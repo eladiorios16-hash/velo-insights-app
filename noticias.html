@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>VELO INSIGHTS | Journal</title>
+    <meta name="description" content="Archivo profundo de análisis técnico de ciclismo WorldTour. Datos, vatios y tecnología.">
+    <meta name="theme-color" content="#050505">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="VELO INSIGHTS | Technical Journal">
+    <meta property="og:description" content="No cubrimos rumores, cubrimos vatios. Análisis profundo del pelotón profesional.">
+    
+    <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/main.css">
+
+    <style>
+        /* ESTILOS BASE */
+        body { -webkit-tap-highlight-color: transparent; }
+        
+        /* Animación Skeleton */
+        @keyframes skeleton-loading {
+            0% { background-color: #09090b; }
+            50% { background-color: #18181b; }
+            100% { background-color: #09090b; }
+        }
+        .skeleton {
+            animation: skeleton-loading 1.5s infinite ease-in-out;
+            border-radius: 1.5rem;
+        }
+        
+        /* Estilo Prosa Modal */
+        .prose-custom p { color: #a1a1aa; font-size: 1.125rem; line-height: 1.8; margin-bottom: 2rem; }
+        .prose-custom h3 { color: white; font-family: 'Archivo Black', sans-serif; text-transform: uppercase; font-style: italic; font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem; }
+        .prose-custom ul { list-style: disc; padding-left: 1.5rem; color: #a1a1aa; margin-bottom: 2rem; }
+        .prose-custom li { margin-bottom: 0.5rem; }
+        .prose-custom strong { color: white; font-weight: 700; }
+
+        /* Scrollbar Personalizada */
+        .custom-scrollbar::-webkit-scrollbar { height: 0px; width: 0px; display: none; }
+        .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .modal-scroll::-webkit-scrollbar { width: 6px; }
+        .modal-scroll::-webkit-scrollbar-track { background: #000; }
+        .modal-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    </style>
+    
+    <link rel="manifest" href="manifest.json">
+</head>
+<body class="antialiased pb-20 overflow-x-hidden bg-[#050505]">
+
+    <header class="pt-32 md:pt-48 pb-8 md:pb-12 px-4 md:px-6 max-w-7xl mx-auto reveal-on-scroll text-center md:text-left">
+        <h1 class="text-4xl md:text-6xl font-heading text-white italic uppercase tracking-tighter mb-4">The Journal <span class="text-cyan-500">///</span></h1>
+        <p class="text-zinc-500 max-w-lg font-medium text-xs md:text-base mx-auto md:mx-0">Archivo profundo de análisis técnico. No cubrimos rumores, cubrimos vatios.</p>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 mb-20">
+        
+        <div class="lg:hidden col-span-1 overflow-x-auto pb-2 custom-scrollbar flex gap-3 relative z-10 py-3 -mx-4 px-4 transition-all">
+            <button onclick="filterByTag('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full bg-zinc-800 border border-zinc-700 text-[10px] font-bold uppercase text-white shadow-lg active:scale-95 transition-transform">Todos</button>
+            <button onclick="filterByTag('RACE REPORT')" class="whitespace-nowrap px-4 py-1.5 rounded-full bg-cyan-900/30 border border-cyan-500/30 text-[10px] font-bold uppercase text-cyan-500 active:scale-95 transition-transform">Race Report</button>
+            <button onclick="filterByTag('TECH LAB')" class="whitespace-nowrap px-4 py-1.5 rounded-full bg-emerald-900/30 border border-emerald-500/30 text-[10px] font-bold uppercase text-emerald-500 active:scale-95 transition-transform">Tech Lab</button>
+            <button onclick="filterByTag('AERO LAB')" class="whitespace-nowrap px-4 py-1.5 rounded-full bg-pink-900/30 border border-pink-500/30 text-[10px] font-bold uppercase text-pink-500 active:scale-95 transition-transform">Aero Lab</button>
+            <button onclick="filterByTag('DATA ANALYSIS')" class="whitespace-nowrap px-4 py-1.5 rounded-full bg-violet-900/30 border border-violet-500/30 text-[10px] font-bold uppercase text-violet-500 active:scale-95 transition-transform">Data</button>
+        </div>
+
+        <div id="news-feed" class="col-span-1 lg:col-span-2 space-y-12 md:space-y-16 pt-4 lg:pt-0">
+             </div>
+        
+        <aside class="hidden lg:block sticky top-32 h-fit reveal-on-scroll">
+            <h4 class="text-[10px] font-black uppercase text-zinc-500 mb-6 tracking-widest border-l-2 border-cyan-500 pl-3">Filtrar por Tema</h4>
+            <div class="flex flex-col gap-2">
+                <button onclick="filterByTag('all')" class="text-left px-4 py-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 hover:text-white hover:border-cyan-500 transition-all">Todos los artículos</button>
+                <button onclick="filterByTag('RACE REPORT')" class="text-left px-4 py-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 hover:text-white hover:border-cyan-500 transition-all">Race Report</button>
+                <button onclick="filterByTag('TECH LAB')" class="text-left px-4 py-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 hover:text-white hover:border-emerald-500 transition-all">Tech Lab</button>
+                <button onclick="filterByTag('AERO LAB')" class="text-left px-4 py-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 hover:text-white hover:border-pink-500 transition-all">Aero Lab</button>
+                <button onclick="filterByTag('DATA ANALYSIS')" class="text-left px-4 py-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 hover:text-white hover:border-violet-500 transition-all">Data Analysis</button>
+            </div>
+        </aside>
+    </main>
+
+    <div id="article-modal" class="fixed inset-0 z-[200] bg-black/95 hidden backdrop-blur-md transition-opacity duration-300">
+        <div class="h-full w-full overflow-y-auto modal-scroll">
+            <div class="min-h-screen flex justify-center py-0 md:py-10 px-0 md:px-4">
+                <div class="w-full max-w-5xl bg-[#050505] md:border border-zinc-800 md:rounded-[2rem] overflow-hidden relative shadow-2xl min-h-screen md:min-h-0">
+                    
+                    <button onclick="closeArticle()" class="fixed top-4 right-4 z-[210] p-2 md:p-3 bg-black/50 text-white rounded-full hover:bg-white hover:text-black transition-all backdrop-blur-md border border-white/20">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+
+                    <div id="modal-content">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="layout.js?v=5.4"></script>
+    
+    <script>
+        // --- VARIABLES GLOBALES ---
+        let allNews = [];
+        const feed = document.getElementById('news-feed');
+        const modal = document.getElementById('article-modal');
+        const modalContent = document.getElementById('modal-content');
+
+        // Colores para las etiquetas
+        const TAG_COLORS = {
+            'TECH LAB': 'bg-emerald-500 text-black',
+            'AERO LAB': 'bg-pink-500 text-white',
+            'DATA ANALYSIS': 'bg-violet-500 text-white',
+            'RACE REPORT': 'bg-cyan-500 text-black',
+            'PREVIA': 'bg-yellow-500 text-black',
+            'DEFAULT': 'bg-zinc-800 text-white'
+        };
+
+        // 1. FUNCIÓN DE CARGA
+        async function fetchNews() {
+            console.log("1. Iniciando petición de noticias...");
+            
+            // Poner esqueleto de carga
+            feed.innerHTML = `<div class="text-zinc-500 animate-pulse text-center py-10">Cargando datos del servidor...</div>`;
+
+            try {
+                // Petición al puerto 3000
+                const response = await fetch('/api/news');
+                console.log("2. Respuesta del servidor recibida:", response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("3. Datos recibidos (JSON):", data);
+
+                    if (data && data.length > 0) {
+                        allNews = data;
+                        renderFeed(allNews); // Pintar las noticias
+                        
+                        // Llama a checkDeepLink después de cargar los datos
+                        checkDeepLink();
+                    } else {
+                        feed.innerHTML = `<p class="text-zinc-500 text-center py-20">El servidor devolvió una lista vacía [ ].</p>`;
+                    }
+                } else {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+            } catch (error) {
+                console.error("❌ ERROR CRÍTICO:", error);
+                feed.innerHTML = `
+                    <div class="text-center py-10 border border-red-900/50 bg-red-900/10 rounded-xl p-4">
+                        <p class="text-red-500 font-bold mb-2">No se pudo conectar con el servidor.</p>
+                        <p class="text-zinc-500 text-xs">Asegúrate de que la ventana negra (node server.js) sigue abierta.</p>
+                        <p class="text-zinc-600 text-xs mt-2 font-mono">${error.message}</p>
+                    </div>`;
+            }
+        }
+
+        // 2. FUNCIÓN DE RENDERIZADO (Pintar en pantalla)
+        function renderFeed(newsList) {
+            console.log("4. Renderizando lista de noticias:", newsList.length);
+            
+            if (!feed) {
+                console.error("ERROR: No encuentro el div con id='news-feed'");
+                return;
+            }
+
+            feed.innerHTML = newsList.map(item => {
+                // Aseguramos que las propiedades existan (Manejo de errores de nombres)
+                const title = item.title || item.titulo || "Sin título";
+                const tag = item.tag || item.categoria || "GENERAL";
+                const date = item.date || item.fecha || "";
+                const image = item.image || item.imagen || "";
+                const id = item.id;
+
+                const tagClass = TAG_COLORS[tag] || TAG_COLORS['DEFAULT'];
+                const hasImage = image && image.trim() !== "";
+
+                // HTML de la imagen (solo si existe)
+                const imageHTML = hasImage ? `
+                    <div class="aspect-[21/9] w-full overflow-hidden rounded-xl md:rounded-[2rem] mb-6 bg-zinc-900 relative border border-zinc-800 shadow-xl">
+                        <img src="${image}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700">
+                        <div class="absolute top-4 left-4">
+                             <span class="px-2 py-1 ${tagClass} text-[10px] font-black uppercase rounded-lg border border-white/10 tracking-widest">${tag}</span>
+                        </div>
+                    </div>
+                ` : '';
+
+                // HTML si NO hay imagen
+                const noImageHTML = !hasImage ? `
+                    <div class="mb-4">
+                         <span class="px-2 py-1 ${tagClass} text-[10px] font-black uppercase rounded border border-zinc-700 tracking-widest">${tag}</span>
+                    </div>
+                ` : '';
+
+                // Tarjeta completa
+                return `
+                    <article class="group cursor-pointer border-b border-zinc-900 pb-12 last:border-0 transition-all" onclick="openArticle(${id})">
+                        ${imageHTML}
+                        ${noImageHTML}
+                        <h2 class="text-2xl md:text-5xl font-heading text-white italic uppercase leading-[0.9] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter">
+                            ${title}
+                        </h2>
+                        <p class="text-zinc-500 text-xs font-mono tracking-widest uppercase">${date}</p>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        // 3. ABRIR ARTÍCULO (Modal)
+        window.openArticle = (id) => {
+            const article = allNews.find(n => n.id == id);
+            if(!article) return;
+            
+            // Actualiza la URL
+            window.history.pushState({ articleId: id }, '', `?article=${id}`);
+
+            // Propiedades seguras
+            const title = article.title || article.titulo;
+            const content = article.content || article.contenido || "<p>Sin contenido.</p>";
+            const lead = article.lead || "";
+            const date = article.date || "";
+            const image = article.image || "";
+            const tag = article.tag || "INFO";
+            const tagClass = TAG_COLORS[tag] || TAG_COLORS['DEFAULT'];
+
+            let headerHTML = image ? `
+                <div class="h-[40vh] md:h-[60vh] w-full relative">
+                    <img src="${image}" class="w-full h-full object-cover grayscale">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 md:p-16">
+                        <span class="px-3 py-1 ${tagClass} rounded text-[10px] font-black uppercase mb-4 inline-block tracking-widest">${tag}</span>
+                        <h1 class="text-3xl md:text-6xl font-heading text-white italic uppercase leading-none tracking-tighter mb-2">${title}</h1>
+                        <p class="text-zinc-400 font-mono text-[10px] uppercase tracking-widest">${date}</p>
+                    </div>
+                </div>` 
+                : `
+                <div class="w-full relative p-6 md:p-16 pt-24 pb-4">
+                    <span class="px-3 py-1 ${tagClass} rounded text-[10px] font-black uppercase mb-4 inline-block tracking-widest border border-zinc-800">${tag}</span>
+                    <h1 class="text-3xl md:text-6xl font-heading text-white italic uppercase leading-none tracking-tighter mb-2">${title}</h1>
+                    <p class="text-zinc-400 font-mono text-[10px] uppercase tracking-widest border-b border-zinc-800 pb-8">${date}</p>
+                </div>`;
+
+            modalContent.innerHTML = `
+                ${headerHTML}
+                <div class="p-6 md:p-20 pt-4 md:pt-10">
+                    <div class="max-w-3xl mx-auto">
+                        ${lead ? `<p class="text-lg md:text-2xl text-zinc-200 font-serif leading-relaxed mb-8 border-l-4 border-cyan-500 pl-4 italic">"${lead}"</p>` : ''}
+                        <div class="prose-custom text-sm md:text-base">${content}</div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeArticle = () => {
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            
+            // Limpia la URL
+            const url = new URL(window.location);
+            url.searchParams.delete('article');
+            window.history.pushState({}, '', url);
+        };
+
+        // 4. FILTROS
+        window.filterByTag = (tag) => {
+            if (tag === 'all') {
+                renderFeed(allNews);
+            } else {
+                const filtered = allNews.filter(n => (n.tag || n.categoria) === tag);
+                renderFeed(filtered);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        
+        // 5. DEEP LINKING
+        function checkDeepLink() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const articleId = urlParams.get('article');
+            if(articleId && allNews.length > 0) {
+                const exists = allNews.some(n => n.id == articleId);
+                if(exists) {
+                    setTimeout(() => { window.openArticle(articleId); }, 150);
+                }
+            }
+        }
+
+        // INICIAR
+        document.addEventListener('DOMContentLoaded', fetchNews);
+    </script>
+</body>
+</html>

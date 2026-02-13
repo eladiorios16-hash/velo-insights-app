@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
+    
+    <title>VELO INSIGHTS | Glosario Técnico</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/main.css">
+    
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+
+        /* Skeletons */
+        @keyframes skeleton-pulse {
+            0% { background-color: #09090b; }
+            50% { background-color: #18181b; }
+            100% { background-color: #09090b; }
+        }
+        .skeleton-card { 
+            animation: skeleton-pulse 1.5s infinite ease-in-out; 
+            border-radius: 1.5rem; 
+            height: 160px; 
+            width: 100%; 
+            border: 1px solid #18181b; 
+        }
+
+        /* --- ESTILOS DE BOTONES DE FILTRO --- */
+        .filter-btn.active {
+            background-color: white;
+            color: black;
+            border-color: #3f3f46;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-btn.active#btn-fisiologia {
+            background-color: rgba(236, 72, 153, 0.1) !important;
+            color: #ec4899 !important;
+            border-color: #ec4899 !important;
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.2) !important;
+        }
+
+        .filter-btn.active#btn-mecanica {
+            background-color: rgba(34, 211, 238, 0.1) !important;
+            color: #22d3ee !important;
+            border-color: #22d3ee !important;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.2) !important;
+        }
+
+        .filter-btn.active#btn-tactica {
+            background-color: rgba(234, 179, 8, 0.1) !important;
+            color: #eab308 !important;
+            border-color: #eab308 !important;
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.2) !important;
+        }
+
+        .filter-btn.active#btn-rol {
+            background-color: rgba(168, 85, 247, 0.1) !important;
+            color: #a855f7 !important;
+            border-color: #a855f7 !important;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.2) !important;
+        }
+        
+        .glass { background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(12px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 10px; }
+    </style>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#050505">
+</head>
+
+<body class="bg-[#050505] antialiased overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+
+    <header class="relative pt-28 md:pt-40 pb-8 md:pb-12 px-4 md:px-6 max-w-7xl mx-auto text-center md:text-left reveal-on-scroll">
+        <h1 class="text-4xl md:text-7xl font-heading text-white italic uppercase tracking-tighter mb-4 md:mb-6 leading-none">
+            Diccionario <span class="text-zinc-700">Técnico</span>
+        </h1>
+        <p class="text-zinc-500 max-w-lg mx-auto mb-6 md:mb-8 font-medium text-xs md:text-sm px-4 md:px-0">
+            Descodificando la jerga del WorldTour. Fisiología, mecánica y táctica.
+        </p>
+
+        <div class="max-w-xl mx-auto relative group px-2 md:px-0">
+            <input type="text" id="term-search" placeholder="BUSCAR TÉRMINO..." 
+                   class="w-full bg-zinc-900/80 border border-zinc-800 rounded-full py-3 md:py-4 px-6 text-white outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(34,211,238,0.1)] transition-all text-center uppercase font-bold tracking-wider text-xs md:text-sm placeholder-zinc-600">
+            <div class="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-cyan-500 transition-colors hidden md:block">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 md:px-6 min-h-screen pb-20">
+        
+        <div class="relative z-30 py-3 mb-8 -mx-4 px-4 flex gap-2 overflow-x-auto no-scrollbar md:justify-center md:flex-wrap md:mx-0 md:px-0 reveal-on-scroll" id="filters">
+            <button onclick="filterGlosario('all')" id="btn-all" class="filter-btn active whitespace-nowrap px-4 py-1.5 md:py-2 rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 text-[10px] font-black uppercase hover:text-white transition-colors">Todos</button>
+            <button onclick="filterGlosario('fisiologia')" id="btn-fisiologia" class="filter-btn whitespace-nowrap px-4 py-1.5 md:py-2 rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 text-[10px] font-black uppercase hover:text-white hover:border-pink-500 transition-colors">Fisiología</button>
+            <button onclick="filterGlosario('mecanica')" id="btn-mecanica" class="filter-btn whitespace-nowrap px-4 py-1.5 md:py-2 rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 text-[10px] font-black uppercase hover:text-white hover:border-cyan-500 transition-colors">Mecánica</button>
+            <button onclick="filterGlosario('tactica')" id="btn-tactica" class="filter-btn whitespace-nowrap px-4 py-1.5 md:py-2 rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 text-[10px] font-black uppercase hover:text-white hover:border-yellow-500 transition-colors">Táctica</button>
+            <button onclick="filterGlosario('rol')" id="btn-rol" class="filter-btn whitespace-nowrap px-4 py-1.5 md:py-2 rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 text-[10px] font-black uppercase hover:text-white hover:border-purple-500 transition-colors">Roles</button>
+        </div>
+
+        <div id="dictionary-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+             </div>
+        
+        <div id="no-results" class="hidden text-center py-20 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20">
+            <p class="text-zinc-600 uppercase font-black tracking-widest text-xs">No se encontraron definiciones</p>
+            <button onclick="filterGlosario('all'); document.getElementById('term-search').value = ''" class="mt-4 text-[10px] font-bold text-cyan-500 underline hover:text-white transition-colors">Ver todo</button>
+        </div>
+    </main>
+
+    <script src="layout.js?v=6"></script>
+    
+    <script>
+        // --- LOGICA DE GLOSARIO CON BACKEND ---
+        const container = document.getElementById('dictionary-grid');
+        const searchInput = document.getElementById('term-search');
+        let fullGlossary = [];
+        let currentFilter = 'all';
+        let debounceTimeout;
+
+        const CAT_STYLES = {
+            'fisiologia': 'text-pink-500 border-pink-500/20 bg-pink-500/10',
+            'mecanica': 'text-cyan-500 border-cyan-500/20 bg-cyan-500/10',
+            'tactica': 'text-yellow-500 border-yellow-500/20 bg-yellow-500/10',
+            'rol': 'text-purple-500 border-purple-500/20 bg-purple-500/10'
+        };
+
+        function showSkeletons() {
+            container.innerHTML = `<div class="skeleton-card"></div>`.repeat(6);
+        }
+
+        async function loadGlossary() {
+            showSkeletons();
+            try {
+                // AQUÍ ESTÁ EL CAMBIO IMPORTANTE: PUERTO 3000
+                const response = await fetch('/api/glossary'); 
+                
+                if (response.ok) {
+                    const sqlData = await response.json();
+                    if (sqlData && sqlData.length > 0) {
+                        fullGlossary = sqlData;
+                        // Ordenar alfabéticamente
+                        fullGlossary.sort((a, b) => a.term.localeCompare(b.term));
+                        renderGlossary(fullGlossary);
+                    } else {
+                         container.innerHTML = `<p class="text-zinc-500 text-center col-span-3 text-xs uppercase font-bold">Base de datos vacía.</p>`;
+                    }
+                } else {
+                    throw new Error('Error en el servidor');
+                }
+            } catch (e) { 
+                console.error(e);
+                container.innerHTML = `<p class="text-red-500 text-center col-span-3 text-xs uppercase font-bold">Error de conexión: Asegúrate de ejecutar 'node server.js'</p>`;
+            }
+        }
+
+        function renderGlossary(items) {
+            container.innerHTML = '';
+            if(items.length === 0) {
+                document.getElementById('no-results').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('no-results').classList.add('hidden');
+            }
+
+            container.innerHTML = items.map(item => {
+                const style = CAT_STYLES[item.cat] || 'text-zinc-500 border-zinc-500/20 bg-zinc-500/10';
+                const catLabel = item.cat.charAt(0).toUpperCase() + item.cat.slice(1);
+                return `
+                    <div class="glass p-6 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 hover:bg-zinc-800/50 hover:border-zinc-700 transition-all group h-full flex flex-col relative overflow-hidden reveal-on-scroll active:scale-[0.98] duration-200">
+                        <div class="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none group-hover:from-white/10 transition-colors"></div>
+                        <div class="flex justify-between items-start mb-3 md:mb-4 relative z-10">
+                            <h3 class="text-xl md:text-2xl font-heading text-white italic uppercase tracking-tight group-hover:text-cyan-400 transition-colors">${item.term}</h3>
+                            <span class="px-2 py-0.5 rounded text-[8px] md:text-[9px] font-black uppercase border tracking-wider ${style}">${catLabel}</span>
+                        </div>
+                        <p class="text-xs md:text-sm text-zinc-400 leading-relaxed group-hover:text-zinc-300 transition-colors flex-grow font-medium">${item.def}</p>
+                    </div>
+                `;
+            }).join('');
+            
+            if (typeof initScrollReveal === 'function') initScrollReveal();
+        }
+
+        window.filterGlosario = (cat) => {
+            currentFilter = cat;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`btn-${cat}`);
+            if(activeBtn) activeBtn.classList.add('active');
+            applyFilters();
+            if(window.innerWidth < 768) window.scrollTo({ top: container.offsetTop - 140, behavior: 'smooth' });
+        };
+
+        function applyFilters() {
+            const term = searchInput.value.toLowerCase().trim();
+            const filtered = fullGlossary.filter(item => 
+                (currentFilter === 'all' || item.cat === currentFilter) &&
+                (item.term.toLowerCase().includes(term) || item.def.toLowerCase().includes(term))
+            );
+            renderGlossary(filtered);
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                applyFilters();
+            }, 250);
+        });
+
+        document.addEventListener('DOMContentLoaded', loadGlossary);
+    </script>
+</body>
+</html>
