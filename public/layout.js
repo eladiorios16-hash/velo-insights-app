@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v6.0 (Full Menu & Smart Search) */
+/* VELO INSIGHTS - LAYOUT ENGINE v6.1 (Cloud Optimized) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -91,7 +91,6 @@ function renderNavbar() {
     
     nav.innerHTML = `
         <div class="w-full max-w-7xl mx-auto flex justify-between items-center h-full relative">
-            
             <a href="index.html" class="flex items-center gap-2 group">
                 <div class="w-10 h-10 bg-white text-black flex items-center justify-center font-black italic rounded-full text-sm tracking-tighter group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(255,255,255,0.5)] border-2 border-transparent group-hover:border-cyan-400">VI</div>
                 <span class="font-black italic text-white uppercase tracking-tighter text-2xl md:text-3xl ml-1 drop-shadow-lg">VELO<span class="text-cyan-500">INSIGHTS</span></span>
@@ -262,36 +261,36 @@ function toggleSearch() {
     }
 }
 
-// --- FUNCIÓN DE BÚSQUEDA CORREGIDA (Conexión al servidor 3000) ---
+// --- FUNCIÓN DE BÚSQUEDA CORREGIDA PARA LA NUBE ---
 async function performSearch(term) {
     const container = document.getElementById('search-results');
     if (!term || term.length < 2) { container.innerHTML = ''; return; }
     
-    // Mostramos estado de carga
     container.innerHTML = `<p class="text-zinc-500 text-center py-8 uppercase text-[10px] font-black tracking-widest animate-pulse">Buscando en la Base de Datos...</p>`;
     
     let results = [];
     const lowerTerm = term.toLowerCase();
 
+    // Determinamos la URL base automáticamente (Local o Railway)
+    const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                     ? 'http://localhost:3000' 
+                     : '';
+
     try {
-        // Pedimos los datos a nuestro puente Node.js (Puerto 3000)
-        // Usamos Promise.all para pedir todo a la vez y que sea rapidísimo
         const [resNews, resGlossary, resCalendar] = await Promise.all([
-            fetch('http://localhost:3000/api/news').catch(() => null),
-            fetch('http://localhost:3000/api/glossary').catch(() => null),
-            fetch('http://localhost:3000/api/calendar').catch(() => null)
+            fetch(`${API_BASE}/api/news`).catch(() => null),
+            fetch(`${API_BASE}/api/glossary`).catch(() => null),
+            fetch(`${API_BASE}/api/calendar`).catch(() => null)
         ]);
 
         let n = resNews && resNews.ok ? await resNews.json() : [];
         let g = resGlossary && resGlossary.ok ? await resGlossary.json() : [];
         let c = resCalendar && resCalendar.ok ? await resCalendar.json() : [];
 
-        // Filtramos las coincidencias (Verificando que los campos no sean nulos)
         const filteredN = n.filter(i => (i.title || '').toLowerCase().includes(lowerTerm));
         const filteredG = g.filter(i => (i.term || '').toLowerCase().includes(lowerTerm) || (i.def || '').toLowerCase().includes(lowerTerm));
         const filteredC = c.filter(i => (i.name || '').toLowerCase().includes(lowerTerm));
         
-        // Unificamos y damos formato a los resultados
         results = [
             ...filteredN.map(x => ({ title: x.title, type: 'NOTICIA', subtitle: x.date, link: `noticias.html?article=${x.id}` })),
             ...filteredG.map(x => ({ title: x.term, type: 'GLOSARIO', subtitle: x.cat, link: `glosario.html?term=${encodeURIComponent(x.term)}` })),
@@ -306,7 +305,6 @@ async function performSearch(term) {
         return;
     }
 
-    // Renderizamos los resultados en la lista desplegable
     container.innerHTML = results.map(r => {
         return `
             <a href="${r.link}" class="flex justify-between items-center p-3 hover:bg-white/5 rounded-xl group transition-colors">
