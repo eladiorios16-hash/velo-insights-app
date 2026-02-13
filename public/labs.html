@@ -35,52 +35,52 @@
             justify-content: center;
         }
         .chart-skeleton::after {
-            content: "CONECTANDO CON SERVIDOR...";
+            content: "INICIALIZANDO GRÁFICOS...";
             font-size: 9px;
             font-weight: 900;
             color: #3f3f46;
             letter-spacing: 0.2em;
         }
         .glass { background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(12px); }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #eab308; margin-top: -10px; box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #eab308; margin-top: -10px; box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); cursor: pointer; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #27272a; border-radius: 2px; }
     </style>
 </head>
 
 <body class="bg-[#050505] antialiased overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
 
-    <header class="pt-32 md:pt-48 pb-8 md:pb-12 px-4 md:px-6 max-w-7xl mx-auto text-center md:text-left reveal-on-scroll">
+    <header class="pt-32 md:pt-48 pb-8 md:pb-12 px-4 md:px-6 max-w-7xl mx-auto text-center md:text-left">
         <h1 class="text-4xl md:text-6xl font-heading text-white italic uppercase tracking-tighter mb-3 md:mb-4 leading-none">Performance Lab <span class="text-cyan-500">///</span></h1>
-        <p class="text-zinc-500 max-w-lg font-medium text-xs md:text-sm mx-auto md:mx-0 px-4 md:px-0">Herramientas de cálculo. Analiza tu rendimiento y compárate con la élite del WorldTour.</p>
+        <p class="text-zinc-500 max-w-lg font-medium text-xs md:text-sm mx-auto md:mx-0">Análisis biomecánico y comparativa de potencia WorldTour de alta precisión.</p>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 pb-20">
         
-        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 h-fit reveal-on-scroll">
+        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 h-fit">
             <h3 class="text-lg md:text-xl font-heading text-white italic uppercase mb-6 flex items-center gap-3">
                 <span class="w-1.5 h-6 md:w-2 md:h-8 bg-cyan-500 block skew-x-[-10deg]"></span>
-                Calculadora de Potencia
+                Potencia Relativa (W/kg)
             </h3>
             
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="block text-[9px] md:text-[10px] font-black uppercase text-zinc-500 mb-2">Tu Peso (kg)</label>
-                    <input type="number" id="weight" placeholder="70" class="w-full font-mono text-base md:text-lg transition-colors focus:border-cyan-500 focus:bg-zinc-900/80 bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none placeholder-zinc-700">
+                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2">Peso Corporal (kg)</label>
+                    <input type="number" id="weight" placeholder="70" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500">
                 </div>
                 <div>
-                    <label class="block text-[9px] md:text-[10px] font-black uppercase text-zinc-500 mb-2">FTP (Vatios)</label>
-                    <input type="number" id="watts" placeholder="250" class="w-full font-mono text-base md:text-lg transition-colors focus:border-cyan-500 focus:bg-zinc-900/80 bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none placeholder-zinc-700">
+                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2">Potencia FTP (W)</label>
+                    <input type="number" id="watts" placeholder="250" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500">
                 </div>
             </div>
 
-            <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-6 flex justify-between items-center relative overflow-hidden group">
-                <div class="absolute right-0 top-0 w-24 h-full bg-cyan-500/10 skew-x-[-20deg] translate-x-12 group-hover:translate-x-8 transition-transform"></div>
+            <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-6 flex justify-between items-center relative overflow-hidden">
+                <div class="absolute right-0 top-0 w-24 h-full bg-cyan-500/10 skew-x-[-20deg] translate-x-12"></div>
                 <div>
-                    <p class="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1">Ratio Potencia/Peso</p>
-                    <p class="text-[10px] text-zinc-600">Dato clave 👇</p>
+                    <p class="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1">Ratio de Rendimiento</p>
+                    <p class="text-[10px] text-zinc-600 italic">Cifra clave para escaladores</p>
                 </div>
                 <div class="text-right z-10">
-                    <p class="text-3xl md:text-4xl font-heading text-white italic tracking-tighter" id="wkg-display">0.0</p>
+                    <p class="text-3xl md:text-4xl font-heading text-white italic tracking-tighter" id="wkg-display">0.00</p>
                     <p class="text-[9px] font-bold text-cyan-500 uppercase">W/kg</p>
                 </div>
             </div>
@@ -90,27 +90,22 @@
                     <thead>
                         <tr class="text-[9px] uppercase font-black text-zinc-600 border-b border-zinc-800 bg-zinc-900/80">
                             <th class="py-2 pl-4">Zona</th>
-                            <th class="py-2">Intensidad</th>
-                            <th class="py-2 text-right pr-4">Vatios</th>
+                            <th class="py-2">Objetivo</th>
+                            <th class="py-2 text-right pr-4">Rango Vatios</th>
                         </tr>
                     </thead>
-                    <tbody id="zones-table" class="divide-y divide-zinc-800/50 font-mono text-xs md:text-sm"></tbody>
+                    <tbody id="zones-table" class="divide-y divide-zinc-800/50 font-mono text-xs"></tbody>
                 </table>
             </div>
         </section>
 
-        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 flex flex-col h-full reveal-on-scroll">
+        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 flex flex-col">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h3 class="text-lg md:text-xl font-heading text-white italic uppercase flex items-center gap-3">
                     <span class="w-1.5 h-6 md:w-2 md:h-8 bg-pink-500 block skew-x-[-10deg]"></span>
-                    Comparativa Pro
+                    Comparativa de Perfil
                 </h3>
-                <div class="w-full md:w-auto relative">
-                    <select id="rival-selector" class="w-full md:w-auto bg-zinc-900 border border-zinc-700 text-white text-xs font-bold uppercase rounded-lg px-3 py-2 outline-none focus:border-pink-500 appearance-none pr-8">
-                        <option>Cargando rivales...</option>
-                    </select>
-                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">▼</div>
-                </div>
+                <select id="rival-selector" class="w-full md:w-auto bg-zinc-900 border border-zinc-700 text-white text-[10px] font-black uppercase rounded-lg px-3 py-2 outline-none focus:border-pink-500"></select>
             </div>
 
             <div class="relative h-60 md:h-64 w-full mb-6">
@@ -118,40 +113,38 @@
                 <canvas id="radarChart"></canvas>
             </div>
             
-            <div id="deep-analysis" class="mt-auto p-4 md:p-5 bg-zinc-950/50 rounded-xl border border-zinc-800">
-                <div id="analysis-content" class="space-y-3">
-                    <p class="text-xs text-zinc-600 text-center animate-pulse">Introduce tus datos para ver el análisis.</p>
-                </div>
+            <div id="analysis-content" class="mt-auto p-4 bg-zinc-950/50 rounded-xl border border-zinc-800">
+                <p class="text-xs text-zinc-600 text-center animate-pulse tracking-widest uppercase">Calculando desfase...</p>
             </div>
         </section>
 
-        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 col-span-1 lg:col-span-2 relative overflow-hidden reveal-on-scroll">
+        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 col-span-1 lg:col-span-2">
             <h3 class="text-lg md:text-xl font-heading text-white italic uppercase mb-6 flex items-center gap-3">
                 <span class="w-1.5 h-6 md:w-2 md:h-8 bg-yellow-500 block skew-x-[-10deg]"></span>
                 Simulador: Alpe d'Huez
             </h3>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 <div>
                     <label class="flex justify-between text-[9px] font-black uppercase text-zinc-400 mb-4">
-                        <span>Ajusta el Ritmo</span>
-                        <span class="text-yellow-500">Desliza para simular</span>
+                        <span>Ajuste de Cadencia/Ritmo</span>
+                        <span class="text-yellow-500">Mueve el dial</span>
                     </label>
                     <input type="range" id="climb-slider" min="36" max="90" value="60" class="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-yellow-500 mb-8">
 
                     <div class="flex items-end justify-between p-4 bg-zinc-900 rounded-xl border border-zinc-800">
                         <div>
-                            <p class="text-[9px] text-zinc-500 uppercase font-black">Tiempo Objetivo</p>
-                            <p class="text-4xl font-heading italic text-white" id="climb-time-display">60 min</p>
+                            <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Tiempo Estimado</p>
+                            <p class="text-4xl font-heading italic text-white" id="climb-time-display">60 <span class="text-sm text-zinc-600 not-italic">min</span></p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[9px] text-zinc-500 uppercase font-black">Potencia Requerida</p>
-                            <p class="text-lg font-mono text-yellow-500 font-bold" id="climb-wkg-display">3.9 W/kg</p>
+                            <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Requisito Bio</p>
+                            <p class="text-xl font-mono text-yellow-500 font-bold" id="climb-wkg-display">3.93 W/kg</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="relative h-56 md:h-64 w-full">
+                <div class="relative h-52 md:h-64 w-full">
                     <div id="climb-skeleton" class="chart-skeleton"></div>
                     <canvas id="climbChart"></canvas>
                 </div>
@@ -161,7 +154,15 @@
 
     <script src="layout.js"></script>
     <script>
-        let PRO_STATS = {}; 
+        // 1. CONFIGURACIÓN DE DATOS PRO (MANUAL)
+        const PRO_STATS = {
+            'pogacar': { name: 'Tadej Pogačar', team: 'UAE', stats: [99, 88, 95, 99, 97], color: '#eab308', bg: 'rgba(234, 179, 8, 0.2)' },
+            'vingegaard': { name: 'Jonas Vingegaard', team: 'Visma', stats: [100, 68, 93, 98, 95], color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.2)' },
+            'evenepoel': { name: 'Remco Evenepoel', team: 'Soudal', stats: [92, 80, 100, 93, 90], color: '#a855f7', bg: 'rgba(168, 85, 247, 0.2)' },
+            'van_aert': { name: 'Wout van Aert', team: 'Visma', stats: [82, 92, 96, 96, 98], color: '#22d3ee', bg: 'rgba(34, 211, 238, 0.2)' },
+            'roglic': { name: 'Primož Roglič', team: 'Red Bull', stats: [94, 82, 91, 94, 92], color: '#ec4899', bg: 'rgba(236, 72, 153, 0.2)' }
+        };
+
         const weightInput = document.getElementById('weight');
         const wattsInput = document.getElementById('watts');
         const rivalSelect = document.getElementById('rival-selector');
@@ -171,41 +172,18 @@
         const climbTimeDisplay = document.getElementById('climb-time-display');
         const climbWkgDisplay = document.getElementById('climb-wkg-display');
 
-        let radarChart = null;
-        let climbChart = null;
+        let radarChart = null, climbChart = null;
 
-        // Cargar datos de la DB de Railway
-        async function loadProData() {
-            try {
-                const response = await fetch('/api/ranking'); // Ruta relativa para Railway
-                if (!response.ok) throw new Error('Error en API');
-                const data = await response.json();
-                
-                rivalSelect.innerHTML = '';
-                const colors = ['#eab308', '#22d3ee', '#a855f7', '#ec4899', '#10b981'];
-
-                data.slice(0, 5).forEach((rider, index) => {
-                    let statsObj = typeof rider.profile === 'string' ? JSON.parse(rider.profile).stats : rider.profile.stats;
-                    
-                    const key = `rider_${rider.id}`;
-                    PRO_STATS[key] = {
-                        name: rider.name,
-                        stats: [parseInt(statsObj.climb || 85), parseInt(statsObj.sprint || 75), parseInt(statsObj.tt || 80), 85, 90],
-                        color: colors[index % colors.length],
-                        bg: colors[index % colors.length] + '33'
-                    };
-
-                    const option = document.createElement('option');
-                    option.value = key;
-                    option.text = `${rider.name} (${rider.team})`;
-                    rivalSelect.appendChild(option);
-                });
-                updateAll();
-            } catch (error) {
-                console.error("Fallo DB:", error);
-                PRO_STATS['fallback'] = { name: 'Tadej Pogačar', stats: [99, 85, 92, 95, 98], color: '#eab308', bg: '#eab30833' };
-                updateAll();
-            }
+        // 2. INICIALIZACIÓN
+        function init() {
+            rivalSelect.innerHTML = Object.entries(PRO_STATS).map(([k,v]) => `<option value="${k}">${v.name} (${v.team})</option>`).join('');
+            
+            const savedW = localStorage.getItem('velo_watts') || 250;
+            const savedKg = localStorage.getItem('velo_weight') || 70;
+            weightInput.value = savedKg;
+            wattsInput.value = savedW;
+            
+            updateAll();
         }
 
         function updateAll() {
@@ -214,61 +192,87 @@
             const wkg = w > 0 ? (w / kg) : 0;
             wkgDisplay.innerText = wkg.toFixed(2);
             
-            // Actualizar tabla de zonas
+            localStorage.setItem('velo_weight', kg);
+            localStorage.setItem('velo_watts', w);
+
+            // Tabla de Zonas Fisiológicas
             const zones = [
-                { n: 'Z2', range: `${Math.round(w*0.56)}-${Math.round(w*0.75)}w` },
-                { n: 'Z4', range: `${Math.round(w*0.91)}-${Math.round(w*1.05)}w` }
+                { n: 'Z2', name: 'Resistencia', r: `${Math.round(w*0.56)}-${Math.round(w*0.75)}w`, c: 'text-cyan-400' },
+                { n: 'Z3', name: 'Tempo', r: `${Math.round(w*0.76)}-${Math.round(w*0.90)}w`, c: 'text-green-500' },
+                { n: 'Z4', name: 'Umbral FTP', r: `${Math.round(w*0.91)}-${Math.round(w*1.05)}w`, c: 'text-yellow-500' },
+                { n: 'Z5', name: 'Capacidad VO2', r: `> ${Math.round(w*1.06)}w`, c: 'text-pink-500' }
             ];
             document.getElementById('zones-table').innerHTML = zones.map(z => `
-                <tr><td class="py-2 pl-4 text-cyan-400 font-black">${z.n}</td><td class="text-zinc-400">Intensidad</td><td class="text-right pr-4 text-white">${z.range}</td></tr>
-            `).join('');
+                <tr class="hover:bg-zinc-800/40">
+                    <td class="py-2 pl-4 font-black ${z.c}">${z.n}</td>
+                    <td class="text-zinc-500 uppercase font-bold text-[9px]">${z.name}</td>
+                    <td class="text-right pr-4 text-white font-bold">${z.r}</td>
+                </tr>`).join('');
 
-            updateRadar();
-            updateClimbSim();
+            renderRadar();
+            renderClimb();
         }
 
-        function updateRadar() {
-            if (typeof Chart === 'undefined' || !PRO_STATS[rivalSelect.value]) return;
+        // 3. GRÁFICOS
+        function renderRadar() {
+            if (typeof Chart === 'undefined') return;
             document.getElementById('radar-skeleton').style.display = 'none';
             const rival = PRO_STATS[rivalSelect.value];
-            const { wkg } = { wkg: parseFloat(wkgDisplay.innerText) };
-            const userScore = Math.min(95, (wkg / 6.5) * 100);
+            const wkg = parseFloat(wkgDisplay.innerText);
+            const userScore = Math.min(95, (wkg / 6.6) * 100);
 
             if (radarChart) radarChart.destroy();
             radarChart = new Chart(document.getElementById('radarChart'), {
                 type: 'radar',
                 data: {
-                    labels: ['Climb', 'Sprint', 'TT', 'Resist', 'Tech'],
+                    labels: ['Escalada', 'Sprint', 'Crono', 'Resistencia', 'Técnica'],
                     datasets: [
-                        { label: 'Tú', data: [userScore, userScore*0.7, userScore*0.8, userScore*0.8, 50], borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)' },
-                        { label: rival.name, data: rival.stats, borderColor: rival.color, backgroundColor: rival.bg }
+                        { label: 'Tú', data: [userScore, userScore*0.7, userScore*0.8, userScore*0.8, 50], borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)', borderWidth: 2, pointRadius: 0 },
+                        { label: rival.name, data: rival.stats, borderColor: rival.color, backgroundColor: rival.bg, borderWidth: 2, pointRadius: 0 }
                     ]
                 },
-                options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+                options: { 
+                    maintainAspectRatio: false, 
+                    scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.05)' }, angleLines: { color: 'rgba(255,255,255,0.05)' }, pointLabels: { color: '#52525b', font: { size: 9, weight: 'bold' } } } },
+                    plugins: { legend: { labels: { color: '#a1a1aa', font: { size: 10 }, boxWidth: 10 } } }
+                }
             });
+
+            const gap = ((userScore / 100) * 100).toFixed(0);
+            analysisContent.innerHTML = `<div class="flex justify-between items-end mb-2"><span class="text-[9px] font-black uppercase text-zinc-500">Nivel Pro-Conti</span><span class="text-sm font-mono font-bold text-white">${gap}%</span></div>
+                <div class="w-full bg-zinc-900 rounded-full h-1 overflow-hidden"><div class="bg-gradient-to-r from-cyan-500 to-pink-500 h-full" style="width: ${gap}%"></div></div>`;
         }
 
-        function updateClimbSim() {
+        function renderClimb() {
             if (typeof Chart === 'undefined') return;
             document.getElementById('climb-skeleton').style.display = 'none';
             const minutes = parseInt(climbSlider.value);
-            climbTimeDisplay.innerHTML = `${minutes} min`;
+            climbTimeDisplay.innerHTML = `${minutes} <span class="text-sm text-zinc-600 not-italic">min</span>`;
             const req = (235.7 / minutes).toFixed(2);
             climbWkgDisplay.innerText = `${req} W/kg`;
+
+            const userWkg = parseFloat(wkgDisplay.innerText);
+            const userTime = userWkg > 0 ? (235.7 / userWkg).toFixed(1) : 90;
 
             if (climbChart) climbChart.destroy();
             climbChart = new Chart(document.getElementById('climbChart'), {
                 type: 'bar',
-                data: { labels: ['Pantani', 'Objetivo'], datasets: [{ data: [36.8, minutes], backgroundColor: ['#eab308', '#fff'] }] },
-                options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                data: { 
+                    labels: ['M. PANTANI', 'OBJETIVO', 'TU TIEMPO'], 
+                    datasets: [{ data: [36.8, minutes, userTime], backgroundColor: ['#eab308', '#ffffff', '#22d3ee'], borderRadius: 4, barThickness: 18 }] 
+                },
+                options: { 
+                    indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false }, ticks: { color: '#3f3f46', font: { size: 8 } } }, y: { ticks: { color: '#fff', font: { weight: '900', size: 9 } } } }
+                }
             });
         }
 
-        weightInput.addEventListener('input', updateAll);
-        wattsInput.addEventListener('input', updateAll);
-        rivalSelect.addEventListener('change', updateRadar);
-        climbSlider.addEventListener('input', updateClimbSim);
-        window.onload = loadProData;
+        // 4. LISTENERS
+        [weightInput, wattsInput].forEach(el => el.addEventListener('input', updateAll));
+        rivalSelect.addEventListener('change', renderRadar);
+        climbSlider.addEventListener('input', renderClimb);
+        window.onload = init;
     </script>
 </body>
 </html>
