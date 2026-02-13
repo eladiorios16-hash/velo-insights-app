@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
+    <title>VELO INSIGHTS | Calendario 2026</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/main.css">
+
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        
+        /* Estilos de Acordeón */
+        .details-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; background: #09090b; }
+        .details-content.open { max-height: 5000px; transition: max-height 0.8s ease-in-out; border-top: 1px solid #27272a; }
+        
+        .stage-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #000000; }
+        .stage-details.open { max-height: 800px; border-top: 1px solid #27272a; border-bottom: 1px solid #27272a; }
+
+        /* Badges */
+        .stage-badge { display: inline-block; width: 70px; text-align: center; padding: 2px 0; border-radius: 4px; font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; }
+        .badge-montaña { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-llano { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .badge-tt { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-mediamontaña { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
+        
+        .finished-tag { background: #22c55e; color: black; font-weight: bold; padding: 2px 6px; border-radius: 99px; font-size: 8px; letter-spacing: 0.05em; }
+        .highlight-race { ring: 2px; ring-color: #22d3ee; box-shadow: 0 0 25px rgba(34, 211, 238, 0.3); border-color: #22d3ee !important; }
+        
+        /* Scrollbar Personalizada */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 10px; }
+    </style>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#050505">
+</head>
+
+<body class="bg-[#050505] antialiased overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200 flex flex-col min-h-screen">
+
+    <main class="max-w-5xl mx-auto px-4 md:px-6 py-32 md:py-48 flex-grow w-full">
+        <header class="mb-8 md:mb-12 reveal-on-scroll text-center md:text-left">
+            <h1 class="text-4xl md:text-7xl font-heading text-white italic uppercase mb-2 md:mb-3 tracking-tighter leading-none">
+                Calendario <span class="text-zinc-700">2026</span>
+            </h1>
+            <p class="text-zinc-500 uppercase font-bold text-[9px] md:text-xs tracking-[0.2em]">Base de datos técnica WorldTour sincronizada</p>
+        </header>
+
+        <div class="mb-6 md:mb-8 relative max-w-md mx-auto md:mx-0 reveal-on-scroll">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </div>
+            <input type="text" id="search-input" placeholder="FILTRAR CARRERA..." class="w-full bg-zinc-900/60 border border-zinc-800 text-white text-[10px] md:text-[11px] font-bold uppercase tracking-wider rounded-full py-3 md:py-4 pl-10 md:pl-12 pr-4 focus:outline-none focus:border-cyan-500 transition-all placeholder-zinc-600">
+        </div>
+
+        <div id="calendar-container" class="space-y-3 md:space-y-4">
+             </div>
+    </main>
+
+    <script src="layout.js?v=5.4"></script>
+
+    <script>
+        const PLACEHOLDER_IMG = "https://placehold.co/600x250/18181b/FFF?text=PERFIL+DE+ETAPA&font=montserrat";
+        const container = document.getElementById('calendar-container');
+        const searchInput = document.getElementById('search-input');
+        let currentCalendarData = [];
+
+        // --- 1. CARGAR DATOS DESDE EL PUENTE (SERVER.JS) ---
+        async function initCalendar() {
+            container.innerHTML = `<p class="text-zinc-600 text-center py-20 animate-pulse uppercase text-xs font-black">Cargando calendario...</p>`;
+
+            try {
+                // APUNTAMOS AL PUERTO 3000
+                const response = await fetch('/api/calendar');
+                
+                if (response.ok) {
+                    const rawData = await response.json();
+                    if (rawData.length > 0) {
+                        processAndRender(rawData);
+                    } else {
+                        container.innerHTML = `<p class="text-zinc-500 text-center py-20">No hay carreras guardadas en la base de datos.</p>`;
+                    }
+                } else {
+                    throw new Error('Error en el servidor');
+                }
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<p class="text-red-500 text-center py-20 text-xs font-bold">Error de conexión: Ejecuta 'node server.js'</p>`;
+            }
+        }
+
+        function processAndRender(rawData) {
+            currentCalendarData = rawData.map(r => {
+                let details = {};
+                
+                // IMPORTANTE: Manejar si 'details' viene como texto o como objeto
+                if (typeof r.details === 'string') {
+                    try { details = JSON.parse(r.details || '{}'); } catch(e) { }
+                } else {
+                    details = r.details || {};
+                }
+
+                return { ...r, info: r.category || r.info || "Carrera", ...details };
+            }).sort((a, b) => {
+                const dateA = a.dateISO ? new Date(a.dateISO).getTime() : 9999999999999;
+                const dateB = b.dateISO ? new Date(b.dateISO).getTime() : 9999999999999;
+                return dateA - dateB; 
+            });
+            
+            renderCalendar(currentCalendarData);
+            handleIncomingRace();
+        }
+
+        // --- 2. RENDERIZAR ---
+        function renderCalendar(data) {
+            const now = new Date().getTime();
+
+            if (data.length === 0) {
+                container.innerHTML = `<div class="text-center py-20 border border-zinc-800 rounded-[2rem] bg-zinc-900/20"><p class="text-zinc-500 font-bold uppercase text-xs">Sin resultados</p></div>`;
+                return;
+            }
+
+            container.innerHTML = data.map((r, i) => {
+                const start = r.dateISO ? new Date(r.dateISO).getTime() : null;
+                const end = r.endDateISO ? new Date(r.endDateISO).getTime() : start;
+                const isFinished = (r.status === 'Finished') || (end && end < now);
+                const isActive = (r.status === 'Active') || (start && end && start <= now && end >= now);
+                const raceID = `race-${r.name.toLowerCase().replace(/\s+/g, '-')}`;
+                
+                return `
+                <div id="${raceID}" class="race-card border border-zinc-800 rounded-xl md:rounded-[2rem] overflow-hidden bg-zinc-900/40 hover:border-zinc-700 transition-all duration-300 reveal-on-scroll">
+                    <button onclick="toggleRace(${i})" class="w-full p-5 md:p-8 flex justify-between items-center text-left group">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 md:gap-3 mb-1 md:mb-2 flex-wrap">
+                                <span class="text-[9px] font-black text-zinc-500 uppercase tracking-widest whitespace-nowrap">${r.date}</span>
+                                ${isFinished ? '<span class="finished-tag">FINALIZADA</span>' : ''}
+                                ${isActive && !isFinished ? '<span class="text-[8px] bg-red-500 text-white px-2 py-0.5 rounded font-bold animate-pulse">EN VIVO</span>' : ''}
+                                <span class="text-[9px] text-zinc-600 font-bold uppercase border-l border-zinc-700 pl-2">${r.info}</span>
+                            </div>
+                            <h3 class="text-lg md:text-3xl font-heading text-white uppercase italic leading-none group-hover:text-cyan-400 transition-colors">${r.name}</h3>
+                            ${isFinished && r.winner ? `<p class="text-[9px] md:text-[10px] text-cyan-500 font-bold mt-1 md:mt-2 uppercase tracking-wide">🏆 ${r.winner}</p>` : ''}
+                        </div>
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full border border-zinc-700 flex items-center justify-center text-zinc-400 group-hover:bg-cyan-500 group-hover:text-black transition-all ml-2" id="icon-race-${i}">+</div>
+                    </button>
+                    
+                    <div id="content-race-${i}" class="details-content">
+                        ${isFinished && r.gc && r.gc.length > 0 ? `
+                            <div class="mx-3 md:mx-6 mb-4 md:mb-6 p-4 md:p-5 bg-black/60 rounded-xl border border-zinc-800">
+                                <p class="text-[9px] font-black text-cyan-500 uppercase mb-3 tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> Clasificación General</p>
+                                <div class="space-y-1.5 md:space-y-2">
+                                    ${r.gc.map((cyclist, idx) => `
+                                        <div class="flex justify-between items-center border-b border-zinc-800/50 pb-1.5 last:border-0">
+                                            <span class="text-white font-bold italic text-xs md:text-sm"><span class="text-zinc-600 mr-2">0${idx + 1}</span>${cyclist.name}</span>
+                                            <span class="font-mono text-[10px] md:text-xs text-zinc-400">${cyclist.time}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="flex flex-col">
+                            ${r.stages && r.stages.length > 0 ? r.stages.map((s, j) => `
+                                <div class="border-b border-zinc-800/50 last:border-0">
+                                    <button onclick="toggleStage(${i}, ${j})" class="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors text-left group/stage">
+                                        <div class="flex items-center gap-3 md:gap-4 overflow-hidden">
+                                            <span class="font-heading text-base md:text-lg text-zinc-600 w-6 text-center group-hover/stage:text-white">${s.n}</span>
+                                            <span class="stage-badge badge-${s.type ? s.type.toLowerCase().replace(/\s+/g, '') : 'llano'}">${s.type || 'Etapa'}</span>
+                                            <span class="text-[10px] md:text-xs font-bold text-zinc-300 uppercase truncate">${s.route || ''}</span>
+                                        </div>
+                                        <div class="text-zinc-500 text-[8px] md:text-[9px] group-hover/stage:text-cyan-400 transition-colors uppercase font-black tracking-widest whitespace-nowrap ml-2">Ver Perfil</div>
+                                    </button>
+
+                                    <div id="stage-content-${i}-${j}" class="stage-details">
+                                        <div class="p-4 md:p-6 flex flex-col gap-4 md:gap-6">
+                                            <div class="grid grid-cols-2 gap-3 md:gap-4">
+                                                <div class="bg-zinc-900/80 p-3 md:p-4 rounded-xl border border-zinc-800 text-center">
+                                                    <p class="text-[8px] md:text-[9px] text-zinc-500 uppercase font-black mb-1">Distancia</p>
+                                                    <p class="text-lg md:text-xl font-heading text-white italic">${s.km || 0} <span class="text-[10px] md:text-xs text-zinc-600 font-sans not-italic">KM</span></p>
+                                                </div>
+                                                <div class="bg-zinc-900/80 p-3 md:p-4 rounded-xl border border-zinc-800 text-center">
+                                                    <p class="text-[8px] md:text-[9px] text-zinc-500 uppercase font-black mb-1">Desnivel</p>
+                                                    <p class="text-lg md:text-xl font-heading text-white italic">${s.gain || 0} <span class="text-[10px] md:text-xs text-zinc-600 font-sans not-italic">M+</span></p>
+                                                </div>
+                                            </div>
+                                            <div class="rounded-xl overflow-hidden border border-zinc-800 bg-white p-1">
+                                                <img src="${s.image ? s.image : PLACEHOLDER_IMG}" loading="lazy" alt="Perfil Altimetría" class="w-full h-auto opacity-90">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('') : '<p class="text-center p-6 text-zinc-600 text-xs italic">Detalles de etapa no disponibles.</p>'}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            if (typeof initScrollReveal === 'function') initScrollReveal();
+        }
+
+        // --- 3. INTERACCIÓN ---
+        window.toggleRace = (index) => {
+            const content = document.getElementById(`content-race-${index}`);
+            const icon = document.getElementById(`icon-race-${index}`);
+            const isOpen = content.classList.contains('open');
+            document.querySelectorAll('.details-content').forEach(el => el.classList.remove('open'));
+            document.querySelectorAll('[id^="icon-race-"]').forEach(el => { el.innerHTML = '+'; });
+            if (!isOpen) { content.classList.add('open'); icon.innerHTML = '−'; }
+        };
+
+        window.toggleStage = (rI, sI) => {
+            const content = document.getElementById(`stage-content-${rI}-${sI}`);
+            const isOpen = content.classList.contains('open');
+            document.querySelectorAll(`[id^="stage-content-${rI}-"]`).forEach(el => el.classList.remove('open'));
+            if (!isOpen) content.classList.add('open');
+        };
+
+        function handleIncomingRace() {
+            const params = new URLSearchParams(window.location.search);
+            const raceName = params.get('race');
+            if (raceName) {
+                const targetID = `race-${raceName.toLowerCase().replace(/\s+/g, '-')}`;
+                const element = document.getElementById(targetID);
+                if (element) {
+                    setTimeout(() => {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        element.classList.add('highlight-race');
+                        element.querySelector('button').click();
+                    }, 500);
+                }
+            }
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            const filtered = currentCalendarData.filter(r => 
+                r.name.toLowerCase().includes(term) || r.date.toLowerCase().includes(term)
+            );
+            renderCalendar(filtered);
+        });
+
+        document.addEventListener('DOMContentLoaded', initCalendar);
+    </script>
+</body>
+</html>
