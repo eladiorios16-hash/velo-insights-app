@@ -68,7 +68,6 @@
 
         input[type=range].slider-green { -webkit-appearance: none; background: #27272a; height: 4px; border-radius: 2px; width: 100%; }
         input[type=range].slider-green::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #10b981; cursor: pointer; border: 2px solid #064e3b; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); margin-top: -8px; }
-        input[type=range].slider-green::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #27272a; border-radius: 2px; }
     </style>
 </head>
 
@@ -107,7 +106,7 @@
             </div>
             <div id="latest-news-container" class="transform transition-all active:scale-[0.98] duration-200">
                 <div class="h-48 md:h-56 bg-zinc-900 rounded-2xl animate-pulse flex items-center justify-center border border-zinc-800">
-                    <span class="text-[10px] text-zinc-700 font-bold uppercase tracking-widest">Cargando Datos...</span>
+                    <span class="text-[10px] text-zinc-700 font-bold uppercase tracking-widest">Conectando con el Lab...</span>
                 </div>
             </div>
         </section>
@@ -115,10 +114,10 @@
         <section>
             <div class="flex justify-between items-end px-2 mb-3">
                 <div class="text-left overflow-hidden">
-                    <h3 id="timeline-race-name" class="text-lg font-heading text-white italic uppercase leading-none transition-all truncate pr-2">Próxima Carrera</h3>
+                    <h3 id="timeline-race-name" class="text-lg font-heading text-white italic uppercase leading-none transition-all truncate pr-2">Cargando Calendario</h3>
                     <div id="timeline-race-meta" class="opacity-0 transition-opacity flex items-center gap-2 text-[9px] font-bold uppercase mt-1">
                         <span id="meta-cat" class="text-yellow-500 bg-yellow-900/30 border border-yellow-500/30 px-1.5 py-0.5 rounded">NEXT</span>
-                        <a id="meta-link" href="#" class="text-zinc-400 hover:text-white underline decoration-zinc-700">Info</a>
+                        <a id="meta-link" href="#" class="text-zinc-400 hover:text-white underline decoration-zinc-700">Ficha Técnica</a>
                     </div>
                 </div>
                 <span id="timeline-month-label" class="text-[9px] font-black text-zinc-600 uppercase tracking-widest whitespace-nowrap">--</span>
@@ -130,11 +129,10 @@
         </section>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-            
             <aside class="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-5">
                 <h3 class="text-base font-heading text-white italic uppercase mb-4 border-b border-zinc-800 pb-2">PROXIMAS <span class="text-yellow-500">CARRERAS</span></h3>
                 <div id="upcoming-races" class="space-y-2">
-                    <p class="text-[10px] text-zinc-500 text-center py-4">Cargando calendario...</p>
+                    <p class="text-[10px] text-zinc-500 text-center py-4 tracking-widest uppercase animate-pulse">Sincronizando fechas...</p>
                 </div>
             </aside>
 
@@ -144,15 +142,13 @@
                     <a href="ranking.html" class="text-[9px] font-bold text-zinc-600 hover:text-amber-500 uppercase transition-colors">TOP 5</a>
                 </div>
                 <div id="ranking-list" class="space-y-1">
-                    <p class="text-[10px] text-zinc-500 text-center py-4">Cargando ranking...</p>
+                    <p class="text-[10px] text-zinc-500 text-center py-4 tracking-widest uppercase animate-pulse">Obteniendo puntos...</p>
                 </div>
             </aside>
-
         </div>
 
         <section class="comparison-card rounded-2xl p-5 md:p-8 opacity-90 hover:opacity-100 transition-opacity">
             <div class="stage-profile-bg"></div>
-
             <div class="relative z-10">
                 <div class="flex justify-between items-center mb-6">
                     <div>
@@ -178,7 +174,7 @@
 
                 <div class="mb-4 border-l-2 border-emerald-500 pl-3">
                     <div class="flex justify-between items-center mb-1">
-                        <span class="text-[9px] font-bold uppercase text-emerald-500">Tu Rendimiento</span>
+                        <span class="text-[9px] font-bold uppercase text-emerald-500">Tu Nivel Estimado</span>
                         <span id="amateur-time" class="text-xs font-mono text-white font-bold">--</span>
                     </div>
                     <div class="flex justify-between text-[9px] font-mono text-emerald-400/80">
@@ -193,7 +189,7 @@
                 <div class="pt-2">
                     <input type="range" min="1" max="10" value="4" class="slider-green w-full block" id="level-slider">
                     <div class="flex justify-between text-[8px] font-bold text-zinc-600 uppercase mt-2 tracking-widest">
-                        <span>Globero</span><span>Pro Tour</span>
+                        <span>Globero</span><span>World Tour</span>
                     </div>
                 </div>
             </div>
@@ -202,10 +198,9 @@
     </main>
     
     <script src="renderers.js?v=1"></script>
-    <script src="layout.js?v=5.8"></script>
+    <script src="layout.js?v=6.1"></script>
     
     <script>
-        // --- 1. LÓGICA DEL SLIDER ---
         const slider = document.getElementById('level-slider');
         const levels = {
             1:  { tag: "Globero", time: "01:25:00", watts: "168W", wkg: "2.4", b: "35%" },
@@ -229,66 +224,45 @@
             document.getElementById('amateur-wkg').innerText = `${d.wkg} W/kg`;
             document.getElementById('amateur-bar').style.width = d.b;
         }
-        if(slider) slider.addEventListener('input', updateComparison);
 
-        // --- 2. CARGA DE DATOS ---
         async function loadContent() {
             // NOTICIAS
-            try {
-                const res = await fetch('/api/news');
-                if (res.ok) {
-                    const news = await res.json();
-                    renderNews(news);
-                }
-            } catch (err) { console.error("Error news:", err); }
+            fetch('/api/news')
+                .then(res => res.json())
+                .then(news => renderNews(news))
+                .catch(e => console.error("Error News:", e));
 
-            // CALENDARIO
-            try {
-                const res = await fetch('/api/calendar');
-                if (res.ok) {
-                    const rawRaces = await res.json();
-                    const races = rawRaces.map(r => {
-                        let details = {};
-                        if (typeof r.details === 'string') {
-                            try { details = JSON.parse(r.details || '{}'); } catch(e) {}
-                        } else { details = r.details || {}; }
-                        return { ...r, ...details };
-                    });
+            // CALENDARIO Y TIMELINE
+            fetch('/api/calendar')
+                .then(res => res.json())
+                .then(raw => {
+                    const races = raw.map(r => ({ ...r, ...(typeof r.details === 'string' ? JSON.parse(r.details || '{}') : r.details || {}) }));
                     renderTimeline(races);
                     renderUpcomingWidget(races);
-                }
-            } catch (err) { console.error("Error calendar:", err); }
+                }).catch(e => console.error("Error Calendar:", e));
 
             // RANKING
-            try {
-                const res = await fetch('/api/ranking');
-                if (res.ok) {
-                    const rankingData = await res.json();
-                    renderRanking(rankingData);
-                }
-            } catch (err) { console.error("Error ranking:", err); }
+            fetch('/api/ranking')
+                .then(res => res.json())
+                .then(data => renderRanking(data))
+                .catch(e => console.error("Error Ranking:", e));
         }
 
-        // --- 3. RENDERIZADORES ---
+        // RENDERIZADORES
         function renderNews(news) {
-            if (news && news.length > 0) {
-                if (typeof getHeroNewsHTML === 'function') {
-                    document.getElementById('latest-news-container').innerHTML = getHeroNewsHTML(news[0]);
-                }
+            const container = document.getElementById('latest-news-container');
+            if (news && news.length > 0 && typeof getHeroNewsHTML === 'function') {
+                container.innerHTML = getHeroNewsHTML(news[0]);
             } else {
-                document.getElementById('latest-news-container').innerHTML = '<p class="text-zinc-500 text-center py-10">Sin noticias recientes.</p>';
+                container.innerHTML = '<p class="text-zinc-500 text-center py-10">Sin datos de noticias.</p>';
             }
         }
 
         function renderRanking(data) {
             const container = document.getElementById('ranking-list');
-            if (data && data.length > 0) {
+            if (data && data.length > 0 && typeof getRankingRowHTML === 'function') {
                 const sorted = data.sort((a,b) => b.points - a.points).slice(0, 5);
-                if (typeof getRankingRowHTML === 'function') {
-                    container.innerHTML = sorted.map((r, i) => getRankingRowHTML(r, i)).join('');
-                }
-            } else {
-                container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center py-4">Sin datos.</p>';
+                container.innerHTML = sorted.map((r, i) => getRankingRowHTML(r, i)).join('');
             }
         }
 
@@ -299,12 +273,7 @@
                                   .sort((a,b) => a.dateISO.localeCompare(b.dateISO))
                                   .slice(0, 3);
 
-            if(upcoming.length === 0) {
-                container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center">No hay carreras próximas.</p>';
-                return;
-            }
-
-            if (typeof getRaceWidgetHTML === 'function') {
+            if (upcoming.length > 0 && typeof getRaceWidgetHTML === 'function') {
                 container.innerHTML = upcoming.map(r => getRaceWidgetHTML(r)).join('');
             }
         }
@@ -314,12 +283,10 @@
             const m = now.getMonth();
             const y = now.getFullYear();
             const dToday = now.getDate();
-            
             const monthNames = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
             const fullMonthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
             
             document.getElementById('timeline-month-label').innerText = `${fullMonthNames[m]} ${y}`;
-            
             const daysInMonth = new Date(y, m + 1, 0).getDate();
             const scrollContainer = document.getElementById('timeline-scroll');
             let html = '';
@@ -343,17 +310,11 @@
 
             for (let d = 1; d <= daysInMonth; d++) {
                 const activeRaces = races.filter(r => {
-                    if(!r.dateISO) return false;
                     const start = new Date(r.dateISO);
                     let end = r.endDateISO ? new Date(r.endDateISO) : new Date(r.dateISO);
-                    if (!r.endDateISO && r.stages && r.stages.length > 1) {
-                        const tempEnd = new Date(start);
-                        tempEnd.setDate(start.getDate() + r.stages.length - 1);
-                        end = tempEnd;
-                    }
-                    const currentLoopDate = new Date(y, m, d);
-                    start.setHours(0,0,0,0); end.setHours(0,0,0,0); currentLoopDate.setHours(0,0,0,0);
-                    return currentLoopDate >= start && currentLoopDate <= end;
+                    const current = new Date(y, m, d);
+                    start.setHours(0,0,0,0); end.setHours(0,0,0,0); current.setHours(0,0,0,0);
+                    return current >= start && current <= end;
                 });
 
                 if (activeRaces.length > 0) {
@@ -362,7 +323,7 @@
                     const isNextRaceStart = (d === nextRaceDay && d >= dToday);
 
                     html += `<div class="timeline-day ${isNextRaceStart ? 'day-next' : 'day-active'} group ${isToday ? 'bg-violet-900/20' : ''}" 
-                                  onclick="window.location.href='calendario.html?race=${encodeURIComponent(r.name)}'">
+                                 onclick="window.location.href='calendario.html?race=${encodeURIComponent(r.name)}'">
                                 <span class="day-month">${monthNames[m]}</span>
                                 <span class="day-number ${isToday ? 'text-violet-400' : ''}">${d}</span>
                                 <div class="w-1.5 h-1.5 ${isNextRaceStart ? 'bg-yellow-500' : 'bg-violet-500'} rounded-full mt-2 shadow-[0_0_8px_#8b5cf6]"></div>
@@ -381,23 +342,13 @@
                 }
             }
             scrollContainer.innerHTML = html;
-            
-            if(nextRaceDay > 3) {
-                setTimeout(() => { 
-                    scrollContainer.scrollLeft = (nextRaceDay - 3) * 48; 
-                }, 100);
-            }
-            
-            let isDown = false, startX, scrollLeft;
-            scrollContainer.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - scrollContainer.offsetLeft; scrollLeft = scrollContainer.scrollLeft; });
-            scrollContainer.addEventListener('mouseleave', () => { isDown = false; });
-            scrollContainer.addEventListener('mouseup', () => { isDown = false; });
-            scrollContainer.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - scrollContainer.offsetLeft; const walk = (x - startX) * 2; scrollContainer.scrollLeft = scrollLeft - walk; });
+            if(nextRaceDay > 3) setTimeout(() => { scrollContainer.scrollLeft = (nextRaceDay - 3) * 48; }, 100);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             updateComparison();
             loadContent();
+            if(slider) slider.addEventListener('input', updateComparison);
         });
     </script>
 </body>
