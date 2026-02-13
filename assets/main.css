@@ -1,0 +1,89 @@
+/* assets/main.css */
+
+/* --- 1. FUENTES & CONFIGURACIÓN BASE --- */
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700;900&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap');
+
+:root {
+    --bg-dark: #050505;
+    --zinc-900: #18181b;
+    --neon-cyan: #22d3ee;
+}
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: var(--bg-dark); 
+    color: #a1a1aa; 
+    margin: 0; 
+    overflow-x: hidden; /* Evita scroll horizontal en móviles */
+}
+
+/* Tipografías Especiales */
+.font-heading { font-family: 'Archivo Black', sans-serif; }
+.font-serif { font-family: 'Merriweather', serif; }
+
+/* --- 2. UTILIDADES DE DISEÑO (UI) --- */
+
+/* Fondo de Malla Técnica (Grid) */
+.bg-grid { 
+    background-image: radial-gradient(circle, #18181b 1px, transparent 1px); 
+    background-size: 30px 30px; 
+    mask-image: radial-gradient(ellipse at center, black 60%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 60%, transparent 100%);
+}
+
+/* Efecto Cristal (Glassmorphism) */
+.glass { 
+    background: rgba(10, 10, 10, 0.85); 
+    backdrop-filter: blur(12px); 
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+}
+
+/* Scrollbar Personalizada */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* --- 3. NAVEGACIÓN & LOGO --- */
+.nav-link { 
+    font-size: 10px; 
+    font-weight: 900; 
+    text-transform: uppercase; 
+    letter-spacing: 0.1em; 
+    transition: all 0.3s ease;
+    color: #71717a; /* zinc-500 */
+}
+.nav-link:hover { color: white; }
+.nav-link.active { color: white; opacity: 1; border-bottom: 2px solid var(--neon-cyan); padding-bottom: 4px; }
+
+/* Animación del Logo (Neón) */
+@keyframes logo-glow {
+    0%, 100% { filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.3)); }
+    50% { filter: drop-shadow(0 0 15px rgba(34, 211, 238, 0.6)); }
+}
+.logo-animate { animation: logo-glow 3s infinite ease-in-out; }
+
+/* --- 4. COMPONENTES ESPECÍFICOS (LABS & GLOSARIO) --- */
+
+/* Inputs de Formularios (Labs) */
+input, select { 
+    background: rgba(24, 24, 27, 0.6); 
+    border: 1px solid #27272a; 
+    color: white; 
+    border-radius: 0.75rem; 
+    padding: 1rem; 
+    outline: none; 
+    transition: border-color 0.3s;
+}
+input:focus, select:focus { border-color: var(--neon-cyan); }
+
+/* Animación de Entrada de Tarjetas (Glosario) */
+@keyframes cardEnter {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.card-enter { animation: cardEnter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; }
+
+/* Scroll Reveal (General) */
+.reveal-on-scroll { opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
+.reveal-on-scroll.active { opacity: 1; transform: translateY(0); }
