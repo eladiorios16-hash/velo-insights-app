@@ -9,9 +9,6 @@
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Velo">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -25,29 +22,26 @@
             100% { background-color: #09090b; }
         }
         .chart-skeleton {
-            position: absolute;
-            inset: 0;
-            animation: skeleton-pulse 1.5s infinite ease-in-out;
-            border-radius: 1rem;
-            z-index: 5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute; inset: 0; animation: skeleton-pulse 1.5s infinite ease-in-out;
+            border-radius: 1rem; z-index: 5; display: flex; align-items: center; justify-content: center;
         }
         .chart-skeleton::after {
-            content: "INICIALIZANDO GRÁFICOS...";
-            font-size: 9px;
-            font-weight: 900;
-            color: #3f3f46;
-            letter-spacing: 0.2em;
+            content: "INICIALIZANDO GRÁFICOS..."; font-size: 9px; font-weight: 900; color: #3f3f46; letter-spacing: 0.2em;
         }
         .glass { background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(12px); }
+        
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #eab308; margin-top: -10px; box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); cursor: pointer; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #27272a; border-radius: 2px; }
-        
-        /* Eliminar flechas del input number */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* Estilo para el perfil del puerto de fondo */
+        .climb-profile-bg {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; opacity: 0.3;
+            transition: all 0.5s ease-in-out;
+            mask-image: linear-gradient(to top, black 20%, transparent 90%);
+            -webkit-mask-image: linear-gradient(to top, black 20%, transparent 90%);
+        }
     </style>
 </head>
 
@@ -68,13 +62,12 @@
             
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2">Peso Corporal (kg)</label>
-                    <input type="number" id="weight" min="1" max="150" placeholder="70" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
-                    <p class="text-[9px] text-zinc-600 mt-1 ml-1">Máx: 150kg</p>
+                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2">Peso (kg)</label>
+                    <input type="number" id="weight" min="1" max="150" placeholder="70" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all">
                 </div>
                 <div>
-                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2">Potencia FTP (W)</label>
-                    <input type="number" id="watts" placeholder="250" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2">FTP (W)</label>
+                    <input type="number" id="watts" placeholder="250" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all">
                 </div>
             </div>
 
@@ -96,7 +89,7 @@
                         <tr class="text-[9px] uppercase font-black text-zinc-600 border-b border-zinc-800 bg-zinc-900/80">
                             <th class="py-2 pl-4">Zona</th>
                             <th class="py-2">Objetivo</th>
-                            <th class="py-2 text-right pr-4">Rango Vatios</th>
+                            <th class="py-2 text-right pr-4">Rango</th>
                         </tr>
                     </thead>
                     <tbody id="zones-table" class="divide-y divide-zinc-800/50 font-mono text-xs"></tbody>
@@ -108,7 +101,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h3 class="text-lg md:text-xl font-heading text-white italic uppercase flex items-center gap-3">
                     <span class="w-1.5 h-6 md:w-2 md:h-8 bg-pink-500 block skew-x-[-10deg]"></span>
-                    Comparativa de Perfil
+                    Comparativa
                 </h3>
                 <select id="rival-selector" class="w-full md:w-auto bg-zinc-900 border border-zinc-700 text-white text-[10px] font-black uppercase rounded-lg px-3 py-2 outline-none focus:border-pink-500"></select>
             </div>
@@ -123,35 +116,59 @@
             </div>
         </section>
 
-        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 col-span-1 lg:col-span-2">
-            <h3 class="text-lg md:text-xl font-heading text-white italic uppercase mb-6 flex items-center gap-3">
-                <span class="w-1.5 h-6 md:w-2 md:h-8 bg-yellow-500 block skew-x-[-10deg]"></span>
-                Simulador: Alpe d'Huez
-            </h3>
+        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 col-span-1 lg:col-span-2 relative overflow-hidden">
+            <div id="climb-profile-container" class="climb-profile-bg"></div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <div>
-                    <label class="flex justify-between text-[9px] font-black uppercase text-zinc-400 mb-4">
-                        <span>Ajuste de Cadencia/Ritmo</span>
-                        <span class="text-yellow-500">Mueve el dial</span>
-                    </label>
-                    <input type="range" id="climb-slider" min="36" max="90" value="60" class="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-yellow-500 mb-8">
-
-                    <div class="flex items-end justify-between p-4 bg-zinc-900 rounded-xl border border-zinc-800">
-                        <div>
-                            <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Tiempo Estimado</p>
-                            <p class="text-4xl font-heading italic text-white" id="climb-time-display">60 <span class="text-sm text-zinc-600 not-italic">min</span></p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Requisito Bio</p>
-                            <p class="text-xl font-mono text-yellow-500 font-bold" id="climb-wkg-display">3.93 W/kg</p>
-                        </div>
+            <div class="relative z-10">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <h3 class="text-lg md:text-xl font-heading text-white italic uppercase flex items-center gap-3">
+                        <span class="w-1.5 h-6 md:w-2 md:h-8 bg-yellow-500 block skew-x-[-10deg]"></span>
+                        Simulador de Ascenso
+                    </h3>
+                    
+                    <div class="relative group w-full md:w-auto">
+                        <select id="climb-select" class="w-full md:w-64 bg-black border border-zinc-700 text-white text-xs font-bold uppercase rounded-xl px-4 py-2 outline-none focus:border-yellow-500 appearance-none cursor-pointer tracking-wide">
+                            <option value="alpe">Alpe d'Huez (13.8km @ 8.1%)</option>
+                            <option value="angliru">L'Angliru (12.5km @ 10.1%)</option>
+                            <option value="tourmalet">Tourmalet (19.0km @ 7.4%)</option>
+                            <option value="mortirolo">Mortirolo (11.8km @ 10.9%)</option>
+                            <option value="stelvio">Stelvio (24.3km @ 7.4%)</option>
+                        </select>
+                        <div class="absolute right-3 top-2.5 pointer-events-none text-zinc-500">▼</div>
                     </div>
                 </div>
 
-                <div class="relative h-52 md:h-64 w-full">
-                    <div id="climb-skeleton" class="chart-skeleton"></div>
-                    <canvas id="climbChart"></canvas>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <div class="mb-8">
+                            <label class="flex justify-between text-[9px] font-black uppercase text-zinc-400 mb-4">
+                                <span>Tiempo Objetivo (Minutos)</span>
+                                <span class="text-yellow-500" id="slider-val-display">60 min</span>
+                            </label>
+                            <input type="range" id="climb-slider" min="30" max="120" value="60" class="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                            <div class="flex justify-between text-[8px] text-zinc-600 font-mono mt-2 uppercase">
+                                <span>30 min (Alien)</span>
+                                <span>120 min (Humano)</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-end justify-between p-4 bg-zinc-900/80 rounded-xl border border-zinc-800 backdrop-blur-sm">
+                            <div>
+                                <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Récord del Puerto</p>
+                                <p class="text-lg font-heading italic text-white" id="record-holder">Pantani '97</p>
+                                <p class="text-xs font-mono text-zinc-400" id="record-time">36m 50s</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Potencia Necesaria</p>
+                                <p class="text-3xl font-mono text-yellow-500 font-bold" id="climb-wkg-display">--</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative h-52 md:h-64 w-full">
+                        <div id="climb-skeleton" class="chart-skeleton"></div>
+                        <canvas id="climbChart"></canvas>
+                    </div>
                 </div>
             </div>
         </section>
@@ -159,7 +176,16 @@
 
     <script src="layout.js"></script>
     <script>
-        // 1. CONFIGURACIÓN DE DATOS PRO (MANUAL)
+        // 1. DATOS DE LOS PUERTOS
+        // factor: Constante física aproximada para cada puerto (basada en VAM y gravedad)
+        const CLIMBS = {
+            'alpe': { name: "Alpe d'Huez", km: 13.8, grad: 8.1, record: 36.8, holder: "M. Pantani '97", factor: 238, color: '#eab308' },
+            'angliru': { name: "L'Angliru", km: 12.5, grad: 10.1, record: 41.6, holder: "R. Heras '00", factor: 265, color: '#ef4444' }, // Más pendiente = Factor más alto (más difícil mover kg)
+            'tourmalet': { name: "Tourmalet", km: 19.0, grad: 7.4, record: 47.5, holder: "T. Pinot '19", factor: 220, color: '#3b82f6' },
+            'mortirolo': { name: "Mortirolo", km: 11.8, grad: 10.9, record: 41.7, holder: "M. Pantani '94", factor: 275, color: '#a855f7' },
+            'stelvio': { name: "Stelvio", km: 24.3, grad: 7.4, record: 60.5, holder: "Rohan Dennis '20", factor: 225, color: '#10b981' }
+        };
+
         const PRO_STATS = {
             'pogacar': { name: 'Tadej Pogačar', team: 'UAE', stats: [99, 88, 95, 99, 97], color: '#eab308', bg: 'rgba(234, 179, 8, 0.2)' },
             'vingegaard': { name: 'Jonas Vingegaard', team: 'Visma', stats: [100, 68, 93, 98, 95], color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.2)' },
@@ -168,19 +194,25 @@
             'roglic': { name: 'Primož Roglič', team: 'Red Bull', stats: [94, 82, 91, 94, 92], color: '#ec4899', bg: 'rgba(236, 72, 153, 0.2)' }
         };
 
+        // Elementos DOM
         const weightInput = document.getElementById('weight');
         const wattsInput = document.getElementById('watts');
         const rivalSelect = document.getElementById('rival-selector');
-        const analysisContent = document.getElementById('analysis-content');
         const wkgDisplay = document.getElementById('wkg-display');
+        const analysisContent = document.getElementById('analysis-content');
+        
+        // Elementos Simulador
+        const climbSelect = document.getElementById('climb-select');
         const climbSlider = document.getElementById('climb-slider');
-        const climbTimeDisplay = document.getElementById('climb-time-display');
+        const sliderValDisplay = document.getElementById('slider-val-display');
+        const recordHolderDisplay = document.getElementById('record-holder');
+        const recordTimeDisplay = document.getElementById('record-time');
         const climbWkgDisplay = document.getElementById('climb-wkg-display');
+        const climbBgContainer = document.getElementById('climb-profile-container');
 
         let radarChart = null, climbChart = null;
         let climbDebounceTimer;
 
-        // 2. INICIALIZACIÓN
         function init() {
             rivalSelect.innerHTML = Object.entries(PRO_STATS).map(([k,v]) => `<option value="${k}">${v.name} (${v.team})</option>`).join('');
             
@@ -190,23 +222,22 @@
             wattsInput.value = savedW;
             
             updateAll();
+            // Disparar la primera carga del fondo
+            updateClimbBackground();
         }
 
         function updateAll() {
             const w = parseFloat(wattsInput.value) || 0;
             let kg = parseFloat(weightInput.value) || 70;
-
-            // --- PROTECCIÓN DE LÍMITES DE PESO ---
-            if (kg < 1) kg = 1;      // Evita división por cero
-            if (kg > 150) kg = 150;  // Límite superior realista
+            if (kg < 1) kg = 1; if (kg > 150) kg = 150;
 
             const wkg = (w > 0 && kg > 0) ? (w / kg) : 0;
             wkgDisplay.innerText = wkg.toFixed(2);
             
-            localStorage.setItem('velo_weight', weightInput.value); // Guardamos lo que escribió el usuario, no el clamp
+            localStorage.setItem('velo_weight', weightInput.value);
             localStorage.setItem('velo_watts', w);
 
-            // Tabla de Zonas Fisiológicas
+            // Zonas
             const zones = [
                 { n: 'Z2', name: 'Resistencia', r: `${Math.round(w*0.56)}-${Math.round(w*0.75)}w`, c: 'text-cyan-400' },
                 { n: 'Z3', name: 'Tempo', r: `${Math.round(w*0.76)}-${Math.round(w*0.90)}w`, c: 'text-green-500' },
@@ -221,11 +252,36 @@
                 </tr>`).join('');
 
             renderRadar();
-            // Renderizamos Climb directamente al actualizar inputs
             renderClimb();
         }
 
-        // 3. GRÁFICOS
+        // GENERADOR DE PERFIL SVG DINÁMICO
+        function updateClimbBackground() {
+            const key = climbSelect.value;
+            const c = CLIMBS[key];
+            
+            // Generar un path SVG basado en la "dureza" (gradiente)
+            // Cuanto más pendiente, más "picudo" es el gráfico de fondo
+            const steepness = c.grad * 5; 
+            const color = c.color;
+            
+            // Un SVG simple de montaña
+            const svg = `
+            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="grad${key}" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:${color};stop-opacity:0.3" />
+                        <stop offset="100%" style="stop-color:${color};stop-opacity:0" />
+                    </linearGradient>
+                </defs>
+                <path d="M0,100 L0,80 L20,${80 - steepness/2} L40,${80 - steepness/1.5} L60,${80 - steepness} L80,${80 - steepness/1.2} L100,60 L100,100 Z" fill="url(#grad${key})" />
+                <path d="M0,80 L20,${80 - steepness/2} L40,${80 - steepness/1.5} L60,${80 - steepness} L80,${80 - steepness/1.2} L100,60" fill="none" stroke="${color}" stroke-width="0.5" stroke-opacity="0.5" vector-effect="non-scaling-stroke" />
+            </svg>`;
+            
+            const encodedSVG = 'data:image/svg+xml;base64,' + btoa(svg);
+            climbBgContainer.style.backgroundImage = `url('${encodedSVG}')`;
+        }
+
         function renderRadar() {
             if (typeof Chart === 'undefined') return;
             document.getElementById('radar-skeleton').style.display = 'none';
@@ -251,51 +307,80 @@
             });
 
             const gap = ((userScore / 100) * 100).toFixed(0);
-            analysisContent.innerHTML = `<div class="flex justify-between items-end mb-2"><span class="text-[9px] font-black uppercase text-zinc-500">Nivel Pro-Conti</span><span class="text-sm font-mono font-bold text-white">${gap}%</span></div>
-                <div class="w-full bg-zinc-900 rounded-full h-1 overflow-hidden"><div class="bg-gradient-to-r from-cyan-500 to-pink-500 h-full" style="width: ${gap}%"></div></div>`;
+            analysisContent.innerHTML = `<div class="flex justify-between items-end mb-2"><span class="text-[9px] font-black uppercase text-zinc-500">Nivel Pro-Conti</span><span class="text-sm font-mono font-bold text-white">${gap}%</span></div><div class="w-full bg-zinc-900 rounded-full h-1 overflow-hidden"><div class="bg-gradient-to-r from-cyan-500 to-pink-500 h-full" style="width: ${gap}%"></div></div>`;
         }
 
         function renderClimb() {
             if (typeof Chart === 'undefined') return;
             document.getElementById('climb-skeleton').style.display = 'none';
+            
+            // DATOS DEL PUERTO SELECCIONADO
+            const key = climbSelect.value;
+            const c = CLIMBS[key];
+            
+            // Actualizar textos informativos
+            recordHolderDisplay.innerText = c.holder;
+            recordTimeDisplay.innerText = `${c.record.toFixed(1)} min`;
+
             const minutes = parseInt(climbSlider.value);
-            climbTimeDisplay.innerHTML = `${minutes} <span class="text-sm text-zinc-600 not-italic">min</span>`;
-            const req = (235.7 / minutes).toFixed(2);
+            sliderValDisplay.innerText = `${minutes} min`;
+            
+            // FÓRMULA AJUSTADA POR PUERTO (Factor / Tiempo)
+            // A más pendiente, más alto es el factor (necesitas más wkg para el mismo tiempo)
+            const req = (c.factor / minutes).toFixed(2);
             climbWkgDisplay.innerText = `${req} W/kg`;
+            climbWkgDisplay.style.color = c.color;
 
             const userWkg = parseFloat(wkgDisplay.innerText);
-            // Evitamos división por cero en el gráfico
-            const userTime = userWkg > 0 ? (235.7 / userWkg).toFixed(1) : 120;
+            const userTime = userWkg > 0 ? (c.factor / userWkg).toFixed(1) : 120;
 
             if (climbChart) climbChart.destroy();
             climbChart = new Chart(document.getElementById('climbChart'), {
                 type: 'bar',
                 data: { 
-                    labels: ['M. PANTANI', 'OBJETIVO', 'TU TIEMPO'], 
-                    datasets: [{ data: [36.8, minutes, userTime], backgroundColor: ['#eab308', '#ffffff', '#22d3ee'], borderRadius: 4, barThickness: 18 }] 
+                    labels: ['RÉCORD', 'OBJETIVO', 'TU TIEMPO'], 
+                    datasets: [{ 
+                        data: [c.record, minutes, userTime], 
+                        backgroundColor: [c.color, '#ffffff', '#22d3ee'], 
+                        borderRadius: 4, 
+                        barThickness: 18 
+                    }] 
                 },
                 options: { 
-                    indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false } },
-                    scales: { x: { grid: { display: false }, ticks: { color: '#3f3f46', font: { size: 8 } } }, y: { ticks: { color: '#fff', font: { weight: '900', size: 9 } } } }
+                    indexAxis: 'y', 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        x: { grid: { display: false }, ticks: { color: '#3f3f46', font: { size: 8 } } }, 
+                        y: { ticks: { color: '#fff', font: { weight: '900', size: 9 } } } 
+                    }
                 }
             });
         }
 
-        // Función DEBOUNCE para el Slider de Alpe d'Huez
         function handleClimbSliderInput() {
             const minutes = parseInt(climbSlider.value);
-            climbTimeDisplay.innerHTML = `${minutes} <span class="text-sm text-zinc-600 not-italic">min</span>`;
-            const req = (235.7 / minutes).toFixed(2);
+            sliderValDisplay.innerText = `${minutes} min`;
+            
+            const key = climbSelect.value;
+            const c = CLIMBS[key];
+            const req = (c.factor / minutes).toFixed(2);
             climbWkgDisplay.innerText = `${req} W/kg`;
 
             clearTimeout(climbDebounceTimer);
-            climbDebounceTimer = setTimeout(renderClimb, 200);
+            climbDebounceTimer = setTimeout(renderClimb, 150);
         }
 
-        // 4. LISTENERS
+        // LISTENERS
         [weightInput, wattsInput].forEach(el => el.addEventListener('input', updateAll));
         rivalSelect.addEventListener('change', renderRadar);
+        
         climbSlider.addEventListener('input', handleClimbSliderInput);
+        
+        climbSelect.addEventListener('change', () => {
+            updateClimbBackground();
+            renderClimb();
+        });
         
         window.onload = init;
     </script>
