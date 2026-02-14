@@ -9,7 +9,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <link rel="stylesheet" href="assets/main.css">
     
     <style>
@@ -144,7 +144,6 @@
                             <span id="modal-country">COUNTRY</span>
                         </div>
                     </div>
-
                     <img id="modal-jersey" src="" alt="Jersey" class="h-20 w-auto md:h-32 object-contain drop-shadow-[0_0_20px_rgba(0,0,0,0.8)] animate-float self-start md:self-center">
                 </div>
 
@@ -167,7 +166,7 @@
                 
                 <div class="p-2 border-t border-zinc-800 bg-zinc-950 text-center relative z-20">
                     <p class="text-[8px] text-zinc-600 font-mono">
-                        * Toca un ciclista para ver sus datos en el radar superior.
+                        * Toca un ciclista para ver sus datos.
                     </p>
                 </div>
             </div>
@@ -192,17 +191,15 @@
         let radarChartInstance = null;
         let compareRadarInstance = null;
 
+        // ACTIVAR PLUGIN DE ETIQUETAS
         Chart.register(ChartDataLabels);
 
-        // --- 1. CARGA DE DATOS ---
         async function fetchTeams() {
             container.innerHTML = `<div class="col-span-full text-center py-20 animate-pulse text-zinc-500 text-xs font-bold uppercase">Cargando equipos...</div>`;
             try {
                 const response = await fetch('/api/teams');
                 if (response.ok) {
                     let data = await response.json();
-                    
-                    // Limpieza de datos
                     allTeams = data.map(team => ({
                         ...team,
                         riders: team.riders.map(rider => {
@@ -250,7 +247,6 @@
             `).join('');
         }
 
-        // --- MODAL & CHART ---
         function initRadarChart(stats) {
             const ctx = document.getElementById('stats-radar').getContext('2d');
             if(radarChartInstance) radarChartInstance.destroy();
@@ -272,9 +268,21 @@
                 },
                 options: {
                     animation: { duration: 300 },
-                    layout: { padding: 5 },
+                    layout: { padding: 10 },
                     scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { display: false }, ticks: { display: false } } },
-                    plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: false } },
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { enabled: false },
+                        // AQUÍ ACTIVAMOS LAS ETIQUETAS DE NÚMEROS
+                        datalabels: { 
+                            display: true,
+                            color: '#fff',
+                            font: { size: 9, weight: 'bold' },
+                            align: 'end',
+                            anchor: 'end',
+                            offset: -2
+                        } 
+                    },
                     maintainAspectRatio: false
                 }
             });
@@ -305,7 +313,6 @@
             modalJersey.src = team.jersey;
 
             const riders = team.riders || [];
-            // Promedio
             const avg = riders.length > 0 ? {
                 mnt: Math.round(riders.reduce((a,b)=>a+b.stats.mnt,0)/riders.length),
                 spr: Math.round(riders.reduce((a,b)=>a+b.stats.spr,0)/riders.length),
@@ -331,7 +338,6 @@
                 if(s.ovr >= 90) { ovrColor = 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]'; radarColor = 'gold'; }
                 else if(s.ovr >= 80) ovrColor = 'text-white';
 
-                // AQUI ESTÁ LA MAGIA: MOSTRAR LOS DATOS NUMÉRICOS
                 return `
                 <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between p-3"
                      onclick="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')"
@@ -340,7 +346,6 @@
                     <div class="flex items-center gap-3 w-full">
                         <span class="text-[10px] font-mono text-zinc-600 font-bold w-4 shrink-0">${index + 1}</span>
                         <span class="text-sm w-6 text-center shrink-0">${rider.country}</span>
-                        
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 <h4 class="text-zinc-300 font-bold uppercase text-xs md:text-sm tracking-tight group-hover:text-white transition-colors truncate">${rider.name}</h4>
@@ -384,7 +389,7 @@
             renderTeams(filtered);
         });
 
-        // H2H Initialization (Código resumido para no repetir, ya está integrado)
+        // H2H Initialization
         function initCompareSection() {
             const h2hSection = document.getElementById('h2h-section');
             h2hSection.classList.remove('hidden');
