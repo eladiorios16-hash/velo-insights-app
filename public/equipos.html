@@ -113,6 +113,9 @@
         </section>
 
         <div class="flex justify-center gap-2 mb-10 overflow-x-auto no-scrollbar py-2 reveal-on-scroll" id="filters">
+            <button onclick="filterFavorites()" id="btn-favs" class="filter-btn px-4 py-1.5 rounded-lg border border-yellow-500/30 bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase hover:bg-yellow-500/20 transition-all mr-2">
+                ★ Mis Favoritos
+            </button>
             <button onclick="filterTeams('all')" id="btn-all" class="filter-btn active px-4 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/50 text-zinc-400 text-[10px] font-bold uppercase hover:text-white hover:border-zinc-600 transition-all">Todos</button>
         </div>
 
@@ -166,7 +169,7 @@
                 
                 <div class="p-2 border-t border-zinc-800 bg-zinc-950 text-center relative z-20">
                     <p class="text-[8px] text-zinc-600 font-mono">
-                        * Toca un ciclista para ver sus datos en el radar superior.
+                        * Toca un ciclista para ver sus datos.
                     </p>
                 </div>
             </div>
@@ -190,6 +193,100 @@
         let allTeams = [];
         let radarChartInstance = null;
         let compareRadarInstance = null;
+        let currentFilter = 'all';
+
+        // --- SISTEMA DE FAVORITOS (LocalStorage) ---
+        const FAV_KEY = 'velo_favs_v1';
+
+        function getFavorites() {
+            return JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+        }
+
+        function toggleFavorite(riderName, teamCode) {
+            let favs = getFavorites();
+            const index = favs.findIndex(f => f.name === riderName);
+            
+            if (index === -1) {
+                // Añadir
+                favs.push({ name: riderName, team: teamCode });
+                showToast(`⭐ ${riderName} guardado`);
+            } else {
+                // Quitar
+                favs.splice(index, 1);
+                showToast(`❌ ${riderName} eliminado`);
+            }
+            
+            localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+            updateHeartIcon(riderName); // Refrescar visualmente
+            
+            // Si estamos viendo la lista de favs, recargarla
+            if(currentFilter === 'favs') filterFavorites();
+        }
+
+        function isFav(riderName) {
+            return getFavorites().some(f => f.name === riderName);
+        }
+
+        function updateHeartIcon(riderName) {
+            // Buscamos botones con onclick que contenga el nombre del ciclista
+            // Nota: Esto busca en el DOM actual (modal abierto)
+            const buttons = document.querySelectorAll(`button[onclick*="${riderName}"] svg`);
+            const active = isFav(riderName);
+            
+            buttons.forEach(svg => {
+                if(active) {
+                    svg.classList.remove('text-zinc-700', 'hover:text-zinc-500');
+                    svg.classList.add('text-yellow-500');
+                } else {
+                    svg.classList.add('text-zinc-700', 'hover:text-zinc-500');
+                    svg.classList.remove('text-yellow-500');
+                }
+            });
+        }
+
+        function showToast(msg) {
+            const div = document.createElement('div');
+            div.className = 'fixed bottom-5 right-5 bg-zinc-900 border border-zinc-700 text-white px-4 py-2 rounded-lg shadow-2xl text-xs font-bold uppercase z-[300] animate-bounce';
+            div.innerText = msg;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 2000);
+        }
+
+        function filterFavorites() {
+            currentFilter = 'favs';
+            
+            // Actualizar botones visualmente
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'bg-zinc-900/50', 'text-white'));
+            document.getElementById('btn-favs').classList.add('active', 'bg-yellow-500/20', 'text-yellow-500');
+
+            const favs = getFavorites();
+            
+            if (favs.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-20 border border-dashed border-yellow-900/50 rounded-3xl bg-yellow-900/10">
+                    <p class="text-yellow-600 uppercase font-black tracking-[0.2em] text-xs">No tienes favoritos</p>
+                    <p class="text-zinc-500 text-[10px] mt-2">Dale a la estrella en la ficha de los equipos.</p>
+                </div>`;
+                return;
+            }
+
+            // Filtrar equipos que tengan al menos un favorito
+            const teamsWithFavs = allTeams.filter(t => 
+                t.riders.some(r => favs.some(f => f.name === r.name))
+            );
+            
+            renderTeams(teamsWithFavs);
+        }
+
+        function filterTeams(type) {
+            currentFilter = 'all';
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'bg-zinc-900/50', 'text-white'));
+            document.getElementById('btn-all').classList.add('active', 'bg-zinc-900/50', 'text-white');
+            document.getElementById('btn-favs').classList.remove('active', 'bg-yellow-500/20', 'text-yellow-500');
+            
+            renderTeams(allTeams);
+        }
+
+        // --- END FAVORITOS ---
 
         Chart.register(ChartDataLabels);
 
@@ -232,6 +329,11 @@
         }
 
         function renderTeams(items) {
+            if(items.length === 0 && currentFilter !== 'favs') {
+                 container.innerHTML = `<div class="col-span-full text-center py-20 text-zinc-500 text-xs font-bold uppercase">No se encontraron equipos.</div>`;
+                 return;
+            }
+
             container.innerHTML = items.map(team => `
                 <div class="team-card glass rounded-2xl border border-zinc-800/80 overflow-hidden cursor-pointer group bg-zinc-900/40 relative" onclick="openModal('${team.code}')">
                     <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
@@ -274,7 +376,6 @@
                             min: 40, max: 100, 
                             angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, 
                             grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
-                            // ETIQUETAS DE EJE ACTIVADAS (MNT, SPR...)
                             pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, 
                             ticks: { display: false } 
                         } 
@@ -282,7 +383,6 @@
                     plugins: { 
                         legend: { display: false }, 
                         tooltip: { enabled: false },
-                        // ETIQUETAS DE VALOR ACTIVADAS (85, 92...)
                         datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, align: 'end', anchor: 'end', offset: -2 } 
                     },
                     maintainAspectRatio: false
@@ -340,14 +440,25 @@
                 if(s.ovr >= 90) { ovrColor = 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]'; radarColor = 'gold'; }
                 else if(s.ovr >= 80) ovrColor = 'text-white';
 
+                // ESTADO FAVORITO
+                const isFavorite = isFav(rider.name);
+                const heartColor = isFavorite ? 'text-yellow-500' : 'text-zinc-700 hover:text-zinc-500';
+
                 return `
                 <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between p-3"
                      onclick="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')"
                      onmouseenter="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')">
                     
                     <div class="flex items-center gap-3 w-full">
-                        <span class="text-[10px] font-mono text-zinc-600 font-bold w-4 shrink-0">${index + 1}</span>
+                        <button onclick="event.stopPropagation(); toggleFavorite('${rider.name}', '${teamCode}')" class="z-50 p-1 -ml-1">
+                            <svg class="w-4 h-4 ${heartColor} transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </button>
+
+                        <span class="text-[10px] font-mono text-zinc-600 font-bold w-4 shrink-0 text-center">${index + 1}</span>
                         <span class="text-sm w-6 text-center shrink-0">${rider.country}</span>
+                        
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 <h4 class="text-zinc-300 font-bold uppercase text-xs md:text-sm tracking-tight group-hover:text-white transition-colors truncate">${rider.name}</h4>
@@ -383,7 +494,7 @@
             setTimeout(() => { document.body.style.overflow = ''; }, 300);
         };
 
-        window.resetSearch = () => { searchInput.value = ''; renderTeams(allTeams); }
+        window.resetSearch = () => { searchInput.value = ''; filterTeams('all'); }
 
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
