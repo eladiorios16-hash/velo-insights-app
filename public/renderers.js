@@ -20,6 +20,18 @@ const UI_CONFIG = {
     }
 };
 
+// --- UTILIDADES ---
+
+/**
+ * Corrige rutas de imágenes para servidores estrictos (Linux/Railway)
+ * Si la ruta no empieza por http o /, le añade / al principio.
+ */
+function fixPath(path) {
+    if (!path) return 'assets/placeholder.jpg'; // Imagen por defecto si no hay dato
+    // Si ya tiene http (es externa) o empieza por /, la dejamos igual. Si no, le ponemos /
+    return (path.startsWith('http') || path.startsWith('/')) ? path : '/' + path;
+}
+
 // --- RENDERIZADORES DE NOTICIAS ---
 
 /**
@@ -28,11 +40,16 @@ const UI_CONFIG = {
  */
 function getNewsCardHTML(news) {
     const tagStyle = UI_CONFIG.tags[news.tag] || UI_CONFIG.tags['DEFAULT'];
+    const imagePath = fixPath(news.image); // Aplicamos corrección de ruta
     
     return `
     <article class="group cursor-pointer border-b border-zinc-900 pb-8 last:border-0 transition-all reveal-on-scroll" onclick="openArticle(${news.id})">
         <div class="aspect-[21/9] w-full overflow-hidden rounded-2xl mb-6 bg-zinc-900 relative border border-zinc-800 shadow-xl">
-            <img src="${news.image}" loading="lazy" decoding="async" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000">
+            <img src="${imagePath}" 
+                 loading="lazy" 
+                 decoding="async" 
+                 onerror="this.src='https://placehold.co/600x400/18181b/3f3f46?text=NO+IMAGE'"
+                 class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000">
             <div class="absolute top-4 left-4">
                  <span class="px-2 py-1 ${tagStyle} text-[9px] font-black uppercase rounded shadow-xl tracking-widest border border-white/10">${news.tag}</span>
             </div>
@@ -43,7 +60,7 @@ function getNewsCardHTML(news) {
             <span>Technical Journal</span>
         </div>
         <h2 class="text-2xl md:text-3xl font-heading text-white italic uppercase leading-[0.9] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter">${news.title}</h2>
-        <p class="text-zinc-400 text-sm leading-relaxed font-medium line-clamp-3">${news.lead}</p>
+        <p class="text-zinc-400 text-sm leading-relaxed font-medium line-clamp-3">${news.lead || ''}</p>
     </article>
     `;
 }
@@ -53,10 +70,13 @@ function getNewsCardHTML(news) {
  */
 function getHeroNewsHTML(news) {
     const tagStyle = UI_CONFIG.tags[news.tag] || UI_CONFIG.tags['DEFAULT'];
+    const imagePath = fixPath(news.image); // Aplicamos corrección de ruta
     
     return `
     <a href="noticias.html?article=${news.id}" class="group relative h-[380px] md:h-[450px] w-full rounded-[1.5rem] overflow-hidden border border-zinc-800 block shadow-2xl hover:border-cyan-500/40 transition-colors">
-        <img src="${news.image}" class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-110">
+        <img src="${imagePath}" 
+             onerror="this.src='https://placehold.co/800x600/18181b/3f3f46?text=NO+IMAGE'"
+             class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-110">
         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent flex items-end p-6 md:p-14 text-left">
             <div class="w-full">
                 <div class="flex justify-between items-center mb-3">
@@ -64,7 +84,7 @@ function getHeroNewsHTML(news) {
                     <span class="text-[9px] font-bold text-white uppercase bg-black/60 backdrop-blur px-2 py-0.5 rounded">${news.date}</span>
                 </div>
                 <h2 class="text-3xl md:text-6xl font-heading text-white italic uppercase leading-[0.9] mb-3 drop-shadow-xl line-clamp-2">${news.title}</h2>
-                <p class="text-zinc-300 text-xs md:text-sm border-l-2 border-cyan-500 pl-3 line-clamp-2 max-w-xl font-medium shadow-black drop-shadow-md leading-relaxed">${news.lead}</p>
+                <p class="text-zinc-300 text-xs md:text-sm border-l-2 border-cyan-500 pl-3 line-clamp-2 max-w-xl font-medium shadow-black drop-shadow-md leading-relaxed">${news.lead || ''}</p>
             </div>
         </div>
     </a>`;
@@ -100,11 +120,17 @@ function getRaceWidgetHTML(race) {
  */
 function getRankingRowHTML(cyclist, index) {
     return `
-    <div class="flex items-center justify-between p-2 rounded-xl border-b border-zinc-800/50 last:border-0 group hover:bg-white/5 transition-colors">
-        <div class="flex items-center gap-3">
-            <span class="text-[10px] font-mono text-zinc-500 w-4 text-center">0${index + 1}</span>
-            <p class="text-xs md:text-sm font-bold text-zinc-300 group-hover:text-white uppercase tracking-tight truncate max-w-[120px]">${cyclist.name}</p>
+    <div class="flex items-center justify-between p-3 hover:bg-white/5 rounded-lg transition-colors group cursor-default border-b border-zinc-800/50 last:border-0">
+        <div class="flex items-center gap-4">
+            <span class="text-sm font-black text-zinc-600 w-5 group-hover:text-amber-500 transition-colors">${index + 1}</span>
+            <div class="flex flex-col">
+                <span class="text-sm md:text-base font-bold text-white transition-colors truncate max-w-[140px] md:max-w-none leading-tight">${cyclist.name}</span>
+                <span class="text-[10px] font-black uppercase text-zinc-600 group-hover:text-zinc-500 transition-colors mt-0.5">${cyclist.team}</span>
+            </div>
         </div>
-        <p class="text-sm font-mono font-bold text-amber-500 tracking-tighter">${cyclist.points}</p>
+        <div class="text-right">
+            <span class="block text-lg md:text-xl font-mono font-black text-amber-500 text-shadow-glow leading-none">${cyclist.points}</span>
+            <span class="text-[8px] text-zinc-600 uppercase font-black tracking-widest">PTS</span>
+        </div>
     </div>`;
 }
