@@ -224,7 +224,7 @@ function injectSearchModal() {
         <div class="w-full max-w-2xl bg-[#09090b]/80 border border-white/10 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl transform transition-all scale-95 opacity-0" id="search-container">
             <div class="flex items-center justify-between border-b border-zinc-800/50 p-4">
                 <svg class="w-5 h-5 text-zinc-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" id="search-input-global" placeholder="BUSCAR EN LA BASE DE DATOS..." 
+                <input type="text" id="search-input-global" placeholder="BUSCAR..." 
                        class="w-full bg-transparent px-4 text-base md:text-lg text-white outline-none font-bold tracking-wide placeholder-zinc-600 h-10">
                 <button onclick="toggleSearch()" class="text-zinc-500 hover:text-white p-2 rounded-full hover:bg-zinc-800 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
