@@ -129,6 +129,7 @@
         </section>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+            
             <aside class="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-5">
                 <h3 class="text-base font-heading text-white italic uppercase mb-4 border-b border-zinc-800 pb-2">PROXIMAS <span class="text-yellow-500">CARRERAS</span></h3>
                 <div id="upcoming-races" class="space-y-2">
@@ -145,10 +146,12 @@
                     <p class="text-[10px] text-zinc-500 text-center py-4 tracking-widest uppercase animate-pulse">Obteniendo puntos...</p>
                 </div>
             </aside>
+
         </div>
 
         <section class="comparison-card rounded-2xl p-5 md:p-8 opacity-90 hover:opacity-100 transition-opacity">
             <div class="stage-profile-bg"></div>
+
             <div class="relative z-10">
                 <div class="flex justify-between items-center mb-6">
                     <div>
@@ -201,6 +204,7 @@
     <script src="layout.js?v=6.1"></script>
     
     <script>
+        // --- 1. LÓGICA DEL SLIDER ---
         const slider = document.getElementById('level-slider');
         const levels = {
             1:  { tag: "Globero", time: "01:25:00", watts: "168W", wkg: "2.4", b: "35%" },
@@ -225,6 +229,7 @@
             document.getElementById('amateur-bar').style.width = d.b;
         }
 
+        // --- 2. CARGA DE DATOS ---
         async function loadContent() {
             // NOTICIAS
             fetch('/api/news')
@@ -232,7 +237,7 @@
                 .then(news => renderNews(news))
                 .catch(e => console.error("Error News:", e));
 
-            // CALENDARIO Y TIMELINE
+            // CALENDARIO
             fetch('/api/calendar')
                 .then(res => res.json())
                 .then(raw => {
@@ -248,33 +253,66 @@
                 .catch(e => console.error("Error Ranking:", e));
         }
 
-        // RENDERIZADORES
+        // --- 3. RENDERIZADORES MANUALES (PARA ASEGURAR CARGA) ---
+        
         function renderNews(news) {
             const container = document.getElementById('latest-news-container');
-            if (news && news.length > 0 && typeof getHeroNewsHTML === 'function') {
-                container.innerHTML = getHeroNewsHTML(news[0]);
+            if (news && news.length > 0) {
+                if(typeof getHeroNewsHTML === 'function') {
+                    container.innerHTML = getHeroNewsHTML(news[0]);
+                } else {
+                    const n = news[0];
+                    container.innerHTML = `<div class="relative h-64 md:h-80 rounded-2xl overflow-hidden group cursor-pointer" onclick="window.location.href='noticias.html?article=${n.id}'"><img src="${n.image}" class="absolute inset-0 w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent p-6 flex flex-col justify-end"><h3 class="text-3xl font-heading text-white italic uppercase">${n.title}</h3></div></div>`;
+                }
             } else {
-                container.innerHTML = '<p class="text-zinc-500 text-center py-10">Sin datos de noticias.</p>';
+                container.innerHTML = '<p class="text-zinc-500 text-center py-10">Sin noticias recientes.</p>';
             }
+        }
+
+        // FUNCIÓN QUE FALTABA PARA EL RANKING
+        function getRankingRowHTML(r, i) {
+            return `<div class="flex items-center justify-between p-2 hover:bg-white/5 rounded-lg transition-colors group cursor-default">
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-black text-zinc-600 w-4 group-hover:text-amber-500 transition-colors">${i + 1}</span>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors truncate max-w-[120px] md:max-w-none">${r.name}</span>
+                        <span class="text-[9px] font-black uppercase text-zinc-600 group-hover:text-zinc-500 transition-colors">${r.team}</span>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="block text-xs font-mono font-bold text-amber-500 text-shadow-glow">${r.points}</span>
+                    <span class="text-[8px] text-zinc-600 uppercase font-black">PTS</span>
+                </div>
+            </div>`;
         }
 
         function renderRanking(data) {
             const container = document.getElementById('ranking-list');
-            if (data && data.length > 0 && typeof getRankingRowHTML === 'function') {
+            if (data && data.length > 0) {
                 const sorted = data.sort((a,b) => b.points - a.points).slice(0, 5);
                 container.innerHTML = sorted.map((r, i) => getRankingRowHTML(r, i)).join('');
+            } else {
+                container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center py-4">Sin datos de ranking.</p>';
             }
         }
 
         function renderUpcomingWidget(races) {
             const container = document.getElementById('upcoming-races');
             const now = new Date().toISOString().split('T')[0];
-            const upcoming = races.filter(r => r.dateISO >= now || r.status === 'Active')
-                                  .sort((a,b) => a.dateISO.localeCompare(b.dateISO))
-                                  .slice(0, 3);
+            const upcoming = races.filter(r => r.dateISO >= now || r.status === 'Active').sort((a,b) => a.dateISO.localeCompare(b.dateISO)).slice(0, 3);
 
-            if (upcoming.length > 0 && typeof getRaceWidgetHTML === 'function') {
-                container.innerHTML = upcoming.map(r => getRaceWidgetHTML(r)).join('');
+            if (upcoming.length > 0) {
+                 const html = upcoming.map(r => `
+                    <a href="calendario.html?race=${encodeURIComponent(r.name)}" class="block p-3 bg-black/40 border border-zinc-800 hover:border-zinc-600 rounded-xl transition-all group">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[9px] font-black text-zinc-500 uppercase tracking-widest group-hover:text-zinc-300">${r.date}</span>
+                            <span class="text-[9px] font-bold text-yellow-500 bg-yellow-900/20 px-1.5 py-0.5 rounded border border-yellow-900/50">${r.category || 'WT'}</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-zinc-300 group-hover:text-white truncate">${r.name}</h4>
+                    </a>`).join('');
+                 container.innerHTML = html;
+            } else {
+                container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center py-4">Sin carreras próximas.</p>';
             }
         }
 
@@ -321,24 +359,14 @@
                     const r = activeRaces[0];
                     const isToday = d === dToday;
                     const isNextRaceStart = (d === nextRaceDay && d >= dToday);
-
-                    html += `<div class="timeline-day ${isNextRaceStart ? 'day-next' : 'day-active'} group ${isToday ? 'bg-violet-900/20' : ''}" 
-                                 onclick="window.location.href='calendario.html?race=${encodeURIComponent(r.name)}'">
-                                <span class="day-month">${monthNames[m]}</span>
-                                <span class="day-number ${isToday ? 'text-violet-400' : ''}">${d}</span>
-                                <div class="w-1.5 h-1.5 ${isNextRaceStart ? 'bg-yellow-500' : 'bg-violet-500'} rounded-full mt-2 shadow-[0_0_8px_#8b5cf6]"></div>
-                             </div>`;
-                    
+                    html += `<div class="timeline-day ${isNextRaceStart ? 'day-next' : 'day-active'} group ${isToday ? 'bg-violet-900/20' : ''}" onclick="window.location.href='calendario.html?race=${encodeURIComponent(r.name)}'"><span class="day-month">${monthNames[m]}</span><span class="day-number ${isToday ? 'text-violet-400' : ''}">${d}</span><div class="w-1.5 h-1.5 ${isNextRaceStart ? 'bg-yellow-500' : 'bg-violet-500'} rounded-full mt-2 shadow-[0_0_8px_#8b5cf6]"></div></div>`;
                     if(isToday) {
                         document.getElementById('live-race-banner').classList.remove('hidden');
                         document.getElementById('live-race-name').innerText = r.name;
                         document.getElementById('live-race-link').href = `calendario.html?race=${encodeURIComponent(r.name)}`;
                     }
                 } else {
-                    html += `<div class="timeline-day day-empty">
-                                <span class="day-number">${d}</span>
-                                <div class="timeline-tick"></div>
-                             </div>`;
+                    html += `<div class="timeline-day day-empty"><span class="day-number">${d}</span><div class="timeline-tick"></div></div>`;
                 }
             }
             scrollContainer.innerHTML = html;
