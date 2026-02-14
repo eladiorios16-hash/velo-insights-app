@@ -305,4 +305,200 @@
                 <div class="team-card glass rounded-2xl border border-zinc-800/80 overflow-hidden cursor-pointer group bg-zinc-900/40 relative" onclick="openModal('${team.code}')">
                     <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
                     <div class="w-full h-48 md:h-60 overflow-hidden flex items-center justify-center p-4 relative">
-                        <img src="${team.jers
+                        <img src="${team.jersey}" class="team-jersey-thumb w-full h-full object-contain relative z-0 transition-transform duration-500 ease-out drop-shadow-lg" loading="lazy">
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full p-4 z-20">
+                        <h3 class="text-sm font-black uppercase tracking-tight text-white leading-none group-hover:text-cyan-400 transition-colors truncate">${team.name}</h3>
+                        <p class="text-[10px] text-zinc-400 mt-1 font-bold">${team.country} <span class="mx-1">•</span> ${team.code}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function initRadarChart(stats) {
+            const ctx = document.getElementById('stats-radar').getContext('2d');
+            if(radarChartInstance) radarChartInstance.destroy();
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'],
+                    datasets: [{ data: [stats.mnt, stats.spr, stats.tt, stats.lla, stats.res, stats.rec], backgroundColor: 'rgba(34, 211, 238, 0.2)', borderColor: '#22d3ee', borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: '#22d3ee', pointHoverBackgroundColor: '#22d3ee', pointRadius: 2 }]
+                },
+                options: { animation: { duration: 300 }, layout: { padding: 10 }, scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } }, plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, align: 'end', anchor: 'end', offset: -2 } }, maintainAspectRatio: false }
+            });
+        }
+
+        window.updateRadarManual = (mnt, spr, tt, lla, res, rec, name, color) => {
+            if(radarChartInstance) {
+                radarChartInstance.data.datasets[0].data = [mnt, spr, tt, lla, res, rec];
+                radarChartInstance.data.datasets[0].borderColor = color === 'gold' ? '#ec4899' : '#22d3ee';
+                radarChartInstance.data.datasets[0].backgroundColor = color === 'gold' ? 'rgba(236, 72, 153, 0.2)' : 'rgba(34, 211, 238, 0.2)';
+                radarChartInstance.update();
+                const label = document.getElementById('radar-rider-name');
+                if(label) { label.innerText = name; label.className = `text-xs font-black uppercase tracking-wide drop-shadow-md bg-black/60 px-2 py-1 rounded transition-colors ${color === 'gold' ? 'text-white' : 'text-zinc-400'}`; }
+            }
+        };
+
+        // --- MODAL LÓGICA (ACTUALIZADA) ---
+        window.openModal = (teamCode, refreshOnly = false) => {
+            const team = allTeams.find(t => t.code === teamCode);
+            if(!team) return;
+
+            currentOpenTeamCode = teamCode;
+
+            if (!refreshOnly) {
+                modalTitle.innerText = team.name;
+                modalCode.innerText = team.code;
+                modalCountry.innerText = team.country;
+                modalJersey.src = team.jersey;
+                if(currentSortCriteria !== 'ovr') setRosterSort('ovr'); 
+            }
+
+            let riders = team.riders || [];
+
+            // 1. FILTRO FAVORITOS
+            const rosterTitle = document.getElementById('roster-title');
+            if(currentFilter === 'favs') {
+                riders = riders.filter(r => isFav(r.name));
+                rosterTitle.innerText = `TUS FAVORITOS (${riders.length})`;
+                rosterTitle.classList.add('text-yellow-500');
+            } else {
+                rosterTitle.innerText = "PLANTILLA 2026";
+                rosterTitle.classList.remove('text-yellow-500');
+            }
+
+            // 2. ORDENACIÓN
+            const sortedRiders = [...riders].sort((a, b) => {
+                const valA = a.stats[currentSortCriteria] || 0;
+                const valB = b.stats[currentSortCriteria] || 0;
+                return valB - valA;
+            });
+
+            // 3. CHART & PROMEDIO
+            if (!refreshOnly) {
+                const avg = riders.length > 0 ? {
+                    mnt: Math.round(riders.reduce((a,b)=>a+b.stats.mnt,0)/riders.length),
+                    spr: Math.round(riders.reduce((a,b)=>a+b.stats.spr,0)/riders.length),
+                    tt: Math.round(riders.reduce((a,b)=>a+b.stats.tt,0)/riders.length),
+                    lla: Math.round(riders.reduce((a,b)=>a+b.stats.lla,0)/riders.length),
+                    res: Math.round(riders.reduce((a,b)=>a+b.stats.res,0)/riders.length),
+                    rec: Math.round(riders.reduce((a,b)=>a+b.stats.rec,0)/riders.length)
+                } : { mnt:0, spr:0, tt:0, lla:0, res:0, rec:0 };
+                
+                setTimeout(() => {
+                    initRadarChart(avg);
+                    const l = document.getElementById('radar-rider-name');
+                    l.innerText = currentFilter === 'favs' ? "PROM. FAVORITOS" : "PROMEDIO";
+                }, 200);
+            }
+
+            // 4. RENDER
+            modalRoster.innerHTML = sortedRiders.map((rider, index) => {
+                const s = rider.stats;
+                let ovrColor = 'text-zinc-500';
+                let radarColor = 'blue';
+                if(s.ovr >= 90) { ovrColor = 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]'; radarColor = 'gold'; }
+                else if(s.ovr >= 80) ovrColor = 'text-white';
+
+                const isFavorite = isFav(rider.name);
+                const heartColor = isFavorite ? 'text-yellow-500' : 'text-zinc-700 hover:text-zinc-500';
+                
+                // ILUMINAR DATO ORDENADO
+                const hl = (key) => key === currentSortCriteria ? 'text-yellow-400 font-black scale-110 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'text-zinc-200';
+
+                return `
+                <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between p-3"
+                     onclick="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')"
+                     onmouseenter="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')">
+                    
+                    <div class="flex items-center gap-3 w-full">
+                        <button onclick="event.stopPropagation(); toggleFavorite('${rider.name}', '${teamCode}')" class="z-50 p-1 -ml-1">
+                            <svg class="w-4 h-4 ${heartColor} transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        </button>
+
+                        <span class="text-[10px] font-mono text-zinc-600 font-bold w-4 shrink-0 text-center">${index + 1}</span>
+                        <span class="text-sm w-6 text-center shrink-0">${rider.country}</span>
+                        
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h4 class="text-zinc-300 font-bold uppercase text-xs md:text-sm tracking-tight group-hover:text-white transition-colors truncate">${rider.name}</h4>
+                                <span class="spec-badge ${rider.typeClass}">${rider.type}</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-6 gap-2 text-[10px] text-zinc-500 font-mono w-full max-w-[340px] mt-1">
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">MNT</span><span class="${hl('mnt')} text-xs">${s.mnt}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">SPR</span><span class="${hl('spr')} text-xs">${s.spr}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">TT</span><span class="${hl('tt')} text-xs">${s.tt}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">LLA</span><span class="${hl('lla')} text-xs">${s.lla}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">RES</span><span class="${hl('res')} text-xs">${s.res}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">REC</span><span class="${hl('rec')} text-xs">${s.rec}</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-right shrink-0 pl-2">
+                        <span class="text-lg font-black italic ${currentSortCriteria === 'ovr' ? ovrColor : 'text-zinc-600'}">${s.ovr}</span>
+                        <span class="text-[8px] block text-zinc-600 font-bold">OVR</span>
+                    </div>
+                </div>
+            `}).join('');
+
+            if (!refreshOnly) {
+                modal.classList.remove('hidden-modal');
+                modal.classList.add('visible-modal');
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        window.closeModal = () => {
+            modal.classList.remove('visible-modal');
+            modal.classList.add('hidden-modal');
+            setTimeout(() => { document.body.style.overflow = ''; }, 300);
+        };
+
+        window.resetSearch = () => { searchInput.value = ''; filterTeams('all'); }
+
+        searchInput.addEventListener('input', (e) => {
+            if(currentFilter === 'favs') {
+                currentFilter = 'all';
+                document.getElementById('btn-favs').classList.remove('active', 'bg-yellow-500/20', 'text-yellow-500');
+                document.getElementById('btn-all').classList.add('active', 'bg-zinc-900/50', 'text-white');
+            }
+            const term = e.target.value.toLowerCase();
+            const filtered = allTeams.filter(t => t.name.toLowerCase().includes(term) || (t.riders && t.riders.some(r => r.name.toLowerCase().includes(term))));
+            renderTeams(filtered);
+        });
+
+        function initCompareSection() {
+            const h2hSection = document.getElementById('h2h-section');
+            h2hSection.classList.remove('hidden');
+            const t1 = document.getElementById('h2h-team-1');
+            const t2 = document.getElementById('h2h-team-2');
+            let teamOptionsHTML = allTeams.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
+            t1.innerHTML = teamOptionsHTML;
+            t2.innerHTML = teamOptionsHTML;
+            const idxUae = allTeams.findIndex(t => t.name.includes('UAE'));
+            const idxVisma = allTeams.findIndex(t => t.name.includes('Visma'));
+            t1.value = idxUae !== -1 ? idxUae : 0;
+            t2.value = idxVisma !== -1 ? idxVisma : (allTeams.length > 1 ? 1 : 0);
+            updateRiderDropdown(1); updateRiderDropdown(2);
+            preselectRider(1, 'Pogačar'); preselectRider(2, 'Vingegaard');
+            
+            const ctx = document.getElementById('compare-radar').getContext('2d');
+            compareRadarInstance = new Chart(ctx, { type: 'radar', data: { labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'], datasets: [{ label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.2)', borderWidth: 2, pointBackgroundColor: '#22d3ee' }, { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.2)', borderWidth: 2, pointBackgroundColor: '#ec4899' }] }, options: { scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } }, plugins: { legend: { display: false }, datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, formatter: Math.round } }, maintainAspectRatio: false } });
+            
+            t1.addEventListener('change', () => { updateRiderDropdown(1); updateCompareChart(); });
+            t2.addEventListener('change', () => { updateRiderDropdown(2); updateCompareChart(); });
+            document.getElementById('h2h-rider-1').addEventListener('change', updateCompareChart);
+            document.getElementById('h2h-rider-2').addEventListener('change', updateCompareChart);
+            updateCompareChart();
+        }
+        function updateRiderDropdown(side) { const teamIdx = document.getElementById(`h2h-team-${side}`).value; const team = allTeams[teamIdx]; const riderSelect = document.getElementById(`h2h-rider-${side}`); if(team && team.riders) { const sortedRiders = [...team.riders].sort((a, b) => b.stats.ovr - a.stats.ovr); riderSelect.innerHTML = sortedRiders.map(r => `<option value="${r.name}">${r.stats.ovr} OVR | ${r.name}</option>`).join(''); } }
+        function preselectRider(side, nameSubstring) { const select = document.getElementById(`h2h-rider-${side}`); const match = Array.from(select.options).find(opt => opt.value.includes(nameSubstring)); if(match) select.value = match.value; }
+        function getSelectedRider(side) { const teamIdx = document.getElementById(`h2h-team-${side}`).value; const riderName = document.getElementById(`h2h-rider-${side}`).value; const team = allTeams[teamIdx]; if (!team || !team.riders) return null; return team.riders.find(r => r.name === riderName); }
+        function updateCompareChart() { const r1 = getSelectedRider(1); const r2 = getSelectedRider(2); if(!r1 || !r2) return; compareRadarInstance.data.datasets[0].label = r1.name; compareRadarInstance.data.datasets[0].data = [r1.stats.mnt, r1.stats.spr, r1.stats.tt, r1.stats.lla, r1.stats.res, r1.stats.rec]; compareRadarInstance.data.datasets[1].label = r2.name; compareRadarInstance.data.datasets[1].data = [r2.stats.mnt, r2.stats.spr, r2.stats.tt, r2.stats.lla, r2.stats.res, r2.stats.rec]; compareRadarInstance.update(); document.getElementById('ovr-1').innerText = r1.stats.ovr; document.getElementById('type-1').className = `spec-badge ${r1.typeClass || 'spec-gc'}`; document.getElementById('type-1').innerText = r1.type || 'PRO'; document.getElementById('ovr-2').innerText = r2.stats.ovr; document.getElementById('type-2').className = `spec-badge ${r2.typeClass || 'spec-gc'}`; document.getElementById('type-2').innerText = r2.type || 'PRO'; }
+
+        document.addEventListener('DOMContentLoaded', fetchTeams);
+    </script>
+</body>
+</html>
