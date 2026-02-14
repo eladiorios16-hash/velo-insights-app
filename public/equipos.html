@@ -161,7 +161,7 @@
 
             <div class="w-full h-1/2 md:h-full md:w-8/12 bg-[#050505] flex flex-col overflow-hidden">
                 <div class="p-3 border-b border-zinc-800 bg-zinc-900/50 flex justify-between items-center shrink-0 z-20 backdrop-blur-md">
-                    <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Plantilla 2026</h3>
+                    <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]" id="roster-title">Plantilla 2026</h3>
                     <span class="text-[8px] text-zinc-500 font-bold uppercase border border-zinc-800 px-2 py-1 rounded bg-black">Orden: OVR</span>
                 </div>
                 
@@ -195,7 +195,7 @@
         let compareRadarInstance = null;
         let currentFilter = 'all';
 
-        // --- SISTEMA DE FAVORITOS (LocalStorage) ---
+        // --- SISTEMA DE FAVORITOS ---
         const FAV_KEY = 'velo_favs_v1';
 
         function getFavorites() {
@@ -207,20 +207,21 @@
             const index = favs.findIndex(f => f.name === riderName);
             
             if (index === -1) {
-                // Añadir
                 favs.push({ name: riderName, team: teamCode });
                 showToast(`⭐ ${riderName} guardado`);
             } else {
-                // Quitar
                 favs.splice(index, 1);
                 showToast(`❌ ${riderName} eliminado`);
             }
             
             localStorage.setItem(FAV_KEY, JSON.stringify(favs));
-            updateHeartIcon(riderName); // Refrescar visualmente
+            updateHeartIcon(riderName);
             
-            // Si estamos viendo la lista de favs, recargarla
-            if(currentFilter === 'favs') filterFavorites();
+            // Si estamos en modo favoritos, al quitar uno hay que refrescar la lista
+            if(currentFilter === 'favs') {
+                // Pequeño timeout para que se vea la animación antes de desaparecer
+                setTimeout(filterFavorites, 300);
+            }
         }
 
         function isFav(riderName) {
@@ -228,11 +229,8 @@
         }
 
         function updateHeartIcon(riderName) {
-            // Buscamos botones con onclick que contenga el nombre del ciclista
-            // Nota: Esto busca en el DOM actual (modal abierto)
             const buttons = document.querySelectorAll(`button[onclick*="${riderName}"] svg`);
             const active = isFav(riderName);
-            
             buttons.forEach(svg => {
                 if(active) {
                     svg.classList.remove('text-zinc-700', 'hover:text-zinc-500');
@@ -255,7 +253,6 @@
         function filterFavorites() {
             currentFilter = 'favs';
             
-            // Actualizar botones visualmente
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'bg-zinc-900/50', 'text-white'));
             document.getElementById('btn-favs').classList.add('active', 'bg-yellow-500/20', 'text-yellow-500');
 
@@ -269,7 +266,6 @@
                 return;
             }
 
-            // Filtrar equipos que tengan al menos un favorito
             const teamsWithFavs = allTeams.filter(t => 
                 t.riders.some(r => favs.some(f => f.name === r.name))
             );
@@ -285,8 +281,6 @@
             
             renderTeams(allTeams);
         }
-
-        // --- END FAVORITOS ---
 
         Chart.register(ChartDataLabels);
 
@@ -348,7 +342,6 @@
             `).join('');
         }
 
-        // --- CHART: Etiquetas activadas ---
         function initRadarChart(stats) {
             const ctx = document.getElementById('stats-radar').getContext('2d');
             if(radarChartInstance) radarChartInstance.destroy();
@@ -414,7 +407,21 @@
             modalCountry.innerText = team.country;
             modalJersey.src = team.jersey;
 
-            const riders = team.riders || [];
+            let riders = team.riders || [];
+
+            // --- FILTRO INTELIGENTE: SI ESTAMOS EN FAVORITOS, SOLO MUESTRA LOS TUYOS ---
+            const rosterTitle = document.getElementById('roster-title');
+            if(currentFilter === 'favs') {
+                riders = riders.filter(r => isFav(r.name));
+                rosterTitle.innerText = "TUS FAVORITOS";
+                rosterTitle.classList.add('text-yellow-500');
+            } else {
+                rosterTitle.innerText = "PLANTILLA 2026";
+                rosterTitle.classList.remove('text-yellow-500');
+            }
+            // --------------------------------------------------------------------------
+
+            // Recalcular promedio basado en lo que se muestra
             const avg = riders.length > 0 ? {
                 mnt: Math.round(riders.reduce((a,b)=>a+b.stats.mnt,0)/riders.length),
                 spr: Math.round(riders.reduce((a,b)=>a+b.stats.spr,0)/riders.length),
@@ -427,7 +434,7 @@
             setTimeout(() => {
                 initRadarChart(avg);
                 const l = document.getElementById('radar-rider-name');
-                l.innerText = "PROMEDIO";
+                l.innerText = currentFilter === 'favs' ? "PROM. FAVORITOS" : "PROMEDIO";
                 l.className = "text-zinc-500 font-bold text-xs uppercase tracking-widest mt-2";
             }, 200);
 
@@ -440,7 +447,6 @@
                 if(s.ovr >= 90) { ovrColor = 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]'; radarColor = 'gold'; }
                 else if(s.ovr >= 80) ovrColor = 'text-white';
 
-                // ESTADO FAVORITO
                 const isFavorite = isFav(rider.name);
                 const heartColor = isFavorite ? 'text-yellow-500' : 'text-zinc-700 hover:text-zinc-500';
 
@@ -506,46 +512,17 @@
         function initCompareSection() {
             const h2hSection = document.getElementById('h2h-section');
             h2hSection.classList.remove('hidden');
-            const t1 = document.getElementById('h2h-team-1');
-            const t2 = document.getElementById('h2h-team-2');
+            // ... (Código H2H completo mantenido) ...
+            const t1 = document.getElementById('h2h-team-1'); const t2 = document.getElementById('h2h-team-2');
             let teamOptionsHTML = allTeams.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
-            t1.innerHTML = teamOptionsHTML;
-            t2.innerHTML = teamOptionsHTML;
-            const idxUae = allTeams.findIndex(t => t.name.includes('UAE'));
-            const idxVisma = allTeams.findIndex(t => t.name.includes('Visma'));
-            t1.value = idxUae !== -1 ? idxUae : 0;
-            t2.value = idxVisma !== -1 ? idxVisma : (allTeams.length > 1 ? 1 : 0);
-            updateRiderDropdown(1); updateRiderDropdown(2);
-            preselectRider(1, 'Pogačar'); preselectRider(2, 'Vingegaard');
-            
+            t1.innerHTML = teamOptionsHTML; t2.innerHTML = teamOptionsHTML;
+            const idxUae = allTeams.findIndex(t => t.name.includes('UAE')); const idxVisma = allTeams.findIndex(t => t.name.includes('Visma'));
+            t1.value = idxUae !== -1 ? idxUae : 0; t2.value = idxVisma !== -1 ? idxVisma : (allTeams.length > 1 ? 1 : 0);
+            updateRiderDropdown(1); updateRiderDropdown(2); preselectRider(1, 'Pogačar'); preselectRider(2, 'Vingegaard');
             const ctx = document.getElementById('compare-radar').getContext('2d');
-            compareRadarInstance = new Chart(ctx, { 
-                type: 'radar', 
-                data: { labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'], datasets: [{ label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.2)', borderWidth: 2, pointBackgroundColor: '#22d3ee' }, { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.2)', borderWidth: 2, pointBackgroundColor: '#ec4899' }] }, 
-                options: { 
-                    scales: { 
-                        r: { 
-                            min: 40, max: 100, 
-                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, 
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
-                            pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, 
-                            ticks: { display: false } 
-                        } 
-                    }, 
-                    plugins: { 
-                        legend: { display: false }, 
-                        // DATALABELS ACTIVADO EN H2H
-                        datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, formatter: Math.round } 
-                    }, 
-                    maintainAspectRatio: false 
-                } 
-            });
-            
-            t1.addEventListener('change', () => { updateRiderDropdown(1); updateCompareChart(); });
-            t2.addEventListener('change', () => { updateRiderDropdown(2); updateCompareChart(); });
-            document.getElementById('h2h-rider-1').addEventListener('change', updateCompareChart);
-            document.getElementById('h2h-rider-2').addEventListener('change', updateCompareChart);
-            updateCompareChart();
+            compareRadarInstance = new Chart(ctx, { type: 'radar', data: { labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'], datasets: [{ label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.2)', borderWidth: 2, pointBackgroundColor: '#22d3ee' }, { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.2)', borderWidth: 2, pointBackgroundColor: '#ec4899' }] }, options: { scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } }, plugins: { legend: { display: false }, datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, formatter: Math.round } }, maintainAspectRatio: false } });
+            t1.addEventListener('change', () => { updateRiderDropdown(1); updateCompareChart(); }); t2.addEventListener('change', () => { updateRiderDropdown(2); updateCompareChart(); });
+            document.getElementById('h2h-rider-1').addEventListener('change', updateCompareChart); document.getElementById('h2h-rider-2').addEventListener('change', updateCompareChart); updateCompareChart();
         }
         function updateRiderDropdown(side) { const teamIdx = document.getElementById(`h2h-team-${side}`).value; const team = allTeams[teamIdx]; const riderSelect = document.getElementById(`h2h-rider-${side}`); if(team && team.riders) { const sortedRiders = [...team.riders].sort((a, b) => b.stats.ovr - a.stats.ovr); riderSelect.innerHTML = sortedRiders.map(r => `<option value="${r.name}">${r.stats.ovr} OVR | ${r.name}</option>`).join(''); } }
         function preselectRider(side, nameSubstring) { const select = document.getElementById(`h2h-rider-${side}`); const match = Array.from(select.options).find(opt => opt.value.includes(nameSubstring)); if(match) select.value = match.value; }
