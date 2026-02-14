@@ -9,7 +9,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <link rel="stylesheet" href="assets/main.css">
     
     <style>
@@ -166,7 +166,7 @@
                 
                 <div class="p-2 border-t border-zinc-800 bg-zinc-950 text-center relative z-20">
                     <p class="text-[8px] text-zinc-600 font-mono">
-                        * Toca un ciclista para ver sus datos.
+                        * Toca un ciclista para ver sus datos en el radar superior.
                     </p>
                 </div>
             </div>
@@ -191,7 +191,7 @@
         let radarChartInstance = null;
         let compareRadarInstance = null;
 
-        // ACTIVAR PLUGIN DE ETIQUETAS
+        // --- CHART CONFIG ---
         Chart.register(ChartDataLabels);
 
         async function fetchTeams() {
@@ -273,15 +273,7 @@
                     plugins: { 
                         legend: { display: false }, 
                         tooltip: { enabled: false },
-                        // AQUÍ ACTIVAMOS LAS ETIQUETAS DE NÚMEROS
-                        datalabels: { 
-                            display: true,
-                            color: '#fff',
-                            font: { size: 9, weight: 'bold' },
-                            align: 'end',
-                            anchor: 'end',
-                            offset: -2
-                        } 
+                        datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, align: 'end', anchor: 'end', offset: -2 } 
                     },
                     maintainAspectRatio: false
                 }
@@ -338,6 +330,7 @@
                 if(s.ovr >= 90) { ovrColor = 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]'; radarColor = 'gold'; }
                 else if(s.ovr >= 80) ovrColor = 'text-white';
 
+                // AQUI ESTÁN LOS CAMBIOS EN EL TAMAÑO DE FUENTE
                 return `
                 <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between p-3"
                      onclick="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')"
@@ -346,19 +339,20 @@
                     <div class="flex items-center gap-3 w-full">
                         <span class="text-[10px] font-mono text-zinc-600 font-bold w-4 shrink-0">${index + 1}</span>
                         <span class="text-sm w-6 text-center shrink-0">${rider.country}</span>
+                        
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 <h4 class="text-zinc-300 font-bold uppercase text-xs md:text-sm tracking-tight group-hover:text-white transition-colors truncate">${rider.name}</h4>
                                 <span class="spec-badge ${rider.typeClass}">${rider.type}</span>
                             </div>
                             
-                            <div class="grid grid-cols-6 gap-1 text-[8px] text-zinc-500 font-mono w-full max-w-[280px]">
-                                <div class="text-center"><span class="block text-[6px] uppercase tracking-wider">MNT</span><span class="text-zinc-300 font-bold">${s.mnt}</span></div>
-                                <div class="text-center"><span class="block text-[6px] uppercase tracking-wider">SPR</span><span class="text-zinc-300 font-bold">${s.spr}</span></div>
-                                <div class="text-center"><span class="block text-[6px] uppercase tracking-wider">TT</span><span class="text-zinc-300 font-bold">${s.tt}</span></div>
-                                <div class="text-center"><span class="block text-[6px] uppercase tracking-wider">LLA</span><span class="text-zinc-300 font-bold">${s.lla}</span></div>
-                                <div class="text-center"><span class="block text-[6px] uppercase tracking-wider">RES</span><span class="text-zinc-300 font-bold">${s.res}</span></div>
-                                <div class="text-center"><span class="block text-[6px] uppercase tracking-wider">REC</span><span class="text-zinc-300 font-bold">${s.rec}</span></div>
+                            <div class="grid grid-cols-6 gap-2 text-[10px] text-zinc-500 font-mono w-full max-w-[340px] mt-1">
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">MNT</span><span class="text-zinc-200 font-bold text-xs">${s.mnt}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">SPR</span><span class="text-zinc-200 font-bold text-xs">${s.spr}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">TT</span><span class="text-zinc-200 font-bold text-xs">${s.tt}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">LLA</span><span class="text-zinc-200 font-bold text-xs">${s.lla}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">RES</span><span class="text-zinc-200 font-bold text-xs">${s.res}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">REC</span><span class="text-zinc-200 font-bold text-xs">${s.rec}</span></div>
                             </div>
                         </div>
                     </div>
@@ -404,8 +398,22 @@
             t2.value = idxVisma !== -1 ? idxVisma : (allTeams.length > 1 ? 1 : 0);
             updateRiderDropdown(1); updateRiderDropdown(2);
             preselectRider(1, 'Pogačar'); preselectRider(2, 'Vingegaard');
+            
             const ctx = document.getElementById('compare-radar').getContext('2d');
-            compareRadarInstance = new Chart(ctx, { type: 'radar', data: { labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'], datasets: [{ label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.2)', borderWidth: 2, pointBackgroundColor: '#22d3ee' }, { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.2)', borderWidth: 2, pointBackgroundColor: '#ec4899' }] }, options: { scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } }, plugins: { legend: { display: false }, datalabels: { display: false } }, maintainAspectRatio: false } });
+            compareRadarInstance = new Chart(ctx, { 
+                type: 'radar', 
+                data: { labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'], datasets: [{ label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.2)', borderWidth: 2, pointBackgroundColor: '#22d3ee' }, { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.2)', borderWidth: 2, pointBackgroundColor: '#ec4899' }] }, 
+                options: { 
+                    scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } }, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        // ACTIVAMOS DATALABELS TAMBIÉN AQUÍ
+                        datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, formatter: Math.round } 
+                    }, 
+                    maintainAspectRatio: false 
+                } 
+            });
+            
             t1.addEventListener('change', () => { updateRiderDropdown(1); updateCompareChart(); });
             t2.addEventListener('change', () => { updateRiderDropdown(2); updateCompareChart(); });
             document.getElementById('h2h-rider-1').addEventListener('change', updateCompareChart);
