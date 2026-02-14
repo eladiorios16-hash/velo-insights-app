@@ -44,6 +44,9 @@
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .glass { background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(12px); }
+        
+        /* Botones de ordenación activos */
+        .sort-btn.active { background-color: rgba(34, 211, 238, 0.2); color: #22d3ee; border-color: #22d3ee; }
     </style>
     
     <link rel="manifest" href="manifest.json">
@@ -160,9 +163,18 @@
             </div>
 
             <div class="w-full h-1/2 md:h-full md:w-8/12 bg-[#050505] flex flex-col overflow-hidden">
-                <div class="p-3 border-b border-zinc-800 bg-zinc-900/50 flex justify-between items-center shrink-0 z-20 backdrop-blur-md">
-                    <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]" id="roster-title">Plantilla 2026</h3>
-                    <span class="text-[8px] text-zinc-500 font-bold uppercase border border-zinc-800 px-2 py-1 rounded bg-black">Orden: OVR</span>
+                <div class="p-3 border-b border-zinc-800 bg-zinc-900/50 flex flex-col gap-2 shrink-0 z-20 backdrop-blur-md">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]" id="roster-title">Plantilla 2026</h3>
+                        <span id="sort-indicator" class="text-[8px] text-cyan-500 font-bold uppercase border border-cyan-500/30 px-2 py-0.5 rounded bg-cyan-900/10">Orden: OVR</span>
+                    </div>
+                    
+                    <div class="flex gap-1 overflow-x-auto no-scrollbar">
+                        <button onclick="setRosterSort('ovr')" id="sort-ovr" class="sort-btn active flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white text-[8px] font-bold uppercase py-1 rounded transition-colors border border-zinc-700">General</button>
+                        <button onclick="setRosterSort('mnt')" id="sort-mnt" class="sort-btn flex-1 bg-zinc-800 hover:bg-pink-900/50 text-zinc-400 hover:text-pink-400 text-[8px] font-bold uppercase py-1 rounded transition-colors border border-zinc-700">Montaña</button>
+                        <button onclick="setRosterSort('spr')" id="sort-spr" class="sort-btn flex-1 bg-zinc-800 hover:bg-green-900/50 text-zinc-400 hover:text-green-400 text-[8px] font-bold uppercase py-1 rounded transition-colors border border-zinc-700">Sprint</button>
+                        <button onclick="setRosterSort('tt')"  id="sort-tt"  class="sort-btn flex-1 bg-zinc-800 hover:bg-blue-900/50 text-zinc-400 hover:text-blue-400 text-[8px] font-bold uppercase py-1 rounded transition-colors border border-zinc-700">Crono</button>
+                    </div>
                 </div>
                 
                 <div id="modal-roster" class="p-0 overflow-y-auto roster-scroll flex-1 bg-black relative"></div>
@@ -194,52 +206,39 @@
         let radarChartInstance = null;
         let compareRadarInstance = null;
         let currentFilter = 'all';
+        let currentSortCriteria = 'ovr'; // Criterio de ordenación por defecto
+        let currentOpenTeamCode = null;  // Para saber qué equipo está abierto y re-ordenar
 
-        // --- SISTEMA DE FAVORITOS (LocalStorage) ---
+        // --- SISTEMA DE FAVORITOS ---
         const FAV_KEY = 'velo_favs_v1';
 
-        function getFavorites() {
-            return JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
-        }
+        function getFavorites() { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); }
 
         function toggleFavorite(riderName, teamCode) {
             let favs = getFavorites();
             const index = favs.findIndex(f => f.name === riderName);
-            
             if (index === -1) {
-                // Añadir
                 favs.push({ name: riderName, team: teamCode });
                 showToast(`⭐ ${riderName} guardado`);
             } else {
-                // Quitar
                 favs.splice(index, 1);
                 showToast(`❌ ${riderName} eliminado`);
             }
-            
             localStorage.setItem(FAV_KEY, JSON.stringify(favs));
             updateHeartIcon(riderName);
-            
-            // Si estamos viendo la lista de favoritos, actualizamos la vista
-            if(currentFilter === 'favs') {
-                setTimeout(filterFavorites, 300);
-            }
+            if(currentFilter === 'favs') { setTimeout(filterFavorites, 300); }
         }
 
-        function isFav(riderName) {
-            return getFavorites().some(f => f.name === riderName);
-        }
+        function isFav(riderName) { return getFavorites().some(f => f.name === riderName); }
 
         function updateHeartIcon(riderName) {
             const buttons = document.querySelectorAll(`button[onclick*="${riderName}"] svg`);
             const active = isFav(riderName);
-            
             buttons.forEach(svg => {
                 if(active) {
-                    svg.classList.remove('text-zinc-700', 'hover:text-zinc-500');
-                    svg.classList.add('text-yellow-500');
+                    svg.classList.remove('text-zinc-700', 'hover:text-zinc-500'); svg.classList.add('text-yellow-500');
                 } else {
-                    svg.classList.add('text-zinc-700', 'hover:text-zinc-500');
-                    svg.classList.remove('text-yellow-500');
+                    svg.classList.add('text-zinc-700', 'hover:text-zinc-500'); svg.classList.remove('text-yellow-500');
                 }
             });
         }
@@ -252,27 +251,36 @@
             setTimeout(() => div.remove(), 2000);
         }
 
+        // --- LÓGICA DE ORDENACIÓN INTELIGENTE ---
+        function setRosterSort(criteria) {
+            currentSortCriteria = criteria;
+            
+            // Actualizar botones visualmente
+            document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(`sort-${criteria}`);
+            if(btn) btn.classList.add('active');
+
+            // Actualizar indicador visual
+            const labels = { ovr: 'GENERAL', mnt: 'MONTAÑA', spr: 'SPRINT', tt: 'CRONO' };
+            const indicator = document.getElementById('sort-indicator');
+            if(indicator) indicator.innerText = `ORDEN: ${labels[criteria]}`;
+
+            // Si hay un equipo abierto, re-renderizar la lista
+            if (currentOpenTeamCode) {
+                openModal(currentOpenTeamCode, true); // true = solo refrescar lista
+            }
+        }
+
         function filterFavorites() {
             currentFilter = 'favs';
-            
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'bg-zinc-900/50', 'text-white'));
             document.getElementById('btn-favs').classList.add('active', 'bg-yellow-500/20', 'text-yellow-500');
-
             const favs = getFavorites();
-            
             if (favs.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-20 border border-dashed border-yellow-900/50 rounded-3xl bg-yellow-900/10">
-                    <p class="text-yellow-600 uppercase font-black tracking-[0.2em] text-xs">No tienes favoritos</p>
-                    <p class="text-zinc-500 text-[10px] mt-2">Dale a la estrella en la ficha de los equipos.</p>
-                </div>`;
+                container.innerHTML = `<div class="col-span-full text-center py-20 border border-dashed border-yellow-900/50 rounded-3xl bg-yellow-900/10"><p class="text-yellow-600 uppercase font-black tracking-[0.2em] text-xs">No tienes favoritos</p></div>`;
                 return;
             }
-
-            // Filtrar equipos que tengan al menos un favorito
-            const teamsWithFavs = allTeams.filter(t => 
-                t.riders.some(r => favs.some(f => f.name === r.name))
-            );
-            
+            const teamsWithFavs = allTeams.filter(t => t.riders.some(r => favs.some(f => f.name === r.name)));
             renderTeams(teamsWithFavs);
         }
 
@@ -281,7 +289,6 @@
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'bg-zinc-900/50', 'text-white'));
             document.getElementById('btn-all').classList.add('active', 'bg-zinc-900/50', 'text-white');
             document.getElementById('btn-favs').classList.remove('active', 'bg-yellow-500/20', 'text-yellow-500');
-            
             renderTeams(allTeams);
         }
 
@@ -297,40 +304,18 @@
                         ...team,
                         riders: team.riders.map(rider => {
                             let stats = rider.stats;
-                            if (typeof stats === 'string') {
-                                try { stats = JSON.parse(stats); } catch(e) { stats = {}; }
-                            }
-                            return { ...rider, stats: {
-                                mnt: Number(stats?.mnt) || 0,
-                                spr: Number(stats?.spr) || 0,
-                                tt: Number(stats?.tt) || 0,
-                                lla: Number(stats?.lla) || 0,
-                                res: Number(stats?.res) || 0,
-                                rec: Number(stats?.rec) || 0,
-                                ovr: Number(stats?.ovr) || 0
-                            }};
+                            if (typeof stats === 'string') { try { stats = JSON.parse(stats); } catch(e) { stats = {}; } }
+                            return { ...rider, stats: { mnt: Number(stats?.mnt)||0, spr: Number(stats?.spr)||0, tt: Number(stats?.tt)||0, lla: Number(stats?.lla)||0, res: Number(stats?.res)||0, rec: Number(stats?.rec)||0, ovr: Number(stats?.ovr)||0 }};
                         })
                     }));
-
-                    if(allTeams.length > 0) {
-                        renderTeams(allTeams);
-                        initCompareSection(); 
-                    } else {
-                        container.innerHTML = `<div class="col-span-full text-center py-20 text-zinc-500 text-xs font-bold uppercase">No hay equipos.</div>`;
-                    }
+                    if(allTeams.length > 0) { renderTeams(allTeams); initCompareSection(); } 
+                    else { container.innerHTML = `<div class="col-span-full text-center py-20 text-zinc-500 text-xs font-bold uppercase">No hay equipos.</div>`; }
                 }
-            } catch (error) {
-                console.error("Error:", error);
-                container.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 font-bold">Error de conexión</div>`;
-            }
+            } catch (error) { container.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 font-bold">Error de conexión</div>`; }
         }
 
         function renderTeams(items) {
-            if(items.length === 0 && currentFilter !== 'favs') {
-                 container.innerHTML = `<div class="col-span-full text-center py-20 text-zinc-500 text-xs font-bold uppercase">No se encontraron equipos.</div>`;
-                 return;
-            }
-
+            if(items.length === 0 && currentFilter !== 'favs') { container.innerHTML = `<div class="col-span-full text-center py-20 text-zinc-500 text-xs font-bold uppercase">No se encontraron equipos.</div>`; return; }
             container.innerHTML = items.map(team => `
                 <div class="team-card glass rounded-2xl border border-zinc-800/80 overflow-hidden cursor-pointer group bg-zinc-900/40 relative" onclick="openModal('${team.code}')">
                     <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
@@ -348,29 +333,13 @@
         function initRadarChart(stats) {
             const ctx = document.getElementById('stats-radar').getContext('2d');
             if(radarChartInstance) radarChartInstance.destroy();
-
             radarChartInstance = new Chart(ctx, {
                 type: 'radar',
                 data: {
                     labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'],
-                    datasets: [{
-                        data: [stats.mnt, stats.spr, stats.tt, stats.lla, stats.res, stats.rec],
-                        backgroundColor: 'rgba(34, 211, 238, 0.2)',
-                        borderColor: '#22d3ee',
-                        borderWidth: 2,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#22d3ee',
-                        pointHoverBackgroundColor: '#22d3ee',
-                        pointRadius: 2
-                    }]
+                    datasets: [{ data: [stats.mnt, stats.spr, stats.tt, stats.lla, stats.res, stats.rec], backgroundColor: 'rgba(34, 211, 238, 0.2)', borderColor: '#22d3ee', borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: '#22d3ee', pointHoverBackgroundColor: '#22d3ee', pointRadius: 2 }]
                 },
-                options: {
-                    animation: { duration: 300 },
-                    layout: { padding: 10 },
-                    scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } },
-                    plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, align: 'end', anchor: 'end', offset: -2 } },
-                    maintainAspectRatio: false
-                }
+                options: { animation: { duration: 300 }, layout: { padding: 10 }, scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } }, plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, align: 'end', anchor: 'end', offset: -2 } }, maintainAspectRatio: false }
             });
         }
 
@@ -380,28 +349,32 @@
                 radarChartInstance.data.datasets[0].borderColor = color === 'gold' ? '#ec4899' : '#22d3ee';
                 radarChartInstance.data.datasets[0].backgroundColor = color === 'gold' ? 'rgba(236, 72, 153, 0.2)' : 'rgba(34, 211, 238, 0.2)';
                 radarChartInstance.update();
-                
                 const label = document.getElementById('radar-rider-name');
-                if(label) {
-                    label.innerText = name;
-                    label.className = `text-sm font-black uppercase tracking-wide drop-shadow-md transition-colors ${color === 'gold' ? 'text-white' : 'text-zinc-400'}`;
-                }
+                if(label) { label.innerText = name; label.className = `text-sm font-black uppercase tracking-wide drop-shadow-md transition-colors ${color === 'gold' ? 'text-white' : 'text-zinc-400'}`; }
             }
         };
 
-        window.openModal = (teamCode) => {
+        // --- OPEN MODAL (CON FILTRO DE FAVORITOS Y ORDENACIÓN) ---
+        window.openModal = (teamCode, refreshOnly = false) => {
             const team = allTeams.find(t => t.code === teamCode);
             if(!team) return;
 
-            modalTitle.innerText = team.name;
-            modalCode.innerText = team.code;
-            modalCountry.innerText = team.country;
-            modalJersey.src = team.jersey;
+            currentOpenTeamCode = teamCode; // Guardamos estado
 
-            // 1. Partimos de todos los ciclistas
+            if (!refreshOnly) {
+                modalTitle.innerText = team.name;
+                modalCode.innerText = team.code;
+                modalCountry.innerText = team.country;
+                modalJersey.src = team.jersey;
+                // Reset visual del orden si abrimos equipo nuevo
+                if (!refreshOnly && currentSortCriteria !== 'ovr') {
+                    // Opcional: Podríamos resetear a 'ovr' aquí, pero mejor mantener la preferencia del usuario
+                }
+            }
+
             let riders = team.riders || [];
 
-            // 2. FILTRADO: Si estamos en modo favoritos, sobreescribimos 'riders' con solo los que coinciden
+            // 1. FILTRADO FAVORITOS
             const rosterTitle = document.getElementById('roster-title');
             if(currentFilter === 'favs') {
                 riders = riders.filter(r => isFav(r.name));
@@ -412,25 +385,33 @@
                 rosterTitle.classList.remove('text-yellow-500');
             }
 
-            // 3. Calculamos el promedio SOLO de los ciclistas mostrados
-            const avg = riders.length > 0 ? {
-                mnt: Math.round(riders.reduce((a,b)=>a+b.stats.mnt,0)/riders.length),
-                spr: Math.round(riders.reduce((a,b)=>a+b.stats.spr,0)/riders.length),
-                tt: Math.round(riders.reduce((a,b)=>a+b.stats.tt,0)/riders.length),
-                lla: Math.round(riders.reduce((a,b)=>a+b.stats.lla,0)/riders.length),
-                res: Math.round(riders.reduce((a,b)=>a+b.stats.res,0)/riders.length),
-                rec: Math.round(riders.reduce((a,b)=>a+b.stats.rec,0)/riders.length)
-            } : { mnt:0, spr:0, tt:0, lla:0, res:0, rec:0 };
-            
-            setTimeout(() => {
-                initRadarChart(avg);
-                const l = document.getElementById('radar-rider-name');
-                l.innerText = currentFilter === 'favs' ? "PROM. FAVORITOS" : "PROMEDIO";
-                l.className = "text-zinc-500 font-bold text-xs uppercase tracking-widest mt-2";
-            }, 200);
+            // 2. ORDENACIÓN (La novedad)
+            const sortedRiders = [...riders].sort((a, b) => {
+                const valA = a.stats[currentSortCriteria] || 0;
+                const valB = b.stats[currentSortCriteria] || 0;
+                return valB - valA; // Descendente
+            });
 
-            const sortedRiders = [...riders].sort((a, b) => b.stats.ovr - a.stats.ovr);
+            // 3. PROMEDIO Y CHART
+            if (!refreshOnly) {
+                const avg = riders.length > 0 ? {
+                    mnt: Math.round(riders.reduce((a,b)=>a+b.stats.mnt,0)/riders.length),
+                    spr: Math.round(riders.reduce((a,b)=>a+b.stats.spr,0)/riders.length),
+                    tt: Math.round(riders.reduce((a,b)=>a+b.stats.tt,0)/riders.length),
+                    lla: Math.round(riders.reduce((a,b)=>a+b.stats.lla,0)/riders.length),
+                    res: Math.round(riders.reduce((a,b)=>a+b.stats.res,0)/riders.length),
+                    rec: Math.round(riders.reduce((a,b)=>a+b.stats.rec,0)/riders.length)
+                } : { mnt:0, spr:0, tt:0, lla:0, res:0, rec:0 };
+                
+                setTimeout(() => {
+                    initRadarChart(avg);
+                    const l = document.getElementById('radar-rider-name');
+                    l.innerText = currentFilter === 'favs' ? "PROM. FAVORITOS" : "PROMEDIO";
+                    l.className = "text-zinc-500 font-bold text-xs uppercase tracking-widest mt-2";
+                }, 200);
+            }
 
+            // 4. RENDER LISTA
             modalRoster.innerHTML = sortedRiders.map((rider, index) => {
                 const s = rider.stats;
                 let ovrColor = 'text-zinc-500';
@@ -440,6 +421,9 @@
 
                 const isFavorite = isFav(rider.name);
                 const heartColor = isFavorite ? 'text-yellow-500' : 'text-zinc-700 hover:text-zinc-500';
+
+                // Helper para iluminar la columna ordenada
+                const hl = (key) => key === currentSortCriteria ? 'text-yellow-400 font-black scale-110 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'text-zinc-200';
 
                 return `
                 <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between p-3"
@@ -461,26 +445,28 @@
                             </div>
                             
                             <div class="grid grid-cols-6 gap-2 text-[10px] text-zinc-500 font-mono w-full max-w-[340px] mt-1">
-                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">MNT</span><span class="text-zinc-200 font-bold text-xs">${s.mnt}</span></div>
-                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">SPR</span><span class="text-zinc-200 font-bold text-xs">${s.spr}</span></div>
-                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">TT</span><span class="text-zinc-200 font-bold text-xs">${s.tt}</span></div>
-                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">LLA</span><span class="text-zinc-200 font-bold text-xs">${s.lla}</span></div>
-                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">RES</span><span class="text-zinc-200 font-bold text-xs">${s.res}</span></div>
-                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">REC</span><span class="text-zinc-200 font-bold text-xs">${s.rec}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">MNT</span><span class="${hl('mnt')} text-xs">${s.mnt}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">SPR</span><span class="${hl('spr')} text-xs">${s.spr}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">TT</span><span class="${hl('tt')} text-xs">${s.tt}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">LLA</span><span class="${hl('lla')} text-xs">${s.lla}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">RES</span><span class="${hl('res')} text-xs">${s.res}</span></div>
+                                <div class="text-center"><span class="block text-[8px] uppercase tracking-wider mb-0.5">REC</span><span class="${hl('rec')} text-xs">${s.rec}</span></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="text-right shrink-0 pl-2">
-                        <span class="text-lg font-black italic ${ovrColor}">${s.ovr}</span>
+                        <span class="text-lg font-black italic ${currentSortCriteria === 'ovr' ? ovrColor : 'text-zinc-600'}">${s.ovr}</span>
                         <span class="text-[8px] block text-zinc-600 font-bold">OVR</span>
                     </div>
                 </div>
             `}).join('');
 
-            modal.classList.remove('hidden-modal');
-            modal.classList.add('visible-modal');
-            document.body.style.overflow = 'hidden';
+            if (!refreshOnly) {
+                modal.classList.remove('hidden-modal');
+                modal.classList.add('visible-modal');
+                document.body.style.overflow = 'hidden';
+            }
         };
 
         window.closeModal = () => {
@@ -492,19 +478,16 @@
         window.resetSearch = () => { searchInput.value = ''; filterTeams('all'); }
 
         searchInput.addEventListener('input', (e) => {
-            // Fix: Resetear filtro de favoritos al buscar
             if(currentFilter === 'favs') {
                 currentFilter = 'all';
                 document.getElementById('btn-favs').classList.remove('active', 'bg-yellow-500/20', 'text-yellow-500');
                 document.getElementById('btn-all').classList.add('active', 'bg-zinc-900/50', 'text-white');
             }
-            
             const term = e.target.value.toLowerCase();
             const filtered = allTeams.filter(t => t.name.toLowerCase().includes(term) || (t.riders && t.riders.some(r => r.name.toLowerCase().includes(term))));
             renderTeams(filtered);
         });
 
-        // H2H Initialization
         function initCompareSection() {
             const h2hSection = document.getElementById('h2h-section');
             h2hSection.classList.remove('hidden');
