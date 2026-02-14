@@ -38,7 +38,7 @@
         .climb-profile-bg {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 0; 
-            opacity: 0.7; /* AUMENTADO PARA QUE SE VEA MÁS */
+            opacity: 0.7; 
             mask-image: linear-gradient(to top, black 30%, transparent 95%);
             -webkit-mask-image: linear-gradient(to top, black 30%, transparent 95%);
             transition: all 0.5s ease-in-out;
@@ -64,11 +64,11 @@
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div>
                     <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2">Peso (kg)</label>
-                    <input type="number" id="weight" min="1" max="150" placeholder="70" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all">
+                    <input type="number" id="weight" min="1" max="150" placeholder="Ej: 70" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all">
                 </div>
                 <div>
                     <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2">FTP (W)</label>
-                    <input type="number" id="watts" placeholder="250" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all">
+                    <input type="number" id="watts" placeholder="Ej: 250" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all">
                 </div>
             </div>
 
@@ -177,7 +177,7 @@
 
     <script src="layout.js"></script>
     <script>
-        // 1. DATOS ACTUALIZADOS (TIEMPOS MODERNOS 2026)
+        // 1. DATOS DE PUERTOS
         const CLIMBS = {
             'alpe': { 
                 name: "Alpe d'Huez", km: 13.8, grad: 8.1, record: 37.6, holder: "M. Pantani '97", factor: 248, color: '#eab308',
@@ -209,6 +209,7 @@
             'roglic': { name: 'Primož Roglič', team: 'Red Bull', stats: [94, 82, 91, 94, 92], color: '#ec4899', bg: 'rgba(236, 72, 153, 0.2)' }
         };
 
+        // DOM
         const weightInput = document.getElementById('weight');
         const wattsInput = document.getElementById('watts');
         const rivalSelect = document.getElementById('rival-selector');
@@ -229,8 +230,9 @@
         function init() {
             rivalSelect.innerHTML = Object.entries(PRO_STATS).map(([k,v]) => `<option value="${k}">${v.name} (${v.team})</option>`).join('');
             
-            const savedW = localStorage.getItem('velo_watts') || 250;
-            const savedKg = localStorage.getItem('velo_weight') || 70;
+            // INICIALIZACIÓN LIMPIA: Si no hay datos, cadenas vacías
+            const savedW = localStorage.getItem('velo_watts') || '';
+            const savedKg = localStorage.getItem('velo_weight') || '';
             weightInput.value = savedKg;
             wattsInput.value = savedW;
             
@@ -240,14 +242,14 @@
 
         function updateAll() {
             const w = parseFloat(wattsInput.value) || 0;
-            let kg = parseFloat(weightInput.value) || 70;
-            if (kg < 1) kg = 1; if (kg > 150) kg = 150;
+            let kg = parseFloat(weightInput.value) || 0; // SIN valor por defecto 70
+            if (kg > 150) kg = 150;
 
             const wkg = (w > 0 && kg > 0) ? (w / kg) : 0;
             wkgDisplay.innerText = wkg.toFixed(2);
             
             localStorage.setItem('velo_weight', weightInput.value);
-            localStorage.setItem('velo_watts', w);
+            localStorage.setItem('velo_watts', wattsInput.value);
 
             const zones = [
                 { n: 'Z2', name: 'Resistencia', r: `${Math.round(w*0.56)}-${Math.round(w*0.75)}w`, c: 'text-cyan-400' },
@@ -270,7 +272,6 @@
             const key = climbSelect.value;
             const c = CLIMBS[key];
             
-            // INYECCIÓN DE SVG CON MÁS OPACIDAD
             climbBgContainer.innerHTML = `
                 <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
                     <defs>
@@ -290,7 +291,10 @@
             document.getElementById('radar-skeleton').style.display = 'none';
             const rival = PRO_STATS[rivalSelect.value];
             const wkg = parseFloat(wkgDisplay.innerText);
-            const userScore = Math.min(95, (wkg / 6.6) * 100);
+            const userScore = wkg > 0 ? Math.min(95, (wkg / 6.6) * 100) : 0; // Si wkg es 0, score es 0
+
+            // DATOS: Si no hay score, pasamos null o array vacío para el dataset "Tú"
+            const userData = userScore > 0 ? [userScore, userScore*0.7, userScore*0.8, userScore*0.8, 50] : [null, null, null, null, null];
 
             if (radarChart) radarChart.destroy();
             radarChart = new Chart(document.getElementById('radarChart'), {
@@ -298,7 +302,7 @@
                 data: {
                     labels: ['Escalada', 'Sprint', 'Crono', 'Resistencia', 'Técnica'],
                     datasets: [
-                        { label: 'Tú', data: [userScore, userScore*0.7, userScore*0.8, userScore*0.8], borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)', borderWidth: 2, pointRadius: 0 },
+                        { label: 'Tú', data: userData, borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)', borderWidth: 2, pointRadius: 0 },
                         { label: rival.name, data: rival.stats, borderColor: rival.color, backgroundColor: rival.bg, borderWidth: 2, pointRadius: 0 }
                     ]
                 },
@@ -331,7 +335,8 @@
             climbWkgDisplay.style.color = c.color;
 
             const userWkg = parseFloat(wkgDisplay.innerText);
-            const userTime = userWkg > 0 ? (c.factor / userWkg).toFixed(1) : 180;
+            // SI userWkg es 0, pasamos null para que la barra NO se pinte
+            const userTime = userWkg > 0 ? (c.factor / userWkg).toFixed(1) : null;
 
             if (climbChart) climbChart.destroy();
             climbChart = new Chart(document.getElementById('climbChart'), {
