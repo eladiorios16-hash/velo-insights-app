@@ -130,33 +130,31 @@
         
         <div class="modal-content relative w-full h-full md:h-[85vh] md:max-w-6xl bg-[#09090b] md:rounded-3xl border border-zinc-800 shadow-2xl overflow-hidden flex flex-col md:flex-row">
             
-            <button onclick="closeModal()" class="absolute top-2 right-2 z-50 p-2 bg-black/50 hover:bg-zinc-800 text-white rounded-full transition-colors border border-zinc-700">
+            <button onclick="closeModal()" class="absolute top-2 right-2 z-50 p-2 bg-black/50 hover:bg-zinc-800 text-white rounded-full transition-colors border border-zinc-700 md:top-4 md:right-4">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
-            <div class="w-full md:w-4/12 bg-gradient-to-b from-zinc-900 to-black p-4 md:p-6 flex flex-row md:flex-col items-center justify-between md:justify-center border-b md:border-b-0 md:border-r border-zinc-800 relative overflow-hidden shrink-0">
+            <div class="w-full h-1/2 md:h-full md:w-4/12 bg-gradient-to-b from-zinc-900 to-black p-2 md:p-6 flex flex-row md:flex-col items-center justify-between md:justify-center border-b md:border-b-0 md:border-r border-zinc-800 relative overflow-hidden shrink-0">
                 
-                <div class="flex items-center gap-2 md:flex-col md:gap-4 md:text-center w-[45%] md:w-full">
-                    <img id="modal-jersey" src="" alt="Jersey" class="h-24 w-24 md:h-32 md:w-auto object-contain drop-shadow-[0_0_20px_rgba(0,0,0,0.8)] animate-float">
-                    <div class="text-left md:text-center min-w-0">
-                        <h2 id="modal-title" class="text-lg md:text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-1 truncate">TEAM</h2>
-                        <div class="flex flex-col md:flex-row md:justify-center gap-0 md:gap-3 text-zinc-500 text-[9px] font-bold tracking-widest uppercase">
-                            <span id="modal-code" class="text-cyan-500">CODE</span>
-                            <span id="modal-country">COUNTRY</span>
-                        </div>
+                <div class="w-1/2 md:w-full flex flex-col items-center justify-center border-r md:border-r-0 border-zinc-800/50 h-full">
+                    <img id="modal-jersey" src="" alt="Jersey" class="h-24 md:h-32 w-auto object-contain drop-shadow-[0_0_20px_rgba(0,0,0,0.8)] animate-float mb-2">
+                    <h2 id="modal-title" class="text-base md:text-3xl font-black text-white italic uppercase tracking-tighter leading-none text-center">TEAM</h2>
+                    <div class="flex items-center gap-2 text-zinc-500 text-[9px] font-bold tracking-widest uppercase mt-1">
+                        <span id="modal-code" class="text-cyan-500">CODE</span>
+                        <span id="modal-country">COUNTRY</span>
                     </div>
                 </div>
 
-                <div class="w-44 h-44 md:w-full md:aspect-square md:max-w-[260px] relative shrink-0 flex items-center justify-center -mr-2 md:mr-0">
-                    <canvas id="stats-radar"></canvas>
-                    <div class="hidden md:block absolute inset-x-0 bottom-0 text-center pointer-events-none">
-                        <p id="radar-rider-name" class="text-white font-bold text-sm uppercase tracking-wide drop-shadow-md">Promedio</p>
+                <div class="w-1/2 md:w-full h-full flex flex-col items-center justify-center relative">
+                    <div class="w-full aspect-square max-h-[160px] md:max-h-[260px] flex items-center justify-center">
+                        <canvas id="stats-radar"></canvas>
                     </div>
+                    <p id="radar-rider-name" class="text-zinc-500 font-bold text-[9px] uppercase tracking-widest text-center mt-[-10px] md:mt-4">Promedio</p>
                 </div>
 
             </div>
 
-            <div class="w-full md:w-8/12 bg-[#050505] flex flex-col h-full overflow-hidden">
+            <div class="w-full h-1/2 md:h-full md:w-8/12 bg-[#050505] flex flex-col overflow-hidden">
                 <div class="p-3 border-b border-zinc-800 bg-zinc-900/50 flex justify-between items-center shrink-0 z-20 backdrop-blur-md">
                     <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Plantilla 2026</h3>
                     <span class="text-[8px] text-zinc-500 font-bold uppercase border border-zinc-800 px-2 py-1 rounded bg-black">Orden: OVR</span>
@@ -164,9 +162,9 @@
                 
                 <div id="modal-roster" class="p-0 overflow-y-auto roster-scroll flex-1 bg-black relative"></div>
                 
-                <div class="hidden md:block p-2 border-t border-zinc-800 bg-zinc-950 text-center relative z-20">
+                <div class="p-2 border-t border-zinc-800 bg-zinc-950 text-center relative z-20">
                     <p class="text-[8px] text-zinc-600 font-mono">
-                        * Pasa el ratón sobre un ciclista para ver su radar individual.
+                        * Toca un ciclista para ver sus datos.
                     </p>
                 </div>
             </div>
@@ -276,21 +274,18 @@
             updateCompareChart();
         }
 
-        // --- ACTUALIZADO: ORDENAR POR OVR Y MOSTRAR LA MEDIA EN EL DESPLEGABLE ---
         function updateRiderDropdown(side) {
             const teamIdx = document.getElementById(`h2h-team-${side}`).value;
             const team = allTeams[teamIdx];
             const riderSelect = document.getElementById(`h2h-rider-${side}`);
             
             if(team && team.riders) {
-                // 1. Ordenamos por OVR (de mayor a menor)
                 const sortedRiders = [...team.riders].sort((a, b) => {
                     const ovrA = a.stats && a.stats.ovr ? a.stats.ovr : 0;
                     const ovrB = b.stats && b.stats.ovr ? b.stats.ovr : 0;
                     return ovrB - ovrA; 
                 });
                 
-                // 2. Añadimos el OVR al texto del selector para verlo antes de elegir
                 riderSelect.innerHTML = sortedRiders.map(r => {
                     const ovr = r.stats && r.stats.ovr ? r.stats.ovr : '--';
                     return `<option value="${r.name}">${ovr} OVR | ${r.name}</option>`;
@@ -341,7 +336,6 @@
             document.getElementById('type-2').innerText = r2.type || 'PRO';
         }
 
-        // --- RENDER GRID EQUIPOS ---
         function renderTeams(items) {
             container.innerHTML = '';
             if(items.length === 0) { document.getElementById('no-results').classList.remove('hidden'); return; }
@@ -363,7 +357,6 @@
             if (typeof initScrollReveal === 'function') setTimeout(initScrollReveal, 100);
         }
 
-        // --- MODAL DE EQUIPO ---
         function initRadarChart(stats) {
             const ctx = document.getElementById('stats-radar').getContext('2d');
             if(radarChartInstance) radarChartInstance.destroy();
@@ -432,8 +425,10 @@
 
                 const statsJson = JSON.stringify(s).replace(/"/g, '&quot;');
 
+                // Eventos onclick y onmouseenter
                 return `
-                <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-default flex items-center justify-between p-3"
+                <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between p-3"
+                     onclick='updateRadarFromHover("${rider.name}", ${statsJson}, "${ovrColor}")'
                      onmouseenter='updateRadarFromHover("${rider.name}", ${statsJson}, "${ovrColor}")'>
                     <div class="flex items-center gap-3">
                         <span class="text-[10px] font-mono text-zinc-600 font-bold w-4">${index + 1}</span>
