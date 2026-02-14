@@ -191,7 +191,6 @@
         let radarChartInstance = null;
         let compareRadarInstance = null;
 
-        // --- CHART CONFIG ---
         Chart.register(ChartDataLabels);
 
         async function fetchTeams() {
@@ -247,6 +246,7 @@
             `).join('');
         }
 
+        // --- CHART: Etiquetas activadas ---
         function initRadarChart(stats) {
             const ctx = document.getElementById('stats-radar').getContext('2d');
             if(radarChartInstance) radarChartInstance.destroy();
@@ -269,10 +269,20 @@
                 options: {
                     animation: { duration: 300 },
                     layout: { padding: 10 },
-                    scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { display: false }, ticks: { display: false } } },
+                    scales: { 
+                        r: { 
+                            min: 40, max: 100, 
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, 
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
+                            // ETIQUETAS DE EJE ACTIVADAS (MNT, SPR...)
+                            pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, 
+                            ticks: { display: false } 
+                        } 
+                    },
                     plugins: { 
                         legend: { display: false }, 
                         tooltip: { enabled: false },
+                        // ETIQUETAS DE VALOR ACTIVADAS (85, 92...)
                         datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, align: 'end', anchor: 'end', offset: -2 } 
                     },
                     maintainAspectRatio: false
@@ -330,7 +340,6 @@
                 if(s.ovr >= 90) { ovrColor = 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]'; radarColor = 'gold'; }
                 else if(s.ovr >= 80) ovrColor = 'text-white';
 
-                // AQUI ESTÁN LOS CAMBIOS EN EL TAMAÑO DE FUENTE
                 return `
                 <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between p-3"
                      onclick="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')"
@@ -339,7 +348,6 @@
                     <div class="flex items-center gap-3 w-full">
                         <span class="text-[10px] font-mono text-zinc-600 font-bold w-4 shrink-0">${index + 1}</span>
                         <span class="text-sm w-6 text-center shrink-0">${rider.country}</span>
-                        
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 <h4 class="text-zinc-300 font-bold uppercase text-xs md:text-sm tracking-tight group-hover:text-white transition-colors truncate">${rider.name}</h4>
@@ -404,10 +412,18 @@
                 type: 'radar', 
                 data: { labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'], datasets: [{ label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.2)', borderWidth: 2, pointBackgroundColor: '#22d3ee' }, { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.2)', borderWidth: 2, pointBackgroundColor: '#ec4899' }] }, 
                 options: { 
-                    scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } }, 
+                    scales: { 
+                        r: { 
+                            min: 40, max: 100, 
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, 
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
+                            pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, 
+                            ticks: { display: false } 
+                        } 
+                    }, 
                     plugins: { 
                         legend: { display: false }, 
-                        // ACTIVAMOS DATALABELS TAMBIÉN AQUÍ
+                        // DATALABELS ACTIVADO EN H2H
                         datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, formatter: Math.round } 
                     }, 
                     maintainAspectRatio: false 
