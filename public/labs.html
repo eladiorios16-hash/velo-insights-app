@@ -34,13 +34,14 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #27272a; border-radius: 2px; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-        /* Contenedor del fondo dinámico */
+        /* FONDO DINÁMICO (Ajustado para mayor visibilidad) */
         .climb-profile-bg {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 0; opacity: 0.3;
-            /* Máscara para que se desvanezca hacia arriba */
-            mask-image: linear-gradient(to top, black 20%, transparent 90%);
-            -webkit-mask-image: linear-gradient(to top, black 20%, transparent 90%);
+            pointer-events: none; z-index: 0; 
+            opacity: 0.7; /* AUMENTADO PARA QUE SE VEA MÁS */
+            mask-image: linear-gradient(to top, black 30%, transparent 95%);
+            -webkit-mask-image: linear-gradient(to top, black 30%, transparent 95%);
+            transition: all 0.5s ease-in-out;
         }
     </style>
 </head>
@@ -176,31 +177,26 @@
 
     <script src="layout.js"></script>
     <script>
-        // 1. DATOS DE LOS PUERTOS (CON PERFILES SVG DEFINIDOS MANUALMENTE)
+        // 1. DATOS ACTUALIZADOS (TIEMPOS MODERNOS 2026)
         const CLIMBS = {
             'alpe': { 
-                name: "Alpe d'Huez", km: 13.8, grad: 8.1, record: 36.8, holder: "M. Pantani '97", factor: 238, color: '#eab308',
-                // Perfil: Inicio duro, descanso en curvas, final constante
+                name: "Alpe d'Huez", km: 13.8, grad: 8.1, record: 37.6, holder: "M. Pantani '97", factor: 248, color: '#eab308',
                 shape: "M0,100 L0,80 Q20,60 40,70 T80,40 L100,20 L100,100 Z"
             },
             'angliru': { 
-                name: "L'Angliru", km: 12.5, grad: 10.1, record: 41.6, holder: "R. Heras '00", factor: 265, color: '#ef4444',
-                // Perfil: Exponencial, el final es una pared vertical
+                name: "L'Angliru", km: 12.5, grad: 10.1, record: 41.9, holder: "J. Vingegaard '23", factor: 289, color: '#ef4444',
                 shape: "M0,100 L0,90 Q30,85 50,60 C60,40 70,30 100,5 L100,100 Z"
             },
             'tourmalet': { 
-                name: "Tourmalet", km: 19.0, grad: 7.4, record: 47.5, holder: "T. Pinot '19", factor: 220, color: '#3b82f6',
-                // Perfil: Largo y muy constante (lineal)
+                name: "Tourmalet", km: 19.0, grad: 7.4, record: 45.2, holder: "J. Vingegaard '23", factor: 293, color: '#3b82f6',
                 shape: "M0,100 L0,85 L100,15 L100,100 Z"
             },
             'mortirolo': { 
-                name: "Mortirolo", km: 11.8, grad: 10.9, record: 41.7, holder: "M. Pantani '94", factor: 275, color: '#a855f7',
-                // Perfil: Pared brutal y constante desde el inicio
+                name: "Mortirolo", km: 11.8, grad: 10.9, record: 41.3, holder: "M. Pantani '94", factor: 276, color: '#a855f7',
                 shape: "M0,100 L0,90 L100,10 L100,100 Z"
             },
             'stelvio': { 
-                name: "Stelvio", km: 24.3, grad: 7.4, record: 60.5, holder: "Rohan Dennis '20", factor: 225, color: '#10b981',
-                // Perfil: Interminable, pendiente media pero muy largo
+                name: "Stelvio", km: 24.3, grad: 7.4, record: 60.5, holder: "R. Dennis '20", factor: 369, color: '#10b981',
                 shape: "M0,100 L0,90 Q50,70 100,30 L100,100 Z"
             }
         };
@@ -213,14 +209,12 @@
             'roglic': { name: 'Primož Roglič', team: 'Red Bull', stats: [94, 82, 91, 94, 92], color: '#ec4899', bg: 'rgba(236, 72, 153, 0.2)' }
         };
 
-        // Elementos DOM
         const weightInput = document.getElementById('weight');
         const wattsInput = document.getElementById('watts');
         const rivalSelect = document.getElementById('rival-selector');
         const wkgDisplay = document.getElementById('wkg-display');
         const analysisContent = document.getElementById('analysis-content');
         
-        // Elementos Simulador
         const climbSelect = document.getElementById('climb-select');
         const climbSlider = document.getElementById('climb-slider');
         const sliderValDisplay = document.getElementById('slider-val-display');
@@ -272,22 +266,21 @@
             renderClimb();
         }
 
-        // GENERADOR DE PERFIL SVG DIRECTO (Soluciona el problema del fondo estático)
         function updateClimbBackground() {
             const key = climbSelect.value;
             const c = CLIMBS[key];
             
-            // Inyectamos el SVG directamente en el HTML
+            // INYECCIÓN DE SVG CON MÁS OPACIDAD
             climbBgContainer.innerHTML = `
                 <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
                     <defs>
                         <linearGradient id="grad-${key}" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:${c.color};stop-opacity:0.2" />
+                            <stop offset="0%" style="stop-color:${c.color};stop-opacity:0.5" />
                             <stop offset="100%" style="stop-color:${c.color};stop-opacity:0" />
                         </linearGradient>
                     </defs>
                     <path d="${c.shape}" fill="url(#grad-${key})" />
-                    <path d="${c.shape.replace('L100,100 Z', '')}" fill="none" stroke="${c.color}" stroke-width="0.5" stroke-opacity="0.6" vector-effect="non-scaling-stroke" />
+                    <path d="${c.shape.replace('L100,100 Z', '')}" fill="none" stroke="${c.color}" stroke-width="0.8" stroke-opacity="0.8" vector-effect="non-scaling-stroke" />
                 </svg>
             `;
         }
@@ -338,7 +331,7 @@
             climbWkgDisplay.style.color = c.color;
 
             const userWkg = parseFloat(wkgDisplay.innerText);
-            const userTime = userWkg > 0 ? (c.factor / userWkg).toFixed(1) : 120;
+            const userTime = userWkg > 0 ? (c.factor / userWkg).toFixed(1) : 180;
 
             if (climbChart) climbChart.destroy();
             climbChart = new Chart(document.getElementById('climbChart'), {
@@ -382,7 +375,6 @@
         rivalSelect.addEventListener('change', renderRadar);
         climbSlider.addEventListener('input', handleClimbSliderInput);
         
-        // Listener del selector de puerto
         climbSelect.addEventListener('change', () => {
             updateClimbBackground();
             renderClimb();
