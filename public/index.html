@@ -28,7 +28,7 @@
         .live-dot { width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* Timeline Mejorado */
+        /* Timeline */
         .timeline-container {
             background: linear-gradient(180deg, rgba(17, 17, 26, 0.95) 0%, rgba(5,5,5,1) 100%);
             border-top: 1px solid rgba(139, 92, 246, 0.2);
@@ -62,7 +62,7 @@
         .comparison-card { background: linear-gradient(180deg, rgba(6, 25, 20, 0.6) 0%, rgba(5,5,5,0.9) 100%); position: relative; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.15); }
         .stage-profile-bg { 
             position: absolute; bottom: 0; left: 0; width: 100%; height: 70%; 
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300' preserveAspectRatio='none'%3E%3Cpath d='M0,300 L50,280 L150,250 L300,200 L450,150 L600,100 L750,50 L900,20 L1000,0 L1000,300 Z' fill='rgba(16, 185, 129, 0.05)' /%3E%3Cpath d='M0,300 L50,280 L150,250 L300,200 L450,150 L600,100 L750,50 L900,20 L1000,0' fill='none' stroke='rgba(16, 185, 129, 0.15)' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat bottom; 
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300' preserveAspectRatio='none'%3E%3Cpath d='M0,300 L50,280 L150,250 L300,200 L450,150 L600,100 L750,50 L900,20 L1000,300 Z' fill='rgba(16, 185, 129, 0.05)' /%3E%3Cpath d='M0,300 L50,280 L150,250 L300,200 L450,150 L600,100 L750,50 L900,20 L1000,0' fill='none' stroke='rgba(16, 185, 129, 0.15)' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat bottom; 
             background-size: cover; pointer-events: none; z-index: 0; 
         }
 
@@ -199,12 +199,11 @@
         </section>
 
     </main>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="renderers.js?v=1"></script>
     <script src="layout.js?v=6.1"></script>
     
     <script>
-        // --- 1. LÓGICA DEL SLIDER ---
         const slider = document.getElementById('level-slider');
         const levels = {
             1:  { tag: "Globero", time: "01:25:00", watts: "168W", wkg: "2.4", b: "35%" },
@@ -229,7 +228,6 @@
             document.getElementById('amateur-bar').style.width = d.b;
         }
 
-        // --- 2. CARGA DE DATOS ---
         async function loadContent() {
             // NOTICIAS
             fetch('/api/news')
@@ -246,32 +244,52 @@
                     renderUpcomingWidget(races);
                 }).catch(e => console.error("Error Calendar:", e));
 
-            // RANKING
+            // RANKING (CON FALLBACK MANUAL)
             fetch('/api/ranking')
-                .then(res => res.json())
-                .then(data => renderRanking(data))
-                .catch(e => console.error("Error Ranking:", e));
+                .then(res => {
+                    if (!res.ok) throw new Error("Error API");
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && data.length > 0) {
+                        renderRanking(data);
+                    } else {
+                        throw new Error("Empty Data"); // Forzamos el uso de fallback
+                    }
+                })
+                .catch(e => {
+                    console.warn("Usando Ranking Fallback");
+                    // DATOS MANUALES SI LA API FALLA
+                    const fallbackData = [
+                        { name: "Tadej Pogačar", team: "UAE Team Emirates", points: 7890 },
+                        { name: "Jonas Vingegaard", team: "Visma | Lease a Bike", points: 6540 },
+                        { name: "Remco Evenepoel", team: "Soudal Quick-Step", points: 5430 },
+                        { name: "Mathieu van der Poel", team: "Alpecin-Deceuninck", points: 4890 },
+                        { name: "Primož Roglič", team: "Red Bull - BORA", points: 4210 }
+                    ];
+                    renderRanking(fallbackData);
+                });
         }
 
-        // --- 3. RENDERIZADORES MANUALES (PARA ASEGURAR CARGA) ---
-        
+        // RENDERIZADORES
         function renderNews(news) {
             const container = document.getElementById('latest-news-container');
             if (news && news.length > 0) {
-                if(typeof getHeroNewsHTML === 'function') {
+                if (typeof getHeroNewsHTML === 'function') {
                     container.innerHTML = getHeroNewsHTML(news[0]);
                 } else {
                     const n = news[0];
-                    container.innerHTML = `<div class="relative h-64 md:h-80 rounded-2xl overflow-hidden group cursor-pointer" onclick="window.location.href='noticias.html?article=${n.id}'"><img src="${n.image}" class="absolute inset-0 w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent p-6 flex flex-col justify-end"><h3 class="text-3xl font-heading text-white italic uppercase">${n.title}</h3></div></div>`;
+                    container.innerHTML = `<div class="relative h-64 md:h-80 rounded-2xl overflow-hidden group cursor-pointer" onclick="window.location.href='noticias.html?article=${n.id}'"><img src="${n.image}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"><div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent p-6 flex flex-col justify-end"><span class="text-cyan-400 text-[10px] font-black uppercase tracking-widest mb-2">${n.tag || 'Noticia'}</span><h3 class="text-2xl md:text-3xl font-heading text-white italic uppercase leading-none">${n.title}</h3></div></div>`;
                 }
             } else {
-                container.innerHTML = '<p class="text-zinc-500 text-center py-10">Sin noticias recientes.</p>';
+                container.innerHTML = '<p class="text-zinc-500 text-center py-10">Sin datos de noticias.</p>';
             }
         }
 
-        // FUNCIÓN QUE FALTABA PARA EL RANKING
+        // Función MANUAL de Ranking (Siempre funciona)
         function getRankingRowHTML(r, i) {
-            return `<div class="flex items-center justify-between p-2 hover:bg-white/5 rounded-lg transition-colors group cursor-default">
+            return `
+            <div class="flex items-center justify-between p-2 hover:bg-white/5 rounded-lg transition-colors group cursor-default">
                 <div class="flex items-center gap-3">
                     <span class="text-xs font-black text-zinc-600 w-4 group-hover:text-amber-500 transition-colors">${i + 1}</span>
                     <div class="flex flex-col">
@@ -288,29 +306,32 @@
 
         function renderRanking(data) {
             const container = document.getElementById('ranking-list');
-            if (data && data.length > 0) {
-                const sorted = data.sort((a,b) => b.points - a.points).slice(0, 5);
-                container.innerHTML = sorted.map((r, i) => getRankingRowHTML(r, i)).join('');
-            } else {
-                container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center py-4">Sin datos de ranking.</p>';
-            }
+            const sorted = data.sort((a,b) => b.points - a.points).slice(0, 5);
+            container.innerHTML = sorted.map((r, i) => getRankingRowHTML(r, i)).join('');
         }
 
         function renderUpcomingWidget(races) {
             const container = document.getElementById('upcoming-races');
             const now = new Date().toISOString().split('T')[0];
-            const upcoming = races.filter(r => r.dateISO >= now || r.status === 'Active').sort((a,b) => a.dateISO.localeCompare(b.dateISO)).slice(0, 3);
+            const upcoming = races.filter(r => r.dateISO >= now || r.status === 'Active')
+                                  .sort((a,b) => a.dateISO.localeCompare(b.dateISO))
+                                  .slice(0, 3);
 
             if (upcoming.length > 0) {
-                 const html = upcoming.map(r => `
+                const renderRace = (r) => `
                     <a href="calendario.html?race=${encodeURIComponent(r.name)}" class="block p-3 bg-black/40 border border-zinc-800 hover:border-zinc-600 rounded-xl transition-all group">
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-[9px] font-black text-zinc-500 uppercase tracking-widest group-hover:text-zinc-300">${r.date}</span>
                             <span class="text-[9px] font-bold text-yellow-500 bg-yellow-900/20 px-1.5 py-0.5 rounded border border-yellow-900/50">${r.category || 'WT'}</span>
                         </div>
                         <h4 class="text-sm font-bold text-zinc-300 group-hover:text-white truncate">${r.name}</h4>
-                    </a>`).join('');
-                 container.innerHTML = html;
+                    </a>`;
+                
+                if (typeof getRaceWidgetHTML === 'function') {
+                    container.innerHTML = upcoming.map(r => getRaceWidgetHTML(r)).join('');
+                } else {
+                    container.innerHTML = upcoming.map(r => renderRace(r)).join('');
+                }
             } else {
                 container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center py-4">Sin carreras próximas.</p>';
             }
@@ -359,14 +380,24 @@
                     const r = activeRaces[0];
                     const isToday = d === dToday;
                     const isNextRaceStart = (d === nextRaceDay && d >= dToday);
-                    html += `<div class="timeline-day ${isNextRaceStart ? 'day-next' : 'day-active'} group ${isToday ? 'bg-violet-900/20' : ''}" onclick="window.location.href='calendario.html?race=${encodeURIComponent(r.name)}'"><span class="day-month">${monthNames[m]}</span><span class="day-number ${isToday ? 'text-violet-400' : ''}">${d}</span><div class="w-1.5 h-1.5 ${isNextRaceStart ? 'bg-yellow-500' : 'bg-violet-500'} rounded-full mt-2 shadow-[0_0_8px_#8b5cf6]"></div></div>`;
+
+                    html += `<div class="timeline-day ${isNextRaceStart ? 'day-next' : 'day-active'} group ${isToday ? 'bg-violet-900/20' : ''}" 
+                                 onclick="window.location.href='calendario.html?race=${encodeURIComponent(r.name)}'">
+                                <span class="day-month">${monthNames[m]}</span>
+                                <span class="day-number ${isToday ? 'text-violet-400' : ''}">${d}</span>
+                                <div class="w-1.5 h-1.5 ${isNextRaceStart ? 'bg-yellow-500' : 'bg-violet-500'} rounded-full mt-2 shadow-[0_0_8px_#8b5cf6]"></div>
+                             </div>`;
+                    
                     if(isToday) {
                         document.getElementById('live-race-banner').classList.remove('hidden');
                         document.getElementById('live-race-name').innerText = r.name;
                         document.getElementById('live-race-link').href = `calendario.html?race=${encodeURIComponent(r.name)}`;
                     }
                 } else {
-                    html += `<div class="timeline-day day-empty"><span class="day-number">${d}</span><div class="timeline-tick"></div></div>`;
+                    html += `<div class="timeline-day day-empty">
+                                <span class="day-number">${d}</span>
+                                <div class="timeline-tick"></div>
+                             </div>`;
                 }
             }
             scrollContainer.innerHTML = html;
