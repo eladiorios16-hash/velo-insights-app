@@ -195,7 +195,7 @@
         let compareRadarInstance = null;
         let currentFilter = 'all';
 
-        // --- SISTEMA DE FAVORITOS ---
+        // --- SISTEMA DE FAVORITOS (LocalStorage) ---
         const FAV_KEY = 'velo_favs_v1';
 
         function getFavorites() {
@@ -207,9 +207,11 @@
             const index = favs.findIndex(f => f.name === riderName);
             
             if (index === -1) {
+                // Añadir
                 favs.push({ name: riderName, team: teamCode });
                 showToast(`⭐ ${riderName} guardado`);
             } else {
+                // Quitar
                 favs.splice(index, 1);
                 showToast(`❌ ${riderName} eliminado`);
             }
@@ -217,9 +219,8 @@
             localStorage.setItem(FAV_KEY, JSON.stringify(favs));
             updateHeartIcon(riderName);
             
-            // Si estamos en modo favoritos, al quitar uno hay que refrescar la lista
+            // Si estamos viendo la lista de favoritos, actualizamos la vista
             if(currentFilter === 'favs') {
-                // Pequeño timeout para que se vea la animación antes de desaparecer
                 setTimeout(filterFavorites, 300);
             }
         }
@@ -231,6 +232,7 @@
         function updateHeartIcon(riderName) {
             const buttons = document.querySelectorAll(`button[onclick*="${riderName}"] svg`);
             const active = isFav(riderName);
+            
             buttons.forEach(svg => {
                 if(active) {
                     svg.classList.remove('text-zinc-700', 'hover:text-zinc-500');
@@ -266,6 +268,7 @@
                 return;
             }
 
+            // Filtrar equipos que tengan al menos un favorito
             const teamsWithFavs = allTeams.filter(t => 
                 t.riders.some(r => favs.some(f => f.name === r.name))
             );
@@ -364,20 +367,8 @@
                 options: {
                     animation: { duration: 300 },
                     layout: { padding: 10 },
-                    scales: { 
-                        r: { 
-                            min: 40, max: 100, 
-                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, 
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
-                            pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, 
-                            ticks: { display: false } 
-                        } 
-                    },
-                    plugins: { 
-                        legend: { display: false }, 
-                        tooltip: { enabled: false },
-                        datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, align: 'end', anchor: 'end', offset: -2 } 
-                    },
+                    scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, align: 'end', anchor: 'end', offset: -2 } },
                     maintainAspectRatio: false
                 }
             });
@@ -407,9 +398,10 @@
             modalCountry.innerText = team.country;
             modalJersey.src = team.jersey;
 
+            // 1. Partimos de todos los ciclistas
             let riders = team.riders || [];
 
-            // --- FILTRO INTELIGENTE: SI ESTAMOS EN FAVORITOS, SOLO MUESTRA LOS TUYOS ---
+            // 2. FILTRADO: Si estamos en modo favoritos, sobreescribimos 'riders' con solo los que coinciden
             const rosterTitle = document.getElementById('roster-title');
             if(currentFilter === 'favs') {
                 riders = riders.filter(r => isFav(r.name));
@@ -419,9 +411,8 @@
                 rosterTitle.innerText = "PLANTILLA 2026";
                 rosterTitle.classList.remove('text-yellow-500');
             }
-            // --------------------------------------------------------------------------
 
-            // Recalcular promedio basado en lo que se muestra
+            // 3. Calculamos el promedio SOLO de los ciclistas mostrados
             const avg = riders.length > 0 ? {
                 mnt: Math.round(riders.reduce((a,b)=>a+b.stats.mnt,0)/riders.length),
                 spr: Math.round(riders.reduce((a,b)=>a+b.stats.spr,0)/riders.length),
@@ -457,9 +448,7 @@
                     
                     <div class="flex items-center gap-3 w-full">
                         <button onclick="event.stopPropagation(); toggleFavorite('${rider.name}', '${teamCode}')" class="z-50 p-1 -ml-1">
-                            <svg class="w-4 h-4 ${heartColor} transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
+                            <svg class="w-4 h-4 ${heartColor} transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                         </button>
 
                         <span class="text-[10px] font-mono text-zinc-600 font-bold w-4 shrink-0 text-center">${index + 1}</span>
@@ -503,6 +492,13 @@
         window.resetSearch = () => { searchInput.value = ''; filterTeams('all'); }
 
         searchInput.addEventListener('input', (e) => {
+            // Fix: Resetear filtro de favoritos al buscar
+            if(currentFilter === 'favs') {
+                currentFilter = 'all';
+                document.getElementById('btn-favs').classList.remove('active', 'bg-yellow-500/20', 'text-yellow-500');
+                document.getElementById('btn-all').classList.add('active', 'bg-zinc-900/50', 'text-white');
+            }
+            
             const term = e.target.value.toLowerCase();
             const filtered = allTeams.filter(t => t.name.toLowerCase().includes(term) || (t.riders && t.riders.some(r => r.name.toLowerCase().includes(term))));
             renderTeams(filtered);
@@ -512,17 +508,26 @@
         function initCompareSection() {
             const h2hSection = document.getElementById('h2h-section');
             h2hSection.classList.remove('hidden');
-            // ... (Código H2H completo mantenido) ...
-            const t1 = document.getElementById('h2h-team-1'); const t2 = document.getElementById('h2h-team-2');
+            const t1 = document.getElementById('h2h-team-1');
+            const t2 = document.getElementById('h2h-team-2');
             let teamOptionsHTML = allTeams.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
-            t1.innerHTML = teamOptionsHTML; t2.innerHTML = teamOptionsHTML;
-            const idxUae = allTeams.findIndex(t => t.name.includes('UAE')); const idxVisma = allTeams.findIndex(t => t.name.includes('Visma'));
-            t1.value = idxUae !== -1 ? idxUae : 0; t2.value = idxVisma !== -1 ? idxVisma : (allTeams.length > 1 ? 1 : 0);
-            updateRiderDropdown(1); updateRiderDropdown(2); preselectRider(1, 'Pogačar'); preselectRider(2, 'Vingegaard');
+            t1.innerHTML = teamOptionsHTML;
+            t2.innerHTML = teamOptionsHTML;
+            const idxUae = allTeams.findIndex(t => t.name.includes('UAE'));
+            const idxVisma = allTeams.findIndex(t => t.name.includes('Visma'));
+            t1.value = idxUae !== -1 ? idxUae : 0;
+            t2.value = idxVisma !== -1 ? idxVisma : (allTeams.length > 1 ? 1 : 0);
+            updateRiderDropdown(1); updateRiderDropdown(2);
+            preselectRider(1, 'Pogačar'); preselectRider(2, 'Vingegaard');
+            
             const ctx = document.getElementById('compare-radar').getContext('2d');
             compareRadarInstance = new Chart(ctx, { type: 'radar', data: { labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'], datasets: [{ label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.2)', borderWidth: 2, pointBackgroundColor: '#22d3ee' }, { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.2)', borderWidth: 2, pointBackgroundColor: '#ec4899' }] }, options: { scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } }, plugins: { legend: { display: false }, datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, formatter: Math.round } }, maintainAspectRatio: false } });
-            t1.addEventListener('change', () => { updateRiderDropdown(1); updateCompareChart(); }); t2.addEventListener('change', () => { updateRiderDropdown(2); updateCompareChart(); });
-            document.getElementById('h2h-rider-1').addEventListener('change', updateCompareChart); document.getElementById('h2h-rider-2').addEventListener('change', updateCompareChart); updateCompareChart();
+            
+            t1.addEventListener('change', () => { updateRiderDropdown(1); updateCompareChart(); });
+            t2.addEventListener('change', () => { updateRiderDropdown(2); updateCompareChart(); });
+            document.getElementById('h2h-rider-1').addEventListener('change', updateCompareChart);
+            document.getElementById('h2h-rider-2').addEventListener('change', updateCompareChart);
+            updateCompareChart();
         }
         function updateRiderDropdown(side) { const teamIdx = document.getElementById(`h2h-team-${side}`).value; const team = allTeams[teamIdx]; const riderSelect = document.getElementById(`h2h-rider-${side}`); if(team && team.riders) { const sortedRiders = [...team.riders].sort((a, b) => b.stats.ovr - a.stats.ovr); riderSelect.innerHTML = sortedRiders.map(r => `<option value="${r.name}">${r.stats.ovr} OVR | ${r.name}</option>`).join(''); } }
         function preselectRider(side, nameSubstring) { const select = document.getElementById(`h2h-rider-${side}`); const match = Array.from(select.options).find(opt => opt.value.includes(nameSubstring)); if(match) select.value = match.value; }
