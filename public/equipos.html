@@ -134,22 +134,24 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
-            <div class="w-full h-1/2 md:h-full md:w-4/12 bg-gradient-to-b from-zinc-900 to-black p-2 md:p-6 flex flex-row md:flex-col items-center justify-between md:justify-center border-b md:border-b-0 md:border-r border-zinc-800 relative overflow-hidden shrink-0">
+            <div class="w-full h-1/2 md:h-full md:w-4/12 bg-gradient-to-b from-zinc-900 to-black p-4 md:p-6 flex flex-row md:flex-col items-center justify-between md:justify-center border-b md:border-b-0 md:border-r border-zinc-800 relative overflow-hidden shrink-0">
                 
-                <div class="w-1/2 md:w-full flex flex-col items-center justify-center border-r md:border-r-0 border-zinc-800/50 h-full">
-                    <img id="modal-jersey" src="" alt="Jersey" class="h-24 md:h-32 w-auto object-contain drop-shadow-[0_0_20px_rgba(0,0,0,0.8)] animate-float mb-2">
-                    <h2 id="modal-title" class="text-base md:text-3xl font-black text-white italic uppercase tracking-tighter leading-none text-center">TEAM</h2>
-                    <div class="flex items-center gap-2 text-zinc-500 text-[9px] font-bold tracking-widest uppercase mt-1">
-                        <span id="modal-code" class="text-cyan-500">CODE</span>
-                        <span id="modal-country">COUNTRY</span>
+                <div class="flex items-center gap-2 md:flex-col md:gap-4 md:text-center w-[45%] md:w-full">
+                    <img id="modal-jersey" src="" alt="Jersey" class="h-24 w-24 md:h-32 md:w-auto object-contain drop-shadow-[0_0_20px_rgba(0,0,0,0.8)] animate-float mb-2">
+                    <div class="text-left md:text-center min-w-0">
+                        <h2 id="modal-title" class="text-lg md:text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-1 truncate">TEAM</h2>
+                        <div class="flex flex-col md:flex-row md:justify-center gap-0 md:gap-3 text-zinc-500 text-[9px] font-bold tracking-widest uppercase">
+                            <span id="modal-code" class="text-cyan-500">CODE</span>
+                            <span id="modal-country">COUNTRY</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="w-1/2 md:w-full h-full flex flex-col items-center justify-center relative">
-                    <div class="w-full aspect-square max-h-[160px] md:max-h-[260px] flex items-center justify-center">
-                        <canvas id="stats-radar"></canvas>
+                <div class="w-44 h-44 md:w-full md:aspect-square md:max-w-[260px] relative shrink-0 flex items-center justify-center -mr-2 md:mr-0">
+                    <canvas id="stats-radar"></canvas>
+                    <div class="hidden md:block absolute inset-x-0 bottom-0 text-center pointer-events-none">
+                        <p id="radar-rider-name" class="text-white font-bold text-sm uppercase tracking-wide drop-shadow-md">Promedio</p>
                     </div>
-                    <p id="radar-rider-name" class="text-zinc-500 font-bold text-[9px] uppercase tracking-widest text-center mt-[-10px] md:mt-4">Promedio</p>
                 </div>
 
             </div>
@@ -178,7 +180,6 @@
         const container = document.getElementById('teams-grid');
         const searchInput = document.getElementById('team-search');
         
-        // Elementos Modal
         const modal = document.getElementById('team-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalCode = document.getElementById('modal-code');
@@ -187,24 +188,43 @@
         const modalRoster = document.getElementById('modal-roster');
         
         let allTeams = [];
-        let allRidersFlat = []; 
         let radarChartInstance = null;
         let compareRadarInstance = null;
 
         Chart.register(ChartDataLabels);
 
-        // --- 1. CARGAR DATOS DESDE EL SERVIDOR ---
+        // --- 1. CARGA DE DATOS CON "LIMPIEZA" ---
         async function fetchTeams() {
             container.innerHTML = `<div class="col-span-full text-center py-20 animate-pulse text-zinc-500 text-xs font-bold uppercase">Cargando equipos...</div>`;
             
             try {
                 const response = await fetch('/api/teams');
-                
                 if (response.ok) {
-                    const data = await response.json();
+                    let data = await response.json();
                     
-                    if(data && data.length > 0) {
-                        allTeams = data;
+                    // IMPORTANTE: Aseguramos que stats sea un objeto y no un string
+                    allTeams = data.map(team => ({
+                        ...team,
+                        riders: team.riders.map(rider => {
+                            let stats = rider.stats;
+                            if (typeof stats === 'string') {
+                                try { stats = JSON.parse(stats); } catch(e) { stats = {}; }
+                            }
+                            // Convertimos a números para evitar errores en el gráfico
+                            stats = {
+                                mnt: parseInt(stats?.mnt || 0),
+                                spr: parseInt(stats?.spr || 0),
+                                tt: parseInt(stats?.tt || 0),
+                                lla: parseInt(stats?.lla || 0),
+                                res: parseInt(stats?.res || 0),
+                                rec: parseInt(stats?.rec || 0),
+                                ovr: parseInt(stats?.ovr || 0)
+                            };
+                            return { ...rider, stats };
+                        })
+                    }));
+
+                    if(allTeams.length > 0) {
                         renderTeams(allTeams);
                         initCompareSection(); 
                     } else {
@@ -215,15 +235,10 @@
                 }
             } catch (error) {
                 console.error("Error cargando equipos:", error);
-                container.innerHTML = `
-                    <div class="col-span-full text-center py-20 border border-red-900/30 rounded-xl bg-red-900/10">
-                        <p class="text-red-500 font-bold mb-2">Error de conexión</p>
-                        <p class="text-zinc-500 text-xs">Ejecuta 'node server.js' en la terminal.</p>
-                    </div>`;
+                container.innerHTML = `<div class="col-span-full text-center py-20 border border-red-900/30 rounded-xl bg-red-900/10"><p class="text-red-500 font-bold mb-2">Error de conexión</p></div>`;
             }
         }
 
-        // --- LÓGICA DEL COMPARADOR H2H ---
         function initCompareSection() {
             const h2hSection = document.getElementById('h2h-section');
             h2hSection.classList.remove('hidden');
@@ -231,20 +246,17 @@
             const t1 = document.getElementById('h2h-team-1');
             const t2 = document.getElementById('h2h-team-2');
 
-            // Llenar los desplegables de equipos
             let teamOptionsHTML = allTeams.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
             t1.innerHTML = teamOptionsHTML;
             t2.innerHTML = teamOptionsHTML;
 
             const idxUae = allTeams.findIndex(t => t.name.includes('UAE'));
             const idxVisma = allTeams.findIndex(t => t.name.includes('Visma'));
-            
             t1.value = idxUae !== -1 ? idxUae : 0;
             t2.value = idxVisma !== -1 ? idxVisma : (allTeams.length > 1 ? 1 : 0);
 
             updateRiderDropdown(1);
             updateRiderDropdown(2);
-
             preselectRider(1, 'Pogačar');
             preselectRider(2, 'Vingegaard');
 
@@ -267,10 +279,8 @@
 
             t1.addEventListener('change', () => { updateRiderDropdown(1); updateCompareChart(); });
             t2.addEventListener('change', () => { updateRiderDropdown(2); updateCompareChart(); });
-            
             document.getElementById('h2h-rider-1').addEventListener('change', updateCompareChart);
             document.getElementById('h2h-rider-2').addEventListener('change', updateCompareChart);
-            
             updateCompareChart();
         }
 
@@ -280,25 +290,14 @@
             const riderSelect = document.getElementById(`h2h-rider-${side}`);
             
             if(team && team.riders) {
-                const sortedRiders = [...team.riders].sort((a, b) => {
-                    const ovrA = a.stats && a.stats.ovr ? a.stats.ovr : 0;
-                    const ovrB = b.stats && b.stats.ovr ? b.stats.ovr : 0;
-                    return ovrB - ovrA; 
-                });
-                
-                riderSelect.innerHTML = sortedRiders.map(r => {
-                    const ovr = r.stats && r.stats.ovr ? r.stats.ovr : '--';
-                    return `<option value="${r.name}">${ovr} OVR | ${r.name}</option>`;
-                }).join('');
-            } else {
-                riderSelect.innerHTML = '';
+                const sortedRiders = [...team.riders].sort((a, b) => b.stats.ovr - a.stats.ovr);
+                riderSelect.innerHTML = sortedRiders.map(r => `<option value="${r.name}">${r.stats.ovr} OVR | ${r.name}</option>`).join('');
             }
         }
 
         function preselectRider(side, nameSubstring) {
             const select = document.getElementById(`h2h-rider-${side}`);
-            const options = Array.from(select.options);
-            const match = options.find(opt => opt.value.includes(nameSubstring));
+            const match = Array.from(select.options).find(opt => opt.value.includes(nameSubstring));
             if(match) select.value = match.value;
         }
 
@@ -313,34 +312,26 @@
         function updateCompareChart() {
             const r1 = getSelectedRider(1);
             const r2 = getSelectedRider(2);
-            
             if(!r1 || !r2) return;
 
-            const st1 = r1.stats || {mnt:0, spr:0, tt:0, lla:0, res:0, rec:0, ovr:0};
-            const st2 = r2.stats || {mnt:0, spr:0, tt:0, lla:0, res:0, rec:0, ovr:0};
-
             compareRadarInstance.data.datasets[0].label = r1.name;
-            compareRadarInstance.data.datasets[0].data = [st1.mnt, st1.spr, st1.tt, st1.lla, st1.res, st1.rec];
+            compareRadarInstance.data.datasets[0].data = [r1.stats.mnt, r1.stats.spr, r1.stats.tt, r1.stats.lla, r1.stats.res, r1.stats.rec];
             
             compareRadarInstance.data.datasets[1].label = r2.name;
-            compareRadarInstance.data.datasets[1].data = [st2.mnt, st2.spr, st2.tt, st2.lla, st2.res, st2.rec];
+            compareRadarInstance.data.datasets[1].data = [r2.stats.mnt, r2.stats.spr, r2.stats.tt, r2.stats.lla, r2.stats.res, r2.stats.rec];
             
             compareRadarInstance.update();
 
-            document.getElementById('ovr-1').innerText = st1.ovr;
+            document.getElementById('ovr-1').innerText = r1.stats.ovr;
             document.getElementById('type-1').className = `spec-badge ${r1.typeClass || 'spec-gc'}`;
             document.getElementById('type-1').innerText = r1.type || 'PRO';
 
-            document.getElementById('ovr-2').innerText = st2.ovr;
+            document.getElementById('ovr-2').innerText = r2.stats.ovr;
             document.getElementById('type-2').className = `spec-badge ${r2.typeClass || 'spec-gc'}`;
             document.getElementById('type-2').innerText = r2.type || 'PRO';
         }
 
         function renderTeams(items) {
-            container.innerHTML = '';
-            if(items.length === 0) { document.getElementById('no-results').classList.remove('hidden'); return; }
-            document.getElementById('no-results').classList.add('hidden');
-
             container.innerHTML = items.map(team => `
                 <div class="team-card glass rounded-2xl border border-zinc-800/80 overflow-hidden cursor-pointer group bg-zinc-900/40 relative" onclick="openModal('${team.code}')">
                     <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
@@ -353,7 +344,6 @@
                     </div>
                 </div>
             `).join('');
-            
             if (typeof initScrollReveal === 'function') setTimeout(initScrollReveal, 100);
         }
 
@@ -396,13 +386,14 @@
             modalJersey.src = team.jersey;
 
             const riders = team.riders || [];
+            // Calculo promedio seguro usando los datos ya limpios
             const avgStats = riders.length > 0 ? {
-                mnt: Math.round(riders.reduce((a,b)=>a+(b.stats?.mnt||0),0)/riders.length),
-                spr: Math.round(riders.reduce((a,b)=>a+(b.stats?.spr||0),0)/riders.length),
-                tt: Math.round(riders.reduce((a,b)=>a+(b.stats?.tt||0),0)/riders.length),
-                lla: Math.round(riders.reduce((a,b)=>a+(b.stats?.lla||0),0)/riders.length),
-                res: Math.round(riders.reduce((a,b)=>a+(b.stats?.res||0),0)/riders.length),
-                rec: Math.round(riders.reduce((a,b)=>a+(b.stats?.rec||0),0)/riders.length)
+                mnt: Math.round(riders.reduce((a,b)=>a+b.stats.mnt,0)/riders.length),
+                spr: Math.round(riders.reduce((a,b)=>a+b.stats.spr,0)/riders.length),
+                tt: Math.round(riders.reduce((a,b)=>a+b.stats.tt,0)/riders.length),
+                lla: Math.round(riders.reduce((a,b)=>a+b.stats.lla,0)/riders.length),
+                res: Math.round(riders.reduce((a,b)=>a+b.stats.res,0)/riders.length),
+                rec: Math.round(riders.reduce((a,b)=>a+b.stats.rec,0)/riders.length)
             } : { mnt:0, spr:0, tt:0, lla:0, res:0, rec:0 };
             
             setTimeout(() => {
@@ -411,21 +402,17 @@
                 document.getElementById('radar-rider-name').className = "text-zinc-500 font-bold text-xs uppercase tracking-widest mt-2";
             }, 200);
 
-            const sortedRiders = [...riders].sort((a, b) => {
-                const ovrA = a.stats && a.stats.ovr ? a.stats.ovr : 0;
-                const ovrB = b.stats && b.stats.ovr ? b.stats.ovr : 0;
-                return ovrB - ovrA;
-            });
+            const sortedRiders = [...riders].sort((a, b) => b.stats.ovr - a.stats.ovr);
 
             modalRoster.innerHTML = sortedRiders.map((rider, index) => {
-                const s = rider.stats || { ovr: 0 };
+                const s = rider.stats;
                 let ovrColor = 'text-zinc-500';
                 if(s.ovr >= 90) ovrColor = 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]';
                 else if(s.ovr >= 80) ovrColor = 'text-white';
 
+                // Pasamos las estadísticas ya limpias como objeto JSON al evento
                 const statsJson = JSON.stringify(s).replace(/"/g, '&quot;');
 
-                // Eventos onclick y onmouseenter
                 return `
                 <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between p-3"
                      onclick='updateRadarFromHover("${rider.name}", ${statsJson}, "${ovrColor}")'
