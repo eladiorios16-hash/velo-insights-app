@@ -7,6 +7,22 @@
     
     <title>VELO INSIGHTS | Glosario Técnico</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ App registrada', reg.scope))
+                    .catch(err => console.log('❌ Error registro App', err));
+            });
+        }
+    </script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="assets/main.css">
     
@@ -69,9 +85,6 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 10px; }
     </style>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#050505">
 </head>
 
 <body class="bg-[#050505] antialiased overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
@@ -136,7 +149,6 @@
         async function loadGlossary() {
             showSkeletons();
             try {
-                // AQUÍ ESTÁ EL CAMBIO IMPORTANTE: PUERTO 3000
                 const response = await fetch('/api/glossary'); 
                 
                 if (response.ok) {
