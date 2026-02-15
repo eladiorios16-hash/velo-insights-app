@@ -120,9 +120,10 @@
                                     <span class="font-heading text-lg text-zinc-500 w-6 text-center group-hover/stage:text-white transition-colors">${s.n}</span>
                                     <div>
                                         <h4 class="text-xs md:text-sm font-bold text-white uppercase stage-name transition-colors">${s.route || 'Etapa ' + s.n}</h4>
-                                        <div class="flex gap-2 mt-1">
+                                        <div class="flex items-center gap-2 mt-1.5">
                                             <span class="text-[9px] font-black badge-${typeClass} px-1.5 py-0.5 rounded uppercase">${s.type || 'Etapa'}</span>
-                                            ${s.km ? `<span class="text-[9px] text-zinc-400 font-mono">${s.km} KM</span>` : ''}
+                                            
+                                            ${s.km ? `<span class="text-xs md:text-sm font-bold text-white font-mono border-l border-zinc-700 pl-2 ml-1">${s.km} km</span>` : ''}
                                         </div>
                                     </div>
                                 </div>
@@ -133,7 +134,7 @@
                             
                             <div id="stage-content-${i}-${j}" class="stage-detail-content race-${i}-stage-content">
                                 <div class="p-4 pt-0">
-                                    ${s.gain ? `<p class="text-[9px] font-mono text-zinc-400 mb-2 text-center uppercase tracking-widest border-b border-zinc-800 pb-2">Desnivel Acumulado: <span class="text-white font-bold">${s.gain}m+</span></p>` : ''}
+                                    ${s.gain ? `<p class="text-[10px] font-mono text-zinc-400 mb-2 text-center uppercase tracking-widest border-b border-zinc-800 pb-2">Desnivel Acumulado: <span class="text-white font-bold text-xs">${s.gain}m+</span></p>` : ''}
                                     
                                     ${s.image ? `
                                     <div class="bg-white rounded-lg p-2 overflow-hidden border border-zinc-700 opacity-90">
@@ -224,12 +225,10 @@
             const isAlreadyOpen = targetContent.classList.contains('open');
 
             // CERRAR TODAS las etapas de esta carrera
-            // Buscamos solo los elementos que tengan la clase 'race-{X}-stage-content'
             const allStagesInRace = document.querySelectorAll(`.race-${raceIndex}-stage-content`);
             allStagesInRace.forEach(el => el.classList.remove('open'));
             
             // Quitar clase activa a todos los botones de esta carrera
-            // (Necesitamos una forma de seleccionarlos, usaremos el padre común)
             const parentDetails = document.getElementById(`details-${raceIndex}`);
             const allBtns = parentDetails.querySelectorAll('.stage-btn');
             allBtns.forEach(btn => btn.classList.remove('active'));
