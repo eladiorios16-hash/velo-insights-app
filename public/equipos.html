@@ -48,6 +48,23 @@
         
         /* Botones activos */
         .sort-btn.active { background-color: rgba(34, 211, 238, 0.2); color: #22d3ee; border-color: #22d3ee; }
+
+        /* =========================================
+           ESTILOS ESPECÍFICOS PARA ESCRITORIO
+           ========================================= */
+        @media (min-width: 1024px) {
+            /* Scrollbar invisible en la lista general en PC para limpieza visual */
+            .roster-scroll::-webkit-scrollbar { width: 8px; }
+            .roster-scroll::-webkit-scrollbar-track { background: #111; }
+            .roster-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+            
+            /* Ajuste del gráfico en PC */
+            #radar-container-desktop {
+                height: 350px !important;
+                width: 100% !important;
+                max-width: 380px;
+            }
+        }
     </style>
     
     <link rel="manifest" href="manifest.json">
@@ -131,7 +148,7 @@
     <div id="team-modal" class="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-6 hidden-modal">
         <div class="absolute inset-0 bg-black/95 backdrop-blur-xl" onclick="closeModal()"></div>
         
-        <div class="modal-content relative w-full h-full md:h-[90vh] md:max-w-4xl bg-[#09090b] md:rounded-3xl border border-zinc-800 shadow-2xl overflow-hidden flex flex-col">
+        <div class="modal-content relative w-full h-full md:h-[90vh] md:max-w-6xl bg-[#09090b] md:rounded-3xl border border-zinc-800 shadow-2xl overflow-hidden flex flex-col">
             
             <button onclick="closeModal()" class="absolute top-2 right-2 z-50 p-2 bg-black/50 hover:bg-zinc-800 text-white rounded-full transition-colors border border-zinc-700 md:top-4 md:right-4">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -145,34 +162,42 @@
                         <span id="modal-country">COUNTRY</span>
                     </div>
                 </div>
-                <img id="modal-jersey" src="" alt="Jersey" class="h-24 md:h-32 w-auto object-contain drop-shadow-[0_0_20px_rgba(0,0,0,0.8)] animate-float">
+                <img id="modal-jersey-mobile" src="" alt="Jersey" class="lg:hidden h-24 w-auto object-contain drop-shadow-[0_0_20px_rgba(0,0,0,0.8)] animate-float">
             </div>
 
-            <div class="w-full bg-black/50 border-b border-zinc-800 flex justify-center items-center py-4 shrink-0 relative">
-                <div class="w-full max-w-[400px] h-48 md:h-56 relative flex justify-center items-center">
-                    <canvas id="stats-radar"></canvas>
-                    <div class="absolute bottom-0 right-4 pointer-events-none">
-                        <p id="radar-rider-name" class="text-white font-bold text-xs uppercase tracking-wide drop-shadow-md bg-black/60 px-2 py-1 rounded">Promedio</p>
+            <div class="flex flex-col lg:flex-row flex-1 overflow-hidden relative">
+
+                <div class="w-full lg:w-[40%] bg-black/50 lg:bg-[#0c0c0e] border-b lg:border-b-0 lg:border-r border-zinc-800 flex flex-col justify-center items-center py-4 lg:p-8 shrink-0 relative order-1">
+                    
+                    <img id="modal-jersey-desktop" src="" alt="Jersey Desktop" class="hidden lg:block h-32 w-auto object-contain mb-6 drop-shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+
+                    <div id="radar-container-desktop" class="w-full max-w-[400px] h-48 md:h-56 relative flex justify-center items-center">
+                        <canvas id="stats-radar"></canvas>
+                        <div class="absolute bottom-0 right-4 pointer-events-none lg:bottom-2 lg:right-2">
+                            <p id="radar-rider-name" class="text-white font-bold text-xs uppercase tracking-wide drop-shadow-md bg-black/60 px-2 py-1 rounded">Promedio</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="w-full flex-1 bg-[#050505] flex flex-col overflow-hidden">
-                <div class="p-3 border-b border-zinc-800 bg-zinc-900/90 flex flex-col md:flex-row gap-3 justify-between items-center shrink-0 z-20 backdrop-blur-md">
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]" id="roster-title">Plantilla 2026</h3>
-                        <span id="sort-indicator" class="text-[8px] text-cyan-500 font-bold uppercase border border-cyan-500/30 px-2 py-0.5 rounded bg-cyan-900/10">Orden: OVR</span>
+                <div class="w-full lg:w-[60%] flex-1 bg-[#050505] flex flex-col overflow-hidden order-2">
+                    
+                    <div class="p-3 border-b border-zinc-800 bg-zinc-900/90 flex flex-col md:flex-row gap-3 justify-between items-center shrink-0 z-20 backdrop-blur-md sticky top-0">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]" id="roster-title">Plantilla 2026</h3>
+                            <span id="sort-indicator" class="text-[8px] text-cyan-500 font-bold uppercase border border-cyan-500/30 px-2 py-0.5 rounded bg-cyan-900/10">Orden: OVR</span>
+                        </div>
+                        
+                        <div class="flex gap-1 overflow-x-auto no-scrollbar w-full md:w-auto">
+                            <button onclick="setRosterSort('ovr')" id="sort-ovr" class="sort-btn active flex-1 md:flex-none bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white text-[9px] font-bold uppercase py-1.5 px-3 rounded transition-colors border border-zinc-700">General</button>
+                            <button onclick="setRosterSort('mnt')" id="sort-mnt" class="sort-btn flex-1 md:flex-none bg-zinc-800 hover:bg-pink-900/50 text-zinc-400 hover:text-pink-400 text-[9px] font-bold uppercase py-1.5 px-3 rounded transition-colors border border-zinc-700">Montaña</button>
+                            <button onclick="setRosterSort('spr')" id="sort-spr" class="sort-btn flex-1 md:flex-none bg-zinc-800 hover:bg-green-900/50 text-zinc-400 hover:text-green-400 text-[9px] font-bold uppercase py-1.5 px-3 rounded transition-colors border border-zinc-700">Sprint</button>
+                            <button onclick="setRosterSort('tt')"  id="sort-tt"  class="sort-btn flex-1 md:flex-none bg-zinc-800 hover:bg-blue-900/50 text-zinc-400 hover:text-blue-400 text-[9px] font-bold uppercase py-1.5 px-3 rounded transition-colors border border-zinc-700">Crono</button>
+                        </div>
                     </div>
                     
-                    <div class="flex gap-1 overflow-x-auto no-scrollbar w-full md:w-auto">
-                        <button onclick="setRosterSort('ovr')" id="sort-ovr" class="sort-btn active flex-1 md:flex-none bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white text-[9px] font-bold uppercase py-1.5 px-3 rounded transition-colors border border-zinc-700">General</button>
-                        <button onclick="setRosterSort('mnt')" id="sort-mnt" class="sort-btn flex-1 md:flex-none bg-zinc-800 hover:bg-pink-900/50 text-zinc-400 hover:text-pink-400 text-[9px] font-bold uppercase py-1.5 px-3 rounded transition-colors border border-zinc-700">Montaña</button>
-                        <button onclick="setRosterSort('spr')" id="sort-spr" class="sort-btn flex-1 md:flex-none bg-zinc-800 hover:bg-green-900/50 text-zinc-400 hover:text-green-400 text-[9px] font-bold uppercase py-1.5 px-3 rounded transition-colors border border-zinc-700">Sprint</button>
-                        <button onclick="setRosterSort('tt')"  id="sort-tt"  class="sort-btn flex-1 md:flex-none bg-zinc-800 hover:bg-blue-900/50 text-zinc-400 hover:text-blue-400 text-[9px] font-bold uppercase py-1.5 px-3 rounded transition-colors border border-zinc-700">Crono</button>
-                    </div>
+                    <div id="modal-roster" class="p-0 overflow-y-auto roster-scroll flex-1 bg-black relative"></div>
                 </div>
-                
-                <div id="modal-roster" class="p-0 overflow-y-auto roster-scroll flex-1 bg-black relative"></div>
+
             </div>
         </div>
     </div>
@@ -188,7 +213,11 @@
         const modalTitle = document.getElementById('modal-title');
         const modalCode = document.getElementById('modal-code');
         const modalCountry = document.getElementById('modal-country');
-        const modalJersey = document.getElementById('modal-jersey');
+        
+        // AHORA TENEMOS DOS IMÁGENES DE MAILLOT (Móvil y Desktop)
+        const modalJerseyMobile = document.getElementById('modal-jersey-mobile');
+        const modalJerseyDesktop = document.getElementById('modal-jersey-desktop');
+        
         const modalRoster = document.getElementById('modal-roster');
         
         let allTeams = [];
@@ -350,7 +379,11 @@
                 modalTitle.innerText = team.name;
                 modalCode.innerText = team.code;
                 modalCountry.innerText = team.country;
-                modalJersey.src = team.jersey;
+                
+                // ACTUALIZAMOS LAS DOS IMÁGENES (Móvil y Desktop)
+                modalJerseyMobile.src = team.jersey;
+                modalJerseyDesktop.src = team.jersey;
+                
                 if(currentSortCriteria !== 'ovr') setRosterSort('ovr'); 
             }
 
