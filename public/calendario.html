@@ -5,21 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
     <title>VELO INSIGHTS | Calendario 2026</title>
+    
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#050505">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="assets/icon-192.png">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
 
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('✅ App registrada', reg.scope))
-                .catch(err => console.log('❌ Error registro App', err));
-        });
-    }
-</script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ App registrada', reg.scope))
+                    .catch(err => console.log('❌ Error registro App', err));
+            });
+        }
+    </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="assets/main.css">
@@ -45,7 +46,7 @@
         .stage-btn.active .stage-arrow { transform: rotate(180deg); color: #22d3ee; }
         .stage-btn.active .stage-name { color: #22d3ee; }
 
-        /* Badges Categoría (Etiquetas dentro de la tarjeta) */
+        /* Badges Categoría */
         .cat-GT { color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); background: rgba(236, 72, 153, 0.1); }
         .cat-MONUMENT { color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); background: rgba(250, 204, 21, 0.1); }
         .cat-WT { color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.1); }
@@ -60,7 +61,6 @@
         
         /* ESTILOS DE LOS FILTROS (BOTONES) */
         .filter-btn { transition: all 0.3s ease; background: transparent; }
-        /* Estilos Activos Específicos */
         .filter-btn.active-all { border-color: #ffffff; color: #ffffff; background: rgba(255,255,255,0.05); box-shadow: 0 0 10px rgba(255,255,255,0.1); }
         .filter-btn.active-gt { border-color: #ec4899; color: #ec4899; background: rgba(236, 72, 153, 0.1); box-shadow: 0 0 15px rgba(236, 72, 153, 0.2); }
         .filter-btn.active-monument { border-color: #facc15; color: #facc15; background: rgba(250, 204, 21, 0.1); box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); }
@@ -83,18 +83,10 @@
             </div>
 
             <div class="flex flex-wrap justify-center gap-3">
-                <button id="btn-ALL" onclick="filterRaces('ALL')" class="filter-btn active-all px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-zinc-600 hover:text-zinc-300">
-                    Todos
-                </button>
-                <button id="btn-GT" onclick="filterRaces('GT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-pink-900 hover:text-pink-800">
-                    Grand Tours
-                </button>
-                <button id="btn-MONUMENT" onclick="filterRaces('MONUMENT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-yellow-900 hover:text-yellow-800">
-                    Monumentos
-                </button>
-                <button id="btn-WT" onclick="filterRaces('WT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-cyan-900 hover:text-cyan-800">
-                    World Tour
-                </button>
+                <button id="btn-ALL" onclick="filterRaces('ALL')" class="filter-btn active-all px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-zinc-600 hover:text-zinc-300">Todos</button>
+                <button id="btn-GT" onclick="filterRaces('GT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-pink-900 hover:text-pink-800">Grand Tours</button>
+                <button id="btn-MONUMENT" onclick="filterRaces('MONUMENT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-yellow-900 hover:text-yellow-800">Monumentos</button>
+                <button id="btn-WT" onclick="filterRaces('WT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-cyan-900 hover:text-cyan-800">World Tour</button>
             </div>
         </header>
 
@@ -211,17 +203,11 @@
             }).join('');
         }
 
-        // --- LÓGICA DE FILTROS ACTUALIZADA (COLORES) ---
         function filterRaces(category) {
             currentFilter = category;
-            
-            // 1. Resetear todos los botones a estado "Inactivo" (Gris)
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                // Quitamos todas las clases de colores activos
                 btn.classList.remove('active-all', 'active-gt', 'active-monument', 'active-wt');
             });
-
-            // 2. Activar el botón seleccionado con su color específico
             const activeBtn = document.getElementById(`btn-${category}`);
             if (activeBtn) {
                 if (category === 'ALL') activeBtn.classList.add('active-all');
@@ -229,8 +215,6 @@
                 else if (category === 'MONUMENT') activeBtn.classList.add('active-monument');
                 else if (category === 'WT') activeBtn.classList.add('active-wt');
             }
-
-            // 3. Filtrar los datos
             const term = searchInput.value.toLowerCase().trim();
             const filtered = allRaces.filter(r => {
                 const matchesCategory = category === 'ALL' || r.category === category;
