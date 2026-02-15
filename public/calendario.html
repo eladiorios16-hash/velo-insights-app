@@ -7,11 +7,12 @@
     
     <title>VELO INSIGHTS | Calendario 2026</title>
     
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#050505">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="assets/icon-192.png">
+    <link rel="apple-touch-icon" href="/assets/icon-192.png">
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -29,30 +30,24 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; background-color: #050505; }
         
-        /* Transiciones generales */
         .race-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .race-card:hover { border-color: #52525b; }
         .race-card.active { border-color: #22d3ee; background-color: rgba(34, 211, 238, 0.05); }
 
-        /* Acordeón NIVEL 1 (Carrera) */
         .details-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; background: #000; }
         .details-content.open { max-height: 3000px; border-top: 1px solid #27272a; }
 
-        /* Acordeón NIVEL 2 (Etapas) */
         .stage-detail-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; background: #0c0c0e; }
-        .stage-detail-content.open { max-height: 500px; border-top: 1px dashed #27272a; padding-bottom: 10px; }
+        .stage-detail-content.open { max-height: 600px; border-top: 1px dashed #27272a; padding-bottom: 10px; }
 
-        /* Flechita de etapa */
         .stage-arrow { transition: transform 0.3s ease; }
         .stage-btn.active .stage-arrow { transform: rotate(180deg); color: #22d3ee; }
         .stage-btn.active .stage-name { color: #22d3ee; }
 
-        /* Badges Categoría */
         .cat-GT { color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); background: rgba(236, 72, 153, 0.1); }
         .cat-MONUMENT { color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); background: rgba(250, 204, 21, 0.1); }
         .cat-WT { color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.1); }
 
-        /* Badges Etapas */
         .badge-tt { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
         .badge-montaña { background: rgba(239, 68, 68, 0.2); color: #f87171; }
         .badge-mediamontaña { background: rgba(234, 179, 8, 0.2); color: #facc15; }
@@ -60,9 +55,7 @@
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* ESTILOS DE LOS FILTROS (BOTONES) */
         .filter-btn { transition: all 0.3s ease; background: transparent; }
-        /* Estilos Activos Específicos */
         .filter-btn.active-all { border-color: #ffffff; color: #ffffff; background: rgba(255,255,255,0.05); box-shadow: 0 0 10px rgba(255,255,255,0.1); }
         .filter-btn.active-gt { border-color: #ec4899; color: #ec4899; background: rgba(236, 72, 153, 0.1); box-shadow: 0 0 15px rgba(236, 72, 153, 0.2); }
         .filter-btn.active-monument { border-color: #facc15; color: #facc15; background: rgba(250, 204, 21, 0.1); box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); }
@@ -85,18 +78,10 @@
             </div>
 
             <div class="flex flex-wrap justify-center gap-3">
-                <button id="btn-ALL" onclick="filterRaces('ALL')" class="filter-btn active-all px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-zinc-600 hover:text-zinc-300">
-                    Todos
-                </button>
-                <button id="btn-GT" onclick="filterRaces('GT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-pink-900 hover:text-pink-800">
-                    Grand Tours
-                </button>
-                <button id="btn-MONUMENT" onclick="filterRaces('MONUMENT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-yellow-900 hover:text-yellow-800">
-                    Monumentos
-                </button>
-                <button id="btn-WT" onclick="filterRaces('WT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-cyan-900 hover:text-cyan-800">
-                    World Tour
-                </button>
+                <button id="btn-ALL" onclick="filterRaces('ALL')" class="filter-btn active-all px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-zinc-600 hover:text-zinc-300">Todos</button>
+                <button id="btn-GT" onclick="filterRaces('GT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-pink-900 hover:text-pink-800">Grand Tours</button>
+                <button id="btn-MONUMENT" onclick="filterRaces('MONUMENT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-yellow-900 hover:text-yellow-800">Monumentos</button>
+                <button id="btn-WT" onclick="filterRaces('WT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-cyan-900 hover:text-cyan-800">World Tour</button>
             </div>
         </header>
 
@@ -136,7 +121,6 @@
                 const day = dateObj.getDate();
                 const month = dateObj.toLocaleString('es-ES', { month: 'short' }).replace('.', '').toUpperCase();
                 
-                // Procesar Etapas (JSON)
                 let stagesHTML = '';
                 const stages = (r.details && r.details.stages) ? r.details.stages : [];
                 
@@ -146,7 +130,6 @@
                         
                         return `
                         <div class="border-b border-zinc-800 last:border-0">
-                            
                             <button onclick="toggleStage(${i}, ${j})" id="stage-btn-${i}-${j}" class="stage-btn w-full p-4 hover:bg-white/5 transition-colors flex items-center justify-between gap-4 text-left group/stage">
                                 <div class="flex items-center gap-3">
                                     <span class="font-heading text-lg text-zinc-500 w-6 text-center group-hover/stage:text-white transition-colors">${s.n}</span>
@@ -154,7 +137,6 @@
                                         <h4 class="text-xs md:text-sm font-bold text-white uppercase stage-name transition-colors">${s.route || 'Etapa ' + s.n}</h4>
                                         <div class="flex items-center gap-2 mt-1.5">
                                             <span class="text-[9px] font-black badge-${typeClass} px-1.5 py-0.5 rounded uppercase">${s.type || 'Etapa'}</span>
-                                            
                                             ${s.km ? `<span class="text-xs md:text-sm font-bold text-white font-mono border-l border-zinc-700 pl-2 ml-1">${s.km} km</span>` : ''}
                                         </div>
                                     </div>
@@ -163,33 +145,35 @@
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
                             </button>
-                            
                             <div id="stage-content-${i}-${j}" class="stage-detail-content race-${i}-stage-content">
                                 <div class="p-4 pt-0">
                                     ${s.gain ? `<p class="text-[10px] font-mono text-zinc-400 mb-2 text-center uppercase tracking-widest border-b border-zinc-800 pb-2">Desnivel Acumulado: <span class="text-white font-bold text-xs">${s.gain}m+</span></p>` : ''}
-                                    
                                     ${s.image ? `
-                                    <div class="bg-white rounded-lg p-2 overflow-hidden border border-zinc-700 opacity-90">
-                                        <img src="${s.image}" loading="lazy" class="w-full h-auto object-contain max-h-[200px]" alt="Perfil etapa ${s.n}">
-                                    </div>
+                                        <div class="bg-white rounded-lg p-2 overflow-hidden border border-zinc-700 opacity-90">
+                                            <img src="${s.image}" loading="lazy" class="w-full h-auto object-contain max-h-[200px]" alt="Perfil etapa ${s.n}">
+                                        </div>
+                                        <div class="mt-3 flex justify-end">
+                                            <button onclick="shareStage('${r.name}', ${s.n}, '${s.route}', '${s.km}', '${s.gain}')" 
+                                                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase hover:bg-cyan-500 hover:text-black transition-all">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 12a3 3 0 100-2.684 3 3 0 000 2.684z"></path></svg>
+                                                Compartir Etapa
+                                            </button>
+                                        </div>
                                     ` : `<p class="text-center text-[9px] text-zinc-600 italic py-2">Sin perfil disponible</p>`}
                                 </div>
                             </div>
-                        </div>
-                        `;
+                        </div>`;
                     }).join('');
                 } else {
                     stagesHTML = `<div class="p-6 text-center text-zinc-600 text-xs italic">Detalles de etapas no disponibles.</div>`;
                 }
 
-                // Estado En Vivo
                 const today = new Date().toISOString().split('T')[0];
                 const isLive = r.dateISO === today;
                 const statusBadge = isLive ? `<span class="bg-green-500 text-black text-[9px] font-black px-2 py-0.5 rounded animate-pulse ml-2">EN VIVO</span>` : '';
 
                 return `
                 <div id="card-${i}" class="race-card bg-zinc-900/40 border border-zinc-800 rounded-2xl overflow-hidden mb-4">
-                    
                     <div class="p-5 flex items-center justify-between cursor-pointer" onclick="toggleDetails(${i})">
                         <div class="flex items-center gap-5">
                             <div class="flex flex-col items-center justify-center w-12 shrink-0 border-r border-zinc-800 pr-5">
@@ -211,7 +195,6 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
-
                     <div id="details-${i}" class="details-content">
                         ${stagesHTML}
                         <div class="p-4 bg-zinc-900 border-t border-zinc-800 flex justify-center">
@@ -221,21 +204,15 @@
                             </button>
                         </div>
                     </div>
-                </div>
-                `;
+                </div>`;
             }).join('');
         }
 
-        // --- LÓGICA DE FILTROS ACTUALIZADA (COLORES) ---
         function filterRaces(category) {
             currentFilter = category;
-            
-            // 1. Resetear todos los botones
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active-all', 'active-gt', 'active-monument', 'active-wt');
             });
-
-            // 2. Activar el seleccionado
             const activeBtn = document.getElementById(`btn-${category}`);
             if (activeBtn) {
                 if (category === 'ALL') activeBtn.classList.add('active-all');
@@ -243,8 +220,6 @@
                 else if (category === 'MONUMENT') activeBtn.classList.add('active-monument');
                 else if (category === 'WT') activeBtn.classList.add('active-wt');
             }
-
-            // 3. Filtrar
             const term = searchInput.value.toLowerCase().trim();
             const filtered = allRaces.filter(r => {
                 const matchesCategory = category === 'ALL' || r.category === category;
@@ -283,6 +258,27 @@
             if (!isAlreadyOpen) {
                 targetContent.classList.add('open');
                 targetBtn.classList.add('active');
+            }
+        };
+
+        window.shareStage = (raceName, stageNum, route, km, gain) => {
+            const text = `🚴‍♂️ Perfil Técnico: ${raceName}\n📍 Etapa ${stageNum}: ${route}\n📏 Distancia: ${km} km\n⛰️ Desnivel: ${gain} m+\n\nAnalizado en Velo Insights ⚡`;
+            const url = window.location.href;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: `Etapa ${stageNum} - ${raceName}`,
+                    text: text,
+                    url: url
+                }).catch((error) => console.log('Error compartiendo:', error));
+            } else {
+                const dummy = document.createElement("textarea");
+                document.body.appendChild(dummy);
+                dummy.value = text + " " + url;
+                dummy.select();
+                document.execCommand("copy");
+                document.body.removeChild(dummy);
+                alert("Copiado al portapapeles: ¡Pégalo donde quieras!");
             }
         };
 
