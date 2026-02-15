@@ -100,7 +100,7 @@ app.get('/api/ranking', (req, res) => {
 
 // 5. GLOSARIO
 app.get('/api/glossary', (req, res) => {
-    pool.query("SELECT * FROM glosario ORDER BY term ASC", (err, results) => {
+    pool.query("SELECT * FROM glossary ORDER BY term ASC", (err, results) => {
         if (err) return res.status(500).json(err);
         res.json(results);
     });
