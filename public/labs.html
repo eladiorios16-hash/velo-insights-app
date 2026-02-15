@@ -5,10 +5,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
+    
     <title>VELO INSIGHTS | Performance Lab</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ App registrada', reg.scope))
+                    .catch(err => console.log('❌ Error registro App', err));
+            });
+        }
+    </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -34,7 +48,6 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #27272a; border-radius: 2px; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-        /* FONDO DINÁMICO (Ajustado para mayor visibilidad) */
         .climb-profile-bg {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 0; 
@@ -177,28 +190,12 @@
 
     <script src="layout.js"></script>
     <script>
-        // 1. DATOS DE PUERTOS
         const CLIMBS = {
-            'alpe': { 
-                name: "Alpe d'Huez", km: 13.8, grad: 8.1, record: 37.6, holder: "M. Pantani '97", factor: 248, color: '#eab308',
-                shape: "M0,100 L0,80 Q20,60 40,70 T80,40 L100,20 L100,100 Z"
-            },
-            'angliru': { 
-                name: "L'Angliru", km: 12.5, grad: 10.1, record: 41.9, holder: "J. Vingegaard '23", factor: 289, color: '#ef4444',
-                shape: "M0,100 L0,90 Q30,85 50,60 C60,40 70,30 100,5 L100,100 Z"
-            },
-            'tourmalet': { 
-                name: "Tourmalet", km: 19.0, grad: 7.4, record: 45.2, holder: "J. Vingegaard '23", factor: 293, color: '#3b82f6',
-                shape: "M0,100 L0,85 L100,15 L100,100 Z"
-            },
-            'mortirolo': { 
-                name: "Mortirolo", km: 11.8, grad: 10.9, record: 41.3, holder: "M. Pantani '94", factor: 276, color: '#a855f7',
-                shape: "M0,100 L0,90 L100,10 L100,100 Z"
-            },
-            'stelvio': { 
-                name: "Stelvio", km: 24.3, grad: 7.4, record: 60.5, holder: "R. Dennis '20", factor: 369, color: '#10b981',
-                shape: "M0,100 L0,90 Q50,70 100,30 L100,100 Z"
-            }
+            'alpe': { name: "Alpe d'Huez", km: 13.8, grad: 8.1, record: 37.6, holder: "M. Pantani '97", factor: 248, color: '#eab308', shape: "M0,100 L0,80 Q20,60 40,70 T80,40 L100,20 L100,100 Z" },
+            'angliru': { name: "L'Angliru", km: 12.5, grad: 10.1, record: 41.9, holder: "J. Vingegaard '23", factor: 289, color: '#ef4444', shape: "M0,100 L0,90 Q30,85 50,60 C60,40 70,30 100,5 L100,100 Z" },
+            'tourmalet': { name: "Tourmalet", km: 19.0, grad: 7.4, record: 45.2, holder: "J. Vingegaard '23", factor: 293, color: '#3b82f6', shape: "M0,100 L0,85 L100,15 L100,100 Z" },
+            'mortirolo': { name: "Mortirolo", km: 11.8, grad: 10.9, record: 41.3, holder: "M. Pantani '94", factor: 276, color: '#a855f7', shape: "M0,100 L0,90 L100,10 L100,100 Z" },
+            'stelvio': { name: "Stelvio", km: 24.3, grad: 7.4, record: 60.5, holder: "R. Dennis '20", factor: 369, color: '#10b981', shape: "M0,100 L0,90 Q50,70 100,30 L100,100 Z" }
         };
 
         const PRO_STATS = {
@@ -209,13 +206,11 @@
             'roglic': { name: 'Primož Roglič', team: 'Red Bull', stats: [94, 82, 91, 94, 92], color: '#ec4899', bg: 'rgba(236, 72, 153, 0.2)' }
         };
 
-        // DOM
         const weightInput = document.getElementById('weight');
         const wattsInput = document.getElementById('watts');
         const rivalSelect = document.getElementById('rival-selector');
         const wkgDisplay = document.getElementById('wkg-display');
         const analysisContent = document.getElementById('analysis-content');
-        
         const climbSelect = document.getElementById('climb-select');
         const climbSlider = document.getElementById('climb-slider');
         const sliderValDisplay = document.getElementById('slider-val-display');
@@ -229,25 +224,17 @@
 
         function init() {
             rivalSelect.innerHTML = Object.entries(PRO_STATS).map(([k,v]) => `<option value="${k}">${v.name} (${v.team})</option>`).join('');
-            
-            // INICIALIZACIÓN LIMPIA: Si no hay datos, cadenas vacías
-            const savedW = localStorage.getItem('velo_watts') || '';
-            const savedKg = localStorage.getItem('velo_weight') || '';
-            weightInput.value = savedKg;
-            wattsInput.value = savedW;
-            
+            weightInput.value = localStorage.getItem('velo_weight') || '';
+            wattsInput.value = localStorage.getItem('velo_watts') || '';
             updateAll();
             updateClimbBackground();
         }
 
         function updateAll() {
             const w = parseFloat(wattsInput.value) || 0;
-            let kg = parseFloat(weightInput.value) || 0; // SIN valor por defecto 70
-            if (kg > 150) kg = 150;
-
+            const kg = parseFloat(weightInput.value) || 0;
             const wkg = (w > 0 && kg > 0) ? (w / kg) : 0;
             wkgDisplay.innerText = wkg.toFixed(2);
-            
             localStorage.setItem('velo_weight', weightInput.value);
             localStorage.setItem('velo_watts', wattsInput.value);
 
@@ -257,13 +244,7 @@
                 { n: 'Z4', name: 'Umbral FTP', r: `${Math.round(w*0.91)}-${Math.round(w*1.05)}w`, c: 'text-yellow-500' },
                 { n: 'Z5', name: 'Capacidad VO2', r: `> ${Math.round(w*1.06)}w`, c: 'text-pink-500' }
             ];
-            document.getElementById('zones-table').innerHTML = zones.map(z => `
-                <tr class="hover:bg-zinc-800/40">
-                    <td class="py-2 pl-4 font-black ${z.c}">${z.n}</td>
-                    <td class="text-zinc-500 uppercase font-bold text-[9px]">${z.name}</td>
-                    <td class="text-right pr-4 text-white font-bold">${z.r}</td>
-                </tr>`).join('');
-
+            document.getElementById('zones-table').innerHTML = zones.map(z => `<tr class="hover:bg-zinc-800/40"><td class="py-2 pl-4 font-black ${z.c}">${z.n}</td><td class="text-zinc-500 uppercase font-bold text-[9px]">${z.name}</td><td class="text-right pr-4 text-white font-bold">${z.r}</td></tr>`).join('');
             renderRadar();
             renderClimb();
         }
@@ -271,19 +252,7 @@
         function updateClimbBackground() {
             const key = climbSelect.value;
             const c = CLIMBS[key];
-            
-            climbBgContainer.innerHTML = `
-                <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
-                    <defs>
-                        <linearGradient id="grad-${key}" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:${c.color};stop-opacity:0.5" />
-                            <stop offset="100%" style="stop-color:${c.color};stop-opacity:0" />
-                        </linearGradient>
-                    </defs>
-                    <path d="${c.shape}" fill="url(#grad-${key})" />
-                    <path d="${c.shape.replace('L100,100 Z', '')}" fill="none" stroke="${c.color}" stroke-width="0.8" stroke-opacity="0.8" vector-effect="non-scaling-stroke" />
-                </svg>
-            `;
+            climbBgContainer.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full"><defs><linearGradient id="grad-${key}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:${c.color};stop-opacity:0.5" /><stop offset="100%" style="stop-color:${c.color};stop-opacity:0" /></linearGradient></defs><path d="${c.shape}" fill="url(#grad-${key})" /><path d="${c.shape.replace('L100,100 Z', '')}" fill="none" stroke="${c.color}" stroke-width="0.8" stroke-opacity="0.8" vector-effect="non-scaling-stroke" /></svg>`;
         }
 
         function renderRadar() {
@@ -291,9 +260,7 @@
             document.getElementById('radar-skeleton').style.display = 'none';
             const rival = PRO_STATS[rivalSelect.value];
             const wkg = parseFloat(wkgDisplay.innerText);
-            const userScore = wkg > 0 ? Math.min(95, (wkg / 6.6) * 100) : 0; // Si wkg es 0, score es 0
-
-            // DATOS: Si no hay score, pasamos null o array vacío para el dataset "Tú"
+            const userScore = wkg > 0 ? Math.min(95, (wkg / 6.6) * 100) : 0;
             const userData = userScore > 0 ? [userScore, userScore*0.7, userScore*0.8, userScore*0.8, 50] : [null, null, null, null, null];
 
             if (radarChart) radarChart.destroy();
@@ -306,13 +273,8 @@
                         { label: rival.name, data: rival.stats, borderColor: rival.color, backgroundColor: rival.bg, borderWidth: 2, pointRadius: 0 }
                     ]
                 },
-                options: { 
-                    maintainAspectRatio: false, 
-                    scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.05)' }, angleLines: { color: 'rgba(255,255,255,0.05)' }, pointLabels: { color: '#52525b', font: { size: 9, weight: 'bold' } } } },
-                    plugins: { legend: { labels: { color: '#a1a1aa', font: { size: 10 }, boxWidth: 10 } } }
-                }
+                options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.05)' }, angleLines: { color: 'rgba(255,255,255,0.05)' }, pointLabels: { color: '#52525b', font: { size: 9, weight: 'bold' } } } }, plugins: { legend: { labels: { color: '#a1a1aa', font: { size: 10 }, boxWidth: 10 } } } }
             });
-
             const gap = ((userScore / 100) * 100).toFixed(0);
             analysisContent.innerHTML = `<div class="flex justify-between items-end mb-2"><span class="text-[9px] font-black uppercase text-zinc-500">Nivel Pro-Conti</span><span class="text-sm font-mono font-bold text-white">${gap}%</span></div><div class="w-full bg-zinc-900 rounded-full h-1 overflow-hidden"><div class="bg-gradient-to-r from-cyan-500 to-pink-500 h-full" style="width: ${gap}%"></div></div>`;
         }
@@ -320,72 +282,41 @@
         function renderClimb() {
             if (typeof Chart === 'undefined') return;
             document.getElementById('climb-skeleton').style.display = 'none';
-            
             const key = climbSelect.value;
             const c = CLIMBS[key];
-            
             recordHolderDisplay.innerText = c.holder;
             recordTimeDisplay.innerText = `${c.record.toFixed(1)} min`;
-
             const minutes = parseInt(climbSlider.value);
             sliderValDisplay.innerText = `${minutes} min`;
-            
             const req = (c.factor / minutes).toFixed(2);
             climbWkgDisplay.innerText = `${req} W/kg`;
             climbWkgDisplay.style.color = c.color;
-
             const userWkg = parseFloat(wkgDisplay.innerText);
-            // SI userWkg es 0, pasamos null para que la barra NO se pinte
             const userTime = userWkg > 0 ? (c.factor / userWkg).toFixed(1) : null;
 
             if (climbChart) climbChart.destroy();
             climbChart = new Chart(document.getElementById('climbChart'), {
                 type: 'bar',
-                data: { 
-                    labels: ['RÉCORD', 'OBJETIVO', 'TU TIEMPO'], 
-                    datasets: [{ 
-                        data: [c.record, minutes, userTime], 
-                        backgroundColor: [c.color, '#ffffff', '#22d3ee'], 
-                        borderRadius: 4, 
-                        barThickness: 18 
-                    }] 
-                },
-                options: { 
-                    indexAxis: 'y', 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } },
-                    scales: { 
-                        x: { grid: { display: false }, ticks: { color: '#3f3f46', font: { size: 8 } } }, 
-                        y: { ticks: { color: '#fff', font: { weight: '900', size: 9 } } } 
-                    }
-                }
+                data: { labels: ['RÉCORD', 'OBJETIVO', 'TU TIEMPO'], datasets: [{ data: [c.record, minutes, userTime], backgroundColor: [c.color, '#ffffff', '#22d3ee'], borderRadius: 4, barThickness: 18 }] },
+                options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#3f3f46', font: { size: 8 } } }, y: { ticks: { color: '#fff', font: { weight: '900', size: 9 } } } } }
             });
         }
 
         function handleClimbSliderInput() {
             const minutes = parseInt(climbSlider.value);
             sliderValDisplay.innerText = `${minutes} min`;
-            
-            const key = climbSelect.value;
-            const c = CLIMBS[key];
-            const req = (c.factor / minutes).toFixed(2);
+            const req = (CLIMBS[climbSelect.value].factor / minutes).toFixed(2);
             climbWkgDisplay.innerText = `${req} W/kg`;
-
             clearTimeout(climbDebounceTimer);
             climbDebounceTimer = setTimeout(renderClimb, 150);
         }
 
-        // LISTENERS
         [weightInput, wattsInput].forEach(el => el.addEventListener('input', updateAll));
         rivalSelect.addEventListener('change', renderRadar);
         climbSlider.addEventListener('input', handleClimbSliderInput);
-        
-        climbSelect.addEventListener('change', () => {
-            updateClimbBackground();
-            renderClimb();
-        });
-        
+        climbSelect.addEventListener('change', () => { updateClimbBackground(); renderClimb(); });
         window.onload = init;
     </script>
 </body>
+
 </html>
