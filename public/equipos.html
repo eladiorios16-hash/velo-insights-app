@@ -6,21 +6,22 @@
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
     
     <title>VELO INSIGHTS | Equipos WorldTour 2026</title>
+    
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#050505">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="assets/icon-192.png">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
 
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('✅ App registrada', reg.scope))
-                .catch(err => console.log('❌ Error registro App', err));
-        });
-    }
-</script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ App registrada', reg.scope))
+                    .catch(err => console.log('❌ Error registro App', err));
+            });
+        }
+    </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -64,16 +65,12 @@
         /* Botones activos */
         .sort-btn.active { background-color: rgba(34, 211, 238, 0.2); color: #22d3ee; border-color: #22d3ee; }
 
-        /* =========================================
-           ESTILOS ESPECÍFICOS PARA ESCRITORIO
-           ========================================= */
+        /* ESTILOS ESPECÍFICOS PARA ESCRITORIO */
         @media (min-width: 1024px) {
-            /* Scrollbar invisible en la lista general en PC para limpieza visual */
             .roster-scroll::-webkit-scrollbar { width: 8px; }
             .roster-scroll::-webkit-scrollbar-track { background: #111; }
             .roster-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
             
-            /* Ajuste del gráfico en PC */
             #radar-container-desktop {
                 height: 350px !important;
                 width: 100% !important;
@@ -81,9 +78,6 @@
             }
         }
     </style>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#050505">
 </head>
 <body class="bg-[#050505] antialiased overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
 
@@ -229,7 +223,6 @@
         const modalCode = document.getElementById('modal-code');
         const modalCountry = document.getElementById('modal-country');
         
-        // AHORA TENEMOS DOS IMÁGENES DE MAILLOT (Móvil y Desktop)
         const modalJerseyMobile = document.getElementById('modal-jersey-mobile');
         const modalJerseyDesktop = document.getElementById('modal-jersey-desktop');
         
@@ -242,7 +235,7 @@
         let currentSortCriteria = 'ovr'; 
         let currentOpenTeamCode = null;
 
-        // --- SISTEMA DE FAVORITOS ---
+        // --- FAVORITOS ---
         const FAV_KEY = 'velo_favs_v1';
 
         function getFavorites() { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); }
@@ -383,7 +376,6 @@
             }
         };
 
-        // --- MODAL LÓGICA (ACTUALIZADA) ---
         window.openModal = (teamCode, refreshOnly = false) => {
             const team = allTeams.find(t => t.code === teamCode);
             if(!team) return;
@@ -394,8 +386,6 @@
                 modalTitle.innerText = team.name;
                 modalCode.innerText = team.code;
                 modalCountry.innerText = team.country;
-                
-                // ACTUALIZAMOS LAS DOS IMÁGENES (Móvil y Desktop)
                 modalJerseyMobile.src = team.jersey;
                 modalJerseyDesktop.src = team.jersey;
                 
@@ -404,7 +394,6 @@
 
             let riders = team.riders || [];
 
-            // 1. FILTRO FAVORITOS
             const rosterTitle = document.getElementById('roster-title');
             if(currentFilter === 'favs') {
                 riders = riders.filter(r => isFav(r.name));
@@ -415,14 +404,12 @@
                 rosterTitle.classList.remove('text-yellow-500');
             }
 
-            // 2. ORDENACIÓN
             const sortedRiders = [...riders].sort((a, b) => {
                 const valA = a.stats[currentSortCriteria] || 0;
                 const valB = b.stats[currentSortCriteria] || 0;
                 return valB - valA;
             });
 
-            // 3. CHART & PROMEDIO
             if (!refreshOnly) {
                 const avg = riders.length > 0 ? {
                     mnt: Math.round(riders.reduce((a,b)=>a+b.stats.mnt,0)/riders.length),
@@ -440,7 +427,6 @@
                 }, 200);
             }
 
-            // 4. RENDER
             modalRoster.innerHTML = sortedRiders.map((rider, index) => {
                 const s = rider.stats;
                 let ovrColor = 'text-zinc-500';
@@ -450,8 +436,6 @@
 
                 const isFavorite = isFav(rider.name);
                 const heartColor = isFavorite ? 'text-yellow-500' : 'text-zinc-700 hover:text-zinc-500';
-                
-                // ILUMINAR DATO ORDENADO
                 const hl = (key) => key === currentSortCriteria ? 'text-yellow-400 font-black scale-110 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'text-zinc-200';
 
                 return `
@@ -517,34 +501,127 @@
             renderTeams(filtered);
         });
 
+        // --- LÓGICA DE COMPARACIÓN (H2H) REPARADA ---
         function initCompareSection() {
             const h2hSection = document.getElementById('h2h-section');
             h2hSection.classList.remove('hidden');
+            
             const t1 = document.getElementById('h2h-team-1');
             const t2 = document.getElementById('h2h-team-2');
+            
+            // Llenar selects de equipos
             let teamOptionsHTML = allTeams.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
             t1.innerHTML = teamOptionsHTML;
             t2.innerHTML = teamOptionsHTML;
+
+            // Seleccionar equipos por defecto
             const idxUae = allTeams.findIndex(t => t.name.includes('UAE'));
             const idxVisma = allTeams.findIndex(t => t.name.includes('Visma'));
             t1.value = idxUae !== -1 ? idxUae : 0;
             t2.value = idxVisma !== -1 ? idxVisma : (allTeams.length > 1 ? 1 : 0);
-            updateRiderDropdown(1); updateRiderDropdown(2);
-            preselectRider(1, 'Pogačar'); preselectRider(2, 'Vingegaard');
-            
+
+            // Iniciar gráfico de comparación
             const ctx = document.getElementById('compare-radar').getContext('2d');
-            compareRadarInstance = new Chart(ctx, { type: 'radar', data: { labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'], datasets: [{ label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.2)', borderWidth: 2, pointBackgroundColor: '#22d3ee' }, { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.2)', borderWidth: 2, pointBackgroundColor: '#ec4899' }] }, options: { scales: { r: { min: 40, max: 100, angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, ticks: { display: false } } }, plugins: { legend: { display: false }, datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, formatter: Math.round } }, maintainAspectRatio: false } });
-            
+            compareRadarInstance = new Chart(ctx, { 
+                type: 'radar', 
+                data: { 
+                    labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'], 
+                    datasets: [
+                        { label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.2)', borderWidth: 2, pointBackgroundColor: '#22d3ee' }, 
+                        { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.2)', borderWidth: 2, pointBackgroundColor: '#ec4899' }
+                    ] 
+                }, 
+                options: { 
+                    scales: { 
+                        r: { 
+                            min: 40, max: 100, 
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, 
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
+                            pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, 
+                            ticks: { display: false } 
+                        } 
+                    }, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, formatter: Math.round } 
+                    }, 
+                    maintainAspectRatio: false 
+                } 
+            });
+
+            // Llenar selects de corredores inicialmente
+            updateRiderDropdown(1);
+            updateRiderDropdown(2);
+
+            // Preseleccionar corredores famosos si existen
+            preselectRider(1, 'Pogačar');
+            preselectRider(2, 'Vingegaard');
+
+            // Listeners para cambios
             t1.addEventListener('change', () => { updateRiderDropdown(1); updateCompareChart(); });
             t2.addEventListener('change', () => { updateRiderDropdown(2); updateCompareChart(); });
             document.getElementById('h2h-rider-1').addEventListener('change', updateCompareChart);
             document.getElementById('h2h-rider-2').addEventListener('change', updateCompareChart);
+
             updateCompareChart();
         }
-        function updateRiderDropdown(side) { const teamIdx = document.getElementById(`h2h-team-${side}`).value; const team = allTeams[teamIdx]; const riderSelect = document.getElementById(`h2h-rider-${side}`); if(team && team.riders) { const sortedRiders = [...team.riders].sort((a, b) => b.stats.ovr - a.stats.ovr); riderSelect.innerHTML = sortedRiders.map(r => `<option value="${r.name}">${r.stats.ovr} OVR | ${r.name}</option>`).join(''); } }
-        function preselectRider(side, nameSubstring) { const select = document.getElementById(`h2h-rider-${side}`); const match = Array.from(select.options).find(opt => opt.value.includes(nameSubstring)); if(match) select.value = match.value; }
-        function getSelectedRider(side) { const teamIdx = document.getElementById(`h2h-team-${side}`).value; const riderName = document.getElementById(`h2h-rider-${side}`).value; const team = allTeams[teamIdx]; if (!team || !team.riders) return null; return team.riders.find(r => r.name === riderName); }
-        function updateCompareChart() { const r1 = getSelectedRider(1); const r2 = getSelectedRider(2); if(!r1 || !r2) return; compareRadarInstance.data.datasets[0].label = r1.name; compareRadarInstance.data.datasets[0].data = [r1.stats.mnt, r1.stats.spr, r1.stats.tt, r1.stats.lla, r1.stats.res, r1.stats.rec]; compareRadarInstance.data.datasets[1].label = r2.name; compareRadarInstance.data.datasets[1].data = [r2.stats.mnt, r2.stats.spr, r2.stats.tt, r2.stats.lla, r2.stats.res, r2.stats.rec]; compareRadarInstance.update(); document.getElementById('ovr-1').innerText = r1.stats.ovr; document.getElementById('type-1').className = `spec-badge ${r1.typeClass || 'spec-gc'}`; document.getElementById('type-1').innerText = r1.type || 'PRO'; document.getElementById('ovr-2').innerText = r2.stats.ovr; document.getElementById('type-2').className = `spec-badge ${r2.typeClass || 'spec-gc'}`; document.getElementById('type-2').innerText = r2.type || 'PRO'; }
+
+        function updateRiderDropdown(side) {
+            const teamIdx = document.getElementById(`h2h-team-${side}`).value;
+            const team = allTeams[teamIdx];
+            const riderSelect = document.getElementById(`h2h-rider-${side}`);
+            
+            if(team && team.riders) {
+                // Ordenar por OVR descendente
+                const sortedRiders = [...team.riders].sort((a, b) => b.stats.ovr - a.stats.ovr);
+                riderSelect.innerHTML = sortedRiders.map(r => `<option value="${r.name}">${r.stats.ovr} OVR | ${r.name}</option>`).join('');
+            }
+        }
+
+        function preselectRider(side, nameSubstring) {
+            const select = document.getElementById(`h2h-rider-${side}`);
+            const match = Array.from(select.options).find(opt => opt.value.includes(nameSubstring));
+            if(match) {
+                select.value = match.value;
+                // Importante: Disparar el cambio si fuera necesario, o llamar updateCompareChart manualmente después
+            }
+        }
+
+        function getSelectedRider(side) {
+            const teamIdx = document.getElementById(`h2h-team-${side}`).value;
+            const riderName = document.getElementById(`h2h-rider-${side}`).value;
+            const team = allTeams[teamIdx];
+            if (!team || !team.riders) return null;
+            return team.riders.find(r => r.name === riderName);
+        }
+
+        function updateCompareChart() {
+            const r1 = getSelectedRider(1);
+            const r2 = getSelectedRider(2);
+            
+            if(!r1 || !r2) return;
+
+            // Actualizar Datos Gráfico
+            compareRadarInstance.data.datasets[0].label = r1.name;
+            compareRadarInstance.data.datasets[0].data = [r1.stats.mnt, r1.stats.spr, r1.stats.tt, r1.stats.lla, r1.stats.res, r1.stats.rec];
+            
+            compareRadarInstance.data.datasets[1].label = r2.name;
+            compareRadarInstance.data.datasets[1].data = [r2.stats.mnt, r2.stats.spr, r2.stats.tt, r2.stats.lla, r2.stats.res, r2.stats.rec];
+            
+            compareRadarInstance.update();
+
+            // Actualizar Datos Texto (Lado 1)
+            document.getElementById('ovr-1').innerText = r1.stats.ovr;
+            const t1Label = document.getElementById('type-1');
+            t1Label.className = `spec-badge ${r1.typeClass || 'spec-gc'}`;
+            t1Label.innerText = r1.type || 'PRO';
+
+            // Actualizar Datos Texto (Lado 2)
+            document.getElementById('ovr-2').innerText = r2.stats.ovr;
+            const t2Label = document.getElementById('type-2');
+            t2Label.className = `spec-badge ${r2.typeClass || 'spec-gc'}`;
+            t2Label.innerText = r2.type || 'PRO';
+        }
 
         document.addEventListener('DOMContentLoaded', fetchTeams);
     </script>
