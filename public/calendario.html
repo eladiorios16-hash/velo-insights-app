@@ -12,14 +12,23 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; background-color: #050505; }
         
-        /* Transiciones */
+        /* Transiciones generales */
         .race-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .race-card:hover { border-color: #52525b; }
         .race-card.active { border-color: #22d3ee; background-color: rgba(34, 211, 238, 0.05); }
 
-        /* Acordeón */
+        /* Acordeón NIVEL 1 (Carrera) */
         .details-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; background: #000; }
-        .details-content.open { max-height: 2000px; border-top: 1px solid #27272a; }
+        .details-content.open { max-height: 3000px; border-top: 1px solid #27272a; }
+
+        /* Acordeón NIVEL 2 (Etapas) */
+        .stage-detail-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; background: #0c0c0e; }
+        .stage-detail-content.open { max-height: 500px; border-top: 1px dashed #27272a; padding-bottom: 10px; }
+
+        /* Flechita de etapa */
+        .stage-arrow { transition: transform 0.3s ease; }
+        .stage-btn.active .stage-arrow { transform: rotate(180deg); color: #22d3ee; }
+        .stage-btn.active .stage-name { color: #22d3ee; }
 
         /* Badges Categoría */
         .cat-GT { color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); background: rgba(236, 72, 153, 0.1); }
@@ -32,7 +41,6 @@
         .badge-mediamontaña { background: rgba(234, 179, 8, 0.2); color: #facc15; }
         .badge-llano { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
 
-        /* Scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -100,31 +108,40 @@
                 const stages = (r.details && r.details.stages) ? r.details.stages : [];
                 
                 if (stages.length > 0) {
-                    stagesHTML = stages.map(s => {
+                    stagesHTML = stages.map((s, j) => {
                         // Limpieza de tipo para la clase CSS
                         const typeClass = s.type ? s.type.toLowerCase().replace(/\s+/g, '') : 'llano';
                         
                         return `
-                        <div class="border-b border-zinc-800 last:border-0 p-4 hover:bg-white/5 transition-colors group/stage">
-                            <div class="flex items-center justify-between gap-4 mb-3">
+                        <div class="border-b border-zinc-800 last:border-0">
+                            
+                            <button onclick="toggleStage(${i}, ${j})" id="stage-btn-${i}-${j}" class="stage-btn w-full p-4 hover:bg-white/5 transition-colors flex items-center justify-between gap-4 text-left group/stage">
                                 <div class="flex items-center gap-3">
                                     <span class="font-heading text-lg text-zinc-500 w-6 text-center group-hover/stage:text-white transition-colors">${s.n}</span>
                                     <div>
-                                        <h4 class="text-xs md:text-sm font-bold text-white uppercase">${s.route || 'Etapa ' + s.n}</h4>
+                                        <h4 class="text-xs md:text-sm font-bold text-white uppercase stage-name transition-colors">${s.route || 'Etapa ' + s.n}</h4>
                                         <div class="flex gap-2 mt-1">
                                             <span class="text-[9px] font-black badge-${typeClass} px-1.5 py-0.5 rounded uppercase">${s.type || 'Etapa'}</span>
                                             ${s.km ? `<span class="text-[9px] text-zinc-400 font-mono">${s.km} KM</span>` : ''}
-                                            ${s.gain ? `<span class="text-[9px] text-zinc-400 font-mono">${s.gain} M+</span>` : ''}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                                <div class="stage-arrow text-zinc-600">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </button>
                             
-                            ${s.image ? `
-                            <div class="mt-2 bg-white rounded-lg p-2 overflow-hidden border border-zinc-700 opacity-80 hover:opacity-100 transition-opacity">
-                                <img src="${s.image}" loading="lazy" class="w-full h-auto object-contain max-h-[150px]" alt="Perfil etapa ${s.n}">
+                            <div id="stage-content-${i}-${j}" class="stage-detail-content race-${i}-stage-content">
+                                <div class="p-4 pt-0">
+                                    ${s.gain ? `<p class="text-[9px] font-mono text-zinc-400 mb-2 text-center uppercase tracking-widest border-b border-zinc-800 pb-2">Desnivel Acumulado: <span class="text-white font-bold">${s.gain}m+</span></p>` : ''}
+                                    
+                                    ${s.image ? `
+                                    <div class="bg-white rounded-lg p-2 overflow-hidden border border-zinc-700 opacity-90">
+                                        <img src="${s.image}" loading="lazy" class="w-full h-auto object-contain max-h-[200px]" alt="Perfil etapa ${s.n}">
+                                    </div>
+                                    ` : `<p class="text-center text-[9px] text-zinc-600 italic py-2">Sin perfil disponible</p>`}
+                                </div>
                             </div>
-                            ` : ''}
                         </div>
                         `;
                     }).join('');
@@ -176,6 +193,54 @@
             }).join('');
         }
 
+        // --- LÓGICA DE ACORDEONES ---
+
+        // 1. Abrir/Cerrar la Carrera completa
+        function toggleDetails(index) {
+            const content = document.getElementById(`details-${index}`);
+            const card = document.getElementById(`card-${index}`);
+            const icon = document.getElementById(`icon-${index}`);
+            const isOpen = content.classList.contains('open');
+            
+            // Cerrar otras carreras
+            document.querySelectorAll('.details-content').forEach(el => el.classList.remove('open'));
+            document.querySelectorAll('.race-card').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.icon-toggle').forEach(el => el.style.transform = 'rotate(0deg)');
+
+            if(!isOpen) {
+                content.classList.add('open');
+                card.classList.add('active');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // 2. Abrir/Cerrar UNA ETAPA ESPECÍFICA (y cerrar las demás de esa carrera)
+        window.toggleStage = (raceIndex, stageIndex) => {
+            const contentID = `stage-content-${raceIndex}-${stageIndex}`;
+            const btnID = `stage-btn-${raceIndex}-${stageIndex}`;
+            const targetContent = document.getElementById(contentID);
+            const targetBtn = document.getElementById(btnID);
+            
+            const isAlreadyOpen = targetContent.classList.contains('open');
+
+            // CERRAR TODAS las etapas de esta carrera
+            // Buscamos solo los elementos que tengan la clase 'race-{X}-stage-content'
+            const allStagesInRace = document.querySelectorAll(`.race-${raceIndex}-stage-content`);
+            allStagesInRace.forEach(el => el.classList.remove('open'));
+            
+            // Quitar clase activa a todos los botones de esta carrera
+            // (Necesitamos una forma de seleccionarlos, usaremos el padre común)
+            const parentDetails = document.getElementById(`details-${raceIndex}`);
+            const allBtns = parentDetails.querySelectorAll('.stage-btn');
+            allBtns.forEach(btn => btn.classList.remove('active'));
+
+            // Si no estaba abierta, la abrimos ahora
+            if (!isAlreadyOpen) {
+                targetContent.classList.add('open');
+                targetBtn.classList.add('active');
+            }
+        };
+
         function filterRaces(category) {
             currentFilter = category;
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -192,24 +257,6 @@
                 return matchesCategory && matchesSearch;
             });
             renderCalendar(filtered);
-        }
-
-        function toggleDetails(index) {
-            const content = document.getElementById(`details-${index}`);
-            const card = document.getElementById(`card-${index}`);
-            const icon = document.getElementById(`icon-${index}`);
-            const isOpen = content.classList.contains('open');
-            
-            // Cerrar todos primero (opcional, si quieres que solo se abra uno a la vez)
-            document.querySelectorAll('.details-content').forEach(el => el.classList.remove('open'));
-            document.querySelectorAll('.race-card').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.icon-toggle').forEach(el => el.style.transform = 'rotate(0deg)');
-
-            if(!isOpen) {
-                content.classList.add('open');
-                card.classList.add('active');
-                icon.style.transform = 'rotate(180deg)';
-            }
         }
 
         function addToCalendar(title, dateStr) {
