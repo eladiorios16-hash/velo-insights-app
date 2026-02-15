@@ -12,39 +12,37 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; background-color: #050505; }
         
-        /* Animaciones y Transiciones */
+        /* Transiciones */
         .race-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .race-card:hover { transform: translateY(-2px); border-color: #3f3f46; }
-        
-        /* Badges de Categoría */
-        .cat-GT { background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
-        .cat-MONUMENT { background: rgba(250, 204, 21, 0.1); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); }
-        .cat-WT { background: rgba(34, 211, 238, 0.1); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); }
-        
-        /* Estado En Vivo */
-        @keyframes pulse-live { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
-        .status-live { border-color: #22c55e !important; animation: pulse-live 2s infinite; }
-
-        /* Filtros Activos */
-        .filter-btn.active { background-color: #fff; color: #000; border-color: #fff; }
+        .race-card:hover { border-color: #52525b; }
+        .race-card.active { border-color: #22d3ee; background-color: rgba(34, 211, 238, 0.05); }
 
         /* Acordeón */
-        .details-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; background: #09090b; }
-        .details-content.open { max-height: 1000px; border-top: 1px solid #27272a; }
-        
+        .details-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; background: #000; }
+        .details-content.open { max-height: 2000px; border-top: 1px solid #27272a; }
+
+        /* Badges Categoría */
+        .cat-GT { color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); background: rgba(236, 72, 153, 0.1); }
+        .cat-MONUMENT { color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); background: rgba(250, 204, 21, 0.1); }
+        .cat-WT { color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.1); }
+
+        /* Badges Etapas */
+        .badge-tt { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .badge-montaña { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge-mediamontaña { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+        .badge-llano { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+
+        /* Scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#050505">
 </head>
 
-<body class="bg-[#050505] antialiased overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen pb-20">
+<body class="bg-[#050505] antialiased min-h-screen pb-20 text-white selection:bg-cyan-500/30">
 
     <main class="max-w-5xl mx-auto px-4 md:px-6 py-28 md:py-40">
         
         <header class="mb-10 text-center reveal-on-scroll">
-            <h1 class="text-4xl md:text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">
+            <h1 class="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">
                 Calendario <span class="text-zinc-700">2026</span>
             </h1>
             
@@ -54,15 +52,14 @@
             </div>
 
             <div class="flex flex-wrap justify-center gap-2 md:gap-3">
-                <button onclick="filterRaces('ALL')" class="filter-btn active px-4 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-600 transition-all">Todos</button>
+                <button onclick="filterRaces('ALL')" class="filter-btn active px-4 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-600 transition-all bg-white/5">Todos</button>
                 <button onclick="filterRaces('GT')" class="filter-btn px-4 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-pink-500 hover:bg-pink-500/10 hover:border-pink-500 transition-all">Grand Tours</button>
                 <button onclick="filterRaces('MONUMENT')" class="filter-btn px-4 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-yellow-500 hover:bg-yellow-500/10 hover:border-yellow-500 transition-all">Monumentos</button>
                 <button onclick="filterRaces('WT')" class="filter-btn px-4 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-cyan-500 hover:bg-cyan-500/10 hover:border-cyan-500 transition-all">World Tour</button>
             </div>
         </header>
 
-        <div id="calendar-container" class="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
-             </div>
+        <div id="calendar-container" class="space-y-4"></div>
 
     </main>
 
@@ -75,83 +72,103 @@
         let currentFilter = 'ALL';
 
         async function initCalendar() {
-            container.innerHTML = `<div class="col-span-full text-center py-20 animate-pulse text-zinc-600 uppercase text-xs font-black">Sincronizando fechas...</div>`;
-
+            container.innerHTML = `<div class="text-center py-20 animate-pulse text-zinc-600 uppercase text-xs font-black">Cargando datos...</div>`;
             try {
                 const response = await fetch('/api/calendar');
                 if (response.ok) {
                     allRaces = await response.json();
                     renderCalendar(allRaces);
-                } else {
-                    throw new Error('Error API');
-                }
+                } else { throw new Error('Error API'); }
             } catch (error) {
-                console.error(error);
-                container.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 text-xs font-bold">Error de conexión.</div>`;
+                container.innerHTML = `<div class="text-center py-20 text-red-500 text-xs font-bold">Error de conexión.</div>`;
             }
         }
 
         function renderCalendar(data) {
-            const today = new Date().toISOString().split('T')[0];
-            
             if (data.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-20 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20"><p class="text-zinc-600 font-bold uppercase text-xs">Sin resultados</p></div>`;
+                container.innerHTML = `<div class="text-center py-20 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20"><p class="text-zinc-600 font-bold uppercase text-xs">Sin resultados</p></div>`;
                 return;
             }
 
             container.innerHTML = data.map((r, i) => {
-                // Formato de Fecha
                 const dateObj = new Date(r.dateISO);
                 const day = dateObj.getDate();
                 const month = dateObj.toLocaleString('es-ES', { month: 'short' }).replace('.', '').toUpperCase();
                 
-                // Estado y Estilos
-                let statusBadge = '';
-                let cardClass = '';
-                let opacityClass = '';
+                // Procesar Etapas (JSON)
+                let stagesHTML = '';
+                const stages = (r.details && r.details.stages) ? r.details.stages : [];
                 
-                if (r.dateISO === today) {
-                    statusBadge = `<span class="bg-green-500 text-black text-[9px] font-black px-2 py-0.5 rounded animate-pulse ml-2">EN VIVO</span>`;
-                    cardClass = 'status-live';
-                } else if (r.dateISO < today && r.status !== 'Upcoming') {
-                    statusBadge = `<span class="text-zinc-600 text-[9px] font-bold uppercase ml-2 border border-zinc-800 px-1.5 rounded">Finalizado</span>`;
-                    opacityClass = 'opacity-60 grayscale hover:grayscale-0 hover:opacity-100';
+                if (stages.length > 0) {
+                    stagesHTML = stages.map(s => {
+                        // Limpieza de tipo para la clase CSS
+                        const typeClass = s.type ? s.type.toLowerCase().replace(/\s+/g, '') : 'llano';
+                        
+                        return `
+                        <div class="border-b border-zinc-800 last:border-0 p-4 hover:bg-white/5 transition-colors group/stage">
+                            <div class="flex items-center justify-between gap-4 mb-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-heading text-lg text-zinc-500 w-6 text-center group-hover/stage:text-white transition-colors">${s.n}</span>
+                                    <div>
+                                        <h4 class="text-xs md:text-sm font-bold text-white uppercase">${s.route || 'Etapa ' + s.n}</h4>
+                                        <div class="flex gap-2 mt-1">
+                                            <span class="text-[9px] font-black badge-${typeClass} px-1.5 py-0.5 rounded uppercase">${s.type || 'Etapa'}</span>
+                                            ${s.km ? `<span class="text-[9px] text-zinc-400 font-mono">${s.km} KM</span>` : ''}
+                                            ${s.gain ? `<span class="text-[9px] text-zinc-400 font-mono">${s.gain} M+</span>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${s.image ? `
+                            <div class="mt-2 bg-white rounded-lg p-2 overflow-hidden border border-zinc-700 opacity-80 hover:opacity-100 transition-opacity">
+                                <img src="${s.image}" loading="lazy" class="w-full h-auto object-contain max-h-[150px]" alt="Perfil etapa ${s.n}">
+                            </div>
+                            ` : ''}
+                        </div>
+                        `;
+                    }).join('');
+                } else {
+                    stagesHTML = `<div class="p-6 text-center text-zinc-600 text-xs italic">Detalles de etapas no disponibles.</div>`;
                 }
 
-                // Detalles
-                let typeInfo = "Carrera";
-                if(r.details && typeof r.details === 'object' && r.details.type) {
-                    typeInfo = r.details.type;
-                }
+                // Estado En Vivo
+                const today = new Date().toISOString().split('T')[0];
+                const isLive = r.dateISO === today;
+                const statusBadge = isLive ? `<span class="bg-green-500 text-black text-[9px] font-black px-2 py-0.5 rounded animate-pulse ml-2">EN VIVO</span>` : '';
 
                 return `
-                <div class="race-card group relative bg-zinc-900/40 border border-zinc-800 rounded-xl overflow-hidden ${cardClass} ${opacityClass} flex flex-col">
+                <div id="card-${i}" class="race-card bg-zinc-900/40 border border-zinc-800 rounded-2xl overflow-hidden mb-4">
                     
-                    <div class="p-4 flex items-center justify-between cursor-pointer" onclick="toggleDetails(${i})">
-                        <div class="flex items-center gap-4">
-                            <div class="flex flex-col items-center justify-center w-12 shrink-0 border-r border-zinc-800 pr-4">
-                                <span class="text-2xl font-black italic text-white leading-none">${day}</span>
+                    <div class="p-5 flex items-center justify-between cursor-pointer" onclick="toggleDetails(${i})">
+                        <div class="flex items-center gap-5">
+                            <div class="flex flex-col items-center justify-center w-12 shrink-0 border-r border-zinc-800 pr-5">
+                                <span class="text-3xl font-black italic text-white leading-none">${day}</span>
                                 <span class="text-[10px] font-bold text-zinc-500 uppercase">${month}</span>
                             </div>
-
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center flex-wrap mb-1">
                                     <span class="text-[8px] font-black px-1.5 py-0.5 rounded uppercase cat-${r.category}">${r.category}</span>
                                     ${statusBadge}
                                 </div>
-                                <h3 class="text-white font-bold uppercase text-sm md:text-base tracking-tight truncate group-hover:text-cyan-400 transition-colors">${r.name}</h3>
-                                <p class="text-[10px] text-zinc-500 font-medium uppercase tracking-wide mt-0.5">${typeInfo}</p>
+                                <h3 class="text-white font-bold uppercase text-base md:text-lg tracking-tight truncate group-hover:text-cyan-400 transition-colors">${r.name}</h3>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5 font-bold">
+                                    ${stages.length > 0 ? `${stages.length} Etapas` : 'Clásica / 1 Día'}
+                                </p>
                             </div>
                         </div>
-
-                        <button onclick="event.stopPropagation(); addToCalendar('${r.name}', '${r.dateISO}')" class="ml-2 w-8 h-8 rounded-full bg-zinc-800 hover:bg-white hover:text-black text-zinc-400 flex items-center justify-center transition-all border border-zinc-700 z-20 relative" title="Agendar en Google Calendar">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        </button>
+                        <div class="w-8 h-8 rounded-full border border-zinc-700 flex items-center justify-center text-zinc-400 transition-all icon-toggle" id="icon-${i}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
                     </div>
 
-                    <div id="details-${i}" class="details-content px-4">
-                        <div class="py-4 text-xs text-zinc-400 font-mono border-t border-zinc-800/50">
-                            <p>Más información disponible próximamente.</p>
+                    <div id="details-${i}" class="details-content">
+                        ${stagesHTML}
+                        <div class="p-4 bg-zinc-900 border-t border-zinc-800 flex justify-center">
+                            <button onclick="addToCalendar('${r.name}', '${r.dateISO}')" class="flex items-center gap-2 text-[10px] font-bold text-zinc-400 hover:text-white uppercase transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Agendar en Google Calendar
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -161,16 +178,13 @@
 
         function filterRaces(category) {
             currentFilter = category;
-            
-            // Actualizar botones
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-                btn.classList.add('text-zinc-400', 'border-zinc-800');
+                btn.classList.remove('active', 'bg-white', 'text-black');
+                btn.classList.add('bg-white/5', 'text-zinc-400');
             });
-            event.target.classList.add('active');
-            event.target.classList.remove('text-zinc-400', 'text-pink-500', 'text-yellow-500', 'text-cyan-500');
+            event.target.classList.remove('bg-white/5', 'text-zinc-400');
+            event.target.classList.add('active', 'bg-white', 'text-black');
 
-            // Filtrar datos
             const term = searchInput.value.toLowerCase().trim();
             const filtered = allRaces.filter(r => {
                 const matchesCategory = category === 'ALL' || r.category === category;
@@ -182,21 +196,28 @@
 
         function toggleDetails(index) {
             const content = document.getElementById(`details-${index}`);
+            const card = document.getElementById(`card-${index}`);
+            const icon = document.getElementById(`icon-${index}`);
             const isOpen = content.classList.contains('open');
-            // Cerrar otros
-            document.querySelectorAll('.details-content').forEach(el => el.classList.remove('open'));
             
-            if(!isOpen) content.classList.add('open');
+            // Cerrar todos primero (opcional, si quieres que solo se abra uno a la vez)
+            document.querySelectorAll('.details-content').forEach(el => el.classList.remove('open'));
+            document.querySelectorAll('.race-card').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.icon-toggle').forEach(el => el.style.transform = 'rotate(0deg)');
+
+            if(!isOpen) {
+                content.classList.add('open');
+                card.classList.add('active');
+                icon.style.transform = 'rotate(180deg)';
+            }
         }
 
         function addToCalendar(title, dateStr) {
             const date = dateStr.replace(/-/g, ''); 
-            const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${date}/${date}&details=Carrera%20WorldTour%202026%20-%20Velo%20Insights`;
-            window.open(googleUrl, '_blank');
+            window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${date}/${date}&details=Velo%20Insights%20WorldTour`, '_blank');
         }
 
         searchInput.addEventListener('input', () => filterRaces(currentFilter));
-
         document.addEventListener('DOMContentLoaded', initCalendar);
     </script>
 </body>
