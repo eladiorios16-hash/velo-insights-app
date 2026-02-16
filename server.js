@@ -156,7 +156,40 @@ app.delete('/api/admin/calendar/:id', authMiddleware, async (req, res) => {
 });
 
 
-// --- 3. RANKING (Crear, Editar, Borrar) ---
+// --- 3. EQUIPOS (LO QUE TE FALTABA) ---
+app.post('/api/admin/teams', authMiddleware, async (req, res) => {
+    const { name, code, country, jersey, riders } = req.body;
+    const ridersJson = JSON.stringify(riders || []); // Convertimos array a texto
+    try {
+        const [result] = await db.query(
+            "INSERT INTO equipos (name, code, country, jersey, riders_json) VALUES (?,?,?,?,?)",
+            [name, code, country, jersey, ridersJson]
+        );
+        res.json({ success: true, id: result.insertId });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/admin/teams/:id', authMiddleware, async (req, res) => {
+    const { name, code, country, jersey, riders } = req.body;
+    const ridersJson = JSON.stringify(riders || []);
+    try {
+        await db.query(
+            "UPDATE equipos SET name=?, code=?, country=?, jersey=?, riders_json=? WHERE id=?",
+            [name, code, country, jersey, ridersJson, req.params.id]
+        );
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/admin/teams/:id', authMiddleware, async (req, res) => {
+    try {
+        await db.query("DELETE FROM equipos WHERE id=?", [req.params.id]);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+
+// --- 4. RANKING (Crear, Editar, Borrar) ---
 app.post('/api/admin/ranking', authMiddleware, async (req, res) => {
     const { name, team, points, rank, trend, profile } = req.body;
     try {
@@ -187,7 +220,7 @@ app.delete('/api/admin/ranking/:id', authMiddleware, async (req, res) => {
 });
 
 
-// --- 4. GLOSARIO (Crear, Editar, Borrar) ---
+// --- 5. GLOSARIO (Crear, Editar, Borrar) ---
 app.post('/api/admin/glossary', authMiddleware, async (req, res) => {
     const { term, cat, definition } = req.body; // Ojo: en BD puede llamarse 'cat' o 'category'
     try {
@@ -218,7 +251,7 @@ app.delete('/api/admin/glossary/:id', authMiddleware, async (req, res) => {
 });
 
 
-// 5. STATIC FILES & FALLBACK
+// 6. STATIC FILES & FALLBACK
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('*', (req, res) => {
