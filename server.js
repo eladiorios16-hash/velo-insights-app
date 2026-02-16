@@ -23,44 +23,63 @@ const authMiddleware = (req, res, next) => {
     res.status(401).send('⛔ ACCESO DENEGADO');
 };
 
-// 3. RUTAS
-// Admin Panel (Debe estar en la RAÍZ, no en public)
+// 3. RUTAS DE SISTEMA
 app.get('/admin', authMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// --- RUTA MÁGICA DE REPARACIÓN (Ejecútala una vez) ---
+// --- RUTA MÁGICA DE REPARACIÓN (CORREGIDA) ---
 app.get('/setup-tables', async (req, res) => {
     try {
         const queries = [
+            // HE AÑADIDO COMILLAS `lead` PARA EVITAR EL ERROR
             `CREATE TABLE IF NOT EXISTS noticias (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                title VARCHAR(255), tag VARCHAR(50), date VARCHAR(50), 
-                image TEXT, lead TEXT, content TEXT, isHero BOOLEAN DEFAULT 0
+                title VARCHAR(255), 
+                tag VARCHAR(50), 
+                date VARCHAR(50), 
+                image TEXT, 
+                \`lead\` TEXT, 
+                content TEXT, 
+                isHero BOOLEAN DEFAULT 0
             )`,
             `CREATE TABLE IF NOT EXISTS equipos (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(100), code VARCHAR(10), country VARCHAR(50), 
-                jersey TEXT, riders_json LONGTEXT
+                name VARCHAR(100), 
+                code VARCHAR(10), 
+                country VARCHAR(50), 
+                jersey TEXT, 
+                riders_json LONGTEXT
             )`,
             `CREATE TABLE IF NOT EXISTS calendario (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(100), status VARCHAR(20), date VARCHAR(50), 
-                dateISO DATE, category VARCHAR(10), details LONGTEXT
+                name VARCHAR(100), 
+                status VARCHAR(20), 
+                date VARCHAR(50), 
+                dateISO DATE, 
+                category VARCHAR(10), 
+                details LONGTEXT
             )`,
+            // TAMBIÉN HE PROTEGIDO `rank` POR SI ACASO
             `CREATE TABLE IF NOT EXISTS ranking (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(100), team VARCHAR(100), points INT, 
-                rank INT, trend VARCHAR(10), profile LONGTEXT
+                name VARCHAR(100), 
+                team VARCHAR(100), 
+                points INT, 
+                \`rank\` INT, 
+                trend VARCHAR(10), 
+                profile LONGTEXT
             )`,
             `CREATE TABLE IF NOT EXISTS glosario (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                term VARCHAR(100), cat VARCHAR(50), definition TEXT
+                term VARCHAR(100), 
+                cat VARCHAR(50), 
+                definition TEXT
             )`
         ];
         
         for (const q of queries) await db.query(q);
-        res.send("✅ TABLAS CREADAS Y REPARADAS CORRECTAMENTE. Ya puedes usar el admin.");
+        res.send("✅ TABLAS CREADAS Y REPARADAS CORRECTAMENTE. ¡Ya funciona!");
     } catch (e) {
         res.status(500).send("❌ Error creando tablas: " + e.message);
     }
@@ -74,7 +93,6 @@ app.get('/api/news', async (req, res) => {
 app.get('/api/teams', async (req, res) => {
     try { 
         const [r] = await db.query("SELECT * FROM equipos"); 
-        // Convertimos el texto JSON de la BD a Array real para que el admin lo lea bien
         const data = r.map(t => ({...t, riders: JSON.parse(t.riders_json || '[]')}));
         res.json(data);
     } catch(e){ res.status(500).json(e); }
@@ -103,11 +121,12 @@ app.get('/api/glossary', async (req, res) => {
 // 1. NOTICIAS
 app.post('/api/admin/news', authMiddleware, async (req, res) => {
     const { title, tag, date, image, lead, content, isHero } = req.body;
-    try { await db.query("INSERT INTO noticias (title, tag, date, image, lead, content, isHero) VALUES (?,?,?,?,?,?,?)", [title, tag, date, image, lead, content, isHero?1:0]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    // OJO: Aquí también usamos backticks en la query `lead`
+    try { await db.query("INSERT INTO noticias (title, tag, date, image, `lead`, content, isHero) VALUES (?,?,?,?,?,?,?)", [title, tag, date, image, lead, content, isHero?1:0]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
 });
 app.put('/api/admin/news/:id', authMiddleware, async (req, res) => {
     const { title, tag, date, image, lead, content, isHero } = req.body;
-    try { await db.query("UPDATE noticias SET title=?, tag=?, date=?, image=?, lead=?, content=?, isHero=? WHERE id=?", [title, tag, date, image, lead, content, isHero?1:0, req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try { await db.query("UPDATE noticias SET title=?, tag=?, date=?, image=?, `lead`=?, content=?, isHero=? WHERE id=?", [title, tag, date, image, lead, content, isHero?1:0, req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
 });
 app.delete('/api/admin/news/:id', authMiddleware, async (req, res) => {
     try { await db.query("DELETE FROM noticias WHERE id=?", [req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
@@ -142,11 +161,12 @@ app.delete('/api/admin/calendar/:id', authMiddleware, async (req, res) => {
 // 4. RANKING
 app.post('/api/admin/ranking', authMiddleware, async (req, res) => {
     const { name, team, points, rank, trend, profile } = req.body;
-    try { await db.query("INSERT INTO ranking (name, team, points, rank, trend, profile) VALUES (?,?,?,?,?,?)", [name, team, points, rank, trend, profile]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    // OJO: Protegemos `rank` también
+    try { await db.query("INSERT INTO ranking (name, team, points, `rank`, trend, profile) VALUES (?,?,?,?,?,?)", [name, team, points, rank, trend, profile]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
 });
 app.put('/api/admin/ranking/:id', authMiddleware, async (req, res) => {
     const { name, team, points, rank, trend, profile } = req.body;
-    try { await db.query("UPDATE ranking SET name=?, team=?, points=?, rank=?, trend=?, profile=? WHERE id=?", [name, team, points, rank, trend, profile, req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try { await db.query("UPDATE ranking SET name=?, team=?, points=?, `rank`=?, trend=?, profile=? WHERE id=?", [name, team, points, rank, trend, profile, req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
 });
 app.delete('/api/admin/ranking/:id', authMiddleware, async (req, res) => {
     try { await db.query("DELETE FROM ranking WHERE id=?", [req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
@@ -166,9 +186,9 @@ app.delete('/api/admin/glossary/:id', authMiddleware, async (req, res) => {
 });
 
 
-// ARCHIVOS ESTÁTICOS Y FALLBACK
+// STATIC FILES
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => { console.log(`🚀 Velo Server ready at ${PORT}`); });
+app.listen(PORT, () => { console.log(`🚀 Servidor Velo listo en puerto ${PORT}`); });
