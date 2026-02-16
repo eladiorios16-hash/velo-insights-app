@@ -2,29 +2,29 @@
 const mysql = require('mysql2');
 
 const pool = mysql.createPool({
-  // Prioriza la red interna de Railway
-  host: process.env.MYSQLHOST || 'mysql.railway.internal',
-  port: parseInt(process.env.MYSQLPORT) || 3306,
+  // Usamos el host público porque el interno da ENOTFOUND
+  host: process.env.MYSQLHOST || 'metro.proxy.rlwy.net',
+  port: parseInt(process.env.MYSQLPORT) || 56923,
   user: process.env.MYSQLUSER || 'root',
   password: process.env.MYSQLPASSWORD || 'gbDeOMOSothCZuATgwzgGIHLEALTdcvW',
   database: process.env.MYSQLDATABASE || 'railway',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  // Eliminamos SSL para la red interna para evitar conflictos
-  ssl: false 
+  // Esta línea ayuda a evitar el "Access Denied" desde IPs internas de Railway
+  ssl: { rejectUnauthorized: false } 
 });
 
 const promisePool = pool.promise();
 
-// Prueba de conexión para los logs
+// Log para confirmar éxito en la consola de Railway
 promisePool.getConnection()
     .then(conn => {
-        console.log("✅ [DB] CONEXIÓN INTERNA EXITOSA");
+        console.log("✅ [DB] CONEXIÓN PÚBLICA ESTABLECIDA");
         conn.release();
     })
     .catch(err => {
-        console.error("❌ [DB] Error de acceso:", err.message);
+        console.error("❌ [DB] Error de conexión:", err.message);
     });
 
 module.exports = promisePool;
