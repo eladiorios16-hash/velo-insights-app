@@ -66,13 +66,10 @@ app.get('/setup-tables', async (req, res) => {
     } catch (e) { res.status(500).send("❌ Error: " + e.message); }
 });
 
-// --- RUTA DE CARGA DE GLOSARIO (NUEVA) ---
+// --- RUTA DE CARGA DE GLOSARIO ---
 app.get('/restore-glossary', async (req, res) => {
     try {
-        // 1. Limpiar tabla para evitar duplicados
         await db.query("TRUNCATE TABLE glosario");
-        
-        // 2. Insertar los 25 términos (Mapeando 'def' a 'definition' para coincidir con la tabla)
         const sql = `
             INSERT INTO glosario (id, term, cat, definition) VALUES
             (1, 'FTP', 'fisiologia', 'Functional Threshold Power. Estimación de la máxima potencia media (en vatios) que un ciclista puede mantener de forma constante durante una hora. Es un indicador clave de rendimiento.'),
@@ -101,16 +98,12 @@ app.get('/restore-glossary', async (req, res) => {
             (24, 'CAZA-ETAPAS', 'rol', 'Ciclista combativo que busca constantemente entrar en fugas para ganar una etapa "a la heroica".'),
             (25, 'PELOTON', 'tactica', 'Grupo principal y más numeroso de ciclistas en una carrera.');
         `;
-        
         await db.query(sql);
         res.send("✅ Glosario (25 términos) cargado correctamente.");
-    } catch (e) { 
-        console.error(e);
-        res.status(500).send("❌ Error cargando glosario: " + e.message); 
-    }
+    } catch (e) { res.status(500).send("❌ Error cargando glosario: " + e.message); }
 });
 
-// --- APIS PÚBLICAS ---
+// --- APIS PÚBLICAS (CORREGIDAS) ---
 app.get('/api/news', async (req, res) => {
     try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
 });
@@ -136,11 +129,18 @@ app.get('/api/calendar', async (req, res) => {
     } catch(e){ res.status(500).json([]); }
 });
 
-// Nueva API para leer el glosario desde el frontend
+// API GLOSARIO CORREGIDA (SOLUCIÓN AL UNDEFINED)
 app.get('/api/glossary', async (req, res) => {
     try { 
         const [rows] = await db.query("SELECT * FROM glosario ORDER BY term ASC");
-        res.json(rows);
+        // Mapeamos 'definition' a 'def' para que el frontend lo lea bien
+        const data = rows.map(row => ({
+            id: row.id,
+            term: row.term,
+            cat: row.cat,
+            def: row.definition 
+        }));
+        res.json(data);
     } catch(e){ res.status(500).json([]); }
 });
 
@@ -157,7 +157,7 @@ app.post('/api/admin/news', authMiddleware, async (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
-// INICIO DEL SERVIDOR
+// INICIO
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => { 
     console.log(`🚀 Servidor Velo listo en puerto ${PORT}`); 
