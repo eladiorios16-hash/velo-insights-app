@@ -2,302 +2,221 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VELO HUB | Admin Ultimate</title>
+    <title>Velo Admin - Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="assets/main.css">
     <style>
-        body { background-color: #050505; color: #e4e4e7; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
-        .tab-btn { padding: 1rem; width: 100%; text-align: left; display: flex; gap: 12px; font-weight: bold; border-radius: 0.5rem; transition: all 0.2s; align-items: center; color: #71717a; }
-        .tab-btn:hover { background: #27272a; color: white; }
-        .tab-btn.active { background: rgba(34, 211, 238, 0.1); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.2); }
-        .tab-content { display: none; animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .input-dark { background: #09090b; border: 1px solid #27272a; color: white; padding: 0.75rem; border-radius: 0.5rem; width: 100%; outline: none; transition: 0.2s; font-size: 0.9rem; }
-        .input-dark:focus { border-color: #22d3ee; }
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
-        .mode-badge { font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #27272a; color: #a1a1aa; border: 1px solid #52525b; }
-        .badge-edit { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border-color: #fbbf24; }
+        /* Estilos oscuros para modo hacker */
+        body { background-color: #0f172a; color: #e2e8f0; font-family: sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .input-dark { background: #1e293b; border: 1px solid #334155; color: white; width: 100%; padding: 8px; margin-bottom: 10px; rounded: 4px; }
     </style>
 </head>
+<body class="p-6">
 
-<body class="min-h-screen pb-20 bg-[#050505] text-zinc-200 font-sans">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-emerald-400 tracking-tighter">⚡ VELO ADMIN</h1>
+        <button onclick="logout()" class="text-xs text-red-400 hover:text-red-300 uppercase font-bold">Cerrar Sesión</button>
+    </div>
 
-    <nav class="border-b border-zinc-800 bg-black/80 sticky top-0 z-50 backdrop-blur-xl">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded bg-cyan-600 flex items-center justify-center font-black text-black">V</div>
-                <h1 class="text-sm font-bold tracking-widest text-zinc-400 uppercase">Command Center</h1>
+    <div class="flex gap-4 mb-8 overflow-x-auto pb-2">
+        <button onclick="loadTable('noticias')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-600 rounded-lg transition border border-slate-700">📰 Noticias</button>
+        <button onclick="loadTable('calendario')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-600 rounded-lg transition border border-slate-700">📅 Calendario</button>
+        <button onclick="loadTable('equipos')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-600 rounded-lg transition border border-slate-700">🚴 Equipos</button>
+        <button onclick="loadTable('glosario')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-600 rounded-lg transition border border-slate-700">🧠 Glosario</button>
+    </div>
+
+    <div id="content-area" class="glass rounded-xl p-6 min-h-[50vh]">
+        <p class="text-slate-500 text-center mt-10">Selecciona una categoría arriba para empezar a gestionar.</p>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 bg-black/80 hidden flex justify-center items-center z-50">
+        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold text-white mb-4">Editar Elemento</h2>
+            <form id="dynamicForm"></form> <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeModal()" class="px-4 py-2 text-slate-400 hover:text-white">Cancelar</button>
+                <button onclick="saveChanges()" class="px-6 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg">Guardar Cambios</button>
             </div>
-            <a href="/" target="_blank" class="text-xs font-bold text-zinc-400 border border-zinc-800 px-3 py-1 rounded hover:bg-zinc-800">Ver Web ↗</a>
         </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        
-        <aside class="lg:col-span-1 sticky top-20 z-40 h-fit">
-            <div class="flex lg:flex-col gap-2 overflow-x-auto pb-4 lg:pb-0 custom-scrollbar">
-                <button onclick="switchTab('news')" id="tab-news" class="tab-btn active"><span>📰</span> Noticias</button>
-                <button onclick="switchTab('calendar')" id="tab-calendar" class="tab-btn"><span>📅</span> Calendario</button>
-                <button onclick="switchTab('teams')" id="tab-teams" class="tab-btn"><span>🚴</span> Equipos</button>
-                <button onclick="switchTab('ranking')" id="tab-ranking" class="tab-btn"><span>🏆</span> Ranking</button>
-                <button onclick="switchTab('glossary')" id="tab-glossary" class="tab-btn"><span>🧠</span> Glosario</button>
-                <div class="h-px bg-zinc-800 my-2"></div>
-                <button onclick="switchTab('manager')" id="tab-manager" class="tab-btn text-cyan-500"><span>⚙️</span> Base de Datos</button>
-            </div>
-        </aside>
-
-        <div class="lg:col-span-3 pb-20">
-            
-            <section id="news" class="tab-content active glass rounded-2xl p-6">
-                <div class="flex justify-between mb-6"><h2 class="text-2xl font-black uppercase text-white">Noticias</h2><button onclick="clearForms()" class="text-xs font-bold text-zinc-500">LIMPIAR</button></div>
-                <form id="form-news" class="space-y-4" onsubmit="event.preventDefault(); saveData('noticias')">
-                    <input type="hidden" id="news-id">
-                    <div id="status-news" class="mode-badge w-fit">NUEVO</div>
-                    <input type="text" id="news-title" placeholder="Titular" class="input-dark text-lg font-bold">
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="news-date" placeholder="Fecha (16 FEB)" class="input-dark">
-                        <input type="text" id="news-tag" placeholder="Tag (RACE REPORT)" class="input-dark">
-                    </div>
-                    <input type="text" id="news-image" placeholder="URL Imagen" class="input-dark">
-                    <div class="flex gap-2 items-center"><input type="checkbox" id="news-hero"><label class="text-xs uppercase font-bold">Destacar (Hero)</label></div>
-                    <textarea id="news-lead" placeholder="Resumen..." class="input-dark h-20"></textarea>
-                    <textarea id="news-content" placeholder="HTML Completo (Opcional)" class="input-dark h-32 font-mono text-xs"></textarea>
-                    <button type="submit" class="w-full py-3 bg-white text-black font-black uppercase rounded hover:bg-cyan-400">Publicar</button>
-                </form>
-            </section>
-
-            <section id="teams" class="tab-content glass rounded-2xl p-6">
-                <div class="flex justify-between mb-6"><h2 class="text-2xl font-black uppercase text-blue-500">Equipos</h2><button onclick="clearForms()" class="text-xs font-bold text-zinc-500">LIMPIAR</button></div>
-                <form id="form-teams" class="space-y-4" onsubmit="event.preventDefault(); saveData('teams')">
-                    <input type="hidden" id="team-id">
-                    <div id="status-teams" class="mode-badge w-fit">NUEVO EQUIPO</div>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="team-name" placeholder="Nombre (Ej: Visma)" class="input-dark font-bold">
-                        <input type="text" id="team-code" placeholder="Código (TVL)" class="input-dark font-mono text-center">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="team-country" placeholder="País (🇳🇱)" class="input-dark text-center">
-                        <input type="text" id="team-jersey" placeholder="URL Maillot" class="input-dark text-xs">
-                    </div>
-
-                    <div class="bg-black/40 p-4 rounded border border-zinc-800">
-                        <h3 class="text-xs font-black uppercase mb-2">Ciclistas (JSON)</h3>
-                        <p class="text-[9px] text-zinc-500 mb-2">Formato: [{"name":"Pogacar", "type":"GC", "country":"🇸🇮", "stats":{"ovr":99, "mnt":99, "spr":85}}]</p>
-                        <textarea id="team-riders" class="input-dark h-40 font-mono text-[10px] text-green-400" placeholder="[]"></textarea>
-                    </div>
-
-                    <button type="submit" class="w-full py-3 bg-blue-600 text-white font-black uppercase rounded hover:bg-blue-500">Guardar Equipo</button>
-                </form>
-            </section>
-
-            <section id="calendar" class="tab-content glass rounded-2xl p-6">
-                <div class="flex justify-between mb-6"><h2 class="text-2xl font-black uppercase text-yellow-500">Calendario</h2><button onclick="clearForms()" class="text-xs font-bold text-zinc-500">LIMPIAR</button></div>
-                <form id="form-calendar" class="space-y-4" onsubmit="event.preventDefault(); saveData('calendario')">
-                    <input type="hidden" id="race-id">
-                    <div id="status-calendar" class="mode-badge w-fit">NUEVA CARRERA</div>
-                    <input type="text" id="race-name" placeholder="Nombre Carrera" class="input-dark font-bold">
-                    <div class="grid grid-cols-3 gap-4">
-                        <select id="race-status" class="input-dark"><option value="Upcoming">Pendiente</option><option value="Active">En Curso</option><option value="Finished">Finalizada</option></select>
-                        <input type="text" id="race-date" placeholder="Fecha Texto" class="input-dark">
-                        <input type="date" id="race-iso" class="input-dark">
-                    </div>
-                    <input type="text" id="race-cat" placeholder="Categoría (WT)" class="input-dark">
-                    
-                    <div class="bg-black/40 p-4 rounded border border-zinc-800">
-                        <h3 class="text-xs font-black uppercase mb-2">Etapas y Detalles (JSON)</h3>
-                        <textarea id="race-details" class="input-dark h-32 font-mono text-[10px]" placeholder='{"stages": [], "winner": ""}'></textarea>
-                    </div>
-                    <button type="submit" class="w-full py-3 bg-yellow-500 text-black font-black uppercase rounded hover:bg-yellow-400">Guardar Carrera</button>
-                </form>
-            </section>
-
-            <section id="ranking" class="tab-content glass rounded-2xl p-6">
-                <div class="flex justify-between mb-6"><h2 class="text-2xl font-black uppercase text-emerald-500">Ranking</h2><button onclick="clearForms()" class="text-xs font-bold text-zinc-500">LIMPIAR</button></div>
-                <form id="form-ranking" class="space-y-4" onsubmit="event.preventDefault(); saveData('ranking')">
-                    <input type="hidden" id="rank-id">
-                    <div id="status-ranking" class="mode-badge w-fit">NUEVO</div>
-                    <div class="grid grid-cols-4 gap-4">
-                        <input type="text" id="rank-name" placeholder="Ciclista" class="input-dark font-bold col-span-3">
-                        <input type="number" id="rank-pos" placeholder="#" class="input-dark text-center">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="rank-team" placeholder="Equipo" class="input-dark">
-                        <input type="number" id="rank-points" placeholder="Puntos" class="input-dark text-right">
-                    </div>
-                    <input type="text" id="rank-profile" placeholder='JSON Perfil: {"img":"...", "role":"GC"}' class="input-dark font-mono text-xs">
-                    <button type="submit" class="w-full py-3 bg-emerald-500 text-black font-black uppercase rounded hover:bg-emerald-400">Actualizar Ranking</button>
-                </form>
-            </section>
-
-            <section id="glossary" class="tab-content glass rounded-2xl p-6">
-                <div class="flex justify-between mb-6"><h2 class="text-2xl font-black uppercase text-purple-500">Glosario</h2><button onclick="clearForms()" class="text-xs font-bold text-zinc-500">LIMPIAR</button></div>
-                <form id="form-glossary" class="space-y-4" onsubmit="event.preventDefault(); saveData('glosario')">
-                    <input type="hidden" id="gloss-id">
-                    <div id="status-glossary" class="mode-badge w-fit">NUEVO</div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="gloss-term" placeholder="Término" class="input-dark font-bold">
-                        <input type="text" id="gloss-cat" placeholder="Categoría" class="input-dark">
-                    </div>
-                    <textarea id="gloss-def" placeholder="Definición..." class="input-dark h-24"></textarea>
-                    <button type="submit" class="w-full py-3 bg-purple-500 text-white font-black uppercase rounded hover:bg-purple-400">Guardar</button>
-                </form>
-            </section>
-
-            <section id="manager" class="tab-content glass rounded-2xl p-6">
-                <div class="flex justify-between mb-6">
-                    <h2 class="text-xl font-bold uppercase">Gestor DB</h2>
-                    <select id="manager-filter" onchange="loadFromAPI(this.value)" class="bg-black border border-zinc-800 rounded px-2 text-xs uppercase font-bold">
-                        <option value="noticias">Noticias</option>
-                        <option value="teams">Equipos</option>
-                        <option value="calendario">Calendario</option>
-                        <option value="ranking">Ranking</option>
-                        <option value="glosario">Glosario</option>
-                    </select>
-                </div>
-                <div id="manager-list" class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar"></div>
-            </section>
-
-        </div>
-    </main>
+    </div>
 
     <script>
-        // Mapeo Frontend -> API
-        const ENDPOINTS = {
-            'noticias': 'news',
-            'teams': 'teams',
-            'calendario': 'calendar',
-            'ranking': 'ranking',
-            'glosario': 'glossary'
-        };
+        // ESTADO GLOBAL
+        let currentTable = '';
+        let currentData = [];
+        let editingId = null;
 
-        // --- GUARDAR ---
-        async function saveData(type) {
-            const api = ENDPOINTS[type];
-            const id = document.getElementById(type === 'teams' ? 'team-id' : type === 'noticias' ? 'news-id' : type === 'calendario' ? 'race-id' : type === 'ranking' ? 'rank-id' : 'gloss-id').value;
-            let body = {};
-
-            if(type === 'noticias') {
-                body = {
-                    title: document.getElementById('news-title').value,
-                    date: document.getElementById('news-date').value,
-                    tag: document.getElementById('news-tag').value,
-                    image: document.getElementById('news-image').value,
-                    lead: document.getElementById('news-lead').value,
-                    content: document.getElementById('news-content').value,
-                    isHero: document.getElementById('news-hero').checked
-                };
-            } else if(type === 'teams') {
-                body = {
-                    name: document.getElementById('team-name').value,
-                    code: document.getElementById('team-code').value,
-                    country: document.getElementById('team-country').value,
-                    jersey: document.getElementById('team-jersey').value,
-                    riders: JSON.parse(document.getElementById('team-riders').value || '[]')
-                };
-            } else if(type === 'calendario') {
-                body = {
-                    name: document.getElementById('race-name').value,
-                    status: document.getElementById('race-status').value,
-                    date: document.getElementById('race-date').value,
-                    dateISO: document.getElementById('race-iso').value,
-                    category: document.getElementById('race-cat').value,
-                    details: document.getElementById('race-details').value // Se envía como string JSON
-                };
-            } else if(type === 'ranking') {
-                body = {
-                    rank: document.getElementById('rank-pos').value,
-                    name: document.getElementById('rank-name').value,
-                    team: document.getElementById('rank-team').value,
-                    points: document.getElementById('rank-points').value,
-                    profile: document.getElementById('rank-profile').value // JSON String
-                };
-            } else if(type === 'glosario') {
-                body = { term: document.getElementById('gloss-term').value, cat: document.getElementById('gloss-cat').value, definition: document.getElementById('gloss-def').value };
-            }
-
-            const method = id ? 'PUT' : 'POST';
-            const url = id ? `/api/admin/${api}/${id}` : `/api/admin/${api}`;
+        // 1. CARGAR DATOS
+        async function loadTable(table) {
+            currentTable = table;
+            document.getElementById('content-area').innerHTML = '<p class="text-center animate-pulse">Cargando datos...</p>';
+            
+            // Mapeo de nombres API (tu web usa nombres distintos en frontend y backend)
+            let apiEndpoint = table;
+            if(table === 'noticias') apiEndpoint = 'news';
+            if(table === 'equipos') apiEndpoint = 'teams';
+            if(table === 'calendario') apiEndpoint = 'calendar';
+            if(table === 'glosario') apiEndpoint = 'glossary';
 
             try {
-                const res = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-                if(res.ok) { alert('Guardado OK'); if(!id) clearForms(); if(document.getElementById('manager').style.display === 'block') loadFromAPI(type); }
-                else { alert('Error: ' + await res.text()); }
-            } catch(e) { alert('Error conexión'); }
-        }
-
-        // --- CARGAR DATOS ---
-        async function loadFromAPI(type) {
-            const api = ENDPOINTS[type];
-            const list = document.getElementById('manager-list');
-            list.innerHTML = 'Cargando...';
-            const res = await fetch(`/api/${api}`);
-            const data = await res.json();
-            list.innerHTML = data.map(item => {
-                const safe = JSON.stringify(item).replace(/"/g, '&quot;');
-                return `<div class="flex justify-between p-2 bg-zinc-900 border border-zinc-800 mb-1 rounded">
-                    <span class="text-xs font-bold truncate w-2/3">${item.name || item.title || item.term}</span>
-                    <div class="flex gap-2"><button onclick="loadItem('${type}', ${safe})" class="text-cyan-500 text-[10px] uppercase font-bold">Editar</button>
-                    <button onclick="deleteItem('${type}', ${item.id})" class="text-red-500 text-[10px] uppercase font-bold">Borrar</button></div>
-                </div>`;
-            }).join('');
-        }
-
-        function loadItem(type, item) {
-            switchTab(type);
-            document.getElementById(`status-${type}`).innerText = `EDITANDO ID: ${item.id}`;
-            document.getElementById(`status-${type}`).classList.add('badge-edit');
-
-            if(type === 'teams') {
-                document.getElementById('team-id').value = item.id;
-                document.getElementById('team-name').value = item.name;
-                document.getElementById('team-code').value = item.code;
-                document.getElementById('team-country').value = item.country;
-                document.getElementById('team-jersey').value = item.jersey;
-                // riders puede venir como objeto o string, aseguramos string bonita
-                document.getElementById('team-riders').value = typeof item.riders === 'string' ? item.riders : JSON.stringify(item.riders, null, 2);
-            } 
-            // ... (resto de cargas similares a la versión anterior) ...
-            else if(type === 'noticias') {
-                document.getElementById('news-id').value = item.id;
-                document.getElementById('news-title').value = item.title;
-                document.getElementById('news-lead').value = item.lead;
-                document.getElementById('news-content').value = item.content || '';
-                document.getElementById('news-image').value = item.image;
-                document.getElementById('news-date').value = item.date;
-                document.getElementById('news-tag').value = item.tag;
-            } else if(type === 'calendario') {
-                document.getElementById('race-id').value = item.id;
-                document.getElementById('race-name').value = item.name;
-                document.getElementById('race-details').value = typeof item.details === 'string' ? item.details : JSON.stringify(item.details, null, 2);
-                document.getElementById('race-status').value = item.status;
-                document.getElementById('race-iso').value = item.dateISO;
+                const res = await fetch(`/api/${apiEndpoint}`);
+                const data = await res.json();
+                currentData = data;
+                renderTable(data);
+            } catch (e) {
+                alert("Error cargando datos: " + e.message);
             }
         }
 
-        async function deleteItem(type, id) {
-            if(!confirm('¿Borrar?')) return;
-            const api = ENDPOINTS[type];
-            await fetch(`/api/admin/${api}/${id}`, { method: 'DELETE' });
-            loadFromAPI(type);
+        // 2. DIBUJAR TABLA
+        function renderTable(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('content-area').innerHTML = '<p class="text-center text-slate-500">No hay datos en esta tabla.</p>';
+                return;
+            }
+
+            // Detectar columnas automáticamente (usamos las claves del primer objeto)
+            const columns = Object.keys(data[0]).filter(k => k !== 'id' && k !== 'riders' && k !== 'details'); // Ocultamos columnas complejas en la vista rápida
+            
+            let html = `
+                <div class="flex justify-between mb-4">
+                    <h3 class="text-xl font-bold capitalize text-white">${currentTable}</h3>
+                    <span class="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">${data.length} registros</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-800 text-emerald-400 uppercase font-bold text-xs">
+                            <tr>
+                                ${columns.map(c => `<th class="p-3">${c}</th>`).join('')}
+                                <th class="p-3 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700">
+            `;
+
+            data.forEach(row => {
+                html += `<tr class="hover:bg-slate-800/50 transition">`;
+                columns.forEach(col => {
+                    let val = row[col];
+                    // Si es muy largo, lo cortamos
+                    if (typeof val === 'string' && val.length > 50) val = val.substring(0, 50) + '...';
+                    html += `<td class="p-3">${val || '-'}</td>`;
+                });
+                
+                // Botones EDITAR y BORRAR conectados
+                html += `
+                    <td class="p-3 text-right flex justify-end gap-2">
+                        <button onclick='openEditModal(${row.id})' class="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1 rounded text-xs transition">EDITAR</button>
+                        <button onclick='deleteItem(${row.id})' class="bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1 rounded text-xs transition">BORRAR</button>
+                    </td>
+                </tr>`;
+            });
+
+            html += `</tbody></table></div>`;
+            document.getElementById('content-area').innerHTML = html;
         }
 
-        function switchTab(id) {
-            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.getElementById(`tab-${id}`).classList.add('active');
-            if(id === 'manager') loadFromAPI(document.getElementById('manager-filter').value);
+        // 3. ABRIR MODAL Y GENERAR FORMULARIO (La Magia)
+        function openEditModal(id) {
+            editingId = id;
+            const item = currentData.find(d => d.id === id);
+            const form = document.getElementById('dynamicForm');
+            form.innerHTML = ''; // Limpiar anterior
+
+            // Recorremos todas las propiedades del objeto para crear inputs
+            for (const [key, value] of Object.entries(item)) {
+                if (key === 'id') continue; // El ID no se toca
+
+                const label = document.createElement('label');
+                label.className = "block text-xs uppercase text-slate-400 font-bold mb-1";
+                label.innerText = key;
+
+                let input;
+                // Si es texto largo o JSON, usamos textarea
+                if (key === 'content' || key === 'riders' || key === 'details' || key === 'profile' || key === 'definition') {
+                    input = document.createElement('textarea');
+                    input.rows = 6;
+                    // Si es un objeto/array, lo convertimos a texto bonito
+                    input.value = (typeof value === 'object') ? JSON.stringify(value, null, 2) : value;
+                } else {
+                    input = document.createElement('input');
+                    input.type = "text";
+                    input.value = value;
+                }
+
+                input.name = key;
+                input.className = "w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm mb-4 focus:border-emerald-500 outline-none";
+
+                form.appendChild(label);
+                form.appendChild(input);
+            }
+
+            document.getElementById('editModal').classList.remove('hidden');
         }
 
-        function clearForms() {
-            document.querySelectorAll('form').forEach(f => f.reset());
-            document.querySelectorAll('input[type=hidden]').forEach(i => i.value='');
-            document.querySelectorAll('.mode-badge').forEach(b => { b.innerText = 'NUEVO'; b.classList.remove('badge-edit'); });
+        // 4. GUARDAR CAMBIOS (PUT al servidor)
+        async function saveChanges() {
+            const form = document.getElementById('dynamicForm');
+            const formData = new FormData(form);
+            const updateData = {};
+
+            // Convertimos el formulario a objeto JSON
+            for (let [key, value] of formData.entries()) {
+                updateData[key] = value;
+            }
+
+            try {
+                // Autenticación básica (admin:velo2026) en base64
+                const authHeader = 'Basic ' + btoa('admin:velo2026');
+
+                const res = await fetch(`/api/admin/${currentTable}/${editingId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authHeader
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (res.ok) {
+                    closeModal();
+                    loadTable(currentTable); // Recargar tabla para ver cambios
+                    alert("✅ Guardado correctamente");
+                } else {
+                    const err = await res.json();
+                    alert("❌ Error al guardar: " + err.error);
+                }
+            } catch (e) {
+                alert("Error de red: " + e.message);
+            }
+        }
+
+        // 5. BORRAR ELEMENTO
+        async function deleteItem(id) {
+            if(!confirm("¿Seguro que quieres borrar esto? No hay vuelta atrás.")) return;
+
+            const authHeader = 'Basic ' + btoa('admin:velo2026');
+            
+            try {
+                const res = await fetch(`/api/admin/${currentTable}/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': authHeader }
+                });
+
+                if(res.ok) {
+                    loadTable(currentTable);
+                } else {
+                    alert("Error borrando");
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function logout() {
+            // Truco simple para cerrar sesión en basic auth: redirigir con credenciales malas
+            window.location.href = "https://logout:logout@" + window.location.host;
         }
     </script>
 </body>
