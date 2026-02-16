@@ -6,7 +6,7 @@ const db = require('./db');
 
 const app = express();
 
-console.log("Fact: Servidor Velo-Insights Iniciado");
+console.log("Fact: Servidor Velo-Insights Iniciado (Fixed Version)");
 
 // 1. CONFIGURACIÓN
 app.use(cors());
@@ -47,28 +47,28 @@ app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// B) EDITAR (CON CORRECCIÓN PARA GLOSARIO)
+// B) EDITAR (CORREGIDO PARA SOPORTAR 'LEAD') ✅
 app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     const { table, id } = req.params;
-    let data = req.body; // Usamos 'let' para poder modificar los datos
+    let data = req.body; 
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking'];
 
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
-    // --- PARCHE DE TRADUCCIÓN (SOLUCIÓN AL ERROR) ---
-    // Si estamos en glosario y llega 'def', lo cambiamos a 'definition'
+    // --- PARCHE DE TRADUCCIÓN ---
     if (table === 'glosario' && data.def !== undefined) {
-        data.definition = data.def; // Copiamos el valor a la columna correcta
-        delete data.def;            // Borramos la columna incorrecta
+        data.definition = data.def; 
+        delete data.def;            
     }
-    // ------------------------------------------------
+    // ----------------------------
 
     const keys = Object.keys(data);
     const values = Object.values(data);
     
     if (keys.length === 0) return res.status(400).json({error: "No hay datos para actualizar"});
 
-    const setClause = keys.map(key => `${key} = ?`).join(', ');
+    // CAMBIO IMPORTANTE AQUÍ: Agregamos backticks `` a la key
+    const setClause = keys.map(key => `\`${key}\` = ?`).join(', ');
     const sql = `UPDATE ${table} SET ${setClause} WHERE id = ?`;
 
     try {
@@ -80,7 +80,7 @@ app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// C) CREAR
+// C) CREAR (CORREGIDO PARA SOPORTAR 'LEAD') ✅
 app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
     const { table } = req.params;
     let data = req.body;
@@ -98,7 +98,10 @@ app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
     const placeholders = keys.map(() => '?').join(', ');
     
     try {
-        const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
+        // CAMBIO IMPORTANTE AQUÍ: Agregamos backticks `` a las keys
+        const columns = keys.map(key => `\`${key}\``).join(', ');
+        const sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
+        
         await db.query(sql, values);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
