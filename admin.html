@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VELO HUB | Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/main.css">
+    <style>
+        body { background-color: #050505; color: #e4e4e7; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+        
+        /* Botones del Sidebar */
+        .tab-btn { color: #71717a; padding: 1rem; width: 100%; text-align: left; display: flex; gap: 12px; font-weight: bold; border-radius: 0.5rem; transition: all 0.2s; align-items: center; }
+        .tab-btn:hover { background: #27272a; color: white; }
+        .tab-btn.active { background: rgba(34, 211, 238, 0.1); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.2); }
+        
+        /* Contenido y Animaciones */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Inputs */
+        .input-dark { background: #09090b; border: 1px solid #27272a; color: white; padding: 0.75rem; border-radius: 0.5rem; width: 100%; outline: none; transition: 0.2s; font-size: 0.9rem; }
+        .input-dark:focus { border-color: #22d3ee; box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.1); }
+        
+        /* Scrollbars */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #18181b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+        /* Badges de Estado */
+        .mode-badge { font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .badge-new { background: #27272a; color: #a1a1aa; border: 1px solid #52525b; }
+        .badge-edit { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid #fbbf24; }
+
+        .stage-editing { border-left: 3px solid #fbbf24 !important; background: linear-gradient(90deg, rgba(251, 191, 36, 0.1), transparent); }
+    </style>
+</head>
+
+<body class="min-h-screen pb-20 bg-[#050505] text-zinc-200 font-sans selection:bg-cyan-500/30 selection:text-cyan-100">
+
+    <nav class="border-b border-zinc-800 bg-black/80 sticky top-0 z-50 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-black text-black italic">V</div>
+                <h1 class="text-sm font-bold tracking-widest text-zinc-400 uppercase hidden md:block">Command Center</h1>
+            </div>
+            <div class="flex gap-3">
+                <a href="/" target="_blank" class="text-xs font-bold text-zinc-400 hover:text-white px-3 py-1.5 rounded-lg border border-zinc-800 hover:border-zinc-600 transition-colors bg-zinc-900/50">Ver Web ↗</a>
+                <button onclick="window.location.reload()" class="text-xs font-bold text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg border border-red-900/30 bg-red-900/10 hover:bg-red-900/20 transition-colors">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 md:px-6 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <aside class="lg:col-span-1 sticky top-20 z-40 h-fit">
+            <div class="flex lg:flex-col gap-2 overflow-x-auto pb-4 lg:pb-0 custom-scrollbar">
+                <p class="hidden lg:block text-[10px] font-black uppercase text-zinc-600 tracking-widest mb-2 pl-2">Contenido</p>
+                <button onclick="switchTab('news')" id="tab-news" class="tab-btn active"><span>📰</span> Noticias</button>
+                <button onclick="switchTab('calendar')" id="tab-calendar" class="tab-btn"><span>📅</span> Calendario</button>
+                <button onclick="switchTab('ranking')" id="tab-ranking" class="tab-btn"><span>🏆</span> Ranking UCI</button>
+                <button onclick="switchTab('glossary')" id="tab-glossary" class="tab-btn"><span>🧠</span> Glosario</button>
+                
+                <div class="hidden lg:block h-px bg-zinc-800 my-4 mx-2"></div>
+                
+                <p class="hidden lg:block text-[10px] font-black uppercase text-zinc-600 tracking-widest mb-2 pl-2">Sistema</p>
+                <button onclick="switchTab('manager')" id="tab-manager" class="tab-btn text-cyan-500 hover:text-cyan-400"><span>⚙️</span> Gestor DB</button>
+            </div>
+        </aside>
+
+        <div class="lg:col-span-3 pb-20">
+            
+            <section id="news" class="tab-content active glass rounded-2xl p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-black italic uppercase flex items-center gap-2"><span class="text-cyan-500">#</span> Noticias</h2>
+                    <div class="flex gap-2">
+                        <button onclick="clearForms()" class="text-xs font-bold uppercase text-zinc-500 hover:text-white px-3 py-2">Limpiar</button>
+                    </div>
+                </div>
+
+                <form id="form-news" class="space-y-5" onsubmit="event.preventDefault()">
+                    <input type="hidden" id="news-id">
+                    <div id="status-news" class="mode-badge badge-new w-fit">NUEVO ARTÍCULO</div>
+                    
+                    <input type="text" id="news-title" placeholder="Titular Impactante" class="input-dark font-black text-lg md:text-xl">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="news-date" placeholder="Fecha (Ej: 16 FEB)" class="input-dark">
+                        <select id="news-tag" class="input-dark bg-[#09090b]">
+                            <option value="RACE REPORT">RACE REPORT</option>
+                            <option value="TECH LAB">TECH LAB</option>
+                            <option value="DATA ANALYSIS">DATA ANALYSIS</option>
+                            <option value="PREVIEW">PREVIEW</option>
+                        </select>
+                    </div>
+
+                    <input type="text" id="news-image" placeholder="URL Imagen Principal (https://...)" class="input-dark font-mono text-xs text-cyan-300">
+                    
+                    <div class="flex items-center gap-3 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
+                        <input type="checkbox" id="news-hero" class="w-5 h-5 accent-cyan-500 rounded cursor-pointer">
+                        <label for="news-hero" class="text-xs font-bold uppercase text-zinc-400 cursor-pointer select-none">Destacar como Hero (Portada)</label>
+                    </div>
+
+                    <textarea id="news-lead" placeholder="Lead / Entradilla (Resumen corto)" class="input-dark h-24 text-sm leading-relaxed"></textarea>
+                    
+                    <textarea id="news-content" placeholder="Cuerpo HTML del artículo (Opcional)" class="input-dark h-40 font-mono text-xs text-zinc-400"></textarea>
+
+                    <button type="button" onclick="saveData('noticias')" class="w-full py-4 bg-white text-black font-black uppercase rounded-xl hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all transform active:scale-[0.98]">
+                        Publicar Noticia
+                    </button>
+                </form>
+            </section>
+
+            <section id="calendar" class="tab-content glass rounded-2xl p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-black italic uppercase flex items-center gap-2 text-yellow-500"><span>#</span> Calendario</h2>
+                    <button onclick="clearForms()" class="text-xs font-bold uppercase text-zinc-500 hover:text-white px-3 py-2">Limpiar</button>
+                </div>
+
+                <form id="form-calendar" class="space-y-5" onsubmit="event.preventDefault()">
+                    <input type="hidden" id="race-id">
+                    <div id="status-calendar" class="mode-badge badge-new w-fit">NUEVA CARRERA</div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="race-name" placeholder="Nombre Carrera (Ej: Tour de Francia)" class="input-dark font-bold text-lg">
+                        <select id="race-status" class="input-dark bg-[#09090b] text-yellow-500 font-bold">
+                            <option value="Upcoming">📅 Pendiente</option>
+                            <option value="Active">🔴 En Curso</option>
+                            <option value="Finished">✅ Finalizada</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" id="race-date" placeholder="Texto Fecha (Ej: 01-23 JUL)" class="input-dark">
+                        <input type="date" id="race-iso" class="input-dark text-zinc-400">
+                        <input type="text" id="race-cat" placeholder="Categoría (WT, GT)" class="input-dark text-center font-mono">
+                    </div>
+
+                    <div class="border border-zinc-800 rounded-xl p-4 bg-black/40">
+                        <div class="flex justify-between mb-4 items-center">
+                            <h3 class="text-xs font-black text-white uppercase tracking-widest">Etapas</h3>
+                            <span id="stage-action-label" class="text-[9px] font-bold text-zinc-600 uppercase">Añadir Nueva</span>
+                        </div>
+                        
+                        <div id="stage-inputs-container" class="grid grid-cols-6 gap-2 mb-2">
+                            <input type="number" id="stage-n" placeholder="#" class="input-dark col-span-1 text-center font-bold">
+                            <select id="stage-type" class="input-dark col-span-2 text-xs bg-[#09090b]">
+                                <option value="llano">Llana</option>
+                                <option value="mediamontaña">Media</option>
+                                <option value="montaña">Montaña</option>
+                                <option value="tt">Crono</option>
+                            </select>
+                            <input type="text" id="stage-km" placeholder="KM" class="input-dark col-span-1 text-center">
+                            <input type="text" id="stage-gain" placeholder="M+" class="input-dark col-span-2 text-center">
+                        </div>
+                        <input type="text" id="stage-route" placeholder="Ruta (Inicio > Fin)" class="input-dark mb-2 text-sm">
+                        <input type="text" id="stage-image" placeholder="URL Perfil Altimetría" class="input-dark mb-4 text-xs font-mono text-zinc-500">
+                        
+                        <div class="flex gap-2">
+                            <button type="button" id="btn-confirm-stage" onclick="confirmStageChange()" class="flex-1 py-2 bg-zinc-800 text-white text-[10px] font-bold uppercase rounded border border-zinc-600 hover:bg-zinc-700">⬇️ Añadir a Lista</button>
+                            <button type="button" id="btn-cancel-stage" onclick="resetStageInputs()" class="hidden px-4 bg-red-900/20 text-red-500 text-[10px] font-bold uppercase rounded hover:bg-red-900/40">✕</button>
+                        </div>
+
+                        <div id="stages-list" class="mt-4 space-y-1 max-h-48 overflow-y-auto custom-scrollbar border-t border-zinc-800 pt-2"></div>
+                    </div>
+
+                    <button type="button" onclick="saveData('calendario')" class="w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase rounded-xl transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)]">
+                        Guardar Carrera
+                    </button>
+                </form>
+            </section>
+
+            <section id="ranking" class="tab-content glass rounded-2xl p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-black italic uppercase flex items-center gap-2 text-emerald-500"><span>#</span> Ranking</h2>
+                    <button onclick="clearForms()" class="text-xs font-bold uppercase text-zinc-500 hover:text-white px-3 py-2">Limpiar</button>
+                </div>
+                
+                <form id="form-ranking" class="space-y-5" onsubmit="event.preventDefault()">
+                    <input type="hidden" id="rank-id">
+                    <div id="status-ranking" class="mode-badge badge-new w-fit">NUEVO CICLISTA</div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="md:col-span-3">
+                            <input type="text" id="rank-name" placeholder="Nombre Ciclista" class="input-dark font-bold text-lg">
+                        </div>
+                        <div>
+                            <input type="number" id="rank-pos" placeholder="Pos. #" class="input-dark font-bold text-center text-lg text-emerald-400 border-emerald-900/50">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="rank-team" placeholder="Equipo Actual" class="input-dark">
+                        <input type="number" id="rank-points" placeholder="Puntos UCI" class="input-dark text-right font-mono">
+                    </div>
+                    
+                    <button type="button" onclick="saveData('ranking')" class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                        Actualizar Ranking
+                    </button>
+                </form>
+            </section>
+
+            <section id="glossary" class="tab-content glass rounded-2xl p-6 md:p-8">
+                <h2 class="text-2xl font-black italic uppercase flex items-center gap-2 text-purple-500 mb-6"><span>#</span> Glosario</h2>
+                <form id="form-glossary" class="space-y-5">
+                    <input type="hidden" id="gloss-id">
+                    <div id="status-glossary" class="mode-badge badge-new w-fit">NUEVO TÉRMINO</div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" id="gloss-term" placeholder="Término (Ej: FTP)" class="input-dark font-bold md:col-span-2">
+                        <input type="text" id="gloss-cat" placeholder="Categoría (Fisiología)" class="input-dark">
+                    </div>
+                    <textarea id="gloss-def" placeholder="Definición..." class="input-dark h-32"></textarea>
+                    
+                    <button type="button" onclick="saveData('glosario')" class="w-full py-4 bg-purple-500 hover:bg-purple-400 text-white font-black uppercase rounded-xl">
+                        Guardar Término
+                    </button>
+                </form>
+            </section>
+
+            <section id="manager" class="tab-content glass rounded-2xl p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold uppercase text-white">Base de Datos</h2>
+                    <select id="manager-filter" onchange="loadFromAPI(this.value)" class="bg-black border border-zinc-800 rounded px-3 py-1.5 text-xs text-white uppercase font-bold outline-none focus:border-cyan-500">
+                        <option value="noticias">Noticias</option>
+                        <option value="calendario">Calendario</option>
+                        <option value="ranking">Ranking</option>
+                        <option value="glosario">Glosario</option>
+                    </select>
+                </div>
+                <div id="manager-list" class="space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar"></div>
+            </section>
+
+        </div>
+    </main>
+
+    <div id="toast" class="fixed bottom-6 right-6 z-[100] bg-zinc-900 border border-zinc-800 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 transform translate-y-20 opacity-0 transition-all duration-300">
+        <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]"></div>
+        <div>
+            <p class="text-xs font-black uppercase tracking-widest text-zinc-500">System Status</p>
+            <p id="toast-msg" class="text-sm font-bold">Operación completada</p>
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA DE ETAPAS ---
+        let currentStages = [];
+        let editingStageIndex = -1;
+
+        function confirmStageChange() {
+            const data = {
+                n: document.getElementById('stage-n').value,
+                type: document.getElementById('stage-type').value,
+                route: document.getElementById('stage-route').value,
+                km: document.getElementById('stage-km').value,
+                gain: document.getElementById('stage-gain').value,
+                image: document.getElementById('stage-image').value
+            };
+            
+            if(!data.n || !data.route) return alert("Faltan datos básicos de la etapa");
+
+            if(editingStageIndex === -1) currentStages.push(data);
+            else { currentStages[editingStageIndex] = data; editingStageIndex = -1; }
+
+            currentStages.sort((a,b) => a.n - b.n);
+            renderStages();
+            resetStageInputs();
+        }
+
+        function renderStages() {
+            const list = document.getElementById('stages-list');
+            list.innerHTML = currentStages.map((s, i) => `
+                <div class="flex justify-between items-center p-2 bg-zinc-900/50 border border-zinc-800/50 rounded hover:bg-zinc-800 transition ${i === editingStageIndex ? 'stage-editing' : ''}">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-mono font-bold text-zinc-500 w-6 text-center">${s.n}</span>
+                        <div>
+                            <p class="text-xs font-bold text-zinc-300">${s.route}</p>
+                            <p class="text-[9px] text-zinc-600 uppercase">${s.type} • ${s.km}km</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="loadStage(${i})" class="text-[9px] font-bold text-cyan-500 uppercase">Edit</button>
+                        <button onclick="deleteStage(${i})" class="text-[9px] font-bold text-red-500 uppercase">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadStage(i) {
+            editingStageIndex = i;
+            const s = currentStages[i];
+            document.getElementById('stage-n').value = s.n;
+            document.getElementById('stage-route').value = s.route;
+            document.getElementById('stage-type').value = s.type;
+            document.getElementById('stage-km').value = s.km;
+            document.getElementById('stage-gain').value = s.gain;
+            document.getElementById('stage-image').value = s.image;
+            
+            document.getElementById('btn-confirm-stage').innerText = "↻ Actualizar";
+            document.getElementById('btn-cancel-stage').classList.remove('hidden');
+        }
+
+        function resetStageInputs() {
+            editingStageIndex = -1;
+            document.getElementById('stage-n').value = currentStages.length + 1;
+            document.getElementById('stage-route').value = "";
+            document.getElementById('stage-km').value = "";
+            document.getElementById('stage-gain').value = "";
+            document.getElementById('stage-image').value = "";
+            document.getElementById('btn-confirm-stage').innerText = "⬇️ Añadir a Lista";
+            document.getElementById('btn-cancel-stage').classList.add('hidden');
+            renderStages();
+        }
+
+        function deleteStage(i) {
+            currentStages.splice(i, 1);
+            renderStages();
+        }
+
+        // --- CONEXIÓN CON API (MODO ADMIN) ---
+        // Mapeo: Frontend (HTML ID) -> Backend (API Endpoint)
+        const ENDPOINTS = {
+            'noticias': 'news',
+            'calendario': 'calendar',
+            'ranking': 'ranking',
+            'glosario': 'glossary'
+        };
+
+        async function saveData(type) {
+            const apiName = ENDPOINTS[type];
+            const idField = document.getElementById({ 'noticias':'news-id', 'calendario':'race-id', 'ranking':'rank-id', 'glosario':'gloss-id' }[type]);
+            const id = idField ? idField.value : null;
+
+            // Recoger Datos
+            let body = {};
+            if(type === 'noticias') {
+                body = {
+                    title: document.getElementById('news-title').value,
+                    date: document.getElementById('news-date').value,
+                    tag: document.getElementById('news-tag').value,
+                    image: document.getElementById('news-image').value,
+                    lead: document.getElementById('news-lead').value,
+                    content: document.getElementById('news-content').value,
+                    isHero: document.getElementById('news-hero').checked
+                };
+            } else if(type === 'calendario') {
+                const details = { stages: currentStages, gc: [], winner: "" }; // Simplificado
+                body = {
+                    name: document.getElementById('race-name').value,
+                    status: document.getElementById('race-status').value,
+                    date: document.getElementById('race-date').value,
+                    dateISO: document.getElementById('race-iso').value,
+                    category: document.getElementById('race-cat').value,
+                    details: JSON.stringify(details)
+                };
+            } else if(type === 'ranking') {
+                body = {
+                    rank: document.getElementById('rank-pos').value,
+                    name: document.getElementById('rank-name').value,
+                    team: document.getElementById('rank-team').value,
+                    points: document.getElementById('rank-points').value
+                };
+            } else if(type === 'glosario') {
+                body = {
+                    term: document.getElementById('gloss-term').value,
+                    cat: document.getElementById('gloss-cat').value,
+                    definition: document.getElementById('gloss-def').value
+                };
+            }
+
+            // Enviar a la API ADMIN (Protegida)
+            // Si hay ID, es PUT (Editar), si no, es POST (Crear)
+            // IMPORTANTE: El server.js debe soportar PUT para editar. Si no, usa siempre POST.
+            const method = id ? 'PUT' : 'POST'; 
+            const url = id ? `/api/admin/${apiName}/${id}` : `/api/admin/${apiName}`;
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if(res.ok) {
+                    showToast("Guardado correctamente");
+                    if(!id) clearForms(); // Limpiar solo si es nuevo
+                    if(document.getElementById('manager').classList.contains('active')) loadFromAPI(type);
+                } else {
+                    const txt = await res.text();
+                    alert("Error: " + txt);
+                }
+            } catch(e) { console.error(e); alert("Error de conexión"); }
+        }
+
+        // --- GESTOR DE DATOS (LEER) ---
+        async function loadFromAPI(type) {
+            const apiName = ENDPOINTS[type];
+            const list = document.getElementById('manager-list');
+            list.innerHTML = '<p class="text-center text-xs text-zinc-600 animate-pulse mt-10">Cargando...</p>';
+
+            try {
+                // Leer de la API pública (GET)
+                const res = await fetch(`/api/${apiName}`);
+                const data = await res.json();
+                
+                list.innerHTML = data.map(item => {
+                    // Escapar comillas para evitar errores en el onclick
+                    const safeItem = JSON.stringify(item).replace(/"/g, '&quot;');
+                    const label = item.title || item.name || item.term;
+                    
+                    return `
+                    <div class="flex justify-between items-center p-3 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-zinc-600 transition group">
+                        <span class="text-xs font-bold text-zinc-300 truncate w-2/3">${label}</span>
+                        <div class="flex gap-2 opacity-50 group-hover:opacity-100 transition">
+                            <button onclick="loadItemIntoForm('${type}', ${safeItem})" class="bg-cyan-900/30 text-cyan-500 px-2 py-1 rounded text-[10px] font-bold uppercase hover:bg-cyan-500 hover:text-black">Editar</button>
+                            <button onclick="deleteItem('${type}', ${item.id})" class="bg-red-900/30 text-red-500 px-2 py-1 rounded text-[10px] font-bold uppercase hover:bg-red-500 hover:text-white">Borrar</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch(e) { list.innerHTML = '<p class="text-red-500 text-center text-xs">Error al cargar datos</p>'; }
+        }
+
+        function loadItemIntoForm(type, item) {
+            switchTab(type);
+            // Marcar como modo edición
+            const badge = document.getElementById(`status-${type}`);
+            if(badge) { badge.innerText = "EDITANDO (ID: " + item.id + ")"; badge.classList.replace('badge-new', 'badge-edit'); }
+
+            if(type === 'noticias') {
+                document.getElementById('news-id').value = item.id;
+                document.getElementById('news-title').value = item.title;
+                document.getElementById('news-date').value = item.date;
+                document.getElementById('news-tag').value = item.tag;
+                document.getElementById('news-lead').value = item.lead;
+                document.getElementById('news-content').value = item.content || '';
+                document.getElementById('news-image').value = item.image;
+            } else if(type === 'calendario') {
+                document.getElementById('race-id').value = item.id;
+                document.getElementById('race-name').value = item.name;
+                document.getElementById('race-status').value = item.status;
+                document.getElementById('race-date').value = item.date;
+                document.getElementById('race-iso').value = item.dateISO;
+                document.getElementById('race-cat').value = item.category;
+                
+                // Cargar etapas si existen
+                try {
+                    const details = typeof item.details === 'string' ? JSON.parse(item.details) : item.details;
+                    currentStages = details.stages || [];
+                    renderStages();
+                } catch(e) {}
+            } else if(type === 'ranking') {
+                document.getElementById('rank-id').value = item.id;
+                document.getElementById('rank-name').value = item.name;
+                document.getElementById('rank-pos').value = item.rank || item.points; // Ajuste según BD
+                document.getElementById('rank-team').value = item.team;
+                document.getElementById('rank-points').value = item.points;
+            } else if(type === 'glosario') {
+                document.getElementById('gloss-id').value = item.id;
+                document.getElementById('gloss-term').value = item.term;
+                document.getElementById('gloss-cat').value = item.cat || 'General';
+                document.getElementById('gloss-def').value = item.definition;
+            }
+        }
+
+        async function deleteItem(type, id) {
+            if(!confirm("¿Seguro que quieres borrar esto? No hay vuelta atrás.")) return;
+            const apiName = ENDPOINTS[type];
+            
+            try {
+                await fetch(`/api/admin/${apiName}/${id}`, { method: 'DELETE' });
+                loadFromAPI(type);
+                showToast("Elemento eliminado");
+            } catch(e) { alert("Error al borrar"); }
+        }
+
+        // --- UI UTILS ---
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.getElementById(`tab-${id}`).classList.add('active');
+            
+            if(id === 'manager') {
+                loadFromAPI(document.getElementById('manager-filter').value);
+            }
+        }
+
+        function clearForms() {
+            document.querySelectorAll('form').forEach(f => f.reset());
+            document.querySelectorAll('input[type="hidden"]').forEach(i => i.value = "");
+            document.querySelectorAll('.mode-badge').forEach(b => {
+                b.innerText = b.id.includes('news') ? "NUEVO ARTÍCULO" : "NUEVA ENTRADA";
+                b.classList.replace('badge-edit', 'badge-new');
+            });
+            currentStages = [];
+            renderStages();
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            t.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+    </script>
+</body>
+</html>
