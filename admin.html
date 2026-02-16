@@ -2,220 +2,332 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Velo Admin - Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Estilos oscuros para modo hacker */
-        body { background-color: #0f172a; color: #e2e8f0; font-family: sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .input-dark { background: #1e293b; border: 1px solid #334155; color: white; width: 100%; padding: 8px; margin-bottom: 10px; rounded: 4px; }
+        body { background-color: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .modal-glass { background: #1e293b; border: 1px solid #475569; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .input-dark {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: #f1f5f9;
+            transition: all 0.3s;
+        }
+        .input-dark:focus {
+            border-color: #10b981;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
     </style>
 </head>
-<body class="p-6">
+<body class="min-h-screen p-6">
 
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-emerald-400 tracking-tighter">⚡ VELO ADMIN</h1>
-        <button onclick="logout()" class="text-xs text-red-400 hover:text-red-300 uppercase font-bold">Cerrar Sesión</button>
-    </div>
+    <header class="flex justify-between items-center mb-10 px-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-black text-xl">V</div>
+            <h1 class="text-2xl font-bold text-white tracking-tight">VELO <span class="text-emerald-400">ADMIN</span></h1>
+        </div>
+        <button onclick="logout()" class="text-slate-400 hover:text-red-400 transition text-sm font-semibold flex items-center gap-2">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+    </header>
 
-    <div class="flex gap-4 mb-8 overflow-x-auto pb-2">
-        <button onclick="loadTable('noticias')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-600 rounded-lg transition border border-slate-700">📰 Noticias</button>
-        <button onclick="loadTable('calendario')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-600 rounded-lg transition border border-slate-700">📅 Calendario</button>
-        <button onclick="loadTable('equipos')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-600 rounded-lg transition border border-slate-700">🚴 Equipos</button>
-        <button onclick="loadTable('glosario')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-600 rounded-lg transition border border-slate-700">🧠 Glosario</button>
-    </div>
+    <nav class="flex flex-wrap gap-4 mb-8 border-b border-slate-700 pb-6">
+        <button onclick="loadTable('noticias')" id="btn-noticias" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium">
+            <i class="fas fa-newspaper text-emerald-400"></i> Noticias
+        </button>
+        <button onclick="loadTable('calendario')" id="btn-calendario" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium">
+            <i class="fas fa-calendar-alt text-blue-400"></i> Calendario
+        </button>
+        <button onclick="loadTable('equipos')" id="btn-equipos" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium">
+            <i class="fas fa-users text-yellow-400"></i> Equipos
+        </button>
+        <button onclick="loadTable('glosario')" id="btn-glosario" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium">
+            <i class="fas fa-book text-purple-400"></i> Glosario
+        </button>
+    </nav>
 
-    <div id="content-area" class="glass rounded-xl p-6 min-h-[50vh]">
-        <p class="text-slate-500 text-center mt-10">Selecciona una categoría arriba para empezar a gestionar.</p>
-    </div>
+    <main id="content-area" class="glass rounded-2xl p-8 min-h-[60vh]">
+        <div class="flex flex-col items-center justify-center h-64 text-slate-500">
+            <i class="fas fa-database text-4xl mb-4 opacity-50"></i>
+            <p>Selecciona una categoría arriba para gestionar la base de datos.</p>
+        </div>
+    </main>
 
-    <div id="editModal" class="fixed inset-0 bg-black/80 hidden flex justify-center items-center z-50">
-        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 class="text-xl font-bold text-white mb-4">Editar Elemento</h2>
-            <form id="dynamicForm"></form> <div class="flex justify-end gap-3 mt-6">
-                <button onclick="closeModal()" class="px-4 py-2 text-slate-400 hover:text-white">Cancelar</button>
-                <button onclick="saveChanges()" class="px-6 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg">Guardar Cambios</button>
+    <div id="modal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-center z-50 p-4 backdrop-blur-sm transition-opacity">
+        <div class="modal-glass w-full max-w-4xl max-h-[90vh] rounded-2xl flex flex-col shadow-2xl animate-fade-in-up">
+            
+            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-2xl">
+                <h2 id="modal-title" class="text-xl font-bold text-white flex items-center gap-3">
+                    <span id="modal-icon">✏️</span> <span id="modal-text">Editar Elemento</span>
+                </h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition bg-slate-700 hover:bg-red-500 w-8 h-8 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-8 overflow-y-auto flex-1 custom-scrollbar">
+                <form id="dynamicForm" class="grid grid-cols-1 gap-6"></form>
+            </div>
+
+            <div class="p-6 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex justify-end gap-4">
+                <button onclick="closeModal()" class="px-6 py-2.5 text-slate-300 hover:text-white font-medium transition">Cancelar</button>
+                <button onclick="saveData()" class="px-8 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg shadow-lg shadow-emerald-500/20 transition transform hover:scale-105 flex items-center gap-2">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // ESTADO GLOBAL
+        // --- 1. CONFIGURACIÓN Y ESTADO ---
         let currentTable = '';
         let currentData = [];
-        let editingId = null;
+        let isEditing = false;
+        let editId = null;
 
-        // 1. CARGAR DATOS
+        // Plantillas para CREAR nuevos elementos (cuando no hay datos previos)
+        const templates = {
+            noticias: { title: 'Título Nuevo', date: 'DD MMM AAAA', tag: 'General', image: 'assets/placeholder.jpg', lead: 'Resumen breve...', content: '<p>Contenido HTML aquí...</p>', isHero: 0 },
+            calendario: { name: 'Nombre Carrera', status: 'Upcoming', date: 'Fechas', category: 'WT', details: '{}', winner: null },
+            equipos: { name: 'Nombre Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
+            glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...' },
+            ranking: { name: 'Corredor', team: 'Equipo', points: 0, rank: 0, trend: '-', profile: '{}' }
+        };
+
+        // --- 2. CARGA DE DATOS ---
         async function loadTable(table) {
             currentTable = table;
-            document.getElementById('content-area').innerHTML = '<p class="text-center animate-pulse">Cargando datos...</p>';
             
-            // Mapeo de nombres API (tu web usa nombres distintos en frontend y backend)
-            let apiEndpoint = table;
-            if(table === 'noticias') apiEndpoint = 'news';
-            if(table === 'equipos') apiEndpoint = 'teams';
-            if(table === 'calendario') apiEndpoint = 'calendar';
-            if(table === 'glosario') apiEndpoint = 'glossary';
+            // UI Feedback
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ring-2', 'ring-emerald-500', 'bg-slate-700'));
+            document.getElementById(`btn-${table}`).classList.add('ring-2', 'ring-emerald-500', 'bg-slate-700');
+            
+            const content = document.getElementById('content-area');
+            content.innerHTML = '<div class="flex justify-center p-20"><i class="fas fa-circle-notch fa-spin text-4xl text-emerald-500"></i></div>';
+
+            // Mapeo de rutas
+            let endpoint = table;
+            if(table === 'noticias') endpoint = 'news';
+            if(table === 'equipos') endpoint = 'teams';
+            if(table === 'calendario') endpoint = 'calendar';
+            if(table === 'glosario') endpoint = 'glossary';
 
             try {
-                const res = await fetch(`/api/${apiEndpoint}`);
-                const data = await res.json();
-                currentData = data;
-                renderTable(data);
+                const res = await fetch(`/api/${endpoint}`);
+                currentData = await res.json();
+                renderUI(currentData);
             } catch (e) {
-                alert("Error cargando datos: " + e.message);
+                content.innerHTML = `<div class="text-red-400 text-center">Error: ${e.message}</div>`;
             }
         }
 
-        // 2. DIBUJAR TABLA
-        function renderTable(data) {
+        // --- 3. RENDERIZADO DE LA TABLA ---
+        function renderUI(data) {
+            const container = document.getElementById('content-area');
+            
+            // Botón de Añadir (Header de la sección)
+            let headerHtml = `
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-white capitalize flex items-center gap-3">
+                        <span class="w-2 h-8 bg-emerald-500 rounded-full"></span>
+                        ${currentTable}
+                    </h2>
+                    <button onclick="openCreateModal()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i> AÑADIR NUEVO
+                    </button>
+                </div>
+            `;
+
             if (!data || data.length === 0) {
-                document.getElementById('content-area').innerHTML = '<p class="text-center text-slate-500">No hay datos en esta tabla.</p>';
+                container.innerHTML = headerHtml + '<div class="bg-slate-800/50 p-10 rounded-xl text-center border border-slate-700 text-slate-400">No hay datos aún. ¡Añade el primero!</div>';
                 return;
             }
 
-            // Detectar columnas automáticamente (usamos las claves del primer objeto)
-            const columns = Object.keys(data[0]).filter(k => k !== 'id' && k !== 'riders' && k !== 'details'); // Ocultamos columnas complejas en la vista rápida
-            
-            let html = `
-                <div class="flex justify-between mb-4">
-                    <h3 class="text-xl font-bold capitalize text-white">${currentTable}</h3>
-                    <span class="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">${data.length} registros</span>
-                </div>
-                <div class="overflow-x-auto">
+            // Detectar columnas (excluyendo ID y campos pesados para la vista previa)
+            const keys = Object.keys(data[0]);
+            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json'];
+            const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5); // Max 5 columnas
+
+            let tableHtml = `
+                <div class="overflow-hidden rounded-xl border border-slate-700 shadow-2xl">
                     <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-800 text-emerald-400 uppercase font-bold text-xs">
+                        <thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs tracking-wider">
                             <tr>
-                                ${columns.map(c => `<th class="p-3">${c}</th>`).join('')}
-                                <th class="p-3 text-right">Acciones</th>
+                                ${displayCols.map(col => `<th class="p-4">${col}</th>`).join('')}
+                                <th class="p-4 text-right bg-slate-800">ACCIONES</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-700">
+                        <tbody class="divide-y divide-slate-700 bg-slate-900/40">
             `;
 
             data.forEach(row => {
-                html += `<tr class="hover:bg-slate-800/50 transition">`;
-                columns.forEach(col => {
+                tableHtml += `<tr class="hover:bg-slate-800/60 transition group">`;
+                displayCols.forEach(col => {
                     let val = row[col];
-                    // Si es muy largo, lo cortamos
-                    if (typeof val === 'string' && val.length > 50) val = val.substring(0, 50) + '...';
-                    html += `<td class="p-3">${val || '-'}</td>`;
+                    // Renderizado inteligente (imágenes, booleanos, texto largo)
+                    if (typeof val === 'string' && val.startsWith('assets/')) {
+                        val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md border border-slate-600">`;
+                    } else if (typeof val === 'boolean' || val === 0 || val === 1) {
+                        val = val ? '<span class="text-emerald-400">● Sí</span>' : '<span class="text-slate-600">No</span>';
+                    } else if (typeof val === 'string' && val.length > 40) {
+                        val = val.substring(0, 40) + '...';
+                    }
+                    tableHtml += `<td class="p-4 font-medium">${val || '<span class="opacity-30">-</span>'}</td>`;
                 });
-                
-                // Botones EDITAR y BORRAR conectados
-                html += `
-                    <td class="p-3 text-right flex justify-end gap-2">
-                        <button onclick='openEditModal(${row.id})' class="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1 rounded text-xs transition">EDITAR</button>
-                        <button onclick='deleteItem(${row.id})' class="bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1 rounded text-xs transition">BORRAR</button>
+
+                tableHtml += `
+                    <td class="p-4 text-right">
+                        <div class="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <button onclick='openEditModal(${row.id})' class="bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white p-2 rounded-lg transition" title="Editar">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button onclick='deleteItem(${row.id})' class="bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white p-2 rounded-lg transition" title="Borrar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>`;
             });
 
-            html += `</tbody></table></div>`;
-            document.getElementById('content-area').innerHTML = html;
+            tableHtml += `</tbody></table></div>`;
+            container.innerHTML = headerHtml + tableHtml;
         }
 
-        // 3. ABRIR MODAL Y GENERAR FORMULARIO (La Magia)
+        // --- 4. GESTIÓN DEL MODAL (INTELIGENTE) ---
+        
+        function openCreateModal() {
+            isEditing = false;
+            editId = null;
+            document.getElementById('modal-title').innerHTML = '<span class="text-emerald-400 text-2xl mr-2">+</span> Añadir Nuevo';
+            
+            // Cargar plantilla vacía según la tabla actual
+            const template = templates[currentTable] || {};
+            buildForm(template);
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
         function openEditModal(id) {
-            editingId = id;
+            isEditing = true;
+            editId = id;
             const item = currentData.find(d => d.id === id);
+            document.getElementById('modal-title').innerHTML = '<span class="text-blue-400 text-2xl mr-2">✎</span> Editar Elemento';
+            buildForm(item);
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function buildForm(data) {
             const form = document.getElementById('dynamicForm');
-            form.innerHTML = ''; // Limpiar anterior
+            form.innerHTML = '';
 
-            // Recorremos todas las propiedades del objeto para crear inputs
-            for (const [key, value] of Object.entries(item)) {
-                if (key === 'id') continue; // El ID no se toca
+            for (const [key, value] of Object.entries(data)) {
+                if (key === 'id') continue; // No editar ID
 
+                const wrapper = document.createElement('div');
+                
                 const label = document.createElement('label');
-                label.className = "block text-xs uppercase text-slate-400 font-bold mb-1";
+                label.className = "block text-xs uppercase text-emerald-500 font-bold mb-2 tracking-widest";
                 label.innerText = key;
 
                 let input;
-                // Si es texto largo o JSON, usamos textarea
-                if (key === 'content' || key === 'riders' || key === 'details' || key === 'profile' || key === 'definition') {
+                // Textareas para contenidos largos o JSON
+                if (key === 'content' || key === 'riders' || key === 'details' || key === 'profile' || key === 'riders_json' || key === 'definition' || key === 'lead') {
                     input = document.createElement('textarea');
-                    input.rows = 6;
-                    // Si es un objeto/array, lo convertimos a texto bonito
-                    input.value = (typeof value === 'object') ? JSON.stringify(value, null, 2) : value;
+                    input.rows = (key === 'riders' || key === 'details' || key === 'content') ? 10 : 4;
+                    input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm"; // Font-mono para JSON
+                    // Formatear JSON si es objeto
+                    input.value = (typeof value === 'object' && value !== null) ? JSON.stringify(value, null, 4) : value;
                 } else {
                     input = document.createElement('input');
                     input.type = "text";
-                    input.value = value;
+                    input.className = "input-dark w-full rounded-lg p-3";
+                    input.value = value || '';
                 }
 
                 input.name = key;
-                input.className = "w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm mb-4 focus:border-emerald-500 outline-none";
-
-                form.appendChild(label);
-                form.appendChild(input);
+                wrapper.appendChild(label);
+                wrapper.appendChild(input);
+                form.appendChild(wrapper);
             }
-
-            document.getElementById('editModal').classList.remove('hidden');
         }
 
-        // 4. GUARDAR CAMBIOS (PUT al servidor)
-        async function saveChanges() {
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        // --- 5. GUARDAR DATOS (CREATE / UPDATE) ---
+        async function saveData() {
             const form = document.getElementById('dynamicForm');
             const formData = new FormData(form);
-            const updateData = {};
+            const dataObj = {};
 
-            // Convertimos el formulario a objeto JSON
+            // Convertir FormData a Objeto JSON
             for (let [key, value] of formData.entries()) {
-                updateData[key] = value;
+                // Intentar limpiar JSON si es un campo de texto que parece JSON
+                if ((key === 'riders' || key === 'details') && typeof value === 'string') {
+                    try {
+                        // Validar si es JSON válido, si no, dejar como texto para que no rompa
+                        JSON.parse(value); 
+                    } catch (e) {
+                        // Si el usuario escribe mal el JSON, avisamos o lo enviamos como string
+                        console.warn("Posible JSON inválido en " + key);
+                    }
+                }
+                dataObj[key] = value;
             }
 
-            try {
-                // Autenticación básica (admin:velo2026) en base64
-                const authHeader = 'Basic ' + btoa('admin:velo2026');
+            const authHeader = 'Basic ' + btoa('admin:velo2026');
+            let url = isEditing ? `/api/admin/${currentTable}/${editId}` : `/api/admin/create/${currentTable}`;
+            let method = isEditing ? 'PUT' : 'POST';
 
-                const res = await fetch(`/api/admin/${currentTable}/${editingId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': authHeader
-                    },
-                    body: JSON.stringify(updateData)
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+                    body: JSON.stringify(dataObj)
                 });
 
                 if (res.ok) {
                     closeModal();
-                    loadTable(currentTable); // Recargar tabla para ver cambios
-                    alert("✅ Guardado correctamente");
+                    loadTable(currentTable); // Refrescar
+                    // Notificación visual rápida
+                    const btn = document.getElementById('modal-title');
+                    btn.innerText = "✅ ¡Guardado!";
+                    setTimeout(() => closeModal(), 500);
                 } else {
                     const err = await res.json();
-                    alert("❌ Error al guardar: " + err.error);
+                    alert("❌ Error: " + JSON.stringify(err));
                 }
             } catch (e) {
                 alert("Error de red: " + e.message);
             }
         }
 
-        // 5. BORRAR ELEMENTO
+        // --- 6. BORRAR ---
         async function deleteItem(id) {
-            if(!confirm("¿Seguro que quieres borrar esto? No hay vuelta atrás.")) return;
-
-            const authHeader = 'Basic ' + btoa('admin:velo2026');
+            if(!confirm("⚠️ ¿Estás seguro de borrar este elemento?")) return;
             
+            const authHeader = 'Basic ' + btoa('admin:velo2026');
             try {
-                const res = await fetch(`/api/admin/${currentTable}/${id}`, {
+                await fetch(`/api/admin/${currentTable}/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': authHeader }
                 });
-
-                if(res.ok) {
-                    loadTable(currentTable);
-                } else {
-                    alert("Error borrando");
-                }
-            } catch(e) { console.error(e); }
-        }
-
-        function closeModal() {
-            document.getElementById('editModal').classList.add('hidden');
+                loadTable(currentTable);
+            } catch(e) { alert("Error borrando"); }
         }
 
         function logout() {
-            // Truco simple para cerrar sesión en basic auth: redirigir con credenciales malas
             window.location.href = "https://logout:logout@" + window.location.host;
         }
     </script>
