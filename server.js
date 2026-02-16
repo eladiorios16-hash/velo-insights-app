@@ -10,7 +10,7 @@ console.log("Fact: Servidor Velo-Insights Iniciado");
 
 // 1. CONFIGURACIÓN
 app.use(cors());
-app.use(express.json()); // Vital para leer los datos que envías al editar
+app.use(express.json());
 
 // 2. SEGURIDAD (Basic Auth)
 const authMiddleware = (req, res, next) => {
@@ -25,14 +25,14 @@ const authMiddleware = (req, res, next) => {
     res.status(401).send('⛔ ACCESO DENEGADO');
 };
 
-// 3. ZONA ADMIN (Frontend)
+// 3. ZONA ADMIN
 app.get('/admin', authMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// --- 4. API MAESTRA DE ADMINISTRACIÓN (LA SOLUCIÓN) ---
+// --- 4. API MAESTRA DE ADMINISTRACIÓN ---
 
-// A) BORRAR CUALQUIER COSA (Genérico)
+// A) BORRAR
 app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     const { table, id } = req.params;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking'];
@@ -47,15 +47,22 @@ app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// B) EDITAR CUALQUIER COSA (Genérico)
+// B) EDITAR (CON CORRECCIÓN PARA GLOSARIO)
 app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     const { table, id } = req.params;
-    const data = req.body; // Los datos nuevos { name: "Nuevo Nombre", ... }
+    let data = req.body; // Usamos 'let' para poder modificar los datos
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking'];
 
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
-    // Construimos la consulta SQL dinámicamente
+    // --- PARCHE DE TRADUCCIÓN (SOLUCIÓN AL ERROR) ---
+    // Si estamos en glosario y llega 'def', lo cambiamos a 'definition'
+    if (table === 'glosario' && data.def !== undefined) {
+        data.definition = data.def; // Copiamos el valor a la columna correcta
+        delete data.def;            // Borramos la columna incorrecta
+    }
+    // ------------------------------------------------
+
     const keys = Object.keys(data);
     const values = Object.values(data);
     
@@ -73,12 +80,18 @@ app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// C) CREAR (Genérico simple)
+// C) CREAR
 app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
     const { table } = req.params;
-    const data = req.body;
-    const allowed = ['noticias', 'calendario', 'equipos', 'glosario']; // Ranking mejor no tocarlo a mano
+    let data = req.body;
+    const allowed = ['noticias', 'calendario', 'equipos', 'glosario'];
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
+
+    // Parche también para crear
+    if (table === 'glosario' && data.def !== undefined) {
+        data.definition = data.def;
+        delete data.def;
+    }
 
     const keys = Object.keys(data);
     const values = Object.values(data);
@@ -92,7 +105,7 @@ app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
 });
 
 
-// --- 5. APIs PÚBLICAS (Lectura) ---
+// --- 5. APIs PÚBLICAS ---
 
 app.get('/api/news', async (req, res) => {
     try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
@@ -121,7 +134,6 @@ app.get('/api/calendar', async (req, res) => {
 app.get('/api/glossary', async (req, res) => {
     try { 
         const [rows] = await db.query("SELECT * FROM glosario ORDER BY term ASC");
-        // Mapeo para que el frontend reciba "def"
         const data = rows.map(r => ({ id: r.id, term: r.term, cat: r.cat, def: r.definition }));
         res.json(data);
     } catch(e){ res.status(500).json([]); }
