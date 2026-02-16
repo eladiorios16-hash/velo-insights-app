@@ -66,7 +66,7 @@
         let editId = null;
 
         const templates = {
-            noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'General', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
+            noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
             calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
             equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
             glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...' }
@@ -118,8 +118,13 @@
                 tableHtml += `<tr class="hover:bg-slate-800/60 transition group">`;
                 displayCols.forEach(col => {
                     let val = row[col];
-                    if (typeof val === 'string' && val.startsWith('assets/')) val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md">`;
+                    // Formateo visual para isHero
+                    if (col === 'isHero') {
+                        val = val == 1 ? '<span class="text-yellow-400">★ SÍ</span>' : '<span class="text-slate-600">No</span>';
+                    }
+                    else if (typeof val === 'string' && val.startsWith('assets/')) val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md">`;
                     else if (typeof val === 'string' && val.length > 40) val = val.substring(0, 40) + '...';
+                    
                     tableHtml += `<td class="p-4 font-medium">${val || '-'}</td>`;
                 });
                 tableHtml += `<td class="p-4 text-right flex justify-end gap-2">
@@ -156,30 +161,64 @@
                 label.innerText = key;
                 
                 let input;
-                // --- DETECCIÓN INTELIGENTE DE CAMPOS ---
-                if (key === 'content' || key === 'riders' || key === 'details' || key === 'definition') {
+                
+                // --- 1. DROPDOWN PARA TAGS ---
+                if (key === 'tag') {
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3";
+                    const options = ['GENERAL', 'RACE REPORT', 'TECH LAB', 'AERO LAB', 'DATA ANALYSIS', 'PREVIA'];
+                    options.forEach(opt => {
+                        const el = document.createElement('option');
+                        el.value = opt;
+                        el.innerText = opt;
+                        if (value === opt) el.selected = true;
+                        input.appendChild(el);
+                    });
+                }
+                // --- 2. DROPDOWN PARA ISHERO ---
+                else if (key === 'isHero') {
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3";
+                    
+                    const optNo = document.createElement('option');
+                    optNo.value = "0";
+                    optNo.innerText = "No (Noticia Normal)";
+                    if (value == 0) optNo.selected = true;
+                    
+                    const optYes = document.createElement('option');
+                    optYes.value = "1";
+                    optYes.innerText = "⭐ SÍ (Portada / Hero)";
+                    if (value == 1) optYes.selected = true;
+
+                    input.appendChild(optNo);
+                    input.appendChild(optYes);
+                }
+                // --- 3. TEXTAREAS GRANDES ---
+                else if (key === 'content' || key === 'riders' || key === 'details' || key === 'definition') {
                     input = document.createElement('textarea');
                     input.rows = 8;
                     input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm";
                     input.value = (typeof value === 'object' && value !== null) ? JSON.stringify(value, null, 4) : value;
                 } 
-                // AQUÍ ESTÁ LA MAGIA PARA LAS FECHAS:
+                // --- 4. FECHAS ---
                 else if (key === 'dateISO' || key === 'endDateISO') {
                     input = document.createElement('input');
-                    input.type = "date"; // Input especial de fecha
+                    input.type = "date";
                     input.className = "input-dark w-full rounded-lg p-3";
-                    // Limpiamos la fecha larga (2026-04-05T00...) para quedarnos solo con YYYY-MM-DD
                     if (value && typeof value === 'string') {
                         input.value = value.split('T')[0]; 
                     } else {
                         input.value = value || '';
                     }
-                } else {
+                } 
+                // --- 5. TEXTO NORMAL (Resto) ---
+                else {
                     input = document.createElement('input');
                     input.type = "text";
                     input.className = "input-dark w-full rounded-lg p-3";
                     input.value = value || '';
                 }
+                
                 input.name = key;
                 wrapper.appendChild(label);
                 wrapper.appendChild(input);
