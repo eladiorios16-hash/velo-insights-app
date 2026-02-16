@@ -1,25 +1,19 @@
 // db.js
 const mysql = require('mysql2');
 
+// Intentamos capturar las variables de Railway, sea cual sea el nombre que usen
 const pool = mysql.createPool({
-  // Host corregido según tu captura de Networking Pública
-  host: process.env.MYSQLHOST || 'metro.proxy.rlwy.net',
-  
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE || 'railway',
-  
-  // PUERTO CRÍTICO: Cambiado de 3306 al que muestra tu captura
-  port: process.env.MYSQLPORT || 56923, 
-  
+  host: process.env.MYSQLHOST || process.env.DB_HOST || 'metro.proxy.rlwy.net',
+  user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
+  database: process.env.MYSQLDATABASE || process.env.DB_NAME || 'railway',
+  port: process.env.MYSQLPORT || process.env.DB_PORT || 56923,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  
-  // Añadimos esto para evitar problemas de desconexión en Railway
   enableKeepAlive: true,
   keepAliveInitialDelay: 10000
 });
 
-// Exportamos la versión con promesas para poder usar 'await' en el server
+// Exportamos con promesas para el server.js
 module.exports = pool.promise();
