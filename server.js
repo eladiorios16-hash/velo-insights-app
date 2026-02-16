@@ -28,7 +28,7 @@ app.get('/admin', authMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// --- RUTA DE REPARACIÓN DE TABLAS ---
+// --- RUTA DE REPARACIÓN DE TABLAS (CORREGIDA) ---
 app.get('/setup-tables', async (req, res) => {
     try {
         const queries = [
@@ -101,38 +101,62 @@ app.get('/restore-calendar-backup', async (req, res) => {
             [31, 'Il Lombardia', '10 Oct', 'WT', '{"stages":[{"n":1,"type":"mediamontaña","route":"Bergamo","km":255}]}', '2026-10-10', '2026-10-10', null, 'Upcoming'],
             [32, 'Gree-Tour of Guangxi', '15-20 Oct', 'WT', '{"stages":[{"n":1,"type":"llano","route":"Beihai","km":140}]}', '2026-10-15', '2026-10-20', null, 'Upcoming']
         ];
+
+        // Usamos bulk insert para velocidad y consistencia
         await db.query(sql, [values]);
         res.send("✅ Calendario restaurado correctamente.");
-    } catch (e) { res.status(500).send("❌ Error: " + e.message); }
+    } catch (e) {
+        console.error("Error en restore-calendar:", e);
+        res.status(500).send("❌ Error: " + e.message);
+    }
 });
 
 // --- API PÚBLICA (GET) ---
 app.get('/api/news', async (req, res) => {
-    try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
+    try {
+        const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC LIMIT 50");
+        res.json(r);
+    } catch(e) { res.status(500).json([]); }
 });
+
 app.get('/api/teams', async (req, res) => {
     try { 
         const [r] = await db.query("SELECT * FROM equipos"); 
-        const data = r.map(t => ({...t, riders: JSON.parse(t.riders_json || '[]')}));
+        const data = r.map(t => ({
+            ...t,
+            riders: JSON.parse(t.riders_json || '[]')
+        }));
         res.json(data);
-    } catch(e){ res.status(500).json([]); }
+    } catch(e) { res.status(500).json([]); }
 });
+
 app.get('/api/calendar', async (req, res) => {
     try { 
         const [r] = await db.query("SELECT * FROM calendario ORDER BY dateISO ASC");
-        const data = r.map(c => ({...c, details: JSON.parse(c.details || '{}')}));
+        const data = r.map(c => ({
+            ...c,
+            details: JSON.parse(c.details || '{}')
+        }));
         res.json(data);
-    } catch(e){ res.status(500).json([]); }
+    } catch(e) { res.status(500).json([]); }
 });
+
 app.get('/api/ranking', async (req, res) => {
     try { 
-        const [r] = await db.query("SELECT * FROM ranking ORDER BY points DESC");
-        const data = r.map(k => ({...k, profile: JSON.parse(k.profile || '{}')}));
+        const [r] = await db.query("SELECT * FROM ranking ORDER BY points DESC LIMIT 100");
+        const data = r.map(k => ({
+            ...k,
+            profile: JSON.parse(k.profile || '{}')
+        }));
         res.json(data);
-    } catch(e){ res.status(500).json([]); }
+    } catch(e) { res.status(500).json([]); }
 });
+
 app.get('/api/glossary', async (req, res) => {
-    try { const [r] = await db.query("SELECT * FROM glosario ORDER BY term ASC"); res.json(r); } catch(e){ res.status(500).json([]); }
+    try {
+        const [r] = await db.query("SELECT * FROM glosario ORDER BY term ASC");
+        res.json(r);
+    } catch(e) { res.status(500).json([]); }
 });
 
 // --- API ADMIN (ESCRITURA) ---
@@ -140,71 +164,163 @@ app.get('/api/glossary', async (req, res) => {
 // 1. NOTICIAS
 app.post('/api/admin/news', authMiddleware, async (req, res) => {
     const { title, tag, date, image, lead, content, isHero } = req.body;
-    try { await db.query("INSERT INTO noticias (title, tag, date, image, `lead`, content, isHero) VALUES (?,?,?,?,?,?,?)", [title, tag, date, image, lead, content, isHero?1:0]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query(
+            "INSERT INTO noticias (title, tag, date, image, `lead`, content, isHero) VALUES (?,?,?,?,?,?,?)",
+            [title, tag, date, image, lead, content, isHero ? 1 : 0]
+        );
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
+
 app.put('/api/admin/news/:id', authMiddleware, async (req, res) => {
     const { title, tag, date, image, lead, content, isHero } = req.body;
-    try { await db.query("UPDATE noticias SET title=?, tag=?, date=?, image=?, `lead`=?, content=?, isHero=? WHERE id=?", [title, tag, date, image, lead, content, isHero?1:0, req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query(
+            "UPDATE noticias SET title=?, tag=?, date=?, image=?, `lead`=?, content=?, isHero=? WHERE id=?",
+            [title, tag, date, image, lead, content, isHero ? 1 : 0, req.params.id]
+        );
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
+
 app.delete('/api/admin/news/:id', authMiddleware, async (req, res) => {
-    try { await db.query("DELETE FROM noticias WHERE id=?", [req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query("DELETE FROM noticias WHERE id=?", [req.params.id]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
 
 // 2. EQUIPOS
 app.post('/api/admin/teams', authMiddleware, async (req, res) => {
     const { name, code, country, jersey, riders } = req.body;
-    try { await db.query("INSERT INTO equipos (name, code, country, jersey, riders_json) VALUES (?,?,?,?,?)", [name, code, country, jersey, JSON.stringify(riders)]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query(
+            "INSERT INTO equipos (name, code, country, jersey, riders_json) VALUES (?,?,?,?,?)",
+            [name, code, country, jersey, JSON.stringify(riders)]
+        );
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
+
 app.put('/api/admin/teams/:id', authMiddleware, async (req, res) => {
     const { name, code, country, jersey, riders } = req.body;
-    try { await db.query("UPDATE equipos SET name=?, code=?, country=?, jersey=?, riders_json=? WHERE id=?", [name, code, country, jersey, JSON.stringify(riders), req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query(
+            "UPDATE equipos SET name=?, code=?, country=?, jersey=?, riders_json=? WHERE id=?",
+            [name, code, country, jersey, JSON.stringify(riders), req.params.id]
+        );
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
+
 app.delete('/api/admin/teams/:id', authMiddleware, async (req, res) => {
-    try { await db.query("DELETE FROM equipos WHERE id=?", [req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query("DELETE FROM equipos WHERE id=?", [req.params.id]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
 
 // 3. CALENDARIO
 app.post('/api/admin/calendar', authMiddleware, async (req, res) => {
     const { name, status, date, dateISO, category, details } = req.body;
-    try { await db.query("INSERT INTO calendario (name, status, date, dateISO, category, details) VALUES (?,?,?,?,?,?)", [name, status, date, dateISO, category, details]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query(
+            "INSERT INTO calendario (name, status, date, dateISO, category, details) VALUES (?,?,?,?,?,?)",
+            [name, status, date, dateISO, category, details]
+        );
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
+
 app.put('/api/admin/calendar/:id', authMiddleware, async (req, res) => {
     const { name, status, date, dateISO, category, details } = req.body;
-    try { await db.query("UPDATE calendario SET name=?, status=?, date=?, dateISO=?, category=?, details=? WHERE id=?", [name, status, date, dateISO, category, details, req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query(
+            "UPDATE calendario SET name=?, status=?, date=?, dateISO=?, category=?, details=? WHERE id=?",
+            [name, status, date, dateISO, category, details, req.params.id]
+        );
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
+
 app.delete('/api/admin/calendar/:id', authMiddleware, async (req, res) => {
-    try { await db.query("DELETE FROM calendario WHERE id=?", [req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query("DELETE FROM calendario WHERE id=?", [req.params.id]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
 
 // 4. RANKING
 app.post('/api/admin/ranking', authMiddleware, async (req, res) => {
     const { name, team, points, rank, trend, profile } = req.body;
-    try { await db.query("INSERT INTO ranking (name, team, points, `rank`, trend, profile) VALUES (?,?,?,?,?,?)", [name, team, points, rank, trend, profile]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query(
+            "INSERT INTO ranking (name, team, points, `rank`, trend, profile) VALUES (?,?,?,?,?,?)",
+            [name, team, points, rank, trend, profile]
+        );
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
+
 app.put('/api/admin/ranking/:id', authMiddleware, async (req, res) => {
     const { name, team, points, rank, trend, profile } = req.body;
-    try { await db.query("UPDATE ranking SET name=?, team=?, points=?, `rank`=?, trend=?, profile=? WHERE id=?", [name, team, points, rank, trend, profile, req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query(
+            "UPDATE ranking SET name=?, team=?, points=?, `rank`=?, trend=?, profile=? WHERE id=?",
+            [name, team, points, rank, trend, profile, req.params.id]
+        );
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
+
 app.delete('/api/admin/ranking/:id', authMiddleware, async (req, res) => {
-    try { await db.query("DELETE FROM ranking WHERE id=?", [req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query("DELETE FROM ranking WHERE id=?", [req.params.id]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
 
 // 5. GLOSARIO
 app.post('/api/admin/glossary', authMiddleware, async (req, res) => {
     const { term, cat, definition } = req.body;
-    try { await db.query("INSERT INTO glosario (term, cat, definition) VALUES (?,?,?)", [term, cat, definition]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query(
+            "INSERT INTO glosario (term, cat, definition) VALUES (?,?,?)",
+            [term, cat, definition]
+        );
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
+
 app.put('/api/admin/glossary/:id', authMiddleware, async (req, res) => {
     const { term, cat, definition } = req.body;
-    try { await db.query("UPDATE glosario SET term=?, cat=?, definition=? WHERE id=?", [term, cat, definition, req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query(
+            "UPDATE glosario SET term=?, cat=?, definition=? WHERE id=?",
+            [term, cat, definition, req.params.id]
+        );
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
+
 app.delete('/api/admin/glossary/:id', authMiddleware, async (req, res) => {
-    try { await db.query("DELETE FROM glosario WHERE id=?", [req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try {
+        await db.query("DELETE FROM glosario WHERE id=?", [req.params.id]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).json(e); }
 });
 
 // STATIC FILES
 app.use(express.static(path.join(__dirname, 'public')));
-app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => { console.log(`🚀 Servidor Velo listo en puerto ${PORT}`); });
+// El comodín debe ir al final
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Railway usará el puerto de la variable de entorno PORT
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor Velo listo en puerto ${PORT}`);
+});
