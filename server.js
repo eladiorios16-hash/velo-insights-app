@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 2. SEGURIDAD (El Portero)
+// 2. SEGURIDAD
 const authMiddleware = (req, res, next) => {
     const auth = { login: 'admin', password: 'velo2026' }; 
     const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
@@ -23,16 +23,16 @@ const authMiddleware = (req, res, next) => {
     res.status(401).send('⛔ ACCESO DENEGADO');
 };
 
-// 3. RUTAS DE SISTEMA
+// 3. ADMIN PANEL
 app.get('/admin', authMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// --- RUTA MÁGICA DE REPARACIÓN (CORREGIDA) ---
+// --- RUTA DE REPARACIÓN (CORREGIDA CON COMILLAS ` `) ---
 app.get('/setup-tables', async (req, res) => {
     try {
         const queries = [
-            // HE AÑADIDO COMILLAS `lead` PARA EVITAR EL ERROR
+            // Aquí estaba el error: lead ahora lleva comillas `lead`
             `CREATE TABLE IF NOT EXISTS noticias (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 title VARCHAR(255), 
@@ -60,7 +60,7 @@ app.get('/setup-tables', async (req, res) => {
                 category VARCHAR(10), 
                 details LONGTEXT
             )`,
-            // TAMBIÉN HE PROTEGIDO `rank` POR SI ACASO
+            // Aquí también: rank lleva comillas `rank`
             `CREATE TABLE IF NOT EXISTS ranking (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(100), 
@@ -79,49 +79,49 @@ app.get('/setup-tables', async (req, res) => {
         ];
         
         for (const q of queries) await db.query(q);
-        res.send("✅ TABLAS CREADAS Y REPARADAS CORRECTAMENTE. ¡Ya funciona!");
+        res.send("✅ ÉXITO: Tablas creadas correctamente. Las palabras reservadas han sido corregidas.");
     } catch (e) {
-        res.status(500).send("❌ Error creando tablas: " + e.message);
+        res.status(500).send("❌ Error crítico: " + e.message);
     }
 });
 
 
 // --- API PÚBLICA (GET) ---
 app.get('/api/news', async (req, res) => {
-    try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json(e); }
+    try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
 });
 app.get('/api/teams', async (req, res) => {
     try { 
         const [r] = await db.query("SELECT * FROM equipos"); 
         const data = r.map(t => ({...t, riders: JSON.parse(t.riders_json || '[]')}));
         res.json(data);
-    } catch(e){ res.status(500).json(e); }
+    } catch(e){ res.status(500).json([]); }
 });
 app.get('/api/calendar', async (req, res) => {
     try { 
         const [r] = await db.query("SELECT * FROM calendario ORDER BY dateISO ASC");
         const data = r.map(c => ({...c, details: JSON.parse(c.details || '{}')}));
         res.json(data);
-    } catch(e){ res.status(500).json(e); }
+    } catch(e){ res.status(500).json([]); }
 });
 app.get('/api/ranking', async (req, res) => {
     try { 
         const [r] = await db.query("SELECT * FROM ranking ORDER BY points DESC");
         const data = r.map(k => ({...k, profile: JSON.parse(k.profile || '{}')}));
         res.json(data);
-    } catch(e){ res.status(500).json(e); }
+    } catch(e){ res.status(500).json([]); }
 });
 app.get('/api/glossary', async (req, res) => {
-    try { const [r] = await db.query("SELECT * FROM glosario ORDER BY term ASC"); res.json(r); } catch(e){ res.status(500).json(e); }
+    try { const [r] = await db.query("SELECT * FROM glosario ORDER BY term ASC"); res.json(r); } catch(e){ res.status(500).json([]); }
 });
 
 
-// --- API ADMIN (POST/PUT/DELETE) ---
+// --- API ADMIN (ESCRITURA) ---
 
 // 1. NOTICIAS
 app.post('/api/admin/news', authMiddleware, async (req, res) => {
     const { title, tag, date, image, lead, content, isHero } = req.body;
-    // OJO: Aquí también usamos backticks en la query `lead`
+    // Usamos `lead` con comillas
     try { await db.query("INSERT INTO noticias (title, tag, date, image, `lead`, content, isHero) VALUES (?,?,?,?,?,?,?)", [title, tag, date, image, lead, content, isHero?1:0]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
 });
 app.put('/api/admin/news/:id', authMiddleware, async (req, res) => {
@@ -161,7 +161,7 @@ app.delete('/api/admin/calendar/:id', authMiddleware, async (req, res) => {
 // 4. RANKING
 app.post('/api/admin/ranking', authMiddleware, async (req, res) => {
     const { name, team, points, rank, trend, profile } = req.body;
-    // OJO: Protegemos `rank` también
+    // Usamos `rank` con comillas
     try { await db.query("INSERT INTO ranking (name, team, points, `rank`, trend, profile) VALUES (?,?,?,?,?,?)", [name, team, points, rank, trend, profile]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
 });
 app.put('/api/admin/ranking/:id', authMiddleware, async (req, res) => {
@@ -186,7 +186,7 @@ app.delete('/api/admin/glossary/:id', authMiddleware, async (req, res) => {
 });
 
 
-// STATIC FILES
+// ARCHIVOS ESTÁTICOS
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
