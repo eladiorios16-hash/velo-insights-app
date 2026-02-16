@@ -6,6 +6,11 @@ const db = require('./db');
 
 const app = express();
 
+// --- VALIDACIÓN DE VARIABLES (NUEVO) ---
+console.log("Fact: Comprobando configuración de base de datos...");
+console.log(`Fact: Host: ${process.env.MYSQLHOST || 'No definido'}`);
+console.log(`Fact: Port: ${process.env.MYSQLPORT || 'No definido'}`);
+
 // 1. CONFIGURACIÓN
 app.use(cors());
 app.use(express.json());
@@ -28,9 +33,10 @@ app.get('/admin', authMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// --- RUTA DE REPARACIÓN DE TABLAS ---
+// --- RUTA DE REPARACIÓN DE TABLAS (CORREGIDA) ---
 app.get('/setup-tables', async (req, res) => {
     try {
+        console.log("Fact: Iniciando creación de tablas...");
         const queries = [
             `CREATE TABLE IF NOT EXISTS noticias (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -57,12 +63,17 @@ app.get('/setup-tables', async (req, res) => {
                 term VARCHAR(100), cat VARCHAR(50), definition TEXT
             )`
         ];
-        for (const q of queries) await db.query(q);
+        for (const q of queries) {
+            await db.query(q);
+        }
         res.send("✅ Tablas reparadas correctamente.");
-    } catch (e) { res.status(500).send("❌ Error: " + e.message); }
+    } catch (e) { 
+        console.error("Error en setup-tables:", e.message);
+        res.status(500).send("❌ Error: " + e.message); 
+    }
 });
 
-// --- RUTA DE RESTAURACIÓN DE CALENDARIO (UNO A UNO) ---
+// --- RUTA DE RESTAURACIÓN DE CALENDARIO ---
 app.get('/restore-calendar-backup', async (req, res) => {
     try {
         await db.query("TRUNCATE TABLE calendario");
@@ -70,7 +81,6 @@ app.get('/restore-calendar-backup', async (req, res) => {
             [1, 'Santos Tour Down Under', '20-25 Ene', 'WT', '{"winner":"Jay Vine"}', '2026-01-20', '2026-01-25', 'Jay Vine', 'Finished'],
             [2, 'Cadel Evans Great Ocean Race', '01 Feb', 'WT', '{"winner":"Tobias Andresen"}', '2026-02-01', '2026-02-01', 'Tobias Andresen', 'Finished'],
             [3, 'UAE Tour', '16-22 Feb', 'WT', '{}', '2026-02-16', '2026-02-22', null, 'Upcoming']
-            // Puedes añadir aquí el resto de carreras siguiendo este formato
         ];
 
         for (let race of races) {
@@ -83,7 +93,7 @@ app.get('/restore-calendar-backup', async (req, res) => {
     } catch (e) { res.status(500).send("❌ Error en la carga: " + e.message); }
 });
 
-// --- API PÚBLICA (GET) ---
+// --- API PÚBLICA ---
 app.get('/api/news', async (req, res) => {
     try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
 });
@@ -96,13 +106,9 @@ app.get('/api/teams', async (req, res) => {
     } catch(e){ res.status(500).json([]); }
 });
 
-// API CALENDAR BLINDADA CON LOGS
 app.get('/api/calendar', async (req, res) => {
     try { 
-        console.log("Fact: Intentando leer tabla calendario...");
         const [rows] = await db.query("SELECT * FROM calendario ORDER BY dateISO ASC");
-        console.log(`Fact: Filas encontradas en BD: ${rows.length}`);
-
         const data = rows.map(c => {
             let detailsParsed = {};
             try {
@@ -114,31 +120,18 @@ app.get('/api/calendar', async (req, res) => {
         });
         res.json(data);
     } catch(e){ 
-        console.error("Error crítico en API Calendar:", e.message);
+        console.error("Error en API Calendar:", e.message);
         res.status(500).json([]); 
     }
 });
 
-app.get('/api/ranking', async (req, res) => {
-    try { 
-        const [r] = await db.query("SELECT * FROM ranking ORDER BY points DESC");
-        const data = r.map(k => ({...k, profile: JSON.parse(k.profile || '{}')}));
-        res.json(data);
-    } catch(e){ res.status(500).json([]); }
-});
-
-app.get('/api/glossary', async (req, res) => {
-    try { const [r] = await db.query("SELECT * FROM glosario ORDER BY term ASC"); res.json(r); } catch(e){ res.status(500).json([]); }
-});
-
-// --- API ADMIN (ESCRITURA) ---
+// --- API ADMIN ---
 app.post('/api/admin/news', authMiddleware, async (req, res) => {
     const { title, tag, date, image, lead, content, isHero } = req.body;
-    try { await db.query("INSERT INTO noticias (title, tag, date, image, `lead`, content, isHero) VALUES (?,?,?,?,?,?,?)", [title, tag, date, image, lead, content, isHero?1:0]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
-});
-
-app.delete('/api/admin/calendar/:id', authMiddleware, async (req, res) => {
-    try { await db.query("DELETE FROM calendario WHERE id=?", [req.params.id]); res.json({success:true}); } catch(e){ res.status(500).json(e); }
+    try { 
+        await db.query("INSERT INTO noticias (title, tag, date, image, `lead`, content, isHero) VALUES (?,?,?,?,?,?,?)", [title, tag, date, image, lead, content, isHero?1:0]); 
+        res.json({success:true}); 
+    } catch(e){ res.status(500).json(e); }
 });
 
 // STATIC FILES
@@ -146,7 +139,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
 // INICIO DEL SERVIDOR
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080; // Railway prefiere el 8080
 app.listen(PORT, '0.0.0.0', () => { 
     console.log(`🚀 Servidor Velo listo en puerto ${PORT}`); 
 });
