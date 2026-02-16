@@ -6,7 +6,7 @@ const db = require('./db');
 
 const app = express();
 
-console.log("Fact: Servidor Velo-Insights Iniciado (Fixed Version)");
+console.log("Fact: Servidor Velo-Insights Iniciado (Version Final Blindada)");
 
 // 1. CONFIGURACIÓN
 app.use(cors());
@@ -47,7 +47,7 @@ app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// B) EDITAR (CORREGIDO PARA SOPORTAR 'LEAD') ✅
+// B) EDITAR (CORREGIDO: LEAD + ISHERO) ✅
 app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     const { table, id } = req.params;
     let data = req.body; 
@@ -55,19 +55,24 @@ app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
 
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
-    // --- PARCHE DE TRADUCCIÓN ---
+    // --- PARCHES DE DATOS ---
+    // 1. Glosario: corregir nombre de columna
     if (table === 'glosario' && data.def !== undefined) {
         data.definition = data.def; 
         delete data.def;            
     }
-    // ----------------------------
+    // 2. Noticias: corregir isHero vacío (NUEVO FIX)
+    if (data.isHero === '') {
+        data.isHero = 0; // Si está vacío, forzamos que sea un número 0
+    }
+    // ------------------------
 
     const keys = Object.keys(data);
     const values = Object.values(data);
     
     if (keys.length === 0) return res.status(400).json({error: "No hay datos para actualizar"});
 
-    // CAMBIO IMPORTANTE AQUÍ: Agregamos backticks `` a la key
+    // Uso de backticks `` para proteger palabras reservadas como 'lead'
     const setClause = keys.map(key => `\`${key}\` = ?`).join(', ');
     const sql = `UPDATE ${table} SET ${setClause} WHERE id = ?`;
 
@@ -80,25 +85,31 @@ app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// C) CREAR (CORREGIDO PARA SOPORTAR 'LEAD') ✅
+// C) CREAR (CORREGIDO: LEAD + ISHERO) ✅
 app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
     const { table } = req.params;
     let data = req.body;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario'];
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
-    // Parche también para crear
+    // --- PARCHES DE DATOS ---
+    // 1. Glosario
     if (table === 'glosario' && data.def !== undefined) {
         data.definition = data.def;
         delete data.def;
     }
+    // 2. Noticias (NUEVO FIX)
+    if (data.isHero === '') {
+        data.isHero = 0;
+    }
+    // ------------------------
 
     const keys = Object.keys(data);
     const values = Object.values(data);
     const placeholders = keys.map(() => '?').join(', ');
     
     try {
-        // CAMBIO IMPORTANTE AQUÍ: Agregamos backticks `` a las keys
+        // Uso de backticks `` para proteger las columnas
         const columns = keys.map(key => `\`${key}\``).join(', ');
         const sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
         
