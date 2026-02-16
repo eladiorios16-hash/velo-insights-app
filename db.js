@@ -4,7 +4,7 @@ const mysql = require('mysql2');
 const pool = mysql.createPool({
   // Host y puerto de tu configuración pública
   host: process.env.MYSQLHOST || 'metro.proxy.rlwy.net',
-  port: parseInt(process.env.MYSQLPORT) || 56923, 
+  port: parseInt(process.env.MYSQLPORT) || 3306, 
   
   // Credenciales de tu captura de variables
   user: process.env.MYSQLUSER || 'root',
