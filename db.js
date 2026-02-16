@@ -1,46 +1,25 @@
 // db.js
 const mysql = require('mysql2');
 
-/**
- * Configuramos el pool de conexiones. 
- * Usamos los nombres de variables estándar de Railway.
- */
 const pool = mysql.createPool({
-  // Host: metro.proxy.rlwy.net
-  host: process.env.MYSQLHOST || 'metro.proxy.rlwy.net',
+  // Host interno de tu captura
+  host: process.env.MYSQLHOST || 'mysql.railway.internal',
   
-  // Usuario y Password: Se extraen de las variables de entorno de Railway
+  // Usuario: root
   user: process.env.MYSQLUSER || 'root',
-  password: process.env.MYSQLPASSWORD,
   
-  // Base de datos: Por defecto suele ser 'railway'
+  // Password de tu captura: gbDeOMOSothCZuATgwzgGIHLEALTdcvW
+  password: process.env.MYSQLPASSWORD || 'gbDeOMOSothCZuATgwzgGIHLEALTdcvW',
+  
+  // Database de tu captura
   database: process.env.MYSQLDATABASE || 'railway',
   
-  // Puerto: 56923 según tu configuración de Networking Pública
-  port: process.env.MYSQLPORT || 56923, 
+  // Puerto interno estándar
+  port: process.env.MYSQLPORT || 3306,
   
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
-  
-  // Opciones para mantener la conexión activa y evitar cortes
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 10000
+  queueLimit: 0
 });
 
-/**
- * Verificamos la conexión al iniciar para ver posibles errores en los logs
- */
-const promisePool = pool.promise();
-
-promisePool.getConnection()
-    .then(connection => {
-        console.log("✅ Conexión establecida con MySQL en metro.proxy.rlwy.net");
-        connection.release();
-    })
-    .catch(err => {
-        console.error("❌ Error de conexión en db.js:", err.message);
-    });
-
-// Exportamos la versión con promesas para usar async/await en server.js
-module.exports = promisePool;
+module.exports = pool.promise();
