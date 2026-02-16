@@ -1,13 +1,12 @@
-// db.js - CÓDIGO COMPLETO
+// db.js - Versión Simplificada
 const mysql = require('mysql2');
 
 const pool = mysql.createPool({
-  // Host público confirmado en tus capturas
+  // Host y puerto de tu configuración pública
   host: process.env.MYSQLHOST || 'metro.proxy.rlwy.net',
-  
-  // ¡RECUERDA CORREGIR ESTO! En tu captura pusiste 59623, pero es 56923
   port: parseInt(process.env.MYSQLPORT) || 56923, 
   
+  // Credenciales de tu captura de variables
   user: process.env.MYSQLUSER || 'root',
   password: process.env.MYSQLPASSWORD || 'gbDeOMOSothCZuATgwzgGIHLEALTdcvW',
   database: process.env.MYSQLDATABASE || 'railway',
@@ -15,20 +14,20 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: { rejectUnauthorized: false } // Vital para conectar desde fuera a Railway
+  
+  // Eliminamos SSL temporalmente para asegurar la entrada inicial
+  ssl: null 
 });
 
-// Esto exporta el pool permitiendo usar async/await en server.js
 const promisePool = pool.promise();
 
-// Prueba de conexión inmediata para el log
 promisePool.getConnection()
     .then(conn => {
-        console.log("✅ [DB] Conexión establecida con éxito");
+        console.log("✅ [DB] CONEXIÓN EXITOSA");
         conn.release();
     })
     .catch(err => {
-        console.error("❌ [DB] Error de conexión:", err.message);
+        console.error("❌ [DB] Error de acceso:", err.message);
     });
 
 module.exports = promisePool;
