@@ -1,13 +1,15 @@
 const mysql = require('mysql2');
 
 const pool = mysql.createPool({
-  host: process.env.MYSQLHOST || 'mysql.railway.internal',
+  // Forzamos los valores internos confirmados en tus capturas
+  host: 'mysql.railway.internal',
   port: 3306,
-  user: process.env.MYSQLUSER || 'root',
-  password: process.env.MYSQLPASSWORD || 'gbDeOMOSothCZuATgwzgGIHLEALTdcvW',
-  database: process.env.MYSQLDATABASE || 'railway',
+  user: 'root',
+  password: 'gbDeOMOSothCZuATgwzgGIHLEALTdcvW',
+  database: 'railway',
   waitForConnections: true,
-  connectionLimit: 10
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 module.exports = pool.promise();
