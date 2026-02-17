@@ -51,19 +51,21 @@
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         .timeline-tick { width: 1px; height: 12px; background-color: #3f3f46; margin: 0 auto; transition: all 0.3s; }
-        .timeline-day { flex: 0 0 48px; height: 65px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.2s; position: relative; cursor: pointer; }
+        
+        /* Modificación para soportar altura variable si hay muchas carreras */
+        .timeline-day { flex: 0 0 52px; height: 75px; display: flex; flex-direction: column; justify-content: start; align-items: center; padding-top: 10px; transition: all 0.2s; position: relative; cursor: pointer; }
         
         /* Estado Activo */
-        .day-active { background: rgba(139, 92, 246, 0.08); border-bottom: 2px solid #8b5cf6; }
-        .day-active .timeline-tick { height: 0px; }
-        .day-active .day-number { font-size: 1.1rem; color: #fff; font-weight: 900; font-style: italic; text-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
-        .day-active .day-month { display: block; color: #a78bfa; font-size: 8px; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; }
+        .day-active { background: rgba(139, 92, 246, 0.05); }
+        .day-active .timeline-tick { display: none; } /* Ocultamos el tick si hay carrera */
         
-        /* Estado Próxima Carrera */
-        .day-next { background: rgba(234, 179, 8, 0.1) !important; border-bottom: 2px solid #eab308 !important; }
-        .day-next .day-number { color: #eab308 !important; text-shadow: 0 0 15px rgba(234, 179, 8, 0.5) !important; }
+        .day-number { font-size: 0.9rem; color: #71717a; font-weight: 700; margin-bottom: 4px; transition: color 0.3s; }
+        .day-active .day-number { color: #e4e4e7; }
+        .day-today .day-number { color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); font-size: 1.1rem; }
 
-        .day-empty .day-number { font-size: 0.65rem; color: #52525b; font-weight: 500; margin-bottom: 4px; }
+        .day-month { display: block; color: #a1a1aa; font-size: 8px; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; }
+        
+        .day-empty .day-number { font-size: 0.65rem; color: #52525b; font-weight: 500; margin-bottom: 6px; }
 
         /* Comparison Card */
         .comparison-card { background: linear-gradient(180deg, rgba(6, 25, 20, 0.6) 0%, rgba(5,5,5,0.9) 100%); position: relative; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.15); }
@@ -121,9 +123,9 @@
         <section>
             <div class="flex justify-between items-end px-2 mb-3">
                 <div class="text-left overflow-hidden">
-                    <h3 id="timeline-race-name" class="text-lg font-heading text-white italic uppercase leading-none transition-all truncate pr-2">Cargando Calendario</h3>
+                    <h3 id="timeline-race-name" class="text-lg font-heading text-white italic uppercase leading-none transition-all truncate pr-2">Cargando...</h3>
                     <div id="timeline-race-meta" class="opacity-0 transition-opacity flex items-center gap-2 text-[9px] font-bold uppercase mt-1">
-                        <span id="meta-cat" class="text-yellow-500 bg-yellow-900/30 border border-yellow-500/30 px-1.5 py-0.5 rounded">NEXT</span>
+                        <span id="meta-cat" class="px-1.5 py-0.5 rounded border">--</span>
                         <a id="meta-link" href="#" class="text-zinc-400 hover:text-white underline decoration-zinc-700">Ficha Técnica</a>
                     </div>
                 </div>
@@ -265,7 +267,6 @@
                     }
                 })
                 .catch(e => {
-                    console.warn("Usando Ranking Fallback");
                     const fallbackData = [
                         { name: "Tadej Pogačar", team: "UAE Team Emirates", points: 7890 },
                         { name: "Jonas Vingegaard", team: "Visma | Lease a Bike", points: 6540 },
@@ -331,6 +332,7 @@
             }
         }
 
+        // --- LÓGICA DE CALENDARIO MULTI-DÍA Y APILAMIENTO ---
         function renderTimeline(races) {
             const now = new Date();
             const m = now.getMonth();
@@ -339,28 +341,73 @@
             const monthNames = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
             const fullMonthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
             
+            // Paleta de colores para cuando coinciden carreras (Stacking)
+            const raceColors = [
+                { bg: 'bg-yellow-500', shadow: 'shadow-yellow-500/50' },
+                { bg: 'bg-cyan-500', shadow: 'shadow-cyan-500/50' },
+                { bg: 'bg-pink-500', shadow: 'shadow-pink-500/50' },
+                { bg: 'bg-emerald-500', shadow: 'shadow-emerald-500/50' },
+                { bg: 'bg-violet-500', shadow: 'shadow-violet-500/50' }
+            ];
+
             document.getElementById('timeline-month-label').innerText = `${fullMonthNames[m]} ${y}`;
             const daysInMonth = new Date(y, m + 1, 0).getDate();
             const scrollContainer = document.getElementById('timeline-scroll');
             let html = '';
             
-            let nextRaceDay = dToday;
-            const racesThisMonth = races.filter(r => {
-                if(!r.dateISO) return false;
-                const d = new Date(r.dateISO);
-                return d.getFullYear() === y && d.getMonth() === m && d.getDate() >= dToday;
-            }).sort((a,b) => a.dateISO.localeCompare(b.dateISO));
+            // 1. Detectar Carreras HOY
+            const todayRaces = races.filter(r => {
+                const start = new Date(r.dateISO);
+                let end = r.endDateISO ? new Date(r.endDateISO) : new Date(r.dateISO);
+                const current = new Date(y, m, dToday);
+                start.setHours(0,0,0,0); end.setHours(0,0,0,0); current.setHours(0,0,0,0);
+                return current >= start && current <= end;
+            });
 
-            if(racesThisMonth.length > 0) {
-                const nextR = racesThisMonth[0];
-                nextRaceDay = new Date(nextR.dateISO).getDate();
-                document.getElementById('timeline-race-name').innerText = nextR.name;
-                document.getElementById('timeline-race-name').classList.add('text-yellow-500');
+            // 2. Lógica del HEADER (Prioridad: En Curso > Próxima)
+            if (todayRaces.length > 0) {
+                // HAY CARRERA HOY
+                const r = todayRaces[0];
+                document.getElementById('timeline-race-name').innerText = r.name;
+                document.getElementById('timeline-race-name').classList.add('text-cyan-400'); // Color distintivo para EN CURSO
                 document.getElementById('timeline-race-meta').style.opacity = '1';
-                document.getElementById('meta-cat').innerText = nextR.category || 'NEXT';
-                document.getElementById('meta-link').href = `calendario.html?race=${encodeURIComponent(nextR.name)}`;
+                
+                const badge = document.getElementById('meta-cat');
+                badge.innerText = "NOW RACING";
+                badge.className = "text-[9px] font-black uppercase text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded border border-cyan-500/30 animate-pulse";
+                
+                document.getElementById('meta-link').href = `calendario.html?race=${encodeURIComponent(r.name)}`;
+
+                // Activar barra LIVE
+                document.getElementById('live-race-banner').classList.remove('hidden');
+                document.getElementById('live-race-name').innerText = r.name;
+                document.getElementById('live-race-link').href = `calendario.html?race=${encodeURIComponent(r.name)}`;
+            } else {
+                // NO HAY CARRERA HOY -> BUSCAR LA SIGUIENTE
+                const futureRaces = races.filter(r => {
+                    const start = new Date(r.dateISO);
+                    const current = new Date(y, m, dToday);
+                    start.setHours(0,0,0,0); current.setHours(0,0,0,0);
+                    return start > current;
+                }).sort((a,b) => a.dateISO.localeCompare(b.dateISO));
+
+                if (futureRaces.length > 0) {
+                    const nextR = futureRaces[0];
+                    document.getElementById('timeline-race-name').innerText = nextR.name;
+                    document.getElementById('timeline-race-name').classList.remove('text-cyan-400');
+                    document.getElementById('timeline-race-meta').style.opacity = '1';
+
+                    const badge = document.getElementById('meta-cat');
+                    badge.innerText = nextR.category || "NEXT";
+                    badge.className = "text-[9px] font-bold uppercase text-yellow-500 bg-yellow-900/30 border border-yellow-500/30 px-1.5 py-0.5 rounded";
+
+                    document.getElementById('meta-link').href = `calendario.html?race=${encodeURIComponent(nextR.name)}`;
+                } else {
+                    document.getElementById('timeline-race-name').innerText = "Sin carreras";
+                }
             }
 
+            // 3. Generar DÍAS del calendario
             for (let d = 1; d <= daysInMonth; d++) {
                 const activeRaces = races.filter(r => {
                     const start = new Date(r.dateISO);
@@ -370,31 +417,39 @@
                     return current >= start && current <= end;
                 });
 
-                if (activeRaces.length > 0) {
-                    const r = activeRaces[0];
-                    const isToday = d === dToday;
-                    const isNextRaceStart = (d === nextRaceDay && d >= dToday);
+                const isToday = d === dToday;
+                let dayContent = '';
 
-                    html += `<div class="timeline-day ${isNextRaceStart ? 'day-next' : 'day-active'} group ${isToday ? 'bg-violet-900/20' : ''}" onclick="window.location.href='calendario.html?race=${encodeURIComponent(r.name)}'">
-                                <span class="day-month">${monthNames[m]}</span>
-                                <span class="day-number ${isToday ? 'text-violet-400' : ''}">${d}</span>
-                                <div class="w-1.5 h-1.5 ${isNextRaceStart ? 'bg-yellow-500' : 'bg-violet-500'} rounded-full mt-2 shadow-[0_0_8px_#8b5cf6]"></div>
-                             </div>`;
-                    
-                    if(isToday) {
-                        document.getElementById('live-race-banner').classList.remove('hidden');
-                        document.getElementById('live-race-name').innerText = r.name;
-                        document.getElementById('live-race-link').href = `calendario.html?race=${encodeURIComponent(r.name)}`;
-                    }
+                if (activeRaces.length > 0) {
+                    // APILAMIENTO: Crear una barrita por cada carrera activa
+                    const indicators = activeRaces.map((r, index) => {
+                        const color = raceColors[index % raceColors.length]; // Rotar colores
+                        return `<div class="w-8 h-1 ${color.bg} rounded-full mb-1 shadow-[0_0_5px_currentColor]"></div>`;
+                    }).join('');
+
+                    // El enlace va a la primera carrera (prioridad)
+                    const mainRace = activeRaces[0];
+
+                    dayContent = `<div class="timeline-day day-active group ${isToday ? 'day-today' : ''}" onclick="window.location.href='calendario.html?race=${encodeURIComponent(mainRace.name)}'">
+                                    <span class="day-month">${monthNames[m]}</span>
+                                    <span class="day-number">${d}</span>
+                                    <div class="flex flex-col items-center mt-1 w-full px-1">
+                                        ${indicators}
+                                    </div>
+                                 </div>`;
                 } else {
-                    html += `<div class="timeline-day day-empty">
-                                <span class="day-number">${d}</span>
-                                <div class="timeline-tick"></div>
-                             </div>`;
+                    dayContent = `<div class="timeline-day day-empty ${isToday ? 'day-today' : ''}">
+                                    <span class="day-number">${d}</span>
+                                    <div class="timeline-tick"></div>
+                                 </div>`;
                 }
+                
+                html += dayContent;
             }
+            
             scrollContainer.innerHTML = html;
-            if(nextRaceDay > 3) setTimeout(() => { scrollContainer.scrollLeft = (nextRaceDay - 3) * 48; }, 100);
+            // Scroll automático al día de hoy (con un poco de margen)
+            if(dToday > 3) setTimeout(() => { scrollContainer.scrollLeft = (dToday - 3) * 52; }, 100);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
