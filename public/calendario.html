@@ -4,222 +4,320 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
-    <title>VELO INSIGHTS | Calendario Deck 2026</title>
+    
+    <title>VELO INSIGHTS | Calendario 2026</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#050505">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/assets/icon-192.png">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ App registrada', reg.scope))
+                    .catch(err => console.log('❌ Error registro App', err));
+            });
+        }
+    </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/main.css">
 
     <style>
-        :root { --accent-color: #22d3ee; }
-        body { 
-            background-color: #050505; 
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-
-        /* Mejora 1: Glassmorphism Header */
-        .glass-header {
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            background: rgba(5, 5, 5, 0.75);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* Mejora 2: Skeleton Screens */
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        .skeleton {
-            background: linear-gradient(90deg, #0a0a0a 25%, #151515 50%, #0a0a0a 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite linear;
-            border-radius: 16px;
-        }
-
-        /* Mejora 3: Dynamic Glow & Hover */
-        .race-card { 
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-        }
-        .race-card:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.02); }
-        .race-card.active { 
-            border-color: var(--accent-color);
-            box-shadow: 0 0 30px rgba(var(--accent-rgb), 0.1);
-        }
-
-        .details-content { 
-            max-height: 0; 
-            overflow: hidden; 
-            transition: max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
-        .details-content.open { max-height: 4000px; }
-
-        /* Categorías con neón sutil */
-        .cat-GT { color: #ec4899; border-color: rgba(236, 72, 153, 0.3); box-shadow: 0 0 10px rgba(236, 72, 153, 0.1); }
-        .cat-WT { color: #22d3ee; border-color: rgba(34, 211, 238, 0.3); box-shadow: 0 0 10px rgba(34, 211, 238, 0.1); }
+        body { -webkit-tap-highlight-color: transparent; background-color: #050505; }
         
+        .race-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .race-card:hover { border-color: #52525b; }
+        .race-card.active { border-color: #22d3ee; background-color: rgba(34, 211, 238, 0.05); }
+
+        .details-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; background: #000; }
+        .details-content.open { max-height: 3000px; border-top: 1px solid #27272a; }
+
+        .stage-detail-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; background: #0c0c0e; }
+        .stage-detail-content.open { max-height: 600px; border-top: 1px dashed #27272a; padding-bottom: 10px; }
+
+        .stage-arrow { transition: transform 0.3s ease; }
+        .stage-btn.active .stage-arrow { transform: rotate(180deg); color: #22d3ee; }
+        .stage-btn.active .stage-name { color: #22d3ee; }
+
+        /* Categorías y Badges */
+        .cat-GT { color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); background: rgba(236, 72, 153, 0.1); }
+        .cat-MONUMENT { color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); background: rgba(250, 204, 21, 0.1); }
+        .cat-WT { color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.1); }
+
+        .badge-tt { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .badge-cri { background: rgba(59, 130, 246, 0.2); color: #60a5fa; } /* Alias para TT */
+        .badge-montaña { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge-mediamontaña { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+        .badge-llano { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .filter-btn { transition: all 0.3s ease; background: transparent; }
+        .filter-btn.active-all { border-color: #ffffff; color: #ffffff; background: rgba(255,255,255,0.05); box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+        .filter-btn.active-gt { border-color: #ec4899; color: #ec4899; background: rgba(236, 72, 153, 0.1); box-shadow: 0 0 15px rgba(236, 72, 153, 0.2); }
+        .filter-btn.active-monument { border-color: #facc15; color: #facc15; background: rgba(250, 204, 21, 0.1); box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); }
+        .filter-btn.active-wt { border-color: #22d3ee; color: #22d3ee; background: rgba(34, 211, 238, 0.1); box-shadow: 0 0 15px rgba(34, 211, 238, 0.2); }
+
+        /* Estilos del Perfil Interactivo */
+        .profile-bar {
+            transition: height 0.5s ease-out, background-color 0.2s, transform 0.2s;
+            transform-origin: bottom;
+        }
+        .profile-bar:hover {
+            transform: scaleY(1.1);
+            filter: brightness(1.3);
+            z-index: 10;
+            cursor: pointer;
+        }
     </style>
 </head>
 
-<body class="text-zinc-100 antialiased selection:bg-cyan-500/30">
+<body class="bg-[#050505] antialiased min-h-screen pb-20 text-white selection:bg-cyan-500/30">
 
-    <nav class="fixed top-0 w-full z-50 glass-header px-4 py-4">
-        <div class="max-w-5xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-2 group cursor-pointer">
-                <div class="w-8 h-8 bg-white text-black rounded flex items-center justify-center font-black italic text-xl transition-transform group-hover:scale-110">V</div>
-                <span class="font-black uppercase tracking-tighter text-xs hidden md:block">Velo <span class="text-zinc-500 italic">Insights</span></span>
-            </div>
-            
-            <div class="flex-1 max-w-sm mx-6">
-                <input type="text" id="search-input" placeholder="BUSCAR TELEMETRÍA..." 
-                       class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 text-[10px] outline-none focus:border-white/40 transition-all font-mono tracking-widest uppercase">
-            </div>
-
-            <div class="flex items-center gap-3">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span class="text-[9px] font-bold text-zinc-500 uppercase font-mono">System.Live</span>
-            </div>
-        </div>
-    </nav>
-
-    <main class="max-w-5xl mx-auto px-4 pt-32 pb-20">
+    <main class="max-w-5xl mx-auto px-4 md:px-6 py-28 md:py-40">
         
-        <header class="mb-12 text-center relative">
-            <h1 class="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-none opacity-[0.03] absolute -top-10 left-0 right-0 pointer-events-none">DATA2026</h1>
-            <div class="relative z-10">
-                <p class="text-[10px] font-mono text-cyan-500 tracking-[0.4em] uppercase mb-2">Calendario Profesional</p>
-                <div class="flex flex-wrap gap-2 justify-center">
-                    <button onclick="filterRaces('ALL')" class="bg-white/5 border border-white/10 px-5 py-1.5 rounded text-[9px] font-bold uppercase hover:bg-white/10 transition-all">Todos</button>
-                    <button onclick="filterRaces('GT')" class="bg-pink-500/10 border border-pink-500/20 px-5 py-1.5 rounded text-[9px] font-bold uppercase text-pink-500 hover:bg-pink-500/20 transition-all">Grand Tours</button>
-                    <button onclick="filterRaces('WT')" class="bg-cyan-500/10 border border-cyan-500/20 px-5 py-1.5 rounded text-[9px] font-bold uppercase text-cyan-500 hover:bg-cyan-500/20 transition-all">WorldTour</button>
-                </div>
+        <header class="mb-10 text-center reveal-on-scroll">
+            <h1 class="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">
+                Calendario <span class="text-zinc-700">2026</span>
+            </h1>
+            
+            <div class="max-w-md mx-auto relative group mb-8">
+                <input type="text" id="search-input" placeholder="BUSCAR CARRERA..." 
+                       class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-3 px-12 text-white outline-none focus:border-cyan-500 focus:bg-black transition-all text-center uppercase font-bold tracking-wider text-xs md:text-sm placeholder-zinc-700 backdrop-blur-sm">
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-3">
+                <button id="btn-ALL" onclick="filterRaces('ALL')" class="filter-btn active-all px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-zinc-600 hover:text-zinc-300">Todos</button>
+                <button id="btn-GT" onclick="filterRaces('GT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-pink-900 hover:text-pink-800">Grand Tours</button>
+                <button id="btn-MONUMENT" onclick="filterRaces('MONUMENT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-yellow-900 hover:text-yellow-800">Monumentos</button>
+                <button id="btn-WT" onclick="filterRaces('WT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-cyan-900 hover:text-cyan-800">World Tour</button>
             </div>
         </header>
 
-        <div id="calendar-container" class="space-y-4">
-            <div class="skeleton h-24 w-full"></div>
-            <div class="skeleton h-24 w-full"></div>
-            <div class="skeleton h-24 w-full"></div>
-            <div class="skeleton h-24 w-full"></div>
-        </div>
+        <div id="calendar-container" class="space-y-4"></div>
 
     </main>
+
+    <script src="layout.js?v=5.5"></script>
 
     <script>
         const container = document.getElementById('calendar-container');
         const searchInput = document.getElementById('search-input');
         let allRaces = [];
-
-        // Mejora: Colores dinámicos por carrera
-        function getRaceTheme(name) {
-            if (name.toLowerCase().includes('giro')) return { color: '#ec4899', rgb: '236, 72, 153' };
-            if (name.toLowerCase().includes('tour')) return { color: '#facc15', rgb: '250, 204, 21' };
-            if (name.toLowerCase().includes('vuelta') || name.toLowerCase().includes('uae')) return { color: '#ef4444', rgb: '239, 68, 68' };
-            return { color: '#22d3ee', rgb: '34, 211, 238' };
-        }
+        let currentFilter = 'ALL';
 
         async function initCalendar() {
+            container.innerHTML = `<div class="text-center py-20 animate-pulse text-zinc-600 uppercase text-xs font-black">Cargando datos...</div>`;
             try {
-                // Simulación de carga para apreciar el Skeleton Screen
-                await new Promise(r => setTimeout(r, 1000));
-                
+                // Simulando carga de datos si no hay API real para este ejemplo
+                // En producción usar: const response = await fetch('/api/calendar');
+                // Aquí usaremos fetch real, asumiendo que el archivo existe
                 const response = await fetch('/api/calendar');
+                
                 if (response.ok) {
                     allRaces = await response.json();
                     renderCalendar(allRaces);
+                } else { 
+                    throw new Error('Error API'); 
                 }
             } catch (error) {
-                container.innerHTML = `<div class="text-center py-20 font-mono text-zinc-600 text-xs">Error: Link.Sync_Failed</div>`;
+                // Fallback para demo si falla API
+                container.innerHTML = `<div class="text-center py-20 text-red-500 text-xs font-bold">Error de conexión (API).</div>`;
             }
+        }
+
+        function generateElevationGraph(stages, raceIndex) {
+            if (!stages || stages.length === 0) return '';
+
+            let barsHTML = '';
+            
+            stages.forEach((s, index) => {
+                let height = '30%'; // Default
+                let colorClass = 'bg-zinc-700';
+                const type = s.type ? s.type.toLowerCase().replace(/\s+/g, '') : 'llano';
+                
+                // Lógica de altura y color según tipo de etapa
+                if (type.includes('montaña') && !type.includes('media')) {
+                    height = '100%';
+                    colorClass = 'bg-gradient-to-t from-red-900 to-red-500';
+                } else if (type.includes('media')) {
+                    height = '60%';
+                    colorClass = 'bg-gradient-to-t from-yellow-900 to-yellow-500';
+                } else if (type.includes('llano')) {
+                    height = '25%';
+                    colorClass = 'bg-gradient-to-t from-green-900 to-green-500';
+                } else if (type.includes('cri') || type.includes('tt')) {
+                    height = '40%';
+                    colorClass = 'bg-gradient-to-t from-blue-900 to-blue-500';
+                }
+
+                // Tooltip simple usando title nativo para ligereza, o personalizado
+                barsHTML += `
+                    <div onclick="toggleStage(${raceIndex}, ${index}); event.stopPropagation();" 
+                         title="Etapa ${s.n}: ${s.type || 'Etapa'}"
+                         class="flex-1 mx-[1px] rounded-t-sm relative group/bar flex flex-col justify-end items-center"
+                         style="height: 100%;">
+                        <div class="w-full rounded-t-sm profile-bar ${colorClass} opacity-80 group-hover/bar:opacity-100" style="height: ${height}"></div>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="px-5 py-6 bg-[#0a0a0a] border-b border-zinc-800">
+                    <div class="flex justify-between items-end mb-2">
+                         <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Perfil de Carrera</span>
+                         <span class="text-[9px] font-mono text-zinc-600 uppercase">Interactive Chart</span>
+                    </div>
+                    <div class="h-24 w-full flex items-end border-b border-zinc-800 pb-px relative">
+                         <div class="absolute w-full h-full border-t border-dashed border-zinc-800/30 top-0 left-0 pointer-events-none"></div>
+                         <div class="absolute w-full h-1/2 border-t border-dashed border-zinc-800/30 top-0 left-0 pointer-events-none"></div>
+                         
+                         ${barsHTML}
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span class="text-[8px] text-zinc-600">E1</span>
+                        <span class="text-[8px] text-zinc-600">FINAL</span>
+                    </div>
+                </div>
+            `;
         }
 
         function renderCalendar(data) {
             if (data.length === 0) {
-                container.innerHTML = `<div class="py-20 text-center border border-white/5 rounded-3xl text-zinc-600 font-mono text-xs italic uppercase">No se encontraron registros activos</div>`;
+                container.innerHTML = `<div class="text-center py-20 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20"><p class="text-zinc-600 font-bold uppercase text-xs">Sin resultados</p></div>`;
                 return;
             }
 
             container.innerHTML = data.map((r, i) => {
-                const theme = getRaceTheme(r.name);
                 const dateObj = new Date(r.dateISO);
-                const day = dateObj.getDate().toString().padStart(2, '0');
-                const month = dateObj.toLocaleString('es-ES', { month: 'short' }).toUpperCase();
+                const day = dateObj.getDate();
+                const month = dateObj.toLocaleString('es-ES', { month: 'short' }).replace('.', '').toUpperCase();
                 
+                let stagesHTML = '';
                 const stages = (r.details && r.details.stages) ? r.details.stages : [];
+                
+                // Generamos el gráfico de elevación interactivo
+                const graphHTML = (stages.length > 1) ? generateElevationGraph(stages, i) : '';
 
-                return `
-                <div id="card-${i}" class="race-card bg-[#0c0c0e] border border-white/5 rounded-2xl overflow-hidden" 
-                     style="--accent-color: ${theme.color}; --accent-rgb: ${theme.rgb}">
-                    
-                    <div class="p-6 flex items-center justify-between cursor-pointer" onclick="toggleDetails(${i})">
-                        <div class="flex items-center gap-6">
-                            <div class="flex flex-col items-center border-r border-white/5 pr-6">
-                                <span class="text-4xl font-black italic font-mono tracking-tighter">${day}</span>
-                                <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">${month}</span>
-                            </div>
-                            <div class="min-w-0">
-                                <span class="text-[8px] font-black px-2 py-0.5 rounded border border-white/10 uppercase mb-2 inline-block cat-${r.category}">${r.category}</span>
-                                <h3 class="text-white font-bold uppercase text-lg md:text-xl tracking-tighter truncate">${r.name}</h3>
-                                <p class="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mt-1">${stages.length || '1'} EVENTOS REGISTRADOS</p>
-                            </div>
-                        </div>
-                        <div class="icon-indicator w-10 h-10 rounded-full border border-white/5 flex items-center justify-center text-zinc-500 transition-all">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        </div>
-                    </div>
+                if (stages.length > 0) {
+                    stagesHTML = stages.map((s, j) => {
+                        const typeClass = s.type ? s.type.toLowerCase().replace(/\s+/g, '') : 'llano';
+                        
+                        const winnerHTML = s.winner ? 
+                            `<div class="mt-1.5 flex items-center gap-1.5 animate-pulse-slow">
+                                <svg class="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                <span class="text-[10px] font-black text-amber-400 uppercase tracking-wide border-b border-amber-400/20">${s.winner}</span>
+                            </div>` : '';
 
-                    <div id="details-${i}" class="details-content">
-                        <div class="p-2 space-y-1 border-t border-white/5 bg-black/50">
-                            ${stages.map((s, j) => {
-                                // CORRECCIÓN: Referencia directa a winner
-                                const winner = s.winner; 
-                                return `
-                                <div class="bg-white/[0.01] border border-white/[0.03] rounded-xl p-4 flex items-center justify-between hover:bg-white/[0.03] transition-all">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-8 h-8 rounded border border-white/10 flex items-center justify-center font-mono text-xs text-zinc-500">${s.n}</div>
-                                        <div>
-                                            <p class="text-xs font-bold uppercase text-zinc-200">${s.route || 'Etapa '+s.n}</p>
-                                            <div class="flex items-center gap-3 mt-1 font-mono text-[9px] text-zinc-500 uppercase">
-                                                <span>${s.km} KM</span>
-                                                <span class="w-1 h-1 bg-zinc-800 rounded-full"></span>
-                                                <span>${s.gain || 0}M+</span>
-                                                <span class="w-1 h-1 bg-zinc-800 rounded-full"></span>
-                                                <span class="text-cyan-500">${s.type}</span>
+                        return `
+                        <div class="border-b border-zinc-800 last:border-0">
+                            <button onclick="toggleStage(${i}, ${j})" id="stage-btn-${i}-${j}" class="stage-btn w-full p-4 hover:bg-white/5 transition-colors flex items-center justify-between gap-4 text-left group/stage">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-heading text-lg text-zinc-500 w-6 text-center group-hover/stage:text-white transition-colors">${s.n}</span>
+                                    <div>
+                                        <h4 class="text-xs md:text-sm font-bold text-white uppercase stage-name transition-colors">${s.route || 'Etapa ' + s.n}</h4>
+                                        <div class="flex flex-col">
+                                            <div class="flex items-center gap-2 mt-1.5">
+                                                <span class="text-[9px] font-black badge-${typeClass} px-1.5 py-0.5 rounded uppercase">${s.type || 'Etapa'}</span>
+                                                ${s.km ? `<span class="text-xs md:text-sm font-bold text-white font-mono border-l border-zinc-700 pl-2 ml-1">${s.km} km</span>` : ''}
                                             </div>
+                                            ${winnerHTML}
                                         </div>
                                     </div>
-                                    ${winner ? `
-                                        <div class="text-right pl-4">
-                                            <span class="text-[7px] font-black text-zinc-600 block uppercase mb-0.5">Top Position</span>
-                                            <span class="text-[10px] font-bold text-amber-500 uppercase bg-amber-500/5 px-2 py-1 rounded border border-amber-500/20">${winner}</span>
+                                </div>
+                                <div class="stage-arrow text-zinc-600">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </button>
+                            <div id="stage-content-${i}-${j}" class="stage-detail-content race-${i}-stage-content">
+                                <div class="p-4 pt-0">
+                                    ${s.gain ? `<p class="text-[10px] font-mono text-zinc-400 mb-2 text-center uppercase tracking-widest border-b border-zinc-800 pb-2">Desnivel Acumulado: <span class="text-white font-bold text-xs">${s.gain}m+</span></p>` : ''}
+                                    ${s.image ? `
+                                        <div class="bg-white rounded-lg p-2 overflow-hidden border border-zinc-700 opacity-90">
+                                            <img src="${s.image}" loading="lazy" class="w-full h-auto object-contain max-h-[200px]" alt="Perfil etapa ${s.n}">
                                         </div>
-                                    ` : ''}
-                                </div>`;
-                            }).join('')}
+                                        <div class="mt-3 flex justify-end">
+                                            <button onclick="shareStage('${r.name}', ${s.n}, '${s.route}', '${s.km}', '${s.gain}', '${s.image}')" 
+                                                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase hover:bg-cyan-500 hover:text-black transition-all">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 12a3 3 0 100-2.684 3 3 0 000 2.684z"></path></svg>
+                                                Compartir Etapa
+                                            </button>
+                                        </div>
+                                    ` : `
+                                        <div class="bg-zinc-900 rounded-lg p-8 flex flex-col items-center border border-zinc-800">
+                                            <img src="assets/logo-icon.svg" class="w-12 h-12 opacity-20 mb-2">
+                                            <p class="text-[9px] text-zinc-600 uppercase font-bold tracking-widest text-center">Perfil no disponible para esta etapa</p>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    stagesHTML = `<div class="p-6 text-center text-zinc-600 text-xs italic">Detalles de etapas no disponibles.</div>`;
+                }
+
+                const today = new Date().toISOString().split('T')[0];
+                const isLive = r.dateISO === today;
+                const statusBadge = isLive ? `<span class="bg-green-500 text-black text-[9px] font-black px-2 py-0.5 rounded animate-pulse ml-2">EN VIVO</span>` : '';
+
+                return `
+                <div id="card-${i}" class="race-card bg-zinc-900/40 border border-zinc-800 rounded-2xl overflow-hidden mb-4">
+                    <div class="p-5 flex items-center justify-between cursor-pointer" onclick="toggleDetails(${i})">
+                        <div class="flex items-center gap-5">
+                            <div class="flex flex-col items-center justify-center w-12 shrink-0 border-r border-zinc-800 pr-5">
+                                <span class="text-3xl font-black italic text-white leading-none">${day}</span>
+                                <span class="text-[10px] font-bold text-zinc-500 uppercase">${month}</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center flex-wrap mb-1">
+                                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded uppercase cat-${r.category}">${r.category}</span>
+                                    ${statusBadge}
+                                </div>
+                                <h3 class="text-white font-bold uppercase text-base md:text-lg tracking-tight truncate group-hover:text-cyan-400 transition-colors">${r.name}</h3>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5 font-bold">
+                                    ${stages.length > 0 ? `${stages.length} Etapas` : 'Clásica / 1 Día'}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="w-8 h-8 rounded-full border border-zinc-700 flex items-center justify-center text-zinc-400 transition-all icon-toggle" id="icon-${i}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                    <div id="details-${i}" class="details-content">
+                        ${graphHTML}
+                        ${stagesHTML}
+                        <div class="p-4 bg-zinc-900 border-t border-zinc-800 flex justify-center">
+                            <button onclick="addToCalendar('${r.name}', '${r.dateISO}')" class="flex items-center gap-2 text-[10px] font-bold text-zinc-400 hover:text-white uppercase transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Agendar en Google Calendar
+                            </button>
                         </div>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        function toggleDetails(index) {
-            const content = document.getElementById(`details-${index}`);
-            const card = document.getElementById(`card-${index}`);
-            const isOpen = content.classList.contains('open');
-            
-            document.querySelectorAll('.details-content').forEach(el => el.classList.remove('open'));
-            document.querySelectorAll('.race-card').forEach(el => el.classList.remove('active'));
-
-            if(!isOpen) {
-                content.classList.add('open');
-                card.classList.add('active');
-            }
-        }
-
         function filterRaces(category) {
+            currentFilter = category;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active-all', 'active-gt', 'active-monument', 'active-wt');
+            });
+            const activeBtn = document.getElementById(`btn-${category}`);
+            if (activeBtn) {
+                if (category === 'ALL') activeBtn.classList.add('active-all');
+                else if (category === 'GT') activeBtn.classList.add('active-gt');
+                else if (category === 'MONUMENT') activeBtn.classList.add('active-monument');
+                else if (category === 'WT') activeBtn.classList.add('active-wt');
+            }
             const term = searchInput.value.toLowerCase().trim();
             const filtered = allRaces.filter(r => {
                 const matchesCategory = category === 'ALL' || r.category === category;
@@ -229,7 +327,69 @@
             renderCalendar(filtered);
         }
 
-        searchInput.addEventListener('input', () => filterRaces('ALL'));
+        function toggleDetails(index) {
+            const content = document.getElementById(`details-${index}`);
+            const card = document.getElementById(`card-${index}`);
+            const icon = document.getElementById(`icon-${index}`);
+            const isOpen = content.classList.contains('open');
+            document.querySelectorAll('.details-content').forEach(el => el.classList.remove('open'));
+            document.querySelectorAll('.race-card').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.icon-toggle').forEach(el => el.style.transform = 'rotate(0deg)');
+            if(!isOpen) {
+                content.classList.add('open');
+                card.classList.add('active');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        window.toggleStage = (raceIndex, stageIndex) => {
+            const contentID = `stage-content-${raceIndex}-${stageIndex}`;
+            const btnID = `stage-btn-${raceIndex}-${stageIndex}`;
+            const targetContent = document.getElementById(contentID);
+            const targetBtn = document.getElementById(btnID);
+            const isAlreadyOpen = targetContent.classList.contains('open');
+            const allStagesInRace = document.querySelectorAll(`.race-${raceIndex}-stage-content`);
+            allStagesInRace.forEach(el => el.classList.remove('open'));
+            const parentDetails = document.getElementById(`details-${raceIndex}`);
+            const allBtns = parentDetails.querySelectorAll('.stage-btn');
+            allBtns.forEach(btn => btn.classList.remove('active'));
+            
+            // Scroll suave hacia la etapa seleccionada si se clickea desde el gráfico
+            if (!isAlreadyOpen) {
+                targetContent.classList.add('open');
+                targetBtn.classList.add('active');
+                // Opcional: Auto-scroll
+                // targetBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        };
+
+        window.shareStage = (raceName, stageNum, route, km, gain, imageUrl) => {
+            const text = `🚴‍♂️ Perfil Técnico: ${raceName}\n📍 Etapa ${stageNum}: ${route}\n📏 Distancia: ${km} km\n⛰️ Desnivel: ${gain} m+\n\n${imageUrl ? `🖼️ Perfil: ${imageUrl}\n` : ''}\nAnalizado en Velo Insights ⚡`;
+            const url = window.location.href;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: `Etapa ${stageNum} - ${raceName}`,
+                    text: text,
+                    url: url
+                }).catch((error) => console.log('Error compartiendo:', error));
+            } else {
+                const dummy = document.createElement("textarea");
+                document.body.appendChild(dummy);
+                dummy.value = text + " " + url;
+                dummy.select();
+                document.execCommand("copy");
+                document.body.removeChild(dummy);
+                alert("Copiado al portapapeles: ¡Pégalo donde quieras!");
+            }
+        };
+
+        function addToCalendar(title, dateStr) {
+            const date = dateStr.replace(/-/g, ''); 
+            window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${date}/${date}&details=Velo%20Insights%20WorldTour`, '_blank');
+        }
+
+        searchInput.addEventListener('input', () => filterRaces(currentFilter));
         document.addEventListener('DOMContentLoaded', initCalendar);
     </script>
 </body>
