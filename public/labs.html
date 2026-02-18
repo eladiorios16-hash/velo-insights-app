@@ -44,8 +44,11 @@
         }
         .glass { background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(12px); }
         
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #eab308; margin-top: -10px; box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); cursor: pointer; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #27272a; border-radius: 2px; }
+        /* Custom Slider Styling */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #eab308; margin-top: -8px; box-shadow: 0 0 15px rgba(234, 179, 8, 0.8); cursor: pointer; transition: transform 0.1s; }
+        input[type=range]::-webkit-slider-thumb:active { transform: scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; border-radius: 2px; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
         .climb-profile-bg {
@@ -68,64 +71,77 @@
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 pb-20">
         
-        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 h-fit">
+        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 h-fit relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
             <h3 class="text-lg md:text-xl font-heading text-white italic uppercase mb-6 flex items-center gap-3">
                 <span class="w-1.5 h-6 md:w-2 md:h-8 bg-cyan-500 block skew-x-[-10deg]"></span>
                 Potencia Relativa (W/kg)
             </h3>
             
-            <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="grid grid-cols-2 gap-4 mb-6 relative z-10">
                 <div>
-                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2">Peso (kg)</label>
-                    <input type="number" id="weight" min="1" max="150" placeholder="Ej: 70" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all">
+                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2 tracking-wider">Peso del ciclista</label>
+                    <div class="relative group">
+                        <span class="absolute left-4 top-3.5 text-xs font-bold text-zinc-600 group-focus-within:text-cyan-500 transition-colors">KG</span>
+                        <input type="number" id="weight" min="1" max="150" value="70" class="w-full font-mono text-xl text-right bg-black border border-zinc-800 rounded-xl py-3 pr-4 pl-10 text-white outline-none focus:border-cyan-500 transition-all focus:shadow-[0_0_15px_rgba(34,211,238,0.15)]">
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2">FTP (W)</label>
-                    <input type="number" id="watts" placeholder="Ej: 250" class="w-full font-mono text-base bg-black border border-zinc-800 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all">
+                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2 tracking-wider">Potencia Umbral</label>
+                    <div class="relative group">
+                        <span class="absolute left-4 top-3.5 text-xs font-bold text-zinc-600 group-focus-within:text-cyan-500 transition-colors">FTP (W)</span>
+                        <input type="number" id="watts" value="250" class="w-full font-mono text-xl text-right bg-black border border-zinc-800 rounded-xl py-3 pr-4 pl-16 text-white outline-none focus:border-cyan-500 transition-all focus:shadow-[0_0_15px_rgba(34,211,238,0.15)]">
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-6 flex justify-between items-center relative overflow-hidden">
-                <div class="absolute right-0 top-0 w-24 h-full bg-cyan-500/10 skew-x-[-20deg] translate-x-12"></div>
+            <div class="bg-black/50 rounded-xl p-5 border border-zinc-800 mb-6 flex justify-between items-center relative overflow-hidden group">
+                <div class="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/5 to-transparent skew-x-[-20deg] translate-x-10 group-hover:translate-x-5 transition-transform duration-700"></div>
                 <div>
-                    <p class="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1">Ratio de Rendimiento</p>
-                    <p class="text-[10px] text-zinc-600 italic">Cifra clave para escaladores</p>
+                    <p class="text-[9px] font-black uppercase text-zinc-400 tracking-widest mb-1">Ratio de Rendimiento</p>
+                    <p class="text-[10px] text-zinc-600 italic">Métrica clave escaladores</p>
                 </div>
-                <div class="text-right z-10">
-                    <p class="text-3xl md:text-4xl font-heading text-white italic tracking-tighter" id="wkg-display">0.00</p>
-                    <p class="text-[9px] font-bold text-cyan-500 uppercase">W/kg</p>
+                <div class="text-right z-10 flex items-baseline gap-1">
+                    <p class="text-4xl md:text-5xl font-heading italic tracking-tighter transition-colors duration-500" id="wkg-display">0.00</p>
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase">W/kg</p>
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-zinc-800">
-                <table class="w-full text-left border-collapse bg-zinc-900/30">
+            <div class="overflow-hidden rounded-xl border border-zinc-800 relative z-10">
+                <table class="w-full text-left border-collapse bg-zinc-950/80">
                     <thead>
-                        <tr class="text-[9px] uppercase font-black text-zinc-600 border-b border-zinc-800 bg-zinc-900/80">
-                            <th class="py-2 pl-4">Zona</th>
-                            <th class="py-2">Objetivo</th>
-                            <th class="py-2 text-right pr-4">Rango</th>
+                        <tr class="text-[9px] uppercase font-black text-zinc-600 border-b border-zinc-800 bg-black">
+                            <th class="py-3 pl-4">Zona</th>
+                            <th class="py-3">Objetivo</th>
+                            <th class="py-3 text-right pr-4">Rango</th>
                         </tr>
                     </thead>
-                    <tbody id="zones-table" class="divide-y divide-zinc-800/50 font-mono text-xs"></tbody>
+                    <tbody id="zones-table" class="font-mono text-xs"></tbody>
                 </table>
             </div>
         </section>
 
-        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 flex flex-col">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 flex flex-col relative overflow-hidden">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 relative z-10">
                 <h3 class="text-lg md:text-xl font-heading text-white italic uppercase flex items-center gap-3">
                     <span class="w-1.5 h-6 md:w-2 md:h-8 bg-pink-500 block skew-x-[-10deg]"></span>
-                    Comparativa
+                    Comparativa Pro
                 </h3>
-                <select id="rival-selector" class="w-full md:w-auto bg-zinc-900 border border-zinc-700 text-white text-[10px] font-black uppercase rounded-lg px-3 py-2 outline-none focus:border-pink-500"></select>
+                <div class="relative group w-full md:w-auto">
+                    <select id="rival-selector" class="w-full md:w-auto bg-black border border-zinc-700 text-white text-[10px] font-black uppercase rounded-lg px-4 py-2.5 outline-none focus:border-pink-500 appearance-none cursor-pointer pr-8"></select>
+                    <div class="absolute right-3 top-2.5 pointer-events-none text-zinc-500">▼</div>
+                </div>
             </div>
 
-            <div class="relative h-60 md:h-64 w-full mb-6">
+            <div class="relative h-60 md:h-64 w-full mb-6 z-10">
                 <div id="radar-skeleton" class="chart-skeleton"></div>
                 <canvas id="radarChart"></canvas>
             </div>
             
-            <div id="analysis-content" class="mt-auto p-4 bg-zinc-950/50 rounded-xl border border-zinc-800">
+            <div id="analysis-content" class="mt-auto p-5 bg-black/60 rounded-xl border border-zinc-800 z-10 backdrop-blur-md">
                 <p class="text-xs text-zinc-600 text-center animate-pulse tracking-widest uppercase">Calculando desfase...</p>
             </div>
         </section>
@@ -135,51 +151,54 @@
 
             <div class="relative z-10">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <h3 class="text-lg md:text-xl font-heading text-white italic uppercase flex items-center gap-3">
-                        <span class="w-1.5 h-6 md:w-2 md:h-8 bg-yellow-500 block skew-x-[-10deg]"></span>
+                    <h3 class="text-lg md:text-xl font-heading text-white italic uppercase flex items-center gap-3 drop-shadow-md">
+                        <span class="w-1.5 h-6 md:w-2 md:h-8 bg-yellow-500 block skew-x-[-10deg] shadow-[0_0_10px_rgba(234,179,8,0.5)]"></span>
                         Simulador de Ascenso
                     </h3>
                     
                     <div class="relative group w-full md:w-auto">
-                        <select id="climb-select" class="w-full md:w-64 bg-black border border-zinc-700 text-white text-xs font-bold uppercase rounded-xl px-4 py-2 outline-none focus:border-yellow-500 appearance-none cursor-pointer tracking-wide">
+                        <select id="climb-select" class="w-full md:w-64 bg-black border border-zinc-700 text-white text-xs font-bold uppercase rounded-xl px-4 py-2.5 outline-none focus:border-yellow-500 appearance-none cursor-pointer tracking-wide shadow-lg">
                             <option value="alpe">Alpe d'Huez (13.8km @ 8.1%)</option>
                             <option value="angliru">L'Angliru (12.5km @ 10.1%)</option>
                             <option value="tourmalet">Tourmalet (19.0km @ 7.4%)</option>
                             <option value="mortirolo">Mortirolo (11.8km @ 10.9%)</option>
                             <option value="stelvio">Stelvio (24.3km @ 7.4%)</option>
                         </select>
-                        <div class="absolute right-3 top-2.5 pointer-events-none text-zinc-500">▼</div>
+                        <div class="absolute right-3 top-3 pointer-events-none text-zinc-500">▼</div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                     <div>
-                        <div class="mb-8">
-                            <label class="flex justify-between text-[9px] font-black uppercase text-zinc-400 mb-4">
-                                <span>Tiempo Objetivo (Minutos)</span>
-                                <span class="text-yellow-500" id="slider-val-display">60 min</span>
+                        <div class="mb-10 bg-black/40 p-5 rounded-xl border border-white/5">
+                            <label class="flex justify-between items-end text-[9px] font-black uppercase text-zinc-400 mb-5">
+                                <span>Arrastra para ajustar tiempo objetivo</span>
+                                <span class="text-yellow-500 text-lg font-mono leading-none" id="slider-val-display">60 min</span>
                             </label>
-                            <input type="range" id="climb-slider" min="30" max="120" value="60" class="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-yellow-500">
-                            <div class="flex justify-between text-[8px] text-zinc-600 font-mono mt-2 uppercase">
-                                <span>30 min (Alien)</span>
-                                <span>120 min (Humano)</span>
+                            <input type="range" id="climb-slider" min="30" max="120" value="60" class="w-full">
+                            <div class="flex justify-between text-[8px] text-zinc-500 font-mono mt-3 uppercase font-bold">
+                                <span>30m (Alien)</span>
+                                <span>120m (Humano)</span>
                             </div>
                         </div>
 
-                        <div class="flex items-end justify-between p-4 bg-zinc-900/80 rounded-xl border border-zinc-800 backdrop-blur-sm">
+                        <div class="flex items-center justify-between p-5 bg-black/80 rounded-xl border border-zinc-800 shadow-2xl relative overflow-hidden">
+                            <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl"></div>
+                            
                             <div>
                                 <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Récord del Puerto</p>
-                                <p class="text-lg font-heading italic text-white" id="record-holder">Pantani '97</p>
+                                <p class="text-xl font-heading italic text-white" id="record-holder">Pantani '97</p>
                                 <p class="text-xs font-mono text-zinc-400" id="record-time">36m 50s</p>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right z-10 border-l border-zinc-800 pl-4">
                                 <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Potencia Necesaria</p>
-                                <p class="text-3xl font-mono text-yellow-500 font-bold" id="climb-wkg-display">--</p>
+                                <p class="text-3xl md:text-4xl font-mono text-yellow-500 font-black drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]" id="climb-wkg-display">--</p>
+                                <p class="text-[10px] font-bold text-zinc-500 mt-1 transition-colors" id="wkg-diff-display">--</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="relative h-52 md:h-64 w-full">
+                    <div class="relative h-64 w-full bg-black/30 p-4 rounded-xl border border-white/5">
                         <div id="climb-skeleton" class="chart-skeleton"></div>
                         <canvas id="climbChart"></canvas>
                     </div>
@@ -217,6 +236,7 @@
         const recordHolderDisplay = document.getElementById('record-holder');
         const recordTimeDisplay = document.getElementById('record-time');
         const climbWkgDisplay = document.getElementById('climb-wkg-display');
+        const wkgDiffDisplay = document.getElementById('wkg-diff-display');
         const climbBgContainer = document.getElementById('climb-profile-container');
 
         let radarChart = null, climbChart = null;
@@ -224,8 +244,12 @@
 
         function init() {
             rivalSelect.innerHTML = Object.entries(PRO_STATS).map(([k,v]) => `<option value="${k}">${v.name} (${v.team})</option>`).join('');
-            weightInput.value = localStorage.getItem('velo_weight') || '';
-            wattsInput.value = localStorage.getItem('velo_watts') || '';
+            
+            // Si el usuario no tiene datos guardados, usamos los valores por defecto del HTML (70kg, 250w)
+            if(localStorage.getItem('velo_weight')) weightInput.value = localStorage.getItem('velo_weight');
+            if(localStorage.getItem('velo_watts')) wattsInput.value = localStorage.getItem('velo_watts');
+            
+            updateSliderBg();
             updateAll();
             updateClimbBackground();
         }
@@ -234,17 +258,38 @@
             const w = parseFloat(wattsInput.value) || 0;
             const kg = parseFloat(weightInput.value) || 0;
             const wkg = (w > 0 && kg > 0) ? (w / kg) : 0;
-            wkgDisplay.innerText = wkg.toFixed(2);
+            
+            wkgDisplay.innerText = wkg > 0 ? wkg.toFixed(2) : '0.00';
+            
+            // Dinamismo de color para el W/KG principal
+            let colorClass = 'text-white';
+            let shadowClass = '';
+            if (wkg >= 5.5) { colorClass = 'text-pink-500'; shadowClass = 'drop-shadow-[0_0_15px_rgba(236,72,153,0.6)]'; }
+            else if (wkg >= 4.5) { colorClass = 'text-yellow-500'; shadowClass = 'drop-shadow-[0_0_15px_rgba(234,179,8,0.6)]'; }
+            else if (wkg >= 3.0) { colorClass = 'text-cyan-400'; shadowClass = 'drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]'; }
+            
+            wkgDisplay.className = `text-4xl md:text-5xl font-heading italic tracking-tighter transition-all duration-500 ${colorClass} ${shadowClass}`;
+
             localStorage.setItem('velo_weight', weightInput.value);
             localStorage.setItem('velo_watts', wattsInput.value);
 
+            // Zonas con colores dinámicos de fondo
             const zones = [
-                { n: 'Z2', name: 'Resistencia', r: `${Math.round(w*0.56)}-${Math.round(w*0.75)}w`, c: 'text-cyan-400' },
-                { n: 'Z3', name: 'Tempo', r: `${Math.round(w*0.76)}-${Math.round(w*0.90)}w`, c: 'text-green-500' },
-                { n: 'Z4', name: 'Umbral FTP', r: `${Math.round(w*0.91)}-${Math.round(w*1.05)}w`, c: 'text-yellow-500' },
-                { n: 'Z5', name: 'Capacidad VO2', r: `> ${Math.round(w*1.06)}w`, c: 'text-pink-500' }
+                { n: 'Z2', name: 'Resistencia', r: w>0 ? `${Math.round(w*0.56)} - ${Math.round(w*0.75)}w` : '--', c: '#22d3ee' },
+                { n: 'Z3', name: 'Tempo', r: w>0 ? `${Math.round(w*0.76)} - ${Math.round(w*0.90)}w` : '--', c: '#4ade80' },
+                { n: 'Z4', name: 'Umbral FTP', r: w>0 ? `${Math.round(w*0.91)} - ${Math.round(w*1.05)}w` : '--', c: '#eab308' },
+                { n: 'Z5', name: 'VO2 Max', r: w>0 ? `> ${Math.round(w*1.06)}w` : '--', c: '#ec4899' }
             ];
-            document.getElementById('zones-table').innerHTML = zones.map(z => `<tr class="hover:bg-zinc-800/40"><td class="py-2 pl-4 font-black ${z.c}">${z.n}</td><td class="text-zinc-500 uppercase font-bold text-[9px]">${z.name}</td><td class="text-right pr-4 text-white font-bold">${z.r}</td></tr>`).join('');
+            
+            document.getElementById('zones-table').innerHTML = zones.map(z => `
+                <tr class="relative group border-b border-zinc-900/50 hover:bg-white/5 transition-colors">
+                    <td class="py-3 pl-4 font-black relative z-10" style="color: ${z.c}">${z.n}</td>
+                    <td class="text-zinc-400 uppercase font-bold text-[10px] relative z-10 tracking-widest">${z.name}</td>
+                    <td class="text-right pr-4 text-white font-mono text-sm font-bold relative z-10">${z.r}</td>
+                    <td class="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity" style="background-color: ${z.c}"></td>
+                    <td class="absolute left-0 top-0 bottom-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity" style="background-color: ${z.c}"></td>
+                </tr>`).join('');
+                
             renderRadar();
             renderClimb();
         }
@@ -252,7 +297,7 @@
         function updateClimbBackground() {
             const key = climbSelect.value;
             const c = CLIMBS[key];
-            climbBgContainer.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full"><defs><linearGradient id="grad-${key}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:${c.color};stop-opacity:0.5" /><stop offset="100%" style="stop-color:${c.color};stop-opacity:0" /></linearGradient></defs><path d="${c.shape}" fill="url(#grad-${key})" /><path d="${c.shape.replace('L100,100 Z', '')}" fill="none" stroke="${c.color}" stroke-width="0.8" stroke-opacity="0.8" vector-effect="non-scaling-stroke" /></svg>`;
+            climbBgContainer.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full"><defs><linearGradient id="grad-${key}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:${c.color};stop-opacity:0.4" /><stop offset="100%" style="stop-color:${c.color};stop-opacity:0" /></linearGradient></defs><path d="${c.shape}" fill="url(#grad-${key})" /><path d="${c.shape.replace('L100,100 Z', '')}" fill="none" stroke="${c.color}" stroke-width="0.5" stroke-opacity="0.5" vector-effect="non-scaling-stroke" /></svg>`;
         }
 
         function renderRadar() {
@@ -260,8 +305,10 @@
             document.getElementById('radar-skeleton').style.display = 'none';
             const rival = PRO_STATS[rivalSelect.value];
             const wkg = parseFloat(wkgDisplay.innerText);
+            
+            // Lógica para que el radar del usuario no esté vacío si no pone datos
             const userScore = wkg > 0 ? Math.min(95, (wkg / 6.6) * 100) : 0;
-            const userData = userScore > 0 ? [userScore, userScore*0.7, userScore*0.8, userScore*0.8, 50] : [null, null, null, null, null];
+            const userData = userScore > 0 ? [userScore, userScore*0.7, userScore*0.8, userScore*0.9, 60] : [10, 10, 10, 10, 10];
 
             if (radarChart) radarChart.destroy();
             radarChart = new Chart(document.getElementById('radarChart'), {
@@ -269,14 +316,35 @@
                 data: {
                     labels: ['Escalada', 'Sprint', 'Crono', 'Resistencia', 'Técnica'],
                     datasets: [
-                        { label: 'Tú', data: userData, borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)', borderWidth: 2, pointRadius: 0 },
-                        { label: rival.name, data: rival.stats, borderColor: rival.color, backgroundColor: rival.bg, borderWidth: 2, pointRadius: 0 }
+                        { label: 'Tú', data: userData, borderColor: '#fff', backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#fff' },
+                        { label: rival.name, data: rival.stats, borderColor: rival.color, backgroundColor: rival.bg, borderWidth: 2, pointRadius: 0, borderDash: [5, 5] }
                     ]
                 },
-                options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.05)' }, angleLines: { color: 'rgba(255,255,255,0.05)' }, pointLabels: { color: '#52525b', font: { size: 9, weight: 'bold' } } } }, plugins: { legend: { labels: { color: '#a1a1aa', font: { size: 10 }, boxWidth: 10 } } } }
+                options: { 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        r: { 
+                            suggestedMin: 0, suggestedMax: 100, ticks: { display: false }, 
+                            grid: { color: 'rgba(255,255,255,0.1)' }, 
+                            angleLines: { color: 'rgba(255,255,255,0.1)' }, 
+                            pointLabels: { color: '#a1a1aa', font: { size: 9, weight: 'bold', family: 'monospace' } } 
+                        } 
+                    }, 
+                    plugins: { legend: { position: 'top', labels: { color: '#fff', font: { size: 10, family: 'monospace' }, boxWidth: 12, usePointStyle: true } } } 
+                }
             });
+            
             const gap = ((userScore / 100) * 100).toFixed(0);
-            analysisContent.innerHTML = `<div class="flex justify-between items-end mb-2"><span class="text-[9px] font-black uppercase text-zinc-500">Nivel Pro-Conti</span><span class="text-sm font-mono font-bold text-white">${gap}%</span></div><div class="w-full bg-zinc-900 rounded-full h-1 overflow-hidden"><div class="bg-gradient-to-r from-cyan-500 to-pink-500 h-full" style="width: ${gap}%"></div></div>`;
+            analysisContent.innerHTML = `
+                <div class="flex justify-between items-end mb-3">
+                    <span class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Performance Gap</span>
+                    <span class="text-lg font-heading italic text-white leading-none">${gap}% <span class="text-[9px] text-zinc-500 font-sans not-italic">Nivel Pro</span></span>
+                </div>
+                <div class="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden border border-zinc-800">
+                    <div class="bg-gradient-to-r from-cyan-500 via-yellow-500 to-pink-500 h-full relative" style="width: ${gap}%">
+                        <div class="absolute right-0 top-0 bottom-0 w-4 bg-white/50 blur-sm"></div>
+                    </div>
+                </div>`;
         }
 
         function renderClimb() {
@@ -286,29 +354,80 @@
             const c = CLIMBS[key];
             recordHolderDisplay.innerText = c.holder;
             recordTimeDisplay.innerText = `${c.record.toFixed(1)} min`;
+            
             const minutes = parseInt(climbSlider.value);
             sliderValDisplay.innerText = `${minutes} min`;
+            
             const req = (c.factor / minutes).toFixed(2);
             climbWkgDisplay.innerText = `${req} W/kg`;
             climbWkgDisplay.style.color = c.color;
+            climbWkgDisplay.style.textShadow = `0 0 15px ${c.color}60`; // Glow effect
+            
             const userWkg = parseFloat(wkgDisplay.innerText);
-            const userTime = userWkg > 0 ? (c.factor / userWkg).toFixed(1) : null;
+            const userTime = userWkg > 0 ? (c.factor / userWkg).toFixed(1) : 0;
+            
+            // Diferencia en tiempo real
+            if (userWkg <= 0) {
+                wkgDiffDisplay.innerText = 'Ingresa tus datos arriba';
+                wkgDiffDisplay.className = 'text-[9px] font-bold text-zinc-500 mt-1 uppercase tracking-widest';
+            } else {
+                const diff = (userWkg - req).toFixed(2);
+                if (diff >= 0) {
+                    wkgDiffDisplay.innerText = `¡Sobrado! (+${diff} W/kg)`;
+                    wkgDiffDisplay.className = 'text-[10px] font-bold text-green-400 mt-1 uppercase tracking-widest';
+                } else {
+                    wkgDiffDisplay.innerText = `Faltan ${Math.abs(diff)} W/kg`;
+                    wkgDiffDisplay.className = 'text-[10px] font-bold text-red-400 mt-1 uppercase tracking-widest';
+                }
+            }
 
             if (climbChart) climbChart.destroy();
             climbChart = new Chart(document.getElementById('climbChart'), {
                 type: 'bar',
-                data: { labels: ['RÉCORD', 'OBJETIVO', 'TU TIEMPO'], datasets: [{ data: [c.record, minutes, userTime], backgroundColor: [c.color, '#ffffff', '#22d3ee'], borderRadius: 4, barThickness: 18 }] },
-                options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#3f3f46', font: { size: 8 } } }, y: { ticks: { color: '#fff', font: { weight: '900', size: 9 } } } } }
+                data: { 
+                    labels: ['RÉCORD', 'OBJETIVO', 'TU TIEMPO'], 
+                    datasets: [{ 
+                        data: [c.record, minutes, userTime > 0 ? userTime : null], 
+                        backgroundColor: [c.color, '#ffffff', '#22d3ee'], 
+                        borderRadius: 6, // Barras más redondeadas
+                        barThickness: 20 
+                    }] 
+                },
+                options: { 
+                    indexAxis: 'y', 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false }, ticks: { color: '#71717a', font: { size: 9, family: 'monospace' } } }, 
+                        y: { border: { display: false }, grid: { display: false }, ticks: { color: '#a1a1aa', font: { weight: '900', size: 10, family: 'monospace' } } } 
+                    } 
+                }
             });
         }
 
+        function updateSliderBg() {
+            const val = ((climbSlider.value - climbSlider.min) / (climbSlider.max - climbSlider.min)) * 100;
+            climbSlider.style.background = `linear-gradient(to right, #eab308 ${val}%, #27272a ${val}%)`;
+        }
+
         function handleClimbSliderInput() {
+            updateSliderBg();
             const minutes = parseInt(climbSlider.value);
             sliderValDisplay.innerText = `${minutes} min`;
-            const req = (CLIMBS[climbSelect.value].factor / minutes).toFixed(2);
+            const c = CLIMBS[climbSelect.value];
+            const req = (c.factor / minutes).toFixed(2);
             climbWkgDisplay.innerText = `${req} W/kg`;
+            
+            // Actualización rápida de la diferencia mientras deslizas
+            const userWkg = parseFloat(wkgDisplay.innerText);
+            if(userWkg > 0) {
+                const diff = (userWkg - req).toFixed(2);
+                wkgDiffDisplay.innerText = diff >= 0 ? `¡Sobrado! (+${diff} W/kg)` : `Faltan ${Math.abs(diff)} W/kg`;
+                wkgDiffDisplay.className = diff >= 0 ? 'text-[10px] font-bold text-green-400 mt-1 uppercase tracking-widest' : 'text-[10px] font-bold text-red-400 mt-1 uppercase tracking-widest';
+            }
+            
             clearTimeout(climbDebounceTimer);
-            climbDebounceTimer = setTimeout(renderClimb, 150);
+            climbDebounceTimer = setTimeout(renderClimb, 50);
         }
 
         [weightInput, wattsInput].forEach(el => el.addEventListener('input', updateAll));
