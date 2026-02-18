@@ -31,10 +31,23 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; }
 
-        /* Tarjetas Grid */
+        /* Tarjetas Grid (Con variables dinámicas para el color del glow) */
         .team-card { transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
-        .team-card:hover { transform: translateY(-8px); border-color: #22d3ee; box-shadow: 0 0 30px rgba(34, 211, 238, 0.15); }
+        .team-card:hover { 
+            transform: translateY(-8px); 
+            border-color: var(--team-color, #22d3ee); 
+            box-shadow: 0 0 30px var(--team-glow, rgba(34, 211, 238, 0.15)); 
+        }
         .team-card:hover .team-jersey-thumb { transform: scale(1.08) rotate(2deg); }
+
+        /* Selectores H2H Custom */
+        .h2h-select {
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
 
         /* Modal Animaciones */
         #team-modal { transition: opacity 0.3s ease, visibility 0.3s ease; }
@@ -62,7 +75,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .glass { background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(12px); }
         
-        /* Botones activos */
+        /* Botones activos modal */
         .sort-btn.active { background-color: rgba(34, 211, 238, 0.2); color: #22d3ee; border-color: #22d3ee; }
 
         /* ESTILOS ESPECÍFICOS PARA ESCRITORIO */
@@ -91,66 +104,79 @@
                 DATABASE // worldtour ranking & stats
             </p>
 
-            <div class="max-w-md mx-auto relative group">
+            <div class="max-w-md mx-auto relative group flex items-center">
+                <svg class="w-5 h-5 text-zinc-500 absolute left-4 group-focus-within:text-cyan-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 <input type="text" id="team-search" placeholder="BUSCAR EQUIPO O CICLISTA..." 
-                       class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-3 px-12 text-white outline-none focus:border-cyan-500 focus:bg-black transition-all text-center uppercase font-bold tracking-wider text-xs md:text-sm placeholder-zinc-700 backdrop-blur-sm">
+                       class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-3 pl-12 pr-12 text-white outline-none focus:border-cyan-500 focus:bg-black transition-all text-center uppercase font-bold tracking-wider text-xs md:text-sm placeholder-zinc-700 backdrop-blur-sm shadow-inner">
+                <div class="absolute right-4 text-[10px] font-mono text-zinc-600 border border-zinc-700 rounded px-1.5 py-0.5 pointer-events-none hidden md:block select-none bg-black">/</div>
             </div>
         </header>
 
-        <section class="mb-12 glass p-6 md:p-8 rounded-3xl border border-zinc-800 reveal-on-scroll hidden" id="h2h-section">
-            <h2 class="text-lg md:text-xl font-heading text-white italic uppercase mb-6 flex items-center gap-3">
+        <section class="mb-12 glass p-6 md:p-8 rounded-3xl border border-zinc-800 reveal-on-scroll hidden relative overflow-hidden" id="h2h-section">
+            <h2 class="text-lg md:text-xl font-heading text-white italic uppercase mb-6 flex items-center gap-3 relative z-10">
                 <span class="w-1.5 h-6 bg-cyan-500 block skew-x-[-10deg]"></span>
                 H2H Comparador <span class="text-zinc-600">PRO</span>
             </h2>
             
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-center">
-                <div class="flex flex-col gap-3 bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/80">
-                    <label class="text-[9px] font-black uppercase tracking-widest text-cyan-500">Ciclista 1</label>
-                    <select id="h2h-team-1" class="bg-black border border-zinc-800 text-zinc-400 p-2 rounded-lg outline-none focus:border-cyan-500 text-[10px] uppercase font-bold transition-colors hover:bg-zinc-900"></select>
-                    <select id="h2h-rider-1" class="bg-black border border-zinc-700 text-white p-3 rounded-xl outline-none focus:border-cyan-500 text-sm uppercase font-bold transition-colors hover:bg-zinc-900"></select>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-stretch relative z-10">
+                
+                <div class="flex flex-col bg-zinc-950/80 p-5 rounded-2xl border border-zinc-800/80 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
                     
-                    <div class="flex justify-between items-end mt-2">
-                        <div><span id="type-1" class="spec-badge spec-gc">GC</span></div>
-                        <div class="text-right">
-                            <span class="text-3xl font-black italic text-cyan-400" id="ovr-1">--</span>
-                            <span class="block text-[9px] font-bold text-zinc-500 uppercase">OVR</span>
+                    <label class="text-[9px] font-black uppercase tracking-widest text-cyan-500 mb-3 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">Ciclista 1</label>
+                    <select id="h2h-team-1" class="h2h-select w-full bg-black border border-zinc-800 text-zinc-400 p-3 rounded-t-xl outline-none focus:border-cyan-500 text-[10px] uppercase font-bold transition-colors mb-1"></select>
+                    <select id="h2h-rider-1" class="h2h-select w-full bg-black border border-zinc-800 text-white p-3 rounded-b-xl outline-none focus:border-cyan-500 text-sm uppercase font-bold transition-colors"></select>
+                    
+                    <div class="flex justify-between items-end mt-6 relative h-20">
+                        <svg class="absolute bottom-0 right-16 w-24 h-24 text-cyan-500/10 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm0 2c2.76 0 5 2.24 5 5 0 2.05-1.23 3.81-3 4.58V15h-4v-1.42C8.23 12.81 7 11.05 7 9c0-2.76 2.24-5 5-5zM9 19h6v2H9v-2z"/></svg>
+                        
+                        <div class="z-10"><span id="type-1" class="spec-badge spec-gc shadow-lg">GC</span></div>
+                        <div class="text-right z-10">
+                            <span class="text-5xl font-black italic text-white drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]" id="ovr-1">--</span>
+                            <span class="block text-[10px] font-bold text-cyan-500 uppercase tracking-widest mt-1">OVR</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="h-64 relative w-full flex justify-center">
+                <div class="h-72 relative w-full flex justify-center items-center bg-black/30 rounded-2xl border border-zinc-800/50 p-2">
                     <canvas id="compare-radar"></canvas>
                 </div>
 
-                <div class="flex flex-col gap-3 bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/80">
-                    <label class="text-[9px] font-black uppercase tracking-widest text-pink-500">Ciclista 2</label>
-                    <select id="h2h-team-2" class="bg-black border border-zinc-800 text-zinc-400 p-2 rounded-lg outline-none focus:border-pink-500 text-[10px] uppercase font-bold transition-colors hover:bg-zinc-900"></select>
-                    <select id="h2h-rider-2" class="bg-black border border-zinc-700 text-white p-3 rounded-xl outline-none focus:border-pink-500 text-sm uppercase font-bold transition-colors hover:bg-zinc-900"></select>
+                <div class="flex flex-col bg-zinc-950/80 p-5 rounded-2xl border border-zinc-800/80 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
                     
-                    <div class="flex justify-between items-end mt-2">
-                        <div><span id="type-2" class="spec-badge spec-gc">GC</span></div>
-                        <div class="text-right">
-                            <span class="text-3xl font-black italic text-pink-500" id="ovr-2">--</span>
-                            <span class="block text-[9px] font-bold text-zinc-500 uppercase">OVR</span>
+                    <label class="text-[9px] font-black uppercase tracking-widest text-pink-500 mb-3 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]">Ciclista 2</label>
+                    <select id="h2h-team-2" class="h2h-select w-full bg-black border border-zinc-800 text-zinc-400 p-3 rounded-t-xl outline-none focus:border-pink-500 text-[10px] uppercase font-bold transition-colors mb-1"></select>
+                    <select id="h2h-rider-2" class="h2h-select w-full bg-black border border-zinc-800 text-white p-3 rounded-b-xl outline-none focus:border-pink-500 text-sm uppercase font-bold transition-colors"></select>
+                    
+                    <div class="flex justify-between items-end mt-6 relative h-20">
+                        <svg class="absolute bottom-0 right-16 w-24 h-24 text-pink-500/10 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm0 2c2.76 0 5 2.24 5 5 0 2.05-1.23 3.81-3 4.58V15h-4v-1.42C8.23 12.81 7 11.05 7 9c0-2.76 2.24-5 5-5zM9 19h6v2H9v-2z"/></svg>
+                        
+                        <div class="z-10"><span id="type-2" class="spec-badge spec-gc shadow-lg">GC</span></div>
+                        <div class="text-right z-10">
+                            <span class="text-5xl font-black italic text-white drop-shadow-[0_0_15px_rgba(236,72,153,0.6)]" id="ovr-2">--</span>
+                            <span class="block text-[10px] font-bold text-pink-500 uppercase tracking-widest mt-1">OVR</span>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <div class="flex justify-center gap-2 mb-10 overflow-x-auto no-scrollbar py-2 reveal-on-scroll" id="filters">
-            <button onclick="filterFavorites()" id="btn-favs" class="filter-btn px-4 py-1.5 rounded-lg border border-yellow-500/30 bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase hover:bg-yellow-500/20 transition-all mr-2">
-                ★ Mis Favoritos
-            </button>
-            <button onclick="filterTeams('all')" id="btn-all" class="filter-btn active px-4 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/50 text-zinc-400 text-[10px] font-bold uppercase hover:text-white hover:border-zinc-600 transition-all">Todos</button>
+        <div class="flex justify-center mb-10 reveal-on-scroll" id="filters">
+            <div class="inline-flex bg-zinc-900/60 p-1 rounded-xl border border-zinc-800 backdrop-blur-sm">
+                <button onclick="filterTeams('all')" id="btn-all" class="filter-tab active px-6 py-2.5 rounded-lg text-white text-[10px] font-black uppercase tracking-widest transition-all bg-zinc-800 shadow-sm">Todos los Equipos</button>
+                <button onclick="filterFavorites()" id="btn-favs" class="filter-tab px-6 py-2.5 rounded-lg text-zinc-500 text-[10px] font-black uppercase tracking-widest transition-all hover:text-yellow-500 flex items-center gap-2">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> Mis Favoritos
+                </button>
+            </div>
         </div>
 
-        <div id="teams-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+        <div id="teams-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
              </div>
         
         <div id="no-results" class="hidden text-center py-24 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/10">
             <p class="text-zinc-600 uppercase font-black tracking-[0.2em] text-xs">Sin resultados</p>
-            <button onclick="resetSearch()" class="mt-4 text-[10px] font-bold text-cyan-500 hover:text-white transition-colors">LIMPIAR BÚSQUEDA</button>
+            <button onclick="resetSearch()" class="mt-4 text-[10px] font-bold text-cyan-500 hover:text-white transition-colors border-b border-cyan-500/30 pb-1">LIMPIAR BÚSQUEDA</button>
         </div>
     </main>
 
@@ -166,7 +192,7 @@
             <div class="w-full bg-gradient-to-b from-zinc-900 to-black p-6 border-b border-zinc-800 flex justify-between items-center shrink-0 h-auto">
                 <div class="flex flex-col gap-1">
                     <h2 id="modal-title" class="text-3xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none">TEAM</h2>
-                    <div class="flex gap-3 text-zinc-500 text-xs font-bold tracking-widest uppercase">
+                    <div class="flex gap-3 text-zinc-500 text-xs font-bold tracking-widest uppercase mt-1">
                         <span id="modal-code" class="text-cyan-500">CODE</span>
                         <span id="modal-country">COUNTRY</span>
                     </div>
@@ -175,21 +201,18 @@
             </div>
 
             <div class="flex flex-col lg:flex-row flex-1 overflow-hidden relative">
-
                 <div class="w-full lg:w-[40%] bg-black/50 lg:bg-[#0c0c0e] border-b lg:border-b-0 lg:border-r border-zinc-800 flex flex-col justify-center items-center py-4 lg:p-8 shrink-0 relative order-1">
-                    
                     <img id="modal-jersey-desktop" src="" alt="Jersey Desktop" class="hidden lg:block h-32 w-auto object-contain mb-6 drop-shadow-[0_0_30px_rgba(0,0,0,0.5)]">
 
                     <div id="radar-container-desktop" class="w-full max-w-[400px] h-48 md:h-56 relative flex justify-center items-center">
                         <canvas id="stats-radar"></canvas>
                         <div class="absolute bottom-0 right-4 pointer-events-none lg:bottom-2 lg:right-2">
-                            <p id="radar-rider-name" class="text-white font-bold text-xs uppercase tracking-wide drop-shadow-md bg-black/60 px-2 py-1 rounded">Promedio</p>
+                            <p id="radar-rider-name" class="text-white font-bold text-xs uppercase tracking-wide drop-shadow-md bg-black/60 px-2 py-1 rounded border border-white/10">Promedio</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="w-full lg:w-[60%] flex-1 bg-[#050505] flex flex-col overflow-hidden order-2">
-                    
                     <div class="p-3 border-b border-zinc-800 bg-zinc-900/90 flex flex-col md:flex-row gap-3 justify-between items-center shrink-0 z-20 backdrop-blur-md sticky top-0">
                         <div class="flex items-center gap-2">
                             <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]" id="roster-title">Plantilla 2026</h3>
@@ -206,7 +229,6 @@
                     
                     <div id="modal-roster" class="p-0 overflow-y-auto roster-scroll flex-1 bg-black relative"></div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -222,10 +244,8 @@
         const modalTitle = document.getElementById('modal-title');
         const modalCode = document.getElementById('modal-code');
         const modalCountry = document.getElementById('modal-country');
-        
         const modalJerseyMobile = document.getElementById('modal-jersey-mobile');
         const modalJerseyDesktop = document.getElementById('modal-jersey-desktop');
-        
         const modalRoster = document.getElementById('modal-roster');
         
         let allTeams = [];
@@ -234,6 +254,22 @@
         let currentFilter = 'all';
         let currentSortCriteria = 'ovr'; 
         let currentOpenTeamCode = null;
+
+        // Base de datos local de marcas de bicis (Opción 2)
+        const TEAM_TECH = {
+            'UAD': { bike: 'Colnago', group: 'Shimano', color: '#ef4444' }, // Red
+            'TVL': { bike: 'Cervélo', group: 'SRAM', color: '#eab308' }, // Yellow
+            'IGD': { bike: 'Pinarello', group: 'Shimano', color: '#f97316' }, // Orange
+            'SOQ': { bike: 'Specialized', group: 'Shimano', color: '#3b82f6' }, // Blue
+            'RBH': { bike: 'Specialized', group: 'SRAM', color: '#10b981' }, // Green
+            'LTK': { bike: 'Trek', group: 'SRAM', color: '#ef4444' }, // Red
+            'ADC': { bike: 'Canyon', group: 'Shimano', color: '#3b82f6' }, // Blue
+            'TBV': { bike: 'Merida', group: 'Shimano', color: '#ef4444' }, // Red
+            'MOV': { bike: 'Canyon', group: 'SRAM', color: '#3b82f6' }, // Blue
+            'DAT': { bike: 'Van Rysel', group: 'Shimano', color: '#3b82f6' }, // Blue
+            'EFE': { bike: 'Cannondale', group: 'Shimano', color: '#ec4899' }, // Pink
+            'DEFAULT': { bike: 'Team Bike', group: 'Components', color: '#22d3ee' } // Cyan fallback
+        };
 
         // --- FAVORITOS ---
         const FAV_KEY = 'velo_favs_v1';
@@ -295,8 +331,13 @@
 
         function filterFavorites() {
             currentFilter = 'favs';
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'bg-zinc-900/50', 'text-white'));
-            document.getElementById('btn-favs').classList.add('active', 'bg-yellow-500/20', 'text-yellow-500');
+            // Gestión visual de TABS
+            document.getElementById('btn-all').classList.remove('active', 'bg-zinc-800', 'text-white');
+            document.getElementById('btn-all').classList.add('text-zinc-500');
+            
+            document.getElementById('btn-favs').classList.add('active', 'bg-zinc-800', 'text-yellow-500');
+            document.getElementById('btn-favs').classList.remove('text-zinc-500');
+
             const favs = getFavorites();
             if (favs.length === 0) {
                 container.innerHTML = `<div class="col-span-full text-center py-20 border border-dashed border-yellow-900/50 rounded-3xl bg-yellow-900/10"><p class="text-yellow-600 uppercase font-black tracking-[0.2em] text-xs">No tienes favoritos</p></div>`;
@@ -308,9 +349,13 @@
 
         function filterTeams(type) {
             currentFilter = 'all';
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'bg-zinc-900/50', 'text-white'));
-            document.getElementById('btn-all').classList.add('active', 'bg-zinc-900/50', 'text-white');
-            document.getElementById('btn-favs').classList.remove('active', 'bg-yellow-500/20', 'text-yellow-500');
+            // Gestión visual de TABS
+            document.getElementById('btn-favs').classList.remove('active', 'bg-zinc-800', 'text-yellow-500');
+            document.getElementById('btn-favs').classList.add('text-zinc-500');
+            
+            document.getElementById('btn-all').classList.add('active', 'bg-zinc-800', 'text-white');
+            document.getElementById('btn-all').classList.remove('text-zinc-500');
+
             renderTeams(allTeams);
         }
 
@@ -333,25 +378,61 @@
                     if(allTeams.length > 0) { renderTeams(allTeams); initCompareSection(); } 
                     else { container.innerHTML = `<div class="col-span-full text-center py-20 text-zinc-500 text-xs font-bold uppercase">No hay equipos.</div>`; }
                 }
-            } catch (error) { container.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 font-bold">Error de conexión</div>`; }
+            } catch (error) { 
+                console.error(error);
+                // Si falla el servidor local, al menos mostramos la UI vacía para no romper la estética
+                container.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 font-bold text-xs uppercase border border-red-900/50 rounded-2xl bg-red-900/10">Error de conexión: Activa el servidor.</div>`; 
+            }
         }
 
         function renderTeams(items) {
-            if(items.length === 0 && currentFilter !== 'favs') { container.innerHTML = `<div class="col-span-full text-center py-20 text-zinc-500 text-xs font-bold uppercase">No se encontraron equipos.</div>`; return; }
-            container.innerHTML = items.map(team => `
-                <div class="team-card glass rounded-2xl border border-zinc-800/80 overflow-hidden cursor-pointer group bg-zinc-900/40 relative" onclick="openModal('${team.code}')">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
-                    <div class="w-full h-48 md:h-60 overflow-hidden flex items-center justify-center p-4 relative">
-                        <img src="${team.jersey}" class="team-jersey-thumb w-full h-full object-contain relative z-0 transition-transform duration-500 ease-out drop-shadow-lg" loading="lazy">
+            if(items.length === 0 && currentFilter !== 'favs') { 
+                document.getElementById('no-results').classList.remove('hidden'); 
+                container.innerHTML = '';
+                return; 
+            } else {
+                document.getElementById('no-results').classList.add('hidden');
+            }
+
+            container.innerHTML = items.map(team => {
+                const tech = TEAM_TECH[team.code] || TEAM_TECH['DEFAULT'];
+                return `
+                <div class="team-card glass rounded-3xl border border-zinc-800/80 overflow-hidden cursor-pointer group bg-zinc-900/30 relative flex flex-col h-full min-h-[320px]" 
+                     onclick="openModal('${team.code}')" 
+                     style="--team-glow: ${tech.color}30; --team-color: ${tech.color}">
+                    
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
+                        <span class="text-[140px] font-black italic text-white/[0.03] group-hover:text-white/[0.06] transition-colors leading-none tracking-tighter select-none rotate-[-15deg] scale-150">${team.code}</span>
                     </div>
-                    <div class="absolute bottom-0 left-0 w-full p-4 z-20">
-                        <h3 class="text-sm font-black uppercase tracking-tight text-white leading-none group-hover:text-cyan-400 transition-colors truncate">${team.name}</h3>
-                        <p class="text-[10px] text-zinc-400 mt-1 font-bold">${team.country} <span class="mx-1">•</span> ${team.code}</p>
+
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-zinc-950/60 to-transparent opacity-90 z-10"></div>
+                    
+                    <div class="w-full flex-1 overflow-hidden flex items-center justify-center p-6 relative z-20 mt-4">
+                        <img src="${team.jersey}" class="team-jersey-thumb w-full h-full object-contain relative transition-transform duration-500 ease-out drop-shadow-2xl" loading="lazy">
+                    </div>
+                    
+                    <div class="p-5 z-30 shrink-0">
+                        <h3 class="text-sm md:text-base font-black uppercase tracking-tight text-white leading-tight group-hover:text-cyan-400 transition-colors mb-1.5 drop-shadow-lg line-clamp-2">${team.name}</h3>
+                        
+                        <div class="flex items-center justify-between mb-3 border-b border-white/5 pb-3">
+                            <div class="flex items-center gap-2 text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
+                                <span>${team.country}</span>
+                                <span class="w-1 h-1 rounded-full bg-zinc-700"></span>
+                                <span class="text-cyan-500">${team.code}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-1 text-[9px] font-mono text-zinc-500 group-hover:text-zinc-300 transition-colors uppercase font-bold">
+                            <span class="flex items-center gap-2"><svg class="w-3 h-3 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg> BIKE: ${tech.bike}</span>
+                            <span class="flex items-center gap-2"><svg class="w-3 h-3 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> GROUP: ${tech.group}</span>
+                        </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
+        // --- LÓGICA RADARES MODAL ---
         function initRadarChart(stats) {
             const ctx = document.getElementById('stats-radar').getContext('2d');
             if(radarChartInstance) radarChartInstance.destroy();
@@ -372,7 +453,7 @@
                 radarChartInstance.data.datasets[0].backgroundColor = color === 'gold' ? 'rgba(236, 72, 153, 0.2)' : 'rgba(34, 211, 238, 0.2)';
                 radarChartInstance.update();
                 const label = document.getElementById('radar-rider-name');
-                if(label) { label.innerText = name; label.className = `text-xs font-black uppercase tracking-wide drop-shadow-md bg-black/60 px-2 py-1 rounded transition-colors ${color === 'gold' ? 'text-white' : 'text-zinc-400'}`; }
+                if(label) { label.innerText = name; label.className = `text-xs font-black uppercase tracking-wide drop-shadow-md bg-black/80 px-3 py-1.5 rounded-lg border border-white/10 transition-colors ${color === 'gold' ? 'text-pink-400' : 'text-cyan-400'}`; }
             }
         };
 
@@ -423,7 +504,7 @@
                 setTimeout(() => {
                     initRadarChart(avg);
                     const l = document.getElementById('radar-rider-name');
-                    l.innerText = currentFilter === 'favs' ? "PROM. FAVORITOS" : "PROMEDIO";
+                    l.innerText = currentFilter === 'favs' ? "PROM. FAVORITOS" : "PROMEDIO DEL EQUIPO";
                 }, 200);
             }
 
@@ -470,7 +551,7 @@
 
                     <div class="text-right shrink-0 pl-2">
                         <span class="text-lg font-black italic ${currentSortCriteria === 'ovr' ? ovrColor : 'text-zinc-600'}">${s.ovr}</span>
-                        <span class="text-[8px] block text-zinc-600 font-bold">OVR</span>
+                        <span class="text-[8px] block text-zinc-600 font-bold tracking-widest mt-0.5">OVR</span>
                     </div>
                 </div>
             `}).join('');
@@ -492,16 +573,14 @@
 
         searchInput.addEventListener('input', (e) => {
             if(currentFilter === 'favs') {
-                currentFilter = 'all';
-                document.getElementById('btn-favs').classList.remove('active', 'bg-yellow-500/20', 'text-yellow-500');
-                document.getElementById('btn-all').classList.add('active', 'bg-zinc-900/50', 'text-white');
+                filterTeams('all');
             }
             const term = e.target.value.toLowerCase();
             const filtered = allTeams.filter(t => t.name.toLowerCase().includes(term) || (t.riders && t.riders.some(r => r.name.toLowerCase().includes(term))));
             renderTeams(filtered);
         });
 
-        // --- LÓGICA DE COMPARACIÓN (H2H) REPARADA ---
+        // --- LÓGICA DE COMPARACIÓN (H2H) MEJORADA ---
         function initCompareSection() {
             const h2hSection = document.getElementById('h2h-section');
             h2hSection.classList.remove('hidden');
@@ -520,30 +599,30 @@
             t1.value = idxUae !== -1 ? idxUae : 0;
             t2.value = idxVisma !== -1 ? idxVisma : (allTeams.length > 1 ? 1 : 0);
 
-            // Iniciar gráfico de comparación
+            // Iniciar gráfico de comparación (Radar MÁS visible)
             const ctx = document.getElementById('compare-radar').getContext('2d');
             compareRadarInstance = new Chart(ctx, { 
                 type: 'radar', 
                 data: { 
-                    labels: ['MNT', 'SPR', 'TT', 'LLA', 'RES', 'REC'], 
+                    labels: ['ESCALADA', 'SPRINT', 'CRONO', 'LLANO', 'RESISTENCIA', 'RECUPERACIÓN'], 
                     datasets: [
-                        { label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.2)', borderWidth: 2, pointBackgroundColor: '#22d3ee' }, 
-                        { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.2)', borderWidth: 2, pointBackgroundColor: '#ec4899' }
+                        { label: 'Rider 1', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.4)', borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#22d3ee', pointRadius: 3 }, 
+                        { label: 'Rider 2', data: [], borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.4)', borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#ec4899', pointRadius: 3 }
                     ] 
                 }, 
                 options: { 
                     scales: { 
                         r: { 
                             min: 40, max: 100, 
-                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, 
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
-                            pointLabels: { display: true, color: '#71717a', font: { size: 9, family: 'monospace', weight: 'bold' } }, 
+                            angleLines: { color: 'rgba(255, 255, 255, 0.15)' }, 
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }, 
+                            pointLabels: { display: true, color: '#a1a1aa', font: { size: 9, family: 'monospace', weight: 'bold' } }, 
                             ticks: { display: false } 
                         } 
                     }, 
                     plugins: { 
                         legend: { display: false }, 
-                        datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, formatter: Math.round } 
+                        datalabels: { display: true, color: '#fff', font: { size: 10, weight: 'bold', family: 'monospace' }, formatter: Math.round } 
                     }, 
                     maintainAspectRatio: false 
                 } 
@@ -572,7 +651,6 @@
             const riderSelect = document.getElementById(`h2h-rider-${side}`);
             
             if(team && team.riders) {
-                // Ordenar por OVR descendente
                 const sortedRiders = [...team.riders].sort((a, b) => b.stats.ovr - a.stats.ovr);
                 riderSelect.innerHTML = sortedRiders.map(r => `<option value="${r.name}">${r.stats.ovr} OVR | ${r.name}</option>`).join('');
             }
@@ -581,10 +659,7 @@
         function preselectRider(side, nameSubstring) {
             const select = document.getElementById(`h2h-rider-${side}`);
             const match = Array.from(select.options).find(opt => opt.value.includes(nameSubstring));
-            if(match) {
-                select.value = match.value;
-                // Importante: Disparar el cambio si fuera necesario, o llamar updateCompareChart manualmente después
-            }
+            if(match) { select.value = match.value; }
         }
 
         function getSelectedRider(side) {
@@ -613,13 +688,13 @@
             // Actualizar Datos Texto (Lado 1)
             document.getElementById('ovr-1').innerText = r1.stats.ovr;
             const t1Label = document.getElementById('type-1');
-            t1Label.className = `spec-badge ${r1.typeClass || 'spec-gc'}`;
+            t1Label.className = `spec-badge ${r1.typeClass || 'spec-gc'} shadow-lg`;
             t1Label.innerText = r1.type || 'PRO';
 
             // Actualizar Datos Texto (Lado 2)
             document.getElementById('ovr-2').innerText = r2.stats.ovr;
             const t2Label = document.getElementById('type-2');
-            t2Label.className = `spec-badge ${r2.typeClass || 'spec-gc'}`;
+            t2Label.className = `spec-badge ${r2.typeClass || 'spec-gc'} shadow-lg`;
             t2Label.innerText = r2.type || 'PRO';
         }
 
