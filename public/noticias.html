@@ -3,16 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
     
-    <title>VELO INSIGHTS | Journal</title>
-    <meta name="description" content="Archivo profundo de análisis técnico de ciclismo WorldTour. Datos, vatios y tecnología.">
-    
+    <title>VELO INSIGHTS | Journal y Análisis Técnico de Ciclismo</title>
+    <meta name="description" content="El Journal de Velo Insights: Archivo profundo de análisis técnico, reportes de carreras, vatios, aerodinámica y tecnología del ciclismo profesional WorldTour.">
+    <meta name="keywords" content="ciclismo profesional, análisis técnico, vatios, aerodinámica ciclismo, WorldTour, noticias ciclismo, telemetría ciclismo, táctica ciclista">
+    <link rel="canonical" href="https://www.tusitioweb.com/noticias">
+
+    <meta property="og:type" content="blog">
+    <meta property="og:url" content="https://www.tusitioweb.com/noticias">
+    <meta property="og:title" content="VELO INSIGHTS | Technical Journal">
+    <meta property="og:description" content="No cubrimos rumores, cubrimos vatios. Análisis profundo del pelotón profesional y tecnología WorldTour.">
+    <meta property="og:image" content="https://www.tusitioweb.com/assets/og-journal.jpg">
+    <meta property="og:locale" content="es_ES">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.tusitioweb.com/noticias">
+    <meta name="twitter:title" content="VELO INSIGHTS | Technical Journal">
+    <meta name="twitter:description" content="No cubrimos rumores, cubrimos vatios. Análisis profundo del pelotón profesional.">
+    <meta name="twitter:image" content="https://www.tusitioweb.com/assets/og-journal.jpg">
+
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Velo Journal">
     <link rel="apple-touch-icon" href="assets/icon-192.png">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "name": "Velo Insights Journal",
+      "url": "https://www.tusitioweb.com/noticias",
+      "description": "Archivo profundo de análisis técnico de ciclismo WorldTour. Datos, vatios y tecnología.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Velo Insights Lab",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://www.tusitioweb.com/assets/icon-192.png"
+        }
+      }
+    }
+    </script>
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -24,11 +58,6 @@
         }
     </script>
     
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="VELO INSIGHTS | Technical Journal">
-    <meta property="og:description" content="No cubrimos rumores, cubrimos vatios. Análisis profundo del pelotón profesional.">
-    
-    <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="assets/main.css">
 
@@ -130,6 +159,10 @@
         let currentTag = 'all';
         let currentSearch = '';
         
+        // Guardamos las etiquetas SEO originales para restaurarlas al cerrar el modal
+        const originalTitle = document.title;
+        const originalDescription = document.querySelector('meta[name="description"]').getAttribute("content");
+
         const feed = document.getElementById('news-feed');
         const modal = document.getElementById('article-modal');
         const modalContent = document.getElementById('modal-content');
@@ -159,7 +192,7 @@
                 }
             } catch (error) {
                 console.error("❌ ERROR:", error);
-                // Datos de prueba por si la API falla mientras desarrollas
+                // Datos de prueba
                 allNews = [
                     { id: 1, title: "Tiberi asalta Jebel Mobrah y destroza la general", tag: "RACE REPORT", date: "18 FEB 2026", image: "assets/default-news.jpg", excerpt: "Un seísmo sacude el UAE Tour. La inédita ascensión a Jebel Mobrah dicta sentencia basándose en los vatios puros." },
                     { id: 2, title: "El nuevo manillar aero de Remco", tag: "TECH LAB", date: "17 FEB 2026", image: "assets/default-news.jpg", excerpt: "Analizamos en el túnel de viento la última innovación de Specialized para rascar vatios." },
@@ -170,16 +203,11 @@
             }
         }
 
-        // --- NUEVA LÓGICA DE FILTRADO UNIFICADO ---
         function applyFilters() {
             let filtered = allNews;
-
-            // Filtrar por botón (Tag)
             if (currentTag !== 'all') {
                 filtered = filtered.filter(n => n.tag === currentTag);
             }
-
-            // Filtrar por texto (Buscador)
             if (currentSearch.trim() !== '') {
                 const term = currentSearch.toLowerCase();
                 filtered = filtered.filter(n => 
@@ -188,11 +216,9 @@
                     (n.tag && n.tag.toLowerCase().includes(term))
                 );
             }
-
             renderFeed(filtered);
         }
 
-        // Listener para la barra de búsqueda (Se ejecuta cada vez que escribes)
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 currentSearch = e.target.value;
@@ -200,7 +226,6 @@
             });
         }
 
-        // Actualizamos la función de los botones
         window.filterByTag = (tag) => {
             currentTag = tag;
             applyFilters();
@@ -215,7 +240,7 @@
 
             let html = '';
 
-            // 1. ARTÍCULO DESTACADO (Hero - Título más pequeño en PC)
+            // 1. ARTÍCULO DESTACADO
             const featured = newsList[0];
             const featuredTagClass = TAG_COLORS[featured.tag] || TAG_COLORS['DEFAULT'];
             
@@ -223,7 +248,7 @@
                 <article class="group cursor-pointer mb-10 bg-zinc-900/30 border border-white/5 rounded-[2rem] overflow-hidden hover:border-white/20 transition-all shadow-xl" onclick="openArticle(${featured.id})">
                     <div class="grid grid-cols-1 md:grid-cols-2 items-stretch">
                         <div class="aspect-[4/3] md:aspect-auto md:h-full relative overflow-hidden bg-black">
-                            ${featured.image ? `<img src="${featured.image}" class="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">` : ''}
+                            ${featured.image ? `<img src="${featured.image}" alt="${featured.title} - Velo Insights" class="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">` : ''}
                             <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#050505]/90 to-transparent"></div>
                             <div class="absolute top-6 left-6">
                                 <span class="px-3 py-1.5 ${featuredTagClass} text-[10px] font-black uppercase rounded-lg border border-white/10 tracking-widest shadow-xl">${featured.tag || 'Journal'}</span>
@@ -249,7 +274,7 @@
                 </article>
             `;
 
-            // 2. GRID SECUNDARIO (Resto de artículos a 2 columnas)
+            // 2. GRID SECUNDARIO
             if (newsList.length > 1) {
                 html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">`;
                 for (let i = 1; i < newsList.length; i++) {
@@ -260,7 +285,7 @@
                         <article class="group cursor-pointer flex flex-col bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 hover:bg-zinc-900/40 transition-all hover:-translate-y-1 shadow-lg" onclick="openArticle(${item.id})">
                             ${item.image ? `
                             <div class="aspect-video relative overflow-hidden bg-black border-b border-white/5">
-                                <img src="${item.image}" class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
+                                <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
                                 <div class="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent opacity-80"></div>
                                 <div class="absolute bottom-4 left-4">
                                     <span class="px-2 py-1 ${tagClass} text-[9px] font-black uppercase rounded bg-opacity-90 tracking-widest">${item.tag || 'Journal'}</span>
@@ -296,10 +321,16 @@
             if(!article) return;
             window.history.pushState({ articleId: id }, '', `?article=${id}`);
 
+            // ACTUALIZACIÓN SEO DINÁMICA
+            document.title = `${article.title} | VELO INSIGHTS`;
+            if (article.excerpt) {
+                document.querySelector('meta[name="description"]').setAttribute("content", article.excerpt);
+            }
+
             const tagClass = TAG_COLORS[article.tag] || TAG_COLORS['DEFAULT'];
             let headerHTML = article.image ? `
                 <div class="h-[40vh] md:h-[60vh] w-full relative">
-                    <img src="${article.image}" class="w-full h-full object-cover grayscale">
+                    <img src="${article.image}" alt="Portada: ${article.title}" class="w-full h-full object-cover grayscale">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent"></div>
                     <div class="absolute bottom-0 left-0 right-0 p-6 md:p-16">
                         <span class="px-3 py-1.5 ${tagClass} rounded-lg text-[10px] font-black uppercase mb-4 inline-block tracking-widest border border-white/10">${article.tag}</span>
@@ -330,6 +361,11 @@
         window.closeArticle = () => {
             modal.classList.add('hidden');
             document.body.style.overflow = 'auto';
+            
+            // RESTAURACIÓN SEO DINÁMICA
+            document.title = originalTitle;
+            document.querySelector('meta[name="description"]').setAttribute("content", originalDescription);
+
             const url = new URL(window.location);
             url.searchParams.delete('article');
             window.history.pushState({}, '', url);
