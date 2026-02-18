@@ -229,7 +229,7 @@
         const wattsInput = document.getElementById('watts');
         const rivalSelect = document.getElementById('rival-selector');
         const wkgDisplay = document.getElementById('wkg-display');
-        const wkgLevelDesc = document.getElementById('wkg-level-desc'); // NUEVO ELEMENTO DE NIVEL
+        const wkgLevelDesc = document.getElementById('wkg-level-desc');
         const analysisContent = document.getElementById('analysis-content');
         const climbSelect = document.getElementById('climb-select');
         const climbSlider = document.getElementById('climb-slider');
@@ -261,7 +261,6 @@
             
             wkgDisplay.innerText = wkg > 0 ? wkg.toFixed(2) : '0.00';
             
-            // --- NUEVO: ETIQUETA DE NIVEL DINÁMICA ---
             let levelTxt = "Ingresa tus datos";
             let levelColor = "text-zinc-600";
             
@@ -276,9 +275,7 @@
             
             wkgLevelDesc.innerText = levelTxt;
             wkgLevelDesc.className = `text-[10px] font-bold uppercase tracking-widest transition-colors duration-500 ${levelColor}`;
-            // ------------------------------------------
 
-            // Dinamismo de color para el número grande W/KG
             let colorClass = 'text-white';
             let shadowClass = '';
             if (wkg >= 5.5) { colorClass = 'text-pink-500'; shadowClass = 'drop-shadow-[0_0_15px_rgba(236,72,153,0.6)]'; }
@@ -290,8 +287,9 @@
             localStorage.setItem('velo_weight', weightInput.value);
             localStorage.setItem('velo_watts', wattsInput.value);
 
-            // Zonas con colores dinámicos de fondo
+            // Zonas con colores dinámicos de fondo y Z1 añadida
             const zones = [
+                { n: 'Z1', name: 'Recuperación', r: w>0 ? `< ${Math.round(w*0.55)}w` : '--', c: '#a1a1aa' },
                 { n: 'Z2', name: 'Resistencia', r: w>0 ? `${Math.round(w*0.56)} - ${Math.round(w*0.75)}w` : '--', c: '#22d3ee' },
                 { n: 'Z3', name: 'Tempo', r: w>0 ? `${Math.round(w*0.76)} - ${Math.round(w*0.90)}w` : '--', c: '#4ade80' },
                 { n: 'Z4', name: 'Umbral FTP', r: w>0 ? `${Math.round(w*0.91)} - ${Math.round(w*1.05)}w` : '--', c: '#eab308' },
@@ -324,7 +322,8 @@
             const wkg = parseFloat(wkgDisplay.innerText);
             
             const userScore = wkg > 0 ? Math.min(95, (wkg / 6.6) * 100) : 0;
-            const userData = userScore > 0 ? [userScore, userScore*0.7, userScore*0.8, userScore*0.9, 60] : [10, 10, 10, 10, 10];
+            // Corrección: Ahora la "Técnica" (último valor) escala dinámicamente con userScore
+            const userData = userScore > 0 ? [userScore, userScore*0.7, userScore*0.8, userScore*0.9, userScore*0.75] : [10, 10, 10, 10, 10];
 
             if (radarChart) radarChart.destroy();
             radarChart = new Chart(document.getElementById('radarChart'), {
