@@ -72,6 +72,13 @@
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-4 gap-8 md:gap-12 mb-20">
         
+        <div class="col-span-1 lg:col-span-4 mt-4 lg:mt-0 mb-4">
+            <div class="relative max-w-md">
+                <input type="text" id="search-input" placeholder="Buscar carrera, corredor o palabra clave..." class="w-full bg-zinc-900/40 border border-zinc-800 text-white text-xs md:text-sm font-mono rounded-xl px-4 py-3 pl-11 focus:outline-none focus:border-cyan-500 transition-colors placeholder:text-zinc-600">
+                <svg class="w-4 h-4 text-zinc-500 absolute left-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
+
         <div class="lg:hidden col-span-1 overflow-x-auto pb-2 custom-scrollbar flex gap-3 relative z-10 py-3 -mx-4 px-4 transition-all">
             <button onclick="filterByTag('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full bg-zinc-800 border border-zinc-700 text-[10px] font-bold uppercase text-white shadow-lg active:scale-95 transition-transform">Todos</button>
             <button onclick="filterByTag('RACE REPORT')" class="whitespace-nowrap px-4 py-1.5 rounded-full bg-cyan-900/30 border border-cyan-500/30 text-[10px] font-bold uppercase text-cyan-500 active:scale-95 transition-transform">Race Report</button>
@@ -118,10 +125,15 @@
     <script src="layout.js?v=5.4"></script>
     
     <script>
+        // Variables globales para los datos y estado de los filtros
         let allNews = [];
+        let currentTag = 'all';
+        let currentSearch = '';
+        
         const feed = document.getElementById('news-feed');
         const modal = document.getElementById('article-modal');
         const modalContent = document.getElementById('modal-content');
+        const searchInput = document.getElementById('search-input');
 
         const TAG_COLORS = {
             'TECH LAB': 'bg-emerald-500 text-black',
@@ -139,7 +151,7 @@
                     const data = await response.json();
                     if (data && data.length > 0) {
                         allNews = data;
-                        renderFeed(allNews);
+                        applyFilters();
                         checkDeepLink();
                     } else {
                         feed.innerHTML = `<p class="text-zinc-500 text-center py-20 border border-zinc-800 rounded-2xl border-dashed">El servidor devolvió una lista vacía.</p>`;
@@ -148,23 +160,62 @@
             } catch (error) {
                 console.error("❌ ERROR:", error);
                 // Datos de prueba por si la API falla mientras desarrollas
-                renderFeed([
+                allNews = [
                     { id: 1, title: "Tiberi asalta Jebel Mobrah y destroza la general", tag: "RACE REPORT", date: "18 FEB 2026", image: "assets/default-news.jpg", excerpt: "Un seísmo sacude el UAE Tour. La inédita ascensión a Jebel Mobrah dicta sentencia basándose en los vatios puros." },
                     { id: 2, title: "El nuevo manillar aero de Remco", tag: "TECH LAB", date: "17 FEB 2026", image: "assets/default-news.jpg", excerpt: "Analizamos en el túnel de viento la última innovación de Specialized para rascar vatios." },
-                    { id: 3, title: "La evolución de Pogačar en 2026", tag: "DATA ANALYSIS", date: "15 FEB 2026", image: "assets/default-news.jpg", excerpt: "Una comparativa de sus números en subidas de 20 minutos respecto a temporadas anteriores." }
-                ]);
+                    { id: 3, title: "La evolución de Pogačar en 2026", tag: "DATA ANALYSIS", date: "15 FEB 2026", image: "assets/default-news.jpg", excerpt: "Una comparativa de sus números en subidas de 20 minutos respecto a temporadas anteriores." },
+                    { id: 4, title: "Análisis de neumáticos tubeless vs tubular", tag: "TECH LAB", date: "12 FEB 2026", image: "assets/default-news.jpg", excerpt: "Los datos de resistencia a la rodadura definitivos que han cambiado las decisiones del pelotón." }
+                ];
+                applyFilters();
             }
         }
 
+        // --- NUEVA LÓGICA DE FILTRADO UNIFICADO ---
+        function applyFilters() {
+            let filtered = allNews;
+
+            // Filtrar por botón (Tag)
+            if (currentTag !== 'all') {
+                filtered = filtered.filter(n => n.tag === currentTag);
+            }
+
+            // Filtrar por texto (Buscador)
+            if (currentSearch.trim() !== '') {
+                const term = currentSearch.toLowerCase();
+                filtered = filtered.filter(n => 
+                    (n.title && n.title.toLowerCase().includes(term)) || 
+                    (n.excerpt && n.excerpt.toLowerCase().includes(term)) ||
+                    (n.tag && n.tag.toLowerCase().includes(term))
+                );
+            }
+
+            renderFeed(filtered);
+        }
+
+        // Listener para la barra de búsqueda (Se ejecuta cada vez que escribes)
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value;
+                applyFilters();
+            });
+        }
+
+        // Actualizamos la función de los botones
+        window.filterByTag = (tag) => {
+            currentTag = tag;
+            applyFilters();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
         function renderFeed(newsList) {
             if (newsList.length === 0) {
-                feed.innerHTML = '<p class="text-zinc-500 py-10">No hay artículos en esta categoría.</p>';
+                feed.innerHTML = '<p class="text-zinc-500 py-10 text-center font-mono text-sm border border-dashed border-zinc-800 rounded-2xl">No se encontraron artículos.</p>';
                 return;
             }
 
             let html = '';
 
-            // 1. ARTÍCULO DESTACADO (Hero - Ocupa todo el ancho del feed)
+            // 1. ARTÍCULO DESTACADO (Hero - Título más pequeño en PC)
             const featured = newsList[0];
             const featuredTagClass = TAG_COLORS[featured.tag] || TAG_COLORS['DEFAULT'];
             
@@ -184,7 +235,7 @@
                                 <span class="w-1 h-1 bg-zinc-700 rounded-full"></span>
                                 <span class="text-cyan-500 font-bold">LATEST FEATURE</span>
                             </p>
-                            <h2 class="text-3xl md:text-5xl font-heading text-white italic uppercase leading-[0.9] mb-4 group-hover:text-cyan-400 transition-colors tracking-tight">
+                            <h2 class="text-3xl md:text-3xl lg:text-4xl font-heading text-white italic uppercase leading-[1.1] mb-4 group-hover:text-cyan-400 transition-colors tracking-tight">
                                 ${featured.title || 'Sin título'}
                             </h2>
                             <p class="text-zinc-400 text-sm md:text-base leading-relaxed line-clamp-3 mb-8">
@@ -282,12 +333,6 @@
             const url = new URL(window.location);
             url.searchParams.delete('article');
             window.history.pushState({}, '', url);
-        };
-
-        window.filterByTag = (tag) => {
-            if (tag === 'all') renderFeed(allNews);
-            else renderFeed(allNews.filter(n => n.tag === tag));
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
         
         function checkDeepLink() {
