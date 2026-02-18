@@ -99,8 +99,8 @@
             <div class="bg-black/50 rounded-xl p-5 border border-zinc-800 mb-6 flex justify-between items-center relative overflow-hidden group">
                 <div class="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/5 to-transparent skew-x-[-20deg] translate-x-10 group-hover:translate-x-5 transition-transform duration-700"></div>
                 <div>
-                    <p class="text-[9px] font-black uppercase text-zinc-400 tracking-widest mb-1">Ratio de Rendimiento</p>
-                    <p class="text-[10px] text-zinc-600 italic">Métrica clave escaladores</p>
+                    <p class="text-[9px] font-black uppercase text-zinc-400 tracking-widest mb-1.5">Ratio de Rendimiento</p>
+                    <p id="wkg-level-desc" class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest transition-colors duration-500">Ingresa tus datos</p>
                 </div>
                 <div class="text-right z-10 flex items-baseline gap-1">
                     <p class="text-4xl md:text-5xl font-heading italic tracking-tighter transition-colors duration-500" id="wkg-display">0.00</p>
@@ -229,6 +229,7 @@
         const wattsInput = document.getElementById('watts');
         const rivalSelect = document.getElementById('rival-selector');
         const wkgDisplay = document.getElementById('wkg-display');
+        const wkgLevelDesc = document.getElementById('wkg-level-desc'); // NUEVO ELEMENTO DE NIVEL
         const analysisContent = document.getElementById('analysis-content');
         const climbSelect = document.getElementById('climb-select');
         const climbSlider = document.getElementById('climb-slider');
@@ -245,7 +246,6 @@
         function init() {
             rivalSelect.innerHTML = Object.entries(PRO_STATS).map(([k,v]) => `<option value="${k}">${v.name} (${v.team})</option>`).join('');
             
-            // Si el usuario no tiene datos guardados, usamos los valores por defecto del HTML (70kg, 250w)
             if(localStorage.getItem('velo_weight')) weightInput.value = localStorage.getItem('velo_weight');
             if(localStorage.getItem('velo_watts')) wattsInput.value = localStorage.getItem('velo_watts');
             
@@ -261,7 +261,24 @@
             
             wkgDisplay.innerText = wkg > 0 ? wkg.toFixed(2) : '0.00';
             
-            // Dinamismo de color para el W/KG principal
+            // --- NUEVO: ETIQUETA DE NIVEL DINÁMICA ---
+            let levelTxt = "Ingresa tus datos";
+            let levelColor = "text-zinc-600";
+            
+            if (wkg > 0) {
+                if (wkg < 2.0) { levelTxt = "Nivel: Principiante 🚲"; levelColor = "text-zinc-400"; }
+                else if (wkg < 3.0) { levelTxt = "Nivel: Cicloturista 🚴"; levelColor = "text-cyan-400"; }
+                else if (wkg < 4.0) { levelTxt = "Nivel: Amateur Avanzado 🥉"; levelColor = "text-green-400"; }
+                else if (wkg < 5.0) { levelTxt = "Nivel: Élite Nacional 🥈"; levelColor = "text-yellow-400"; }
+                else if (wkg < 5.8) { levelTxt = "Nivel: Pro Continental 🥇"; levelColor = "text-orange-400"; }
+                else { levelTxt = "Nivel: World Tour 👽"; levelColor = "text-pink-500 drop-shadow-[0_0_5px_rgba(236,72,153,0.8)]"; }
+            }
+            
+            wkgLevelDesc.innerText = levelTxt;
+            wkgLevelDesc.className = `text-[10px] font-bold uppercase tracking-widest transition-colors duration-500 ${levelColor}`;
+            // ------------------------------------------
+
+            // Dinamismo de color para el número grande W/KG
             let colorClass = 'text-white';
             let shadowClass = '';
             if (wkg >= 5.5) { colorClass = 'text-pink-500'; shadowClass = 'drop-shadow-[0_0_15px_rgba(236,72,153,0.6)]'; }
@@ -306,7 +323,6 @@
             const rival = PRO_STATS[rivalSelect.value];
             const wkg = parseFloat(wkgDisplay.innerText);
             
-            // Lógica para que el radar del usuario no esté vacío si no pone datos
             const userScore = wkg > 0 ? Math.min(95, (wkg / 6.6) * 100) : 0;
             const userData = userScore > 0 ? [userScore, userScore*0.7, userScore*0.8, userScore*0.9, 60] : [10, 10, 10, 10, 10];
 
@@ -361,12 +377,11 @@
             const req = (c.factor / minutes).toFixed(2);
             climbWkgDisplay.innerText = `${req} W/kg`;
             climbWkgDisplay.style.color = c.color;
-            climbWkgDisplay.style.textShadow = `0 0 15px ${c.color}60`; // Glow effect
+            climbWkgDisplay.style.textShadow = `0 0 15px ${c.color}60`;
             
             const userWkg = parseFloat(wkgDisplay.innerText);
             const userTime = userWkg > 0 ? (c.factor / userWkg).toFixed(1) : 0;
             
-            // Diferencia en tiempo real
             if (userWkg <= 0) {
                 wkgDiffDisplay.innerText = 'Ingresa tus datos arriba';
                 wkgDiffDisplay.className = 'text-[9px] font-bold text-zinc-500 mt-1 uppercase tracking-widest';
@@ -389,7 +404,7 @@
                     datasets: [{ 
                         data: [c.record, minutes, userTime > 0 ? userTime : null], 
                         backgroundColor: [c.color, '#ffffff', '#22d3ee'], 
-                        borderRadius: 6, // Barras más redondeadas
+                        borderRadius: 6,
                         barThickness: 20 
                     }] 
                 },
@@ -418,7 +433,6 @@
             const req = (c.factor / minutes).toFixed(2);
             climbWkgDisplay.innerText = `${req} W/kg`;
             
-            // Actualización rápida de la diferencia mientras deslizas
             const userWkg = parseFloat(wkgDisplay.innerText);
             if(userWkg > 0) {
                 const diff = (userWkg - req).toFixed(2);
