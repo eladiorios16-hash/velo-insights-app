@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v6.2 (Cloud Optimized & Fixed Header) */
+/* VELO INSIGHTS - LAYOUT ENGINE v6.3 (Grid Background & Solid Nav) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -14,6 +14,22 @@ document.addEventListener("DOMContentLoaded", () => {
 function injectGlobalStyles() {
     const style = document.createElement('style');
     style.innerHTML = `
+        /* --- REJILLA DE FONDO (TECH GRID) --- */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -10; /* Siempre al fondo del todo */
+            pointer-events: none; /* Para que no interfiera con los clics */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px; /* Tamaño de los cuadros de la rejilla */
+            /* Efecto difuminado: hace que la rejilla sea más visible en el centro y se funda hacia los bordes */
+            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 80%);
+            mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 80%);
+        }
+
         /* Estilos de Navegación */
         .nav-link { 
             font-size: 11px; 
@@ -37,20 +53,20 @@ function injectGlobalStyles() {
             background: #22d3ee; box-shadow: 0 0 10px #22d3ee;
         }
 
-        /* --- DISEÑO CÁPSULA --- */
+        /* --- DISEÑO CÁPSULA MENU (Cristal Ahumado Fuerte) --- */
         .nav-capsule {
-            background: rgba(18, 18, 20, 0.85); 
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            border-top: 1px solid rgba(255, 255, 255, 0.15); 
+            background: rgba(15, 15, 17, 0.95); /* Más opaco para tapar la rejilla */
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); /* Blur muy fuerte */
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-top: 1px solid rgba(255, 255, 255, 0.2); 
             border-radius: 9999px; 
             padding: 0.75rem 2rem;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
             transition: all 0.3s ease;
         }
         .nav-capsule:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            border-color: rgba(34, 211, 238, 0.4);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(34, 211, 238, 0.1);
             transform: translateY(-1px);
         }
 
@@ -59,32 +75,33 @@ function injectGlobalStyles() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 10px; }
         .search-modal-active { overflow: hidden; }
         
-        /* MENU MOVIL */
+        /* MENU MOVIL (Cristal Ahumado) */
         #main-menu { 
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; 
             transform-origin: top right; 
-            background: rgba(20, 20, 23, 0.95);
-            backdrop-filter: blur(20px);
+            background: rgba(15, 15, 18, 0.98);
+            backdrop-filter: blur(24px);
             border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
         }
         .menu-hidden { transform: scale(0.95) translateY(-10px); opacity: 0; pointer-events: none; }
         .menu-visible { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
 
-        /* NAVBAR SCROLL - COMPORTAMIENTO FIJO */
+        /* NAVBAR SCROLL - COMPORTAMIENTO FIJO Y FONDO SÓLIDO */
         #main-nav { 
-            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
         }
         #main-nav.nav-hidden { transform: translateY(-100%); }
         
-        /* Estado cuando hacemos scroll (se oscurece el fondo) */
+        /* Estado cuando hacemos scroll (Se vuelve una barra oscura contundente) */
         #main-nav.scrolled {
-            background: rgba(5, 5, 5, 0.9);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 0.8rem;
+            padding-bottom: 0.8rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
     `;
     document.head.appendChild(style);
@@ -99,7 +116,6 @@ function renderNavbar() {
     
     const nav = document.createElement('nav');
     nav.id = "main-nav";
-    // Clases ajustadas: top-0 (pegado arriba), py-6 (espaciado inicial)
     nav.className = "fixed top-0 left-0 w-full z-[100] px-4 md:px-6 py-6 flex items-center justify-center transition-all duration-300";
     
     nav.innerHTML = `
@@ -109,7 +125,7 @@ function renderNavbar() {
                 <span class="font-black italic text-white uppercase tracking-tighter text-2xl md:text-3xl ml-1 drop-shadow-lg">VELO<span class="text-cyan-500">INSIGHTS</span></span>
             </a>
 
-            <button onclick="toggleMenu()" class="md:hidden p-2 text-zinc-400 hover:text-white active:scale-95 transition-transform bg-zinc-900/80 backdrop-blur-md rounded-full border border-zinc-800 shadow-lg group">
+            <button onclick="toggleMenu()" class="md:hidden p-2 text-zinc-400 hover:text-white active:scale-95 transition-transform bg-zinc-900/90 backdrop-blur-xl rounded-full border border-zinc-700 shadow-[0_5px_15px_rgba(0,0,0,0.8)] group">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
                 </svg>
@@ -125,7 +141,7 @@ function renderNavbar() {
             </div>
 
             <div class="hidden md:flex items-center">
-                <button onclick="toggleSearch()" class="p-3 text-zinc-400 hover:text-cyan-400 bg-black/20 hover:bg-zinc-900/80 rounded-full transition-all border border-transparent hover:border-zinc-700 shadow-sm hover:shadow-cyan-500/20">
+                <button onclick="toggleSearch()" class="p-3 text-zinc-400 hover:text-cyan-400 bg-black/40 hover:bg-zinc-800 rounded-full transition-all border border-zinc-800 hover:border-cyan-500/50 shadow-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </button>
             </div>
@@ -147,7 +163,7 @@ function initNavbarScrollBehavior() {
             toggleMenu();
         }
 
-        // Lógica de "Scrolled" para añadir fondo cuando bajamos
+        // Aplica el fondo sólido/difuminado casi de inmediato al empezar a bajar
         if (scrollTop > 20) {
             nav.classList.add('scrolled');
         } else {
@@ -162,7 +178,6 @@ function initNavbarScrollBehavior() {
 
         if (Math.abs(lastScrollTop - scrollTop) <= delta) return;
 
-        // Ocultar al bajar, mostrar al subir
         if (scrollTop > lastScrollTop) {
             nav.classList.add('nav-hidden');
         } else {
@@ -239,14 +254,14 @@ function injectSearchModal() {
     const modal = document.createElement('div');
     modal.id = "search-modal";
     
-    modal.className = "fixed inset-0 z-[300] bg-black/20 backdrop-blur-sm hidden flex items-start justify-center pt-24 px-4 md:pt-32 md:px-6 transition-all duration-300";
+    modal.className = "fixed inset-0 z-[300] bg-black/50 backdrop-blur-md hidden flex items-start justify-center pt-24 px-4 md:pt-32 md:px-6 transition-all duration-300";
     
     modal.innerHTML = `
-        <div class="w-full max-w-2xl bg-[#09090b]/80 border border-white/10 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl transform transition-all scale-95 opacity-0" id="search-container">
-            <div class="flex items-center justify-between border-b border-zinc-800/50 p-4">
-                <svg class="w-5 h-5 text-zinc-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" id="search-input-global" placeholder="BUSCAR..." 
-                       class="w-full bg-transparent px-4 text-base md:text-lg text-white outline-none font-bold tracking-wide placeholder-zinc-600 h-10">
+        <div class="w-full max-w-2xl bg-[#09090b]/90 border border-zinc-700/50 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl transform transition-all scale-95 opacity-0" id="search-container">
+            <div class="flex items-center justify-between border-b border-zinc-800/80 p-4">
+                <svg class="w-5 h-5 text-cyan-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" id="search-input-global" placeholder="BUSCAR CARRERAS, NOTICIAS, TÉRMINOS..." 
+                       class="w-full bg-transparent px-4 text-sm md:text-base text-white outline-none font-bold tracking-wide placeholder-zinc-600 h-10">
                 <button onclick="toggleSearch()" class="text-zinc-500 hover:text-white p-2 rounded-full hover:bg-zinc-800 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -326,9 +341,9 @@ async function performSearch(term) {
 
     container.innerHTML = results.map(r => {
         return `
-            <a href="${r.link}" class="flex justify-between items-center p-3 hover:bg-white/5 rounded-xl group transition-colors">
+            <a href="${r.link}" class="flex justify-between items-center p-3 hover:bg-zinc-800/50 rounded-xl group transition-colors border border-transparent hover:border-zinc-700">
                 <div class="flex items-center gap-3 overflow-hidden">
-                    <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-zinc-700 transition-colors">
+                    <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-cyan-400 group-hover:border-cyan-500/30 transition-colors">
                         ${r.type === 'NOTICIA' ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>' : 
                           r.type === 'CARRERA' ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-8a2 2 0 012-2h14a2 2 0 012 2v8M3 13V6a2 2 0 012-2h14a2 2 0 012 2v7m-2 0h2m-2-4h2"/></svg>' : 
                           '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>'}
@@ -338,7 +353,7 @@ async function performSearch(term) {
                         <p class="text-[9px] text-zinc-500 font-bold uppercase mt-0.5">${r.type} • ${r.subtitle}</p>
                     </div>
                 </div>
-                <svg class="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <svg class="w-4 h-4 text-zinc-600 group-hover:text-cyan-400 transition-colors transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
         `;
     }).join('');
@@ -390,7 +405,7 @@ function handleIncomingLinks() {
 
 function renderFooter() {
     const footer = document.createElement('footer');
-    footer.className = "py-10 md:py-20 border-t border-zinc-900 bg-black px-6 text-center"; 
+    footer.className = "py-10 md:py-20 border-t border-zinc-900 bg-black/80 backdrop-blur-md px-6 text-center mt-20 relative z-10"; 
     footer.innerHTML = `<p class="text-zinc-700 text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-loose">© 2026 VELO INSIGHTS • PERFORMANCE LAB<br><span class="opacity-30 tracking-[0.3em] md:tracking-[0.5em]">DATA DRIVEN CYCLING</span></p>`;
     document.body.appendChild(footer);
 }
