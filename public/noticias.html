@@ -356,6 +356,9 @@
             
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
+            
+            // LÍNEA AÑADIDA: Resetea el scroll del modal al abrirlo
+            document.querySelector('.modal-scroll').scrollTop = 0;
         };
 
         window.closeArticle = () => {
