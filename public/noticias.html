@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-    <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
@@ -62,6 +60,8 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="assets/main.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         /* ESTILOS BASE */
@@ -158,15 +158,15 @@
     <script>
         // Variables globales para los datos y estado de los filtros
         let allNews = [];
-        let currentFilteredNews = []; // NUEVO: Guarda la lista filtrada temporal
+        let currentFilteredNews = []; 
         let currentTag = 'all';
         let currentSearch = '';
         
         // NUEVAS VARIABLES PARA PAGINACIÓN
-        let itemsPerLoad = 5; // Cuántos artículos cargar por clic (1 destacado + 4 secundarios)
-        let currentDisplayed = itemsPerLoad; // Cuántos se están mostrando actualmente
+        let itemsPerLoad = 5; 
+        let currentDisplayed = itemsPerLoad; 
         
-        // Guardamos las etiquetas SEO originales para restaurarlas al cerrar el modal
+        // Guardamos las etiquetas SEO originales
         const originalTitle = document.title;
         const originalDescription = document.querySelector('meta[name="description"]').getAttribute("content");
 
@@ -184,6 +184,89 @@
             'DEFAULT': 'bg-zinc-800 text-white'
         };
 
+        // ==========================================
+        // 1. FUNCIÓN PARA DIBUJAR EL GRÁFICO (NUEVO)
+        // ==========================================
+        window.initPowerChart = () => {
+            const ctx = document.getElementById('powerChart');
+            if (!ctx) return; // Si el artículo no tiene el <canvas>, no hace nada
+
+            // Destruimos el gráfico si ya existía para que no se superpongan
+            let existingChart = Chart.getChart(ctx);
+            if (existingChart) existingChart.destroy();
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['-5 km', '-4 km', '-3 km', '-2 km', '-1 km', 'Meta'],
+                    datasets: [
+                        {
+                            label: 'A. Tiberi (W/kg)',
+                            data: [6.1, 6.2, 6.5, 6.4, 6.6, 6.8],
+                            borderColor: '#ef4444', 
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#050505',
+                            pointBorderColor: '#ef4444',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.4, 
+                            fill: true
+                        },
+                        {
+                            label: 'R. Evenepoel (W/kg)',
+                            data: [6.1, 6.1, 5.8, 5.4, 5.0, 4.4],
+                            borderColor: '#ffffff', 
+                            borderWidth: 2,
+                            borderDash: [5, 5], 
+                            pointBackgroundColor: '#050505',
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false, 
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#a1a1aa', font: { family: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', size: 10 } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#e4e4e7',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                            boxPadding: 4
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 4.0, max: 7.0,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#71717a', font: { family: 'monospace', size: 10 }, callback: function(value) { return value + ' W/kg'; } }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#71717a', font: { family: 'monospace', size: 10, weight: 'bold' } }
+                        }
+                    }
+                }
+            });
+        };
+        // ==========================================
+
+
         async function fetchNews() {
             try {
                 const response = await fetch('/api/news');
@@ -199,7 +282,7 @@
                 }
             } catch (error) {
                 console.error("❌ ERROR:", error);
-                // Datos de prueba (He añadido un par más para probar el botón "Cargar más")
+                // Datos de prueba temporales
                 allNews = [
                     { id: 1, title: "Tiberi asalta Jebel Mobrah y destroza la general", tag: "RACE REPORT", date: "18 FEB 2026", image: "assets/default-news.jpg", excerpt: "Un seísmo sacude el UAE Tour. La inédita ascensión a Jebel Mobrah dicta sentencia basándose en los vatios puros." },
                     { id: 2, title: "El nuevo manillar aero de Remco", tag: "TECH LAB", date: "17 FEB 2026", image: "assets/default-news.jpg", excerpt: "Analizamos en el túnel de viento la última innovación de Specialized para rascar vatios." },
@@ -226,8 +309,8 @@
                 );
             }
             
-            currentFilteredNews = filtered; // Guardamos la lista actual
-            currentDisplayed = itemsPerLoad; // Reseteamos la vista a los primeros 5
+            currentFilteredNews = filtered; 
+            currentDisplayed = itemsPerLoad; 
             renderFeed();
         }
 
@@ -244,7 +327,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        // NUEVA FUNCIÓN: Suma más artículos y vuelve a renderizar
         window.loadMore = () => {
             currentDisplayed += itemsPerLoad;
             renderFeed();
@@ -259,11 +341,7 @@
             }
 
             let html = '';
-
-            // Cortamos el array original para mostrar solo los que corresponden
             const itemsToRender = newsList.slice(0, currentDisplayed);
-
-            // 1. ARTÍCULO DESTACADO
             const featured = itemsToRender[0];
             const featuredTagClass = TAG_COLORS[featured.tag] || TAG_COLORS['DEFAULT'];
             
@@ -297,7 +375,6 @@
                 </article>
             `;
 
-            // 2. GRID SECUNDARIO
             if (itemsToRender.length > 1) {
                 html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">`;
                 for (let i = 1; i < itemsToRender.length; i++) {
@@ -336,7 +413,6 @@
                 html += `</div>`;
             }
 
-            // 3. RENDERIZAR BOTÓN "CARGAR MÁS" SI QUEDAN ARTÍCULOS
             if (currentDisplayed < newsList.length) {
                 html += `
                     <div class="flex justify-center mt-4 mb-12">
@@ -355,7 +431,6 @@
             if(!article) return;
             window.history.pushState({ articleId: id }, '', `?article=${id}`);
 
-            // ACTUALIZACIÓN SEO DINÁMICA
             document.title = `${article.title} | VELO INSIGHTS`;
             if (article.excerpt) {
                 document.querySelector('meta[name="description"]').setAttribute("content", article.excerpt);
@@ -390,16 +465,23 @@
             
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
-            
-            // Resetea el scroll del modal al abrirlo
             document.querySelector('.modal-scroll').scrollTop = 0;
+
+            // ==========================================
+            // 2. DISPARAR LA GRÁFICA AL ABRIR EL MODAL
+            // ==========================================
+            setTimeout(() => {
+                if (typeof window.initPowerChart === 'function') {
+                    window.initPowerChart();
+                }
+            }, 100); 
+            // ==========================================
         };
 
         window.closeArticle = () => {
             modal.classList.add('hidden');
             document.body.style.overflow = 'auto';
             
-            // RESTAURACIÓN SEO DINÁMICA
             document.title = originalTitle;
             document.querySelector('meta[name="description"]').setAttribute("content", originalDescription);
 
