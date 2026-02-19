@@ -262,6 +262,17 @@
                 const isLive = r.dateISO === today;
                 const statusBadge = isLive ? `<span class="bg-green-500 text-black text-[9px] font-black px-2 py-0.5 rounded animate-pulse ml-2">EN VIVO</span>` : '';
 
+                // ETIQUETA NUEVA DEL GANADOR GENERAL DE LA CARRERA
+                const raceWinnerBadge = r.winner ? `
+                    <div class="mt-2 flex items-center gap-1.5">
+                        <span class="bg-amber-500/20 border border-amber-500/40 text-amber-500 text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest flex items-center gap-1">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M21 5h-4M19 3v4M9 11v3m-3 4h12M12 3v8m0 0a4 4 0 01-4-4m4 4a4 4 0 004-4"></path></svg>
+                            GANADOR
+                        </span>
+                        <span class="text-xs font-black text-white uppercase tracking-wide">${r.winner}</span>
+                    </div>
+                ` : '';
+
                 return `
                 <div id="card-${i}" class="race-card bg-zinc-900/40 border border-zinc-800 rounded-2xl overflow-hidden mb-4">
                     <div class="p-5 flex items-center justify-between cursor-pointer" onclick="toggleDetails(${i})">
@@ -279,6 +290,7 @@
                                 <p class="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5 font-bold">
                                     ${stages.length > 0 ? `${stages.length} Etapas` : 'Clásica / 1 Día'}
                                 </p>
+                                ${raceWinnerBadge}
                             </div>
                         </div>
                         <div class="w-8 h-8 rounded-full border border-zinc-700 flex items-center justify-center text-zinc-400 transition-all icon-toggle" id="icon-${i}">
