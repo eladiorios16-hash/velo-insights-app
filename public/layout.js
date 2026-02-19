@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v6.3 (Grid Background & Solid Nav) */
+/* VELO INSIGHTS - LAYOUT ENGINE v6.4 (Dot Grid Background & Solid Nav) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -14,20 +14,21 @@ document.addEventListener("DOMContentLoaded", () => {
 function injectGlobalStyles() {
     const style = document.createElement('style');
     style.innerHTML = `
-        /* --- REJILLA DE FONDO (TECH GRID) --- */
+        /* --- REJILLA DE PUNTOS (DOT GRID) --- */
         body::before {
             content: '';
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: -10; /* Siempre al fondo del todo */
             pointer-events: none; /* Para que no interfiera con los clics */
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px; /* Tamaño de los cuadros de la rejilla */
-            /* Efecto difuminado: hace que la rejilla sea más visible en el centro y se funda hacia los bordes */
-            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 80%);
-            mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 80%);
+            
+            /* Genera puntos blancos sutiles de 1.5px espaciados cada 32px */
+            background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px);
+            background-size: 32px 32px; 
+            
+            /* Efecto difuminado: los puntos son visibles en el centro y se desvanecen hacia los bordes */
+            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 80%);
+            mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 80%);
         }
 
         /* Estilos de Navegación */
@@ -55,8 +56,8 @@ function injectGlobalStyles() {
 
         /* --- DISEÑO CÁPSULA MENU (Cristal Ahumado Fuerte) --- */
         .nav-capsule {
-            background: rgba(15, 15, 17, 0.95); /* Más opaco para tapar la rejilla */
-            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); /* Blur muy fuerte */
+            background: rgba(15, 15, 17, 0.95);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.1); 
             border-top: 1px solid rgba(255, 255, 255, 0.2); 
             border-radius: 9999px; 
