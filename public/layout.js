@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v6.4 (Dot Grid Background & Solid Nav) */
+/* VELO INSIGHTS - LAYOUT ENGINE v6.5 (Dot Grid + Lightbox Global) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderMenuModal(); 
     renderFooter();       
     injectSearchModal();  
+    injectLightbox();     // <-- NUEVO: Inyectamos el visor de imágenes
     initScrollReveal();   
     handleIncomingLinks();
     initNavbarScrollBehavior();
@@ -19,19 +20,14 @@ function injectGlobalStyles() {
             content: '';
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: -10; /* Siempre al fondo del todo */
-            pointer-events: none; /* Para que no interfiera con los clics */
-            
-            /* Genera puntos blancos sutiles de 1.5px espaciados cada 32px */
+            z-index: -10; 
+            pointer-events: none; 
             background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px);
             background-size: 32px 32px; 
-            
-            /* Efecto difuminado: los puntos son visibles en el centro y se desvanecen hacia los bordes */
             -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 80%);
             mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 80%);
         }
 
-        /* Estilos de Navegación */
         .nav-link { 
             font-size: 11px; 
             font-weight: 800; 
@@ -54,7 +50,6 @@ function injectGlobalStyles() {
             background: #22d3ee; box-shadow: 0 0 10px #22d3ee;
         }
 
-        /* --- DISEÑO CÁPSULA MENU (Cristal Ahumado Fuerte) --- */
         .nav-capsule {
             background: rgba(15, 15, 17, 0.95);
             backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
@@ -71,12 +66,10 @@ function injectGlobalStyles() {
             transform: translateY(-1px);
         }
 
-        /* Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 10px; }
         .search-modal-active { overflow: hidden; }
         
-        /* MENU MOVIL (Cristal Ahumado) */
         #main-menu { 
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; 
             transform-origin: top right; 
@@ -88,13 +81,11 @@ function injectGlobalStyles() {
         .menu-hidden { transform: scale(0.95) translateY(-10px); opacity: 0; pointer-events: none; }
         .menu-visible { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
 
-        /* NAVBAR SCROLL - COMPORTAMIENTO FIJO Y FONDO SÓLIDO */
         #main-nav { 
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
         }
         #main-nav.nav-hidden { transform: translateY(-100%); }
         
-        /* Estado cuando hacemos scroll (Se vuelve una barra oscura contundente) */
         #main-nav.scrolled {
             background: rgba(5, 5, 5, 0.95);
             backdrop-filter: blur(20px);
@@ -164,7 +155,6 @@ function initNavbarScrollBehavior() {
             toggleMenu();
         }
 
-        // Aplica el fondo sólido/difuminado casi de inmediato al empezar a bajar
         if (scrollTop > 20) {
             nav.classList.add('scrolled');
         } else {
@@ -428,3 +418,67 @@ function initScrollReveal() {
         observer.observe(el);
     });
 }
+
+// ==========================================
+// NUEVO: SISTEMA DE VISOR DE IMÁGENES (LIGHTBOX)
+// ==========================================
+function injectLightbox() {
+    if(document.getElementById('vi-lightbox')) return;
+    
+    const lightbox = document.createElement('div');
+    lightbox.id = 'vi-lightbox';
+    // z-[500] asegura que se ponga por encima de cualquier otro elemento (menú incluido)
+    lightbox.className = 'fixed inset-0 z-[500] bg-[#050505]/98 backdrop-blur-2xl hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300';
+    
+    lightbox.innerHTML = `
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 p-3 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full backdrop-blur-md transition-all z-[510] shadow-2xl">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+        <div class="relative w-full h-full p-2 md:p-12 flex items-center justify-center overflow-auto" onclick="if(event.target === this) closeLightbox()">
+            <img id="vi-lightbox-img" src="" class="max-w-[95%] max-h-[95%] object-contain transform transition-transform duration-300 scale-95 shadow-2xl rounded-lg bg-white" alt="Vista ampliada">
+        </div>
+        <div class="absolute bottom-6 md:bottom-10 text-zinc-500 text-[9px] md:text-xs font-mono uppercase tracking-widest pointer-events-none text-center">
+            Gira el móvil para ver más grande
+        </div>
+    `;
+    document.body.appendChild(lightbox);
+
+    // Permitir cerrar con la tecla Escape
+    document.addEventListener('keydown', (e) => { 
+        if(e.key === 'Escape' && !lightbox.classList.contains('hidden')) closeLightbox(); 
+    });
+}
+
+window.openLightbox = function(src) {
+    const lb = document.getElementById('vi-lightbox');
+    const img = document.getElementById('vi-lightbox-img');
+    img.src = src;
+    lb.classList.remove('hidden');
+    lb.classList.add('flex');
+    document.body.style.overflow = 'hidden'; // Evita que se pueda hacer scroll en la web de fondo
+    
+    // Pequeño retraso para que la animación CSS se ejecute suavemente
+    setTimeout(() => {
+        lb.classList.remove('opacity-0');
+        lb.classList.add('opacity-100');
+        img.classList.remove('scale-95');
+        img.classList.add('scale-100');
+    }, 10);
+};
+
+window.closeLightbox = function() {
+    const lb = document.getElementById('vi-lightbox');
+    const img = document.getElementById('vi-lightbox-img');
+    
+    lb.classList.remove('opacity-100');
+    lb.classList.add('opacity-0');
+    img.classList.remove('scale-100');
+    img.classList.add('scale-95');
+    
+    setTimeout(() => {
+        lb.classList.add('hidden');
+        lb.classList.remove('flex');
+        img.src = ''; // Limpiamos la imagen para que no haga un flash raro en la siguiente
+        document.body.style.overflow = ''; // Restauramos el scroll normal
+    }, 300);
+};
