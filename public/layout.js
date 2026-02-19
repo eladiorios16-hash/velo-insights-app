@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v6.1 (Cloud Optimized) */
+/* VELO INSIGHTS - LAYOUT ENGINE v6.2 (Cloud Optimized & Fixed Header) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -71,9 +71,21 @@ function injectGlobalStyles() {
         .menu-hidden { transform: scale(0.95) translateY(-10px); opacity: 0; pointer-events: none; }
         .menu-visible { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
 
-        /* NAVBAR SCROLL */
-        #main-nav { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        #main-nav.nav-hidden { transform: translateY(-150%); }
+        /* NAVBAR SCROLL - COMPORTAMIENTO FIJO */
+        #main-nav { 
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease;
+        }
+        #main-nav.nav-hidden { transform: translateY(-100%); }
+        
+        /* Estado cuando hacemos scroll (se oscurece el fondo) */
+        #main-nav.scrolled {
+            background: rgba(5, 5, 5, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
     `;
     document.head.appendChild(style);
 }
@@ -87,7 +99,8 @@ function renderNavbar() {
     
     const nav = document.createElement('nav');
     nav.id = "main-nav";
-    nav.className = "fixed top-6 left-0 w-full z-[100] px-4 md:px-6 flex items-center justify-center transition-transform duration-300";
+    // Clases ajustadas: top-0 (pegado arriba), py-6 (espaciado inicial)
+    nav.className = "fixed top-0 left-0 w-full z-[100] px-4 md:px-6 py-6 flex items-center justify-center transition-all duration-300";
     
     nav.innerHTML = `
         <div class="w-full max-w-7xl mx-auto flex justify-between items-center h-full relative">
@@ -134,6 +147,13 @@ function initNavbarScrollBehavior() {
             toggleMenu();
         }
 
+        // Lógica de "Scrolled" para añadir fondo cuando bajamos
+        if (scrollTop > 20) {
+            nav.classList.add('scrolled');
+        } else {
+            nav.classList.remove('scrolled');
+        }
+
         if (scrollTop <= 0) {
             nav.classList.remove('nav-hidden');
             lastScrollTop = 0;
@@ -142,6 +162,7 @@ function initNavbarScrollBehavior() {
 
         if (Math.abs(lastScrollTop - scrollTop) <= delta) return;
 
+        // Ocultar al bajar, mostrar al subir
         if (scrollTop > lastScrollTop) {
             nav.classList.add('nav-hidden');
         } else {
@@ -261,7 +282,6 @@ function toggleSearch() {
     }
 }
 
-// --- FUNCIÓN DE BÚSQUEDA CORREGIDA PARA LA NUBE ---
 async function performSearch(term) {
     const container = document.getElementById('search-results');
     if (!term || term.length < 2) { container.innerHTML = ''; return; }
@@ -271,7 +291,6 @@ async function performSearch(term) {
     let results = [];
     const lowerTerm = term.toLowerCase();
 
-    // Determinamos la URL base automáticamente (Local o Railway)
     const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
                      ? 'http://localhost:3000' 
                      : '';
