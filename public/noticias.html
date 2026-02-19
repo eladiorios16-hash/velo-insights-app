@@ -156,8 +156,13 @@
     <script>
         // Variables globales para los datos y estado de los filtros
         let allNews = [];
+        let currentFilteredNews = []; // NUEVO: Guarda la lista filtrada temporal
         let currentTag = 'all';
         let currentSearch = '';
+        
+        // NUEVAS VARIABLES PARA PAGINACIÓN
+        let itemsPerLoad = 5; // Cuántos artículos cargar por clic (1 destacado + 4 secundarios)
+        let currentDisplayed = itemsPerLoad; // Cuántos se están mostrando actualmente
         
         // Guardamos las etiquetas SEO originales para restaurarlas al cerrar el modal
         const originalTitle = document.title;
@@ -192,12 +197,14 @@
                 }
             } catch (error) {
                 console.error("❌ ERROR:", error);
-                // Datos de prueba
+                // Datos de prueba (He añadido un par más para probar el botón "Cargar más")
                 allNews = [
                     { id: 1, title: "Tiberi asalta Jebel Mobrah y destroza la general", tag: "RACE REPORT", date: "18 FEB 2026", image: "assets/default-news.jpg", excerpt: "Un seísmo sacude el UAE Tour. La inédita ascensión a Jebel Mobrah dicta sentencia basándose en los vatios puros." },
                     { id: 2, title: "El nuevo manillar aero de Remco", tag: "TECH LAB", date: "17 FEB 2026", image: "assets/default-news.jpg", excerpt: "Analizamos en el túnel de viento la última innovación de Specialized para rascar vatios." },
                     { id: 3, title: "La evolución de Pogačar en 2026", tag: "DATA ANALYSIS", date: "15 FEB 2026", image: "assets/default-news.jpg", excerpt: "Una comparativa de sus números en subidas de 20 minutos respecto a temporadas anteriores." },
-                    { id: 4, title: "Análisis de neumáticos tubeless vs tubular", tag: "TECH LAB", date: "12 FEB 2026", image: "assets/default-news.jpg", excerpt: "Los datos de resistencia a la rodadura definitivos que han cambiado las decisiones del pelotón." }
+                    { id: 4, title: "Análisis de neumáticos tubeless vs tubular", tag: "TECH LAB", date: "12 FEB 2026", image: "assets/default-news.jpg", excerpt: "Los datos de resistencia a la rodadura definitivos que han cambiado las decisiones del pelotón." },
+                    { id: 5, title: "El Algoritmo del Pavé: Previa Omloop", tag: "DATA ANALYSIS", date: "19 FEB 2026", image: "assets/default-news.jpg", excerpt: "Por qué los vatios absolutos y la resistencia a la fatiga serán la clave en el Muur van Geraardsbergen." },
+                    { id: 6, title: "Velocidad Terminal: Sprint a 74 km/h en Dubai", tag: "RACE REPORT", date: "19 FEB 2026", image: "assets/default-news.jpg", excerpt: "Desglosamos los vatios máximos y la cadencia de los velocistas en un final decidido por milímetros." }
                 ];
                 applyFilters();
             }
@@ -216,7 +223,10 @@
                     (n.tag && n.tag.toLowerCase().includes(term))
                 );
             }
-            renderFeed(filtered);
+            
+            currentFilteredNews = filtered; // Guardamos la lista actual
+            currentDisplayed = itemsPerLoad; // Reseteamos la vista a los primeros 5
+            renderFeed();
         }
 
         if (searchInput) {
@@ -232,7 +242,15 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        function renderFeed(newsList) {
+        // NUEVA FUNCIÓN: Suma más artículos y vuelve a renderizar
+        window.loadMore = () => {
+            currentDisplayed += itemsPerLoad;
+            renderFeed();
+        };
+
+        function renderFeed() {
+            const newsList = currentFilteredNews;
+
             if (newsList.length === 0) {
                 feed.innerHTML = '<p class="text-zinc-500 py-10 text-center font-mono text-sm border border-dashed border-zinc-800 rounded-2xl">No se encontraron artículos.</p>';
                 return;
@@ -240,8 +258,11 @@
 
             let html = '';
 
+            // Cortamos el array original para mostrar solo los que corresponden
+            const itemsToRender = newsList.slice(0, currentDisplayed);
+
             // 1. ARTÍCULO DESTACADO
-            const featured = newsList[0];
+            const featured = itemsToRender[0];
             const featuredTagClass = TAG_COLORS[featured.tag] || TAG_COLORS['DEFAULT'];
             
             html += `
@@ -275,10 +296,10 @@
             `;
 
             // 2. GRID SECUNDARIO
-            if (newsList.length > 1) {
-                html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">`;
-                for (let i = 1; i < newsList.length; i++) {
-                    const item = newsList[i];
+            if (itemsToRender.length > 1) {
+                html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">`;
+                for (let i = 1; i < itemsToRender.length; i++) {
+                    const item = itemsToRender[i];
                     const tagClass = TAG_COLORS[item.tag] || TAG_COLORS['DEFAULT'];
                     
                     html += `
@@ -311,6 +332,17 @@
                     `;
                 }
                 html += `</div>`;
+            }
+
+            // 3. RENDERIZAR BOTÓN "CARGAR MÁS" SI QUEDAN ARTÍCULOS
+            if (currentDisplayed < newsList.length) {
+                html += `
+                    <div class="flex justify-center mt-4 mb-12">
+                        <button onclick="loadMore()" class="px-8 py-3 rounded-full bg-zinc-900 border border-zinc-700 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:bg-white hover:text-black hover:border-white transition-all shadow-lg active:scale-95 flex items-center gap-2">
+                            Cargar más análisis <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
+                `;
             }
 
             feed.innerHTML = html;
@@ -357,7 +389,7 @@
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             
-            // LÍNEA AÑADIDA: Resetea el scroll del modal al abrirlo
+            // Resetea el scroll del modal al abrirlo
             document.querySelector('.modal-scroll').scrollTop = 0;
         };
 
