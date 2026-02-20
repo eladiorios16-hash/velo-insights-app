@@ -65,11 +65,12 @@
         let isEditing = false;
         let editId = null;
 
+        // AQUÍ SE AÑADE EL CAMPO 'insight' A LA PLANTILLA DEL GLOSARIO
         const templates = {
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
             calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
             equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
-            glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...' }
+            glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' } 
         };
 
         async function loadTable(table) {
@@ -104,7 +105,8 @@
             if (!data || data.length === 0) { container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10">No hay datos.</div>'; return; }
 
             const keys = Object.keys(data[0]);
-            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json'];
+            // Ocultamos el campo insight de la tabla visual para no saturar
+            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight'];
             const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
 
             let tableHtml = `<div class="overflow-hidden rounded-xl border border-slate-700 shadow-2xl"><table class="w-full text-left text-sm text-slate-300">
@@ -193,10 +195,11 @@
                     input.appendChild(optNo);
                     input.appendChild(optYes);
                 }
-                // --- 3. TEXTAREAS GRANDES ---
-                else if (key === 'content' || key === 'riders' || key === 'details' || key === 'definition') {
+                // --- 3. TEXTAREAS GRANDES (AÑADIDO 'insight') ---
+                else if (key === 'content' || key === 'riders' || key === 'details' || key === 'definition' || key === 'def' || key === 'insight') {
                     input = document.createElement('textarea');
-                    input.rows = 8;
+                    // Si es insight, lo hacemos un poco más pequeño
+                    input.rows = key === 'insight' ? 3 : 8; 
                     input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm";
                     input.value = (typeof value === 'object' && value !== null) ? JSON.stringify(value, null, 4) : value;
                 } 
