@@ -148,11 +148,9 @@ app.get('/api/glossary', async (req, res) => {
 // --- 6. ACTUALIZACIÓN AUTOMÁTICA DE BASE DE DATOS ---
 async function upgradeDatabase() {
     try {
-        // Intentamos añadir la columna 'insight'. 
         await db.query("ALTER TABLE glosario ADD COLUMN insight TEXT NULL");
         console.log("✅ Base de datos actualizada: Columna 'insight' creada con éxito.");
     } catch (error) {
-        // Si la columna ya existe, MySQL lanzará un error (Duplicate column). Lo ignoramos tranquilamente.
         if (error.code === 'ER_DUP_FIELDNAME' || error.message.includes('Duplicate column')) {
             console.log("⚡ La columna 'insight' ya existe en la base de datos. Todo OK.");
         } else {
@@ -160,19 +158,48 @@ async function upgradeDatabase() {
         }
     }
 }
-// Ejecutamos la actualización al iniciar el servidor
 upgradeDatabase();
 
-// --- AUTO-INSERTAR EQUIPO NSN ---
-async function insertNSNTeam() {
-    const ridersJSON = '[{"name":"Stephen Williams","country":"🇬🇧","age":29,"type":"Puncher","typeClass":"spec-classic","stats":{"mnt":82,"spr":90,"tt":78,"lla":90,"res":91,"rec":84,"ovr":86}},{"name":"Alexey Lutsenko","country":"🇰🇿","age":33,"type":"GC","typeClass":"spec-gc","stats":{"mnt":92,"spr":67,"tt":81,"lla":75,"res":89,"rec":91,"ovr":85}},{"name":"Corbin Strong","country":"🇳🇿","age":25,"type":"Puncher","typeClass":"spec-sprinter","stats":{"mnt":76,"spr":85,"tt":80,"lla":90,"res":87,"rec":86,"ovr":84}},{"name":"Ethan Vernon","country":"🇬🇧","age":25,"type":"Sprinter","typeClass":"spec-sprinter","stats":{"mnt":66,"spr":94,"tt":71,"lla":89,"res":81,"rec":78,"ovr":83}},{"name":"Joseph Blackmore","country":"🇬🇧","age":22,"type":"GC","typeClass":"spec-gc","stats":{"mnt":88,"spr":69,"tt":78,"lla":76,"res":86,"rec":87,"ovr":82}},{"name":"George Bennett","country":"🇳🇿","age":35,"type":"Escalador","typeClass":"spec-climber","stats":{"mnt":82,"spr":67,"tt":76,"lla":74,"res":81,"rec":85,"ovr":80}},{"name":"Krists Neilands","country":"🇱🇻","age":31,"type":"Cazaetapas","typeClass":"spec-classic","stats":{"mnt":73,"spr":77,"tt":73,"lla":83,"res":86,"rec":81,"ovr":78}},{"name":"Nick Schultz","country":"🇦🇺","age":31,"type":"Escalador","typeClass":"spec-climber","stats":{"mnt":79,"spr":59,"tt":74,"lla":71,"res":76,"rec":81,"ovr":76}},{"name":"Jake Stewart","country":"🇬🇧","age":26,"type":"Clasicomano","typeClass":"spec-classic","stats":{"mnt":72,"spr":79,"tt":71,"lla":82,"res":78,"rec":77,"ovr":76}},{"name":"Hugo Hofstetter","country":"🇫🇷","age":31,"type":"Sprinter","typeClass":"spec-sprinter","stats":{"mnt":55,"spr":85,"tt":63,"lla":82,"res":73,"rec":68,"ovr":76}},{"name":"Matis Louvel","country":"🇫🇷","age":26,"type":"Clasicomano","typeClass":"spec-classic","stats":{"mnt":67,"spr":77,"tt":70,"lla":78,"res":81,"rec":73,"ovr":75}},{"name":"Simon Clarke","country":"🇦🇺","age":39,"type":"Capitán","typeClass":"spec-domestique","stats":{"mnt":66,"spr":63,"tt":74,"lla":77,"res":73,"rec":72,"ovr":73}},{"name":"Tom Van Asbroeck","country":"🇧🇪","age":35,"type":"Clasicomano","typeClass":"spec-classic","stats":{"mnt":67,"spr":77,"tt":71,"lla":78,"res":77,"rec":72,"ovr":73}},{"name":"Lewis Askey","country":"🇬🇧","age":24,"type":"Clasicomano","typeClass":"spec-classic","stats":{"mnt":70,"spr":74,"tt":65,"lla":79,"res":79,"rec":71,"ovr":72}},{"name":"Jan Hirt","country":"🇨🇿","age":35,"type":"Escalador","typeClass":"spec-climber","stats":{"mnt":76,"spr":55,"tt":68,"lla":62,"res":72,"rec":75,"ovr":72}},{"name":"Ryan Mullen","country":"🇮🇪","age":31,"type":"Rodador","typeClass":"spec-domestique","stats":{"mnt":58,"spr":59,"tt":69,"lla":72,"res":72,"rec":71,"ovr":70}},{"name":"Guillaume Boivin","country":"🇨🇦","age":36,"type":"Rodador","typeClass":"spec-domestique","stats":{"mnt":60,"spr":54,"tt":69,"lla":71,"res":71,"rec":69,"ovr":67}},{"name":"Pier-André Coté","country":"🇨🇦","age":28,"type":"Sprinter","typeClass":"spec-sprinter","stats":{"mnt":50,"spr":76,"tt":59,"lla":69,"res":61,"rec":59,"ovr":67}},{"name":"Itamar Einhorn","country":"🇮🇱","age":28,"type":"Sprinter","typeClass":"spec-sprinter","stats":{"mnt":50,"spr":75,"tt":56,"lla":68,"res":61,"rec":60,"ovr":67}},{"name":"Marco Frigo","country":"🇮🇹","age":25,"type":"Cazaetapas","typeClass":"spec-classic","stats":{"mnt":59,"spr":68,"tt":65,"lla":75,"res":75,"rec":67,"ovr":67}},{"name":"Brady Gilmore","country":"🇦🇺","age":24,"type":"Joven","typeClass":"spec-domestique","stats":{"mnt":69,"spr":69,"tt":66,"lla":68,"res":64,"rec":68,"ovr":67}},{"name":"Oded Kogut","country":"🇮🇱","age":24,"type":"Sprinter","typeClass":"spec-sprinter","stats":{"mnt":50,"spr":74,"tt":60,"lla":74,"res":60,"rec":64,"ovr":67}},{"name":"Pau Martí","country":"🇪🇸","age":21,"type":"Joven","typeClass":"spec-climber","stats":{"mnt":69,"spr":70,"tt":65,"lla":66,"res":65,"rec":65,"ovr":67}},{"name":"Alessandro Pinarello","country":"🇮🇹","age":22,"type":"Joven","typeClass":"spec-classic","stats":{"mnt":69,"spr":70,"tt":65,"lla":64,"res":65,"rec":64,"ovr":67}},{"name":"Nadav Raisberg","country":"🇮🇱","age":24,"type":"Rodador","typeClass":"spec-domestique","stats":{"mnt":59,"spr":60,"tt":64,"lla":69,"res":66,"rec":66,"ovr":67}},{"name":"Dion Smith","country":"🇳🇿","age":32,"type":"Puncher","typeClass":"spec-classic","stats":{"mnt":60,"spr":69,"tt":65,"lla":75,"res":75,"rec":68,"ovr":67}},{"name":"Thomas Stewart","country":"🇬🇧","age":36,"type":"Rodador","typeClass":"spec-domestique","stats":{"mnt":60,"spr":60,"tt":64,"lla":74,"res":66,"rec":67,"ovr":67}},{"name":"Floris Van Tricht","country":"🇧🇪","age":24,"type":"Clasicomano","typeClass":"spec-classic","stats":{"mnt":64,"spr":71,"tt":61,"lla":75,"res":72,"rec":68,"ovr":67}}]';
+// --- AUTO-INSERTAR EQUIPO LIDL - TREK ---
+async function insertLidlTrekTeam() {
+    const ridersJSON = JSON.stringify([
+        { "name": "Juan Ayuso", "country": "🇪🇸", "age": 23, "type": "GC", "typeClass": "spec-gc", "stats": { "mnt": 92, "spr": 75, "tt": 88, "lla": 80, "res": 90, "rec": 91, "ovr": 90 } },
+        { "name": "Mads Pedersen", "country": "🇩🇰", "age": 30, "type": "Clasicomano", "typeClass": "spec-classic", "stats": { "mnt": 75, "spr": 93, "tt": 86, "lla": 95, "res": 94, "rec": 88, "ovr": 92 } },
+        { "name": "Jonathan Milan", "country": "🇮🇹", "age": 25, "type": "Sprinter", "typeClass": "spec-sprinter", "stats": { "mnt": 65, "spr": 96, "tt": 82, "lla": 92, "res": 84, "rec": 82, "ovr": 89 } },
+        { "name": "Mattias Skjelmose", "country": "🇩🇰", "age": 25, "type": "GC", "typeClass": "spec-gc", "stats": { "mnt": 88, "spr": 78, "tt": 87, "lla": 82, "res": 88, "rec": 86, "ovr": 88 } },
+        { "name": "Giulio Ciccone", "country": "🇮🇹", "age": 31, "type": "Escalador", "typeClass": "spec-climber", "stats": { "mnt": 90, "spr": 72, "tt": 65, "lla": 70, "res": 85, "rec": 84, "ovr": 85 } },
+        { "name": "Tao Geoghegan Hart", "country": "🇬🇧", "age": 30, "type": "GC", "typeClass": "spec-gc", "stats": { "mnt": 87, "spr": 70, "tt": 82, "lla": 75, "res": 85, "rec": 84, "ovr": 84 } },
+        { "name": "Lennard Kämna", "country": "🇩🇪", "age": 29, "type": "Cazaetapas", "typeClass": "spec-climber", "stats": { "mnt": 85, "spr": 68, "tt": 86, "lla": 80, "res": 83, "rec": 82, "ovr": 84 } },
+        { "name": "Toms Skujins", "country": "🇱🇻", "age": 34, "type": "Clasicomano", "typeClass": "spec-classic", "stats": { "mnt": 76, "spr": 78, "tt": 78, "lla": 85, "res": 88, "rec": 85, "ovr": 83 } },
+        { "name": "Søren Kragh Andersen", "country": "🇩🇰", "age": 31, "type": "Clasicomano", "typeClass": "spec-classic", "stats": { "mnt": 72, "spr": 82, "tt": 83, "lla": 88, "res": 84, "rec": 80, "ovr": 83 } },
+        { "name": "Thibau Nys", "country": "🇧🇪", "age": 23, "type": "Puncher", "typeClass": "spec-classic", "stats": { "mnt": 78, "spr": 86, "tt": 72, "lla": 82, "res": 81, "rec": 80, "ovr": 82 } },
+        { "name": "Mathias Vacek", "country": "🇨🇿", "age": 23, "type": "All-Rounder", "typeClass": "spec-classic", "stats": { "mnt": 75, "spr": 80, "tt": 84, "lla": 85, "res": 82, "rec": 80, "ovr": 82 } },
+        { "name": "Matteo Sobrero", "country": "🇮🇹", "age": 28, "type": "TT", "typeClass": "spec-tt", "stats": { "mnt": 78, "spr": 70, "tt": 86, "lla": 82, "res": 80, "rec": 81, "ovr": 81 } },
+        { "name": "Andrea Bagioli", "country": "🇮🇹", "age": 26, "type": "Puncher", "typeClass": "spec-classic", "stats": { "mnt": 80, "spr": 84, "tt": 70, "lla": 78, "res": 82, "rec": 80, "ovr": 81 } },
+        { "name": "Simone Consonni", "country": "🇮🇹", "age": 31, "type": "Lanzador", "typeClass": "spec-sprinter", "stats": { "mnt": 60, "spr": 88, "tt": 70, "lla": 82, "res": 75, "rec": 76, "ovr": 80 } },
+        { "name": "Patrick Konrad", "country": "🇦🇹", "age": 34, "type": "Escalador", "typeClass": "spec-climber", "stats": { "mnt": 80, "spr": 72, "tt": 74, "lla": 75, "res": 80, "rec": 81, "ovr": 79 } },
+        { "name": "Quinn Simmons", "country": "🇺🇸", "age": 24, "type": "Clasicomano", "typeClass": "spec-classic", "stats": { "mnt": 70, "spr": 78, "tt": 75, "lla": 86, "res": 82, "rec": 78, "ovr": 79 } },
+        { "name": "Albert Withen Philipsen", "country": "🇩🇰", "age": 19, "type": "Joven", "typeClass": "spec-gc", "stats": { "mnt": 72, "spr": 80, "tt": 82, "lla": 80, "res": 76, "rec": 78, "ovr": 78 } },
+        { "name": "Max Walscheid", "country": "🇩🇪", "age": 32, "type": "Rodador", "typeClass": "spec-domestique", "stats": { "mnt": 55, "spr": 84, "tt": 82, "lla": 88, "res": 76, "rec": 72, "ovr": 78 } },
+        { "name": "Bauke Mollema", "country": "🇳🇱", "age": 39, "type": "Capitán", "typeClass": "spec-classic", "stats": { "mnt": 78, "spr": 68, "tt": 75, "lla": 76, "res": 82, "rec": 80, "ovr": 78 } },
+        { "name": "Sam Oomen", "country": "🇳🇱", "age": 30, "type": "Escalador", "typeClass": "spec-climber", "stats": { "mnt": 80, "spr": 60, "tt": 72, "lla": 74, "res": 80, "rec": 78, "ovr": 77 } },
+        { "name": "Carlos Verona", "country": "🇪🇸", "age": 33, "type": "Escalador", "typeClass": "spec-climber", "stats": { "mnt": 82, "spr": 60, "tt": 68, "lla": 70, "res": 80, "rec": 78, "ovr": 77 } },
+        { "name": "Edward Theuns", "country": "🇧🇪", "age": 34, "type": "Clasicomano", "typeClass": "spec-classic", "stats": { "mnt": 62, "spr": 82, "tt": 70, "lla": 84, "res": 78, "rec": 75, "ovr": 77 } },
+        { "name": "Tim Torn Teutenberg", "country": "🇩🇪", "age": 23, "type": "Sprinter", "typeClass": "spec-sprinter", "stats": { "mnt": 60, "spr": 84, "tt": 74, "lla": 80, "res": 75, "rec": 74, "ovr": 77 } },
+        { "name": "Mathias Norsgaard", "country": "🇩🇰", "age": 28, "type": "Rodador", "typeClass": "spec-domestique", "stats": { "mnt": 60, "spr": 65, "tt": 82, "lla": 86, "res": 78, "rec": 75, "ovr": 76 } },
+        { "name": "Julien Bernard", "country": "🇫🇷", "age": 33, "type": "Escalador", "typeClass": "spec-climber", "stats": { "mnt": 76, "spr": 65, "tt": 72, "lla": 75, "res": 78, "rec": 76, "ovr": 75 } },
+        { "name": "Amanuel Ghebreigzabhier", "country": "🇪🇷", "age": 31, "type": "Escalador", "typeClass": "spec-climber", "stats": { "mnt": 78, "spr": 60, "tt": 68, "lla": 70, "res": 76, "rec": 75, "ovr": 74 } },
+        { "name": "Jakob Söderqvist", "country": "🇸🇪", "age": 22, "type": "Rodador", "typeClass": "spec-domestique", "stats": { "mnt": 65, "spr": 65, "tt": 80, "lla": 82, "res": 75, "rec": 74, "ovr": 74 } },
+        { "name": "Jacopo Mosca", "country": "🇮🇹", "age": 32, "type": "Gregario", "typeClass": "spec-domestique", "stats": { "mnt": 65, "spr": 65, "tt": 70, "lla": 80, "res": 76, "rec": 74, "ovr": 73 } },
+        { "name": "Otto Vergaerde", "country": "🇧🇪", "age": 31, "type": "Gregario", "typeClass": "spec-domestique", "stats": { "mnt": 60, "spr": 65, "tt": 68, "lla": 82, "res": 76, "rec": 74, "ovr": 73 } }
+    ]);
 
     const values = [
-        17, 
-        'NSN Cycling Team', 
-        'NSN', 
-        '🇨🇭', 
-        'assets/equipos/nsn.png', 
+        18, 
+        'Lidl - Trek', 
+        'LTK', 
+        '🇺🇸', 
+        'assets/equipos/lidl.png', 
         ridersJSON
     ];
 
@@ -189,13 +216,12 @@ async function insertNSNTeam() {
 
     try {
         await db.query(sql, values);
-        console.log("✅ Equipo NSN Cycling Team inyectado correctamente en la base de datos.");
+        console.log("✅ Equipo Lidl - Trek inyectado correctamente en la base de datos.");
     } catch (e) {
-        console.error("⚠️ Error inyectando el equipo NSN:", e.message);
+        console.error("⚠️ Error inyectando el equipo Lidl - Trek:", e.message);
     }
 }
-// Ejecutar la inserción
-insertNSNTeam();
+insertLidlTrekTeam();
 
 
 // --- 7. SERVIDOR ---
