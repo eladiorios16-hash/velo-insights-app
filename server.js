@@ -148,7 +148,8 @@ app.get('/api/calendar', async (req, res) => {
 app.get('/api/glossary', async (req, res) => {
     try { 
         const [rows] = await db.query("SELECT * FROM glosario ORDER BY term ASC");
-        const data = rows.map(r => ({ id: r.id, term: r.term, cat: r.cat, def: r.definition }));
+        // AÑADIDO: Ahora se extrae y se envía 'insight' al frontend
+        const data = rows.map(r => ({ id: r.id, term: r.term, cat: r.cat, def: r.definition, insight: r.insight }));
         res.json(data);
     } catch(e){ res.status(500).json([]); }
 });
