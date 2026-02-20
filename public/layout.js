@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v6.6 (Dot Grid + Interactive Zoom Lightbox) */
+/* VELO INSIGHTS - LAYOUT ENGINE v6.7 (Dot Grid + Interactive Zoom Lightbox + Fullscreen Mobile Menu) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -71,15 +71,11 @@ function injectGlobalStyles() {
         .search-modal-active { overflow: hidden; }
         
         #main-menu { 
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; 
-            transform-origin: top right; 
-            background: rgba(15, 15, 18, 0.98);
-            backdrop-filter: blur(24px);
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; 
+            transform-origin: top center; 
         }
-        .menu-hidden { transform: scale(0.95) translateY(-10px); opacity: 0; pointer-events: none; }
-        .menu-visible { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
+        .menu-hidden { transform: translateY(-20px); opacity: 0; pointer-events: none; }
+        .menu-visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
 
         #main-nav { 
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
@@ -182,41 +178,54 @@ function initNavbarScrollBehavior() {
 function renderMenuModal() {
     const menu = document.createElement('div');
     menu.id = "main-menu";
-    menu.className = "menu-hidden fixed top-24 right-4 w-64 border border-white/10 rounded-2xl shadow-2xl z-[110] overflow-hidden p-2 flex flex-col gap-1 md:hidden";
+    menu.className = "menu-hidden fixed inset-0 w-full h-[100dvh] bg-[#09090b]/98 backdrop-blur-2xl z-[90] flex flex-col pt-28 px-6 pb-10 md:hidden overflow-y-auto";
     
     const icons = {
-        home: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 01-1 1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
-        news: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>`,
-        teams: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`,
-        calendar: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
-        glossary: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
-        lab: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
-        search: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`
+        home: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 01-1 1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
+        news: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>`,
+        teams: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`,
+        calendar: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
+        glossary: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
+        lab: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+        search: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`
     };
 
     menu.innerHTML = `
-        <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-800/50 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider group">
-            <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.home}</span> Inicio
-        </a>
-        <a href="noticias.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-800/50 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider group">
-            <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.news}</span> Journal
-        </a>
-        <a href="equipos.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-800/50 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider group">
-             <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.teams}</span> Equipos
-        </a>
-        <a href="calendario.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-800/50 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider group">
-            <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.calendar}</span> Calendario
-        </a>
-        <a href="glosario.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-800/50 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider group">
-            <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.glossary}</span> Glosario
-        </a>
-        <a href="labs.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-800/50 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider group">
-            <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.lab}</span> Tech Lab
-        </a>
-        <div class="h-px bg-white/10 my-1 mx-2"></div>
-        <button onclick="toggleSearch()" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-800/50 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider text-left w-full group">
-            <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.search}</span> Buscar
-        </button>
+        <div class="flex flex-col gap-2">
+            <button onclick="toggleMenu(); toggleSearch()" class="flex items-center justify-between w-full p-4 mb-6 rounded-2xl bg-zinc-800/40 border border-zinc-700/50 hover:border-cyan-500/50 text-white transition-all group shadow-lg">
+                <span class="text-xs font-bold uppercase tracking-widest text-zinc-400 group-hover:text-cyan-400 transition-colors">Buscar en VeloInsights...</span>
+                <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.search}</span>
+            </button>
+
+            <a href="index.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
+                <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.home}</span>
+                <span class="text-xl font-black uppercase tracking-wider">Inicio</span>
+            </a>
+            <a href="noticias.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
+                <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.news}</span>
+                <span class="text-xl font-black uppercase tracking-wider">Journal</span>
+            </a>
+            <a href="equipos.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
+                 <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.teams}</span>
+                 <span class="text-xl font-black uppercase tracking-wider">Equipos</span>
+            </a>
+            <a href="calendario.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
+                <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.calendar}</span>
+                <span class="text-xl font-black uppercase tracking-wider">Calendario</span>
+            </a>
+            <a href="glosario.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
+                <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.glossary}</span>
+                <span class="text-xl font-black uppercase tracking-wider">Glosario</span>
+            </a>
+            <a href="labs.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
+                <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.lab}</span>
+                <span class="text-xl font-black uppercase tracking-wider">Tech Lab</span>
+            </a>
+        </div>
+        
+        <div class="mt-auto pt-8 pb-4 text-center">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-zinc-600">VeloInsights © 2026</p>
+        </div>
     `;
     document.body.appendChild(menu);
 
