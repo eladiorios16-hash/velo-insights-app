@@ -47,7 +47,7 @@ app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// B) EDITAR (CORREGIDO: LEAD + ISHERO) ✅
+// B) EDITAR
 app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     const { table, id } = req.params;
     let data = req.body; 
@@ -55,24 +55,20 @@ app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
 
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
-    // --- PARCHES DE DATOS ---
-    // 1. Glosario: corregir nombre de columna
+    // Parches
     if (table === 'glosario' && data.def !== undefined) {
         data.definition = data.def; 
         delete data.def;            
     }
-    // 2. Noticias: corregir isHero vacío (NUEVO FIX)
     if (data.isHero === '') {
-        data.isHero = 0; // Si está vacío, forzamos que sea un número 0
+        data.isHero = 0;
     }
-    // ------------------------
 
     const keys = Object.keys(data);
     const values = Object.values(data);
     
     if (keys.length === 0) return res.status(400).json({error: "No hay datos para actualizar"});
 
-    // Uso de backticks `` para proteger palabras reservadas como 'lead'
     const setClause = keys.map(key => `\`${key}\` = ?`).join(', ');
     const sql = `UPDATE ${table} SET ${setClause} WHERE id = ?`;
 
@@ -85,31 +81,27 @@ app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// C) CREAR (CORREGIDO: LEAD + ISHERO) ✅
+// C) CREAR
 app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
     const { table } = req.params;
     let data = req.body;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario'];
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
-    // --- PARCHES DE DATOS ---
-    // 1. Glosario
+    // Parches
     if (table === 'glosario' && data.def !== undefined) {
         data.definition = data.def;
         delete data.def;
     }
-    // 2. Noticias (NUEVO FIX)
     if (data.isHero === '') {
         data.isHero = 0;
     }
-    // ------------------------
 
     const keys = Object.keys(data);
     const values = Object.values(data);
     const placeholders = keys.map(() => '?').join(', ');
     
     try {
-        // Uso de backticks `` para proteger las columnas
         const columns = keys.map(key => `\`${key}\``).join(', ');
         const sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
         
@@ -148,13 +140,31 @@ app.get('/api/calendar', async (req, res) => {
 app.get('/api/glossary', async (req, res) => {
     try { 
         const [rows] = await db.query("SELECT * FROM glosario ORDER BY term ASC");
-        // AÑADIDO: Ahora se extrae y se envía 'insight' al frontend
         const data = rows.map(r => ({ id: r.id, term: r.term, cat: r.cat, def: r.definition, insight: r.insight }));
         res.json(data);
     } catch(e){ res.status(500).json([]); }
 });
 
-// --- 6. SERVIDOR ---
+// --- 6. ACTUALIZACIÓN AUTOMÁTICA DE BASE DE DATOS ---
+async function upgradeDatabase() {
+    try {
+        // Intentamos añadir la columna 'insight'. 
+        await db.query("ALTER TABLE glosario ADD COLUMN insight TEXT NULL");
+        console.log("✅ Base de datos actualizada: Columna 'insight' creada con éxito.");
+    } catch (error) {
+        // Si la columna ya existe, MySQL lanzará un error (Duplicate column). Lo ignoramos tranquilamente.
+        if (error.code === 'ER_DUP_FIELDNAME' || error.message.includes('Duplicate column')) {
+            console.log("⚡ La columna 'insight' ya existe en la base de datos. Todo OK.");
+        } else {
+            console.error("⚠️ Aviso al actualizar DB:", error.message);
+        }
+    }
+}
+// Ejecutamos la actualización al iniciar el servidor
+upgradeDatabase();
+
+
+// --- 7. SERVIDOR ---
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
