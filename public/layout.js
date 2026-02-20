@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v6.5 (Dot Grid + Lightbox Global) */
+/* VELO INSIGHTS - LAYOUT ENGINE v6.6 (Dot Grid + Interactive Zoom Lightbox) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderMenuModal(); 
     renderFooter();       
     injectSearchModal();  
-    injectLightbox();     // <-- NUEVO: Inyectamos el visor de imágenes
+    injectLightbox();     // Motor de visor de imágenes interactivo
     initScrollReveal();   
     handleIncomingLinks();
     initNavbarScrollBehavior();
@@ -420,65 +420,169 @@ function initScrollReveal() {
 }
 
 // ==========================================
-// NUEVO: SISTEMA DE VISOR DE IMÁGENES (LIGHTBOX)
+// SISTEMA DE VISOR DE IMÁGENES CON ZOOM INTERACTIVO
 // ==========================================
+let lbScale = 1;
+let lbPointX = 0;
+let lbPointY = 0;
+let lbStartX = 0;
+let lbStartY = 0;
+let lbIsDragging = false;
+let lbInitialPinchDistance = null;
+let lbInitialScale = 1;
+let lbLastTap = 0;
+
 function injectLightbox() {
     if(document.getElementById('vi-lightbox')) return;
     
     const lightbox = document.createElement('div');
     lightbox.id = 'vi-lightbox';
-    // z-[500] asegura que se ponga por encima de cualquier otro elemento (menú incluido)
     lightbox.className = 'fixed inset-0 z-[500] bg-[#050505]/98 backdrop-blur-2xl hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300';
     
     lightbox.innerHTML = `
-        <button onclick="closeLightbox()" class="absolute top-6 right-6 p-3 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full backdrop-blur-md transition-all z-[510] shadow-2xl">
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 p-3 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full backdrop-blur-md transition-all z-[510] shadow-2xl border border-white/10">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
-        <div class="relative w-full h-full p-2 md:p-12 flex items-center justify-center overflow-auto" onclick="if(event.target === this) closeLightbox()">
-            <img id="vi-lightbox-img" src="" class="max-w-[95%] max-h-[95%] object-contain transform transition-transform duration-300 scale-95 shadow-2xl rounded-lg bg-white" alt="Vista ampliada">
+        <div id="vi-lightbox-wrapper" class="relative w-full h-full flex items-center justify-center overflow-hidden touch-none cursor-grab active:cursor-grabbing">
+            <img id="vi-lightbox-img" src="" class="max-w-[95%] max-h-[90%] object-contain shadow-[0_0_50px_rgba(255,255,255,0.1)] rounded-xl bg-white origin-center" alt="Vista ampliada">
         </div>
-        <div class="absolute bottom-6 md:bottom-10 text-zinc-500 text-[9px] md:text-xs font-mono uppercase tracking-widest pointer-events-none text-center">
-            Gira el móvil para ver más grande
+        <div class="absolute bottom-10 text-cyan-400 text-[10px] font-mono uppercase tracking-widest pointer-events-none text-center bg-cyan-900/20 border border-cyan-500/30 px-4 py-2 rounded-full backdrop-blur-md">
+            Pellizca para Zoom • Doble toque
         </div>
     `;
     document.body.appendChild(lightbox);
 
-    // Permitir cerrar con la tecla Escape
+    const wrapper = document.getElementById('vi-lightbox-wrapper');
+    const img = document.getElementById('vi-lightbox-img');
+
+    const setTransform = () => {
+        img.style.transform = `translate(${lbPointX}px, ${lbPointY}px) scale(${lbScale})`;
+    };
+
+    // Eventos Móvil (Pellizco y Arrastre)
+    wrapper.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            lbIsDragging = false;
+            lbInitialPinchDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            lbInitialScale = lbScale;
+        } else if (e.touches.length === 1) {
+            lbIsDragging = true;
+            lbStartX = e.touches[0].clientX - lbPointX;
+            lbStartY = e.touches[0].clientY - lbPointY;
+        }
+    }, { passive: false });
+
+    wrapper.addEventListener('touchmove', (e) => {
+        e.preventDefault(); 
+        if (e.touches.length === 2) {
+            const currentDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            lbScale = Math.min(Math.max(1, lbInitialScale * (currentDistance / lbInitialPinchDistance)), 4);
+            setTransform();
+        } else if (e.touches.length === 1 && lbIsDragging && lbScale > 1) {
+            lbPointX = e.touches[0].clientX - lbStartX;
+            lbPointY = e.touches[0].clientY - lbStartY;
+            setTransform();
+        }
+    }, { passive: false });
+
+    wrapper.addEventListener('touchend', (e) => {
+        lbIsDragging = false;
+        if (e.touches.length < 2) {
+            lbInitialPinchDistance = null;
+        }
+        
+        // Doble Toque Rápido
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lbLastTap;
+        if (tapLength < 300 && tapLength > 0 && e.touches.length === 0) {
+            img.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            if (lbScale > 1) {
+                lbScale = 1; lbPointX = 0; lbPointY = 0;
+            } else {
+                lbScale = 2.5; lbPointX = 0; lbPointY = 0;
+            }
+            setTransform();
+            setTimeout(() => img.style.transition = 'none', 300);
+        }
+        lbLastTap = currentTime;
+    });
+
+    // Eventos PC (Rueda del ratón y Arrastre)
+    wrapper.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const xs = (e.clientX - lbPointX) / lbScale;
+        const ys = (e.clientY - lbPointY) / lbScale;
+        const delta = -e.deltaY;
+        
+        (delta > 0) ? (lbScale *= 1.1) : (lbScale /= 1.1);
+        lbScale = Math.min(Math.max(1, lbScale), 4);
+        
+        lbPointX = e.clientX - xs * lbScale;
+        lbPointY = e.clientY - ys * lbScale;
+        
+        if(lbScale === 1) { lbPointX = 0; lbPointY = 0; }
+        setTransform();
+    }, { passive: false });
+    
+    wrapper.addEventListener('mousedown', (e) => {
+        if(lbScale > 1) {
+            lbIsDragging = true;
+            lbStartX = e.clientX - lbPointX;
+            lbStartY = e.clientY - lbPointY;
+        }
+    });
+    wrapper.addEventListener('mousemove', (e) => {
+        if(!lbIsDragging) return;
+        lbPointX = e.clientX - lbStartX;
+        lbPointY = e.clientY - lbStartY;
+        setTransform();
+    });
+    wrapper.addEventListener('mouseup', () => lbIsDragging = false);
+    wrapper.addEventListener('mouseleave', () => lbIsDragging = false);
+
+    // Cerrar al tocar fuera o presionar Escape
     document.addEventListener('keydown', (e) => { 
-        if(e.key === 'Escape' && !lightbox.classList.contains('hidden')) closeLightbox(); 
+        if(e.key === 'Escape' && !document.getElementById('vi-lightbox').classList.contains('hidden')) closeLightbox(); 
+    });
+    wrapper.addEventListener('click', (e) => {
+        if (e.target === wrapper && lbScale === 1) closeLightbox();
     });
 }
 
 window.openLightbox = function(src) {
     const lb = document.getElementById('vi-lightbox');
     const img = document.getElementById('vi-lightbox-img');
+    
+    lbScale = 1; lbPointX = 0; lbPointY = 0;
+    img.style.transition = 'none';
+    img.style.transform = 'translate(0px, 0px) scale(1)';
     img.src = src;
+    
     lb.classList.remove('hidden');
     lb.classList.add('flex');
-    document.body.style.overflow = 'hidden'; // Evita que se pueda hacer scroll en la web de fondo
+    document.body.style.overflow = 'hidden'; 
     
-    // Pequeño retraso para que la animación CSS se ejecute suavemente
     setTimeout(() => {
         lb.classList.remove('opacity-0');
         lb.classList.add('opacity-100');
-        img.classList.remove('scale-95');
-        img.classList.add('scale-100');
     }, 10);
 };
 
 window.closeLightbox = function() {
     const lb = document.getElementById('vi-lightbox');
-    const img = document.getElementById('vi-lightbox-img');
-    
     lb.classList.remove('opacity-100');
     lb.classList.add('opacity-0');
-    img.classList.remove('scale-100');
-    img.classList.add('scale-95');
     
     setTimeout(() => {
         lb.classList.add('hidden');
         lb.classList.remove('flex');
-        img.src = ''; // Limpiamos la imagen para que no haga un flash raro en la siguiente
-        document.body.style.overflow = ''; // Restauramos el scroll normal
+        document.getElementById('vi-lightbox-img').src = ''; 
+        document.body.style.overflow = ''; 
     }, 300);
 };
