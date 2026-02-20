@@ -42,122 +42,148 @@
         .chart-skeleton::after {
             content: "INICIALIZANDO GRÁFICOS..."; font-size: 9px; font-weight: 900; color: #3f3f46; letter-spacing: 0.2em;
         }
-        .glass { background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(12px); }
         
-        /* Custom Slider Styling */
-        input[type=range] { -webkit-appearance: none; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #eab308; margin-top: -8px; box-shadow: 0 0 15px rgba(234, 179, 8, 0.8); cursor: pointer; transition: transform 0.1s; }
-        input[type=range]::-webkit-slider-thumb:active { transform: scale(1.2); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; border-radius: 2px; }
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        /* GLASSMORPHISM AVANZADO */
+        .glass { 
+            background: rgba(10, 10, 12, 0.7); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        /* Custom Sliders: Input TYPE=RANGE */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; margin-top: 10px; }
+        input[type=range]:focus { outline: none; }
+        
+        /* Pista del slider */
+        input[type=range]::-webkit-slider-runnable-track { 
+            width: 100%; height: 6px; cursor: pointer; border-radius: 3px; 
+            background: rgba(255,255,255,0.1); 
+        }
+        /* Color dinámico para la pista (se maneja vía JS) */
+        .slider-cyan::-webkit-slider-runnable-track { background: linear-gradient(to right, #22d3ee var(--val), rgba(255,255,255,0.1) var(--val)); }
+        .slider-pink::-webkit-slider-runnable-track { background: linear-gradient(to right, #ec4899 var(--val), rgba(255,255,255,0.1) var(--val)); }
+        .slider-yellow::-webkit-slider-runnable-track { background: linear-gradient(to right, #eab308 var(--val), rgba(255,255,255,0.1) var(--val)); }
+
+        /* Botón del slider */
+        input[type=range]::-webkit-slider-thumb { 
+            -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; 
+            background: #fff; margin-top: -7px; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; 
+        }
+        .slider-cyan::-webkit-slider-thumb { box-shadow: 0 0 15px rgba(34, 211, 238, 0.8); border: 2px solid #22d3ee; }
+        .slider-pink::-webkit-slider-thumb { box-shadow: 0 0 15px rgba(236, 72, 153, 0.8); border: 2px solid #ec4899; }
+        .slider-yellow::-webkit-slider-thumb { box-shadow: 0 0 15px rgba(234, 179, 8, 0.8); border: 2px solid #eab308; }
+        
+        input[type=range]::-webkit-slider-thumb:active { transform: scale(1.3); }
 
         .climb-profile-bg {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 0; 
-            opacity: 0.7; 
-            mask-image: linear-gradient(to top, black 30%, transparent 95%);
-            -webkit-mask-image: linear-gradient(to top, black 30%, transparent 95%);
+            opacity: 0.5; 
+            mask-image: linear-gradient(to top, black 20%, transparent 90%);
+            -webkit-mask-image: linear-gradient(to top, black 20%, transparent 90%);
             transition: all 0.5s ease-in-out;
         }
+
+        /* Ocultar input number arrows */
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 
 <body class="bg-[#050505] antialiased overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
 
     <header class="pt-32 md:pt-48 pb-8 md:pb-12 px-4 md:px-6 max-w-7xl mx-auto text-center md:text-left">
-        <h1 class="text-4xl md:text-6xl font-heading text-white italic uppercase tracking-tighter mb-3 md:mb-4 leading-none">Performance Lab <span class="text-cyan-500">///</span></h1>
-        <p class="text-zinc-500 max-w-lg font-medium text-xs md:text-sm mx-auto md:mx-0">Análisis biomecánico y comparativa de potencia WorldTour de alta precisión.</p>
+        <h1 class="text-4xl md:text-6xl font-heading text-white italic uppercase tracking-tighter mb-3 md:mb-4 leading-none">Performance Lab <span class="text-cyan-500 animate-pulse">///</span></h1>
+        <p class="text-zinc-500 max-w-lg font-medium text-xs md:text-sm mx-auto md:mx-0">Simulador telemétrico en tiempo real. Ajusta tus parámetros para descubrir tu nivel respecto al pelotón WorldTour.</p>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 pb-20">
         
-        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 h-fit relative overflow-hidden">
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <section class="glass p-5 md:p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-[80px] pointer-events-none"></div>
 
-            <h3 class="text-lg md:text-xl font-heading text-white italic uppercase mb-6 flex items-center gap-3">
-                <span class="w-1.5 h-6 md:w-2 md:h-8 bg-cyan-500 block skew-x-[-10deg]"></span>
-                Potencia Relativa (W/kg)
+            <h3 class="text-lg md:text-xl font-heading text-white italic uppercase mb-8 flex items-center gap-3">
+                <span class="w-1.5 h-6 md:w-2 md:h-8 bg-cyan-500 block skew-x-[-10deg] shadow-[0_0_15px_rgba(34,211,238,0.5)]"></span>
+                Telemetría del Piloto
             </h3>
             
-            <div class="grid grid-cols-2 gap-4 mb-6 relative z-10">
-                <div>
-                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2 tracking-wider">Peso del ciclista</label>
-                    <div class="relative group">
-                        <span class="absolute left-4 top-3.5 text-xs font-bold text-zinc-600 group-focus-within:text-cyan-500 transition-colors">KG</span>
-                        <input type="number" id="weight" min="1" max="150" value="70" class="w-full font-mono text-xl text-right bg-black border border-zinc-800 rounded-xl py-3 pr-4 pl-10 text-white outline-none focus:border-cyan-500 transition-all focus:shadow-[0_0_15px_rgba(34,211,238,0.15)]">
+            <div class="space-y-8 relative z-10 mb-8">
+                <div class="bg-black/40 p-4 rounded-2xl border border-zinc-800 hover:border-cyan-500/30 transition-colors">
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-[10px] font-black uppercase text-zinc-500 tracking-wider">Masa Corporal</label>
+                        <div class="flex items-baseline gap-1">
+                            <input type="number" id="weight-num" value="70" class="w-12 bg-transparent text-white font-mono text-xl text-right outline-none">
+                            <span class="text-[10px] text-zinc-500 font-bold">KG</span>
+                        </div>
                     </div>
+                    <input type="range" id="weight" min="40" max="110" value="70" class="slider-cyan" style="--val: 42%;">
                 </div>
-                <div>
-                    <label class="block text-[9px] font-black uppercase text-zinc-500 mb-2 tracking-wider">Potencia Umbral</label>
-                    <div class="relative group">
-                        <span class="absolute left-4 top-3.5 text-xs font-bold text-zinc-600 group-focus-within:text-cyan-500 transition-colors">FTP (W)</span>
-                        <input type="number" id="watts" value="250" class="w-full font-mono text-xl text-right bg-black border border-zinc-800 rounded-xl py-3 pr-4 pl-16 text-white outline-none focus:border-cyan-500 transition-all focus:shadow-[0_0_15px_rgba(34,211,238,0.15)]">
+
+                <div class="bg-black/40 p-4 rounded-2xl border border-zinc-800 hover:border-cyan-500/30 transition-colors">
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-[10px] font-black uppercase text-zinc-500 tracking-wider">Potencia Umbral (FTP)</label>
+                        <div class="flex items-baseline gap-1">
+                            <input type="number" id="watts-num" value="250" class="w-16 bg-transparent text-white font-mono text-xl text-right outline-none">
+                            <span class="text-[10px] text-zinc-500 font-bold">W</span>
+                        </div>
                     </div>
+                    <input type="range" id="watts" min="100" max="500" value="250" class="slider-cyan" style="--val: 37%;">
                 </div>
             </div>
 
-            <div class="bg-black/50 rounded-xl p-5 border border-zinc-800 mb-6 flex justify-between items-center relative overflow-hidden group">
-                <div class="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/5 to-transparent skew-x-[-20deg] translate-x-10 group-hover:translate-x-5 transition-transform duration-700"></div>
+            <div class="bg-zinc-950 rounded-2xl p-6 border border-zinc-800 flex justify-between items-center relative overflow-hidden group shadow-inner">
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 <div>
-                    <p class="text-[9px] font-black uppercase text-zinc-400 tracking-widest mb-1.5">Ratio de Rendimiento</p>
-                    <p id="wkg-level-desc" class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest transition-colors duration-500">Ingresa tus datos</p>
+                    <p class="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-2">Rendimiento Relativo</p>
+                    <div class="flex items-center gap-2">
+                        <div id="wkg-dot" class="w-2 h-2 rounded-full bg-zinc-500"></div>
+                        <p id="wkg-level-desc" class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest transition-colors duration-300">Ajusta los controles</p>
+                    </div>
                 </div>
                 <div class="text-right z-10 flex items-baseline gap-1">
-                    <p class="text-4xl md:text-5xl font-heading italic tracking-tighter transition-colors duration-500" id="wkg-display">0.00</p>
+                    <p class="text-5xl md:text-6xl font-heading italic tracking-tighter transition-colors duration-300" id="wkg-display">0.00</p>
                     <p class="text-[10px] font-bold text-zinc-500 uppercase">W/kg</p>
                 </div>
             </div>
-
-            <div class="overflow-hidden rounded-xl border border-zinc-800 relative z-10">
-                <table class="w-full text-left border-collapse bg-zinc-950/80">
-                    <thead>
-                        <tr class="text-[9px] uppercase font-black text-zinc-600 border-b border-zinc-800 bg-black">
-                            <th class="py-3 pl-4">Zona</th>
-                            <th class="py-3">Objetivo</th>
-                            <th class="py-3 text-right pr-4">Rango</th>
-                        </tr>
-                    </thead>
-                    <tbody id="zones-table" class="font-mono text-xs"></tbody>
-                </table>
-            </div>
         </section>
 
-        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 flex flex-col relative overflow-hidden">
-            <div class="absolute -top-24 -left-24 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <section class="glass p-5 md:p-8 rounded-3xl flex flex-col relative overflow-hidden">
+            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-pink-500/10 rounded-full blur-[80px] pointer-events-none"></div>
 
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 relative z-10">
                 <h3 class="text-lg md:text-xl font-heading text-white italic uppercase flex items-center gap-3">
-                    <span class="w-1.5 h-6 md:w-2 md:h-8 bg-pink-500 block skew-x-[-10deg]"></span>
-                    Comparativa Pro
+                    <span class="w-1.5 h-6 md:w-2 md:h-8 bg-pink-500 block skew-x-[-10deg] shadow-[0_0_15px_rgba(236,72,153,0.5)]"></span>
+                    Versus Pro
                 </h3>
                 <div class="relative group w-full md:w-auto">
-                    <select id="rival-selector" class="w-full md:w-auto bg-black border border-zinc-700 text-white text-[10px] font-black uppercase rounded-lg px-4 py-2.5 outline-none focus:border-pink-500 appearance-none cursor-pointer pr-8"></select>
+                    <select id="rival-selector" class="w-full md:w-auto bg-black border border-zinc-700 text-white text-[10px] font-black uppercase rounded-lg px-4 py-2.5 outline-none focus:border-pink-500 appearance-none cursor-pointer pr-8 shadow-lg transition-colors hover:bg-zinc-900"></select>
                     <div class="absolute right-3 top-2.5 pointer-events-none text-zinc-500">▼</div>
                 </div>
             </div>
 
-            <div class="relative h-60 md:h-64 w-full mb-6 z-10">
+            <div class="relative h-64 w-full mb-6 z-10 bg-black/20 rounded-2xl border border-white/5 p-4">
                 <div id="radar-skeleton" class="chart-skeleton"></div>
                 <canvas id="radarChart"></canvas>
             </div>
             
             <div id="analysis-content" class="mt-auto p-5 bg-black/60 rounded-xl border border-zinc-800 z-10 backdrop-blur-md">
-                <p class="text-xs text-zinc-600 text-center animate-pulse tracking-widest uppercase">Calculando desfase...</p>
+                <p class="text-xs text-zinc-600 text-center animate-pulse tracking-widest uppercase">Calculando datos...</p>
             </div>
         </section>
 
-        <section class="glass p-5 md:p-8 rounded-2xl md:rounded-3xl border border-zinc-800 col-span-1 lg:col-span-2 relative overflow-hidden">
+        <section class="glass p-5 md:p-8 rounded-3xl col-span-1 lg:col-span-2 relative overflow-hidden">
             <div id="climb-profile-container" class="climb-profile-bg"></div>
 
             <div class="relative z-10">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                     <h3 class="text-lg md:text-xl font-heading text-white italic uppercase flex items-center gap-3 drop-shadow-md">
-                        <span class="w-1.5 h-6 md:w-2 md:h-8 bg-yellow-500 block skew-x-[-10deg] shadow-[0_0_10px_rgba(234,179,8,0.5)]"></span>
-                        Simulador de Ascenso
+                        <span class="w-1.5 h-6 md:w-2 md:h-8 bg-yellow-500 block skew-x-[-10deg] shadow-[0_0_15px_rgba(234,179,8,0.5)]"></span>
+                        Simulador de Ascenso Mítico
                     </h3>
                     
                     <div class="relative group w-full md:w-auto">
-                        <select id="climb-select" class="w-full md:w-64 bg-black border border-zinc-700 text-white text-xs font-bold uppercase rounded-xl px-4 py-2.5 outline-none focus:border-yellow-500 appearance-none cursor-pointer tracking-wide shadow-lg">
+                        <select id="climb-select" class="w-full md:w-64 bg-black border border-zinc-700 text-white text-xs font-bold uppercase rounded-xl px-4 py-2.5 outline-none focus:border-yellow-500 appearance-none cursor-pointer tracking-wide shadow-lg hover:bg-zinc-900 transition-colors">
                             <option value="alpe">Alpe d'Huez (13.8km @ 8.1%)</option>
                             <option value="angliru">L'Angliru (12.5km @ 10.1%)</option>
                             <option value="tourmalet">Tourmalet (19.0km @ 7.4%)</option>
@@ -170,35 +196,35 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                     <div>
-                        <div class="mb-10 bg-black/40 p-5 rounded-xl border border-white/5">
+                        <div class="mb-10 bg-black/60 p-6 rounded-2xl border border-zinc-800 backdrop-blur-md">
                             <label class="flex justify-between items-end text-[9px] font-black uppercase text-zinc-400 mb-5">
-                                <span>Arrastra para ajustar tiempo objetivo</span>
-                                <span class="text-yellow-500 text-lg font-mono leading-none" id="slider-val-display">60 min</span>
+                                <span>Tiempo Objetivo</span>
+                                <span class="text-yellow-500 text-2xl font-mono leading-none drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]" id="slider-val-display">60m</span>
                             </label>
-                            <input type="range" id="climb-slider" min="30" max="120" value="60" class="w-full">
-                            <div class="flex justify-between text-[8px] text-zinc-500 font-mono mt-3 uppercase font-bold">
-                                <span>30m (Alien)</span>
-                                <span>120m (Humano)</span>
+                            <input type="range" id="climb-slider" min="30" max="120" value="60" class="slider-yellow w-full" style="--val: 33%;">
+                            <div class="flex justify-between text-[8px] text-zinc-600 font-mono mt-4 uppercase font-bold">
+                                <span>Récord Pro</span>
+                                <span>Cicloturista</span>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between p-5 bg-black/80 rounded-xl border border-zinc-800 shadow-2xl relative overflow-hidden">
+                        <div class="flex items-center justify-between p-6 bg-gradient-to-r from-black to-zinc-950 rounded-2xl border border-zinc-800 shadow-2xl relative overflow-hidden">
                             <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl"></div>
                             
                             <div>
-                                <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Récord del Puerto</p>
+                                <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Récord Absoluto</p>
                                 <p class="text-xl font-heading italic text-white" id="record-holder">Pantani '97</p>
                                 <p class="text-xs font-mono text-zinc-400" id="record-time">36m 50s</p>
                             </div>
-                            <div class="text-right z-10 border-l border-zinc-800 pl-4">
-                                <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Potencia Necesaria</p>
-                                <p class="text-3xl md:text-4xl font-mono text-yellow-500 font-black drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]" id="climb-wkg-display">--</p>
-                                <p class="text-[10px] font-bold text-zinc-500 mt-1 transition-colors" id="wkg-diff-display">--</p>
+                            <div class="text-right z-10 border-l border-zinc-800 pl-5">
+                                <p class="text-[9px] text-zinc-500 uppercase font-black mb-1">Tu Potencia Requerida</p>
+                                <p class="text-4xl font-mono text-yellow-500 font-black drop-shadow-[0_0_15px_rgba(234,179,8,0.4)]" id="climb-wkg-display">--</p>
+                                <p class="text-[10px] font-bold text-zinc-500 mt-1 transition-colors bg-black px-2 py-1 rounded inline-block" id="wkg-diff-display">--</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="relative h-64 w-full bg-black/30 p-4 rounded-xl border border-white/5">
+                    <div class="relative h-72 w-full bg-black/40 p-5 rounded-2xl border border-white/5 backdrop-blur-sm">
                         <div id="climb-skeleton" class="chart-skeleton"></div>
                         <canvas id="climbChart"></canvas>
                     </div>
@@ -225,12 +251,18 @@
             'roglic': { name: 'Primož Roglič', team: 'Red Bull', stats: [94, 82, 91, 94, 92], color: '#ec4899', bg: 'rgba(236, 72, 153, 0.2)' }
         };
 
-        const weightInput = document.getElementById('weight');
-        const wattsInput = document.getElementById('watts');
+        // DOM Elements
+        const weightSlider = document.getElementById('weight');
+        const weightNum = document.getElementById('weight-num');
+        const wattsSlider = document.getElementById('watts');
+        const wattsNum = document.getElementById('watts-num');
+        
         const rivalSelect = document.getElementById('rival-selector');
         const wkgDisplay = document.getElementById('wkg-display');
         const wkgLevelDesc = document.getElementById('wkg-level-desc');
+        const wkgDot = document.getElementById('wkg-dot');
         const analysisContent = document.getElementById('analysis-content');
+        
         const climbSelect = document.getElementById('climb-select');
         const climbSlider = document.getElementById('climb-slider');
         const sliderValDisplay = document.getElementById('slider-val-display');
@@ -243,70 +275,85 @@
         let radarChart = null, climbChart = null;
         let climbDebounceTimer;
 
+        // Sync inputs and sliders
+        function syncInputs(slider, numBox) {
+            slider.addEventListener('input', () => {
+                numBox.value = slider.value;
+                updateSliderStyle(slider);
+                updateAll();
+            });
+            numBox.addEventListener('input', () => {
+                let val = parseInt(numBox.value) || slider.min;
+                if(val < slider.min) val = slider.min;
+                if(val > slider.max) val = slider.max;
+                slider.value = val;
+                updateSliderStyle(slider);
+                updateAll();
+            });
+        }
+
+        function updateSliderStyle(slider) {
+            const percent = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+            slider.style.setProperty('--val', `${percent}%`);
+        }
+
         function init() {
             rivalSelect.innerHTML = Object.entries(PRO_STATS).map(([k,v]) => `<option value="${k}">${v.name} (${v.team})</option>`).join('');
             
-            if(localStorage.getItem('velo_weight')) weightInput.value = localStorage.getItem('velo_weight');
-            if(localStorage.getItem('velo_watts')) wattsInput.value = localStorage.getItem('velo_watts');
+            // Cargar datos guardados si existen
+            if(localStorage.getItem('velo_weight')) {
+                weightSlider.value = localStorage.getItem('velo_weight');
+                weightNum.value = localStorage.getItem('velo_weight');
+            }
+            if(localStorage.getItem('velo_watts')) {
+                wattsSlider.value = localStorage.getItem('velo_watts');
+                wattsNum.value = localStorage.getItem('velo_watts');
+            }
             
-            updateSliderBg();
+            syncInputs(weightSlider, weightNum);
+            syncInputs(wattsSlider, wattsNum);
+            updateSliderStyle(weightSlider);
+            updateSliderStyle(wattsSlider);
+            updateSliderStyle(climbSlider);
+            
             updateAll();
             updateClimbBackground();
         }
 
         function updateAll() {
-            const w = parseFloat(wattsInput.value) || 0;
-            const kg = parseFloat(weightInput.value) || 0;
+            const w = parseFloat(wattsSlider.value) || 0;
+            const kg = parseFloat(weightSlider.value) || 0;
             const wkg = (w > 0 && kg > 0) ? (w / kg) : 0;
             
             wkgDisplay.innerText = wkg > 0 ? wkg.toFixed(2) : '0.00';
             
+            // Lógica de Niveles y Colores
             let levelTxt = "Ingresa tus datos";
-            let levelColor = "text-zinc-600";
-            
+            let colorHex = "#52525b"; // zinc-500
+            let shadowClass = "";
+            let colorClass = "text-zinc-500";
+
             if (wkg > 0) {
-                if (wkg < 2.0) { levelTxt = "Nivel: Principiante 🚲"; levelColor = "text-zinc-400"; }
-                else if (wkg < 3.0) { levelTxt = "Nivel: Cicloturista 🚴"; levelColor = "text-cyan-400"; }
-                else if (wkg < 4.0) { levelTxt = "Nivel: Amateur Avanzado 🥉"; levelColor = "text-green-400"; }
-                else if (wkg < 5.0) { levelTxt = "Nivel: Élite Nacional 🥈"; levelColor = "text-yellow-400"; }
-                else if (wkg < 5.8) { levelTxt = "Nivel: Pro Continental 🥇"; levelColor = "text-orange-400"; }
-                else { levelTxt = "Nivel: World Tour 👽"; levelColor = "text-pink-500 drop-shadow-[0_0_5px_rgba(236,72,153,0.8)]"; }
+                if (wkg < 2.5) { levelTxt = "Principiante"; colorHex = "#a1a1aa"; colorClass = "text-zinc-400"; }
+                else if (wkg < 3.5) { levelTxt = "Cicloturista"; colorHex = "#22d3ee"; colorClass = "text-cyan-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]"; }
+                else if (wkg < 4.5) { levelTxt = "Amateur"; colorHex = "#4ade80"; colorClass = "text-green-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]"; }
+                else if (wkg < 5.5) { levelTxt = "Élite Nacional"; colorHex = "#eab308"; colorClass = "text-yellow-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]"; }
+                else if (wkg < 6.2) { levelTxt = "Pro Continental"; colorHex = "#f97316"; colorClass = "text-orange-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]"; }
+                else { levelTxt = "World Tour (Alien)"; colorHex = "#ec4899"; colorClass = "text-pink-500"; shadowClass = "drop-shadow-[0_0_20px_rgba(236,72,153,0.8)]"; }
             }
             
-            wkgLevelDesc.innerText = levelTxt;
-            wkgLevelDesc.className = `text-[10px] font-bold uppercase tracking-widest transition-colors duration-500 ${levelColor}`;
-
-            let colorClass = 'text-white';
-            let shadowClass = '';
-            if (wkg >= 5.5) { colorClass = 'text-pink-500'; shadowClass = 'drop-shadow-[0_0_15px_rgba(236,72,153,0.6)]'; }
-            else if (wkg >= 4.5) { colorClass = 'text-yellow-500'; shadowClass = 'drop-shadow-[0_0_15px_rgba(234,179,8,0.6)]'; }
-            else if (wkg >= 3.0) { colorClass = 'text-cyan-400'; shadowClass = 'drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]'; }
+            wkgLevelDesc.innerText = `Nivel: ${levelTxt}`;
+            wkgLevelDesc.className = `text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 ${colorClass}`;
+            wkgDot.style.backgroundColor = colorHex;
+            wkgDot.style.boxShadow = `0 0 10px ${colorHex}`;
             
-            wkgDisplay.className = `text-4xl md:text-5xl font-heading italic tracking-tighter transition-all duration-500 ${colorClass} ${shadowClass}`;
+            wkgDisplay.className = `text-5xl md:text-6xl font-heading italic tracking-tighter transition-all duration-300 ${colorClass} ${shadowClass}`;
 
-            localStorage.setItem('velo_weight', weightInput.value);
-            localStorage.setItem('velo_watts', wattsInput.value);
+            localStorage.setItem('velo_weight', weightSlider.value);
+            localStorage.setItem('velo_watts', wattsSlider.value);
 
-            // Zonas con colores dinámicos de fondo y Z1 añadida
-            const zones = [
-                { n: 'Z1', name: 'Recuperación', r: w>0 ? `< ${Math.round(w*0.55)}w` : '--', c: '#a1a1aa' },
-                { n: 'Z2', name: 'Resistencia', r: w>0 ? `${Math.round(w*0.56)} - ${Math.round(w*0.75)}w` : '--', c: '#22d3ee' },
-                { n: 'Z3', name: 'Tempo', r: w>0 ? `${Math.round(w*0.76)} - ${Math.round(w*0.90)}w` : '--', c: '#4ade80' },
-                { n: 'Z4', name: 'Umbral FTP', r: w>0 ? `${Math.round(w*0.91)} - ${Math.round(w*1.05)}w` : '--', c: '#eab308' },
-                { n: 'Z5', name: 'VO2 Max', r: w>0 ? `> ${Math.round(w*1.06)}w` : '--', c: '#ec4899' }
-            ];
-            
-            document.getElementById('zones-table').innerHTML = zones.map(z => `
-                <tr class="relative group border-b border-zinc-900/50 hover:bg-white/5 transition-colors">
-                    <td class="py-3 pl-4 font-black relative z-10" style="color: ${z.c}">${z.n}</td>
-                    <td class="text-zinc-400 uppercase font-bold text-[10px] relative z-10 tracking-widest">${z.name}</td>
-                    <td class="text-right pr-4 text-white font-mono text-sm font-bold relative z-10">${z.r}</td>
-                    <td class="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity" style="background-color: ${z.c}"></td>
-                    <td class="absolute left-0 top-0 bottom-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity" style="background-color: ${z.c}"></td>
-                </tr>`).join('');
-                
             renderRadar();
-            renderClimb();
+            handleClimbSliderInput(); // Actualiza la pestaña de la subida también
         }
 
         function updateClimbBackground() {
@@ -321,18 +368,22 @@
             const rival = PRO_STATS[rivalSelect.value];
             const wkg = parseFloat(wkgDisplay.innerText);
             
-            const userScore = wkg > 0 ? Math.min(95, (wkg / 6.6) * 100) : 0;
-            // Corrección: Ahora la "Técnica" (último valor) escala dinámicamente con userScore
+            // Fórmula para escalar la gráfica del usuario (max 100 pts si llega a 6.6 w/kg)
+            const userScore = wkg > 0 ? Math.min(98, (wkg / 6.6) * 100) : 0;
             const userData = userScore > 0 ? [userScore, userScore*0.7, userScore*0.8, userScore*0.9, userScore*0.75] : [10, 10, 10, 10, 10];
 
             if (radarChart) radarChart.destroy();
+            
+            Chart.defaults.color = '#71717a';
+            Chart.defaults.font.family = 'monospace';
+
             radarChart = new Chart(document.getElementById('radarChart'), {
                 type: 'radar',
                 data: {
                     labels: ['Escalada', 'Sprint', 'Crono', 'Resistencia', 'Técnica'],
                     datasets: [
-                        { label: 'Tú', data: userData, borderColor: '#fff', backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#fff' },
-                        { label: rival.name, data: rival.stats, borderColor: rival.color, backgroundColor: rival.bg, borderWidth: 2, pointRadius: 0, borderDash: [5, 5] }
+                        { label: 'Tú', data: userData, borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.3)', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#fff' },
+                        { label: rival.name, data: rival.stats, borderColor: rival.color, backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, borderDash: [4, 4] }
                     ]
                 },
                 options: { 
@@ -340,40 +391,47 @@
                     scales: { 
                         r: { 
                             suggestedMin: 0, suggestedMax: 100, ticks: { display: false }, 
-                            grid: { color: 'rgba(255,255,255,0.1)' }, 
+                            grid: { color: 'rgba(255,255,255,0.05)', lineWidth: 1 }, 
                             angleLines: { color: 'rgba(255,255,255,0.1)' }, 
-                            pointLabels: { color: '#a1a1aa', font: { size: 9, weight: 'bold', family: 'monospace' } } 
+                            pointLabels: { color: '#a1a1aa', font: { size: 10, weight: 'bold' } } 
                         } 
                     }, 
-                    plugins: { legend: { position: 'top', labels: { color: '#fff', font: { size: 10, family: 'monospace' }, boxWidth: 12, usePointStyle: true } } } 
+                    plugins: { 
+                        legend: { position: 'top', labels: { color: '#fff', boxWidth: 12, usePointStyle: true } },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleFont: {size: 10}, bodyFont: {size: 12} }
+                    } 
                 }
             });
             
+            // Widget de análisis de texto
             const gap = ((userScore / 100) * 100).toFixed(0);
+            let message = "";
+            if(gap < 40) message = "Aún te queda entrenamiento para aguantar un abanico.";
+            else if(gap < 70) message = "Buen nivel amateur, aguantarías en un puerto de 3ª categoría.";
+            else if(gap < 90) message = "Nivel excelente. Podrías correr carreras élite.";
+            else message = "Eres un monstruo genético. Ficha por un WorldTour ya.";
+
             analysisContent.innerHTML = `
                 <div class="flex justify-between items-end mb-3">
-                    <span class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Performance Gap</span>
-                    <span class="text-lg font-heading italic text-white leading-none">${gap}% <span class="text-[9px] text-zinc-500 font-sans not-italic">Nivel Pro</span></span>
+                    <span class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Afinidad Pro</span>
+                    <span class="text-xl font-heading italic text-cyan-400 leading-none">${gap}%</span>
                 </div>
-                <div class="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden border border-zinc-800">
-                    <div class="bg-gradient-to-r from-cyan-500 via-yellow-500 to-pink-500 h-full relative" style="width: ${gap}%">
+                <div class="w-full bg-black rounded-full h-2 mb-3 overflow-hidden border border-zinc-800">
+                    <div class="bg-gradient-to-r from-zinc-700 via-cyan-500 to-cyan-300 h-full relative" style="width: ${gap}%">
                         <div class="absolute right-0 top-0 bottom-0 w-4 bg-white/50 blur-sm"></div>
                     </div>
-                </div>`;
+                </div>
+                <p class="text-[10px] text-zinc-500 italic">${message}</p>`;
         }
 
-        function renderClimb() {
-            if (typeof Chart === 'undefined') return;
-            document.getElementById('climb-skeleton').style.display = 'none';
-            const key = climbSelect.value;
-            const c = CLIMBS[key];
-            recordHolderDisplay.innerText = c.holder;
-            recordTimeDisplay.innerText = `${c.record.toFixed(1)} min`;
-            
+        function handleClimbSliderInput() {
+            updateSliderStyle(climbSlider);
             const minutes = parseInt(climbSlider.value);
-            sliderValDisplay.innerText = `${minutes} min`;
+            sliderValDisplay.innerText = `${minutes}m`;
             
-            const req = (c.factor / minutes).toFixed(2);
+            const c = CLIMBS[climbSelect.value];
+            const req = (c.factor / minutes).toFixed(2); // Fórmula básica factor/tiempo
+            
             climbWkgDisplay.innerText = `${req} W/kg`;
             climbWkgDisplay.style.color = c.color;
             climbWkgDisplay.style.textShadow = `0 0 15px ${c.color}60`;
@@ -382,73 +440,67 @@
             const userTime = userWkg > 0 ? (c.factor / userWkg).toFixed(1) : 0;
             
             if (userWkg <= 0) {
-                wkgDiffDisplay.innerText = 'Ingresa tus datos arriba';
-                wkgDiffDisplay.className = 'text-[9px] font-bold text-zinc-500 mt-1 uppercase tracking-widest';
+                wkgDiffDisplay.innerText = 'Define tu W/kg arriba ↑';
+                wkgDiffDisplay.className = 'text-[9px] font-bold text-zinc-600 mt-1 uppercase tracking-widest';
             } else {
                 const diff = (userWkg - req).toFixed(2);
                 if (diff >= 0) {
-                    wkgDiffDisplay.innerText = `¡Sobrado! (+${diff} W/kg)`;
-                    wkgDiffDisplay.className = 'text-[10px] font-bold text-green-400 mt-1 uppercase tracking-widest';
+                    wkgDiffDisplay.innerText = `Lo superas (+${diff} W/kg)`;
+                    wkgDiffDisplay.className = 'text-[10px] font-bold text-green-400 mt-1 uppercase tracking-widest border border-green-500/30';
                 } else {
-                    wkgDiffDisplay.innerText = `Faltan ${Math.abs(diff)} W/kg`;
-                    wkgDiffDisplay.className = 'text-[10px] font-bold text-red-400 mt-1 uppercase tracking-widest';
+                    wkgDiffDisplay.innerText = `Te faltan ${Math.abs(diff)} W/kg`;
+                    wkgDiffDisplay.className = 'text-[10px] font-bold text-red-400 mt-1 uppercase tracking-widest border border-red-500/30';
                 }
             }
+            
+            clearTimeout(climbDebounceTimer);
+            climbDebounceTimer = setTimeout(() => renderClimb(minutes, userTime, c), 50);
+        }
+
+        function renderClimb(targetMins, userMins, climbObj) {
+            if (typeof Chart === 'undefined') return;
+            document.getElementById('climb-skeleton').style.display = 'none';
+            
+            recordHolderDisplay.innerText = climbObj.holder;
+            recordTimeDisplay.innerText = `${climbObj.record.toFixed(1)} min`;
 
             if (climbChart) climbChart.destroy();
             climbChart = new Chart(document.getElementById('climbChart'), {
                 type: 'bar',
                 data: { 
-                    labels: ['RÉCORD', 'OBJETIVO', 'TU TIEMPO'], 
+                    labels: ['RÉCORD', 'TU OBJETIVO', 'TU TIEMPO REAL'], 
                     datasets: [{ 
-                        data: [c.record, minutes, userTime > 0 ? userTime : null], 
-                        backgroundColor: [c.color, '#ffffff', '#22d3ee'], 
-                        borderRadius: 6,
-                        barThickness: 20 
+                        data: [climbObj.record, targetMins, userMins > 0 ? userMins : null], 
+                        backgroundColor: [climbObj.color, '#a1a1aa', '#22d3ee'], 
+                        borderRadius: 4,
+                        barThickness: 24 
                     }] 
                 },
                 options: { 
                     indexAxis: 'y', 
                     maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } }, 
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return context.raw + ' min'; }
+                            }
+                        }
+                    }, 
                     scales: { 
-                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false }, ticks: { color: '#71717a', font: { size: 9, family: 'monospace' } } }, 
-                        y: { border: { display: false }, grid: { display: false }, ticks: { color: '#a1a1aa', font: { weight: '900', size: 10, family: 'monospace' } } } 
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false }, ticks: { color: '#71717a', font: { size: 10 } } }, 
+                        y: { border: { display: false }, grid: { display: false }, ticks: { color: '#fff', font: { weight: 'bold', size: 10 } } } 
                     } 
                 }
             });
         }
 
-        function updateSliderBg() {
-            const val = ((climbSlider.value - climbSlider.min) / (climbSlider.max - climbSlider.min)) * 100;
-            climbSlider.style.background = `linear-gradient(to right, #eab308 ${val}%, #27272a ${val}%)`;
-        }
-
-        function handleClimbSliderInput() {
-            updateSliderBg();
-            const minutes = parseInt(climbSlider.value);
-            sliderValDisplay.innerText = `${minutes} min`;
-            const c = CLIMBS[climbSelect.value];
-            const req = (c.factor / minutes).toFixed(2);
-            climbWkgDisplay.innerText = `${req} W/kg`;
-            
-            const userWkg = parseFloat(wkgDisplay.innerText);
-            if(userWkg > 0) {
-                const diff = (userWkg - req).toFixed(2);
-                wkgDiffDisplay.innerText = diff >= 0 ? `¡Sobrado! (+${diff} W/kg)` : `Faltan ${Math.abs(diff)} W/kg`;
-                wkgDiffDisplay.className = diff >= 0 ? 'text-[10px] font-bold text-green-400 mt-1 uppercase tracking-widest' : 'text-[10px] font-bold text-red-400 mt-1 uppercase tracking-widest';
-            }
-            
-            clearTimeout(climbDebounceTimer);
-            climbDebounceTimer = setTimeout(renderClimb, 50);
-        }
-
-        [weightInput, wattsInput].forEach(el => el.addEventListener('input', updateAll));
-        rivalSelect.addEventListener('change', renderRadar);
-        climbSlider.addEventListener('input', handleClimbSliderInput);
-        climbSelect.addEventListener('change', () => { updateClimbBackground(); renderClimb(); });
+        climbSelect.addEventListener('change', () => { 
+            updateClimbBackground(); 
+            handleClimbSliderInput(); 
+        });
+        
         window.onload = init;
     </script>
 </body>
-
 </html>
