@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v6.7 (Dot Grid + Interactive Zoom Lightbox + Fullscreen Mobile Menu) */
+/* VELO INSIGHTS - LAYOUT ENGINE v6.8 (Dot Grid + Interactive Zoom Lightbox + HUD Mobile Menu) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -70,12 +70,30 @@ function injectGlobalStyles() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 10px; }
         .search-modal-active { overflow: hidden; }
         
+        /* --- ANIMACIONES DEL MENÚ MÓVIL --- */
         #main-menu { 
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; 
             transform-origin: top center; 
         }
         .menu-hidden { transform: translateY(-20px); opacity: 0; pointer-events: none; }
         .menu-visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
+
+        /* Efecto cascada de los enlaces */
+        .nav-item {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        #main-menu.menu-visible .nav-item { opacity: 1; transform: translateX(0); }
+        
+        /* Retardos para que entren uno tras otro */
+        .nav-item:nth-child(1) { transition-delay: 0.05s; }
+        .nav-item:nth-child(2) { transition-delay: 0.10s; }
+        .nav-item:nth-child(3) { transition-delay: 0.15s; }
+        .nav-item:nth-child(4) { transition-delay: 0.20s; }
+        .nav-item:nth-child(5) { transition-delay: 0.25s; }
+        .nav-item:nth-child(6) { transition-delay: 0.30s; }
+        .nav-item:nth-child(7) { transition-delay: 0.35s; }
 
         #main-nav { 
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
@@ -84,11 +102,9 @@ function injectGlobalStyles() {
         
         #main-nav.scrolled {
             background: rgba(5, 5, 5, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 0.8rem;
-            padding-bottom: 0.8rem;
+            padding-top: 0.8rem; padding-bottom: 0.8rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
     `;
@@ -178,7 +194,8 @@ function initNavbarScrollBehavior() {
 function renderMenuModal() {
     const menu = document.createElement('div');
     menu.id = "main-menu";
-    menu.className = "menu-hidden fixed inset-0 w-full h-[100dvh] bg-[#09090b]/98 backdrop-blur-2xl z-[90] flex flex-col pt-28 px-6 pb-10 md:hidden overflow-y-auto";
+    // Fondo más inmersivo con gradiente muy oscuro hacia abajo
+    menu.className = "menu-hidden fixed inset-0 w-full h-[100dvh] bg-gradient-to-b from-[#09090b]/98 to-[#000000]/98 backdrop-blur-3xl z-[90] flex flex-col pt-28 px-4 pb-10 md:hidden overflow-y-auto";
     
     const icons = {
         home: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 01-1 1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
@@ -191,40 +208,81 @@ function renderMenuModal() {
     };
 
     menu.innerHTML = `
-        <div class="flex flex-col gap-2">
-            <button onclick="toggleMenu(); toggleSearch()" class="flex items-center justify-between w-full p-4 mb-6 rounded-2xl bg-zinc-800/40 border border-zinc-700/50 hover:border-cyan-500/50 text-white transition-all group shadow-lg">
-                <span class="text-xs font-bold uppercase tracking-widest text-zinc-400 group-hover:text-cyan-400 transition-colors">Buscar en VeloInsights...</span>
-                <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.search}</span>
+        <div class="absolute top-28 right-6 text-[8px] font-mono text-cyan-500/50 text-right uppercase tracking-[0.2em] pointer-events-none">
+            Sys_Nav.Online<br>Mode: Performance
+        </div>
+
+        <div class="flex flex-col gap-3 relative z-10 w-full max-w-sm mx-auto">
+            
+            <button onclick="toggleMenu(); toggleSearch()" class="nav-item group relative flex items-center justify-between w-full p-4 mb-4 rounded-xl bg-zinc-900/60 border border-zinc-700/50 hover:border-cyan-500/80 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)] overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
+                <div class="flex items-center gap-3">
+                    <span class="text-cyan-500">${icons.search}</span>
+                    <span class="text-xs font-bold uppercase tracking-widest text-zinc-300 group-hover:text-white transition-colors">Inicializar Búsqueda...</span>
+                </div>
+                <div class="text-[9px] font-mono text-zinc-600 bg-black px-2 py-1 rounded">CMD+K</div>
             </button>
 
-            <a href="index.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
-                <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.home}</span>
-                <span class="text-xl font-black uppercase tracking-wider">Inicio</span>
+            <a href="index.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
+                <div class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
+                <div class="flex items-center gap-4">
+                    <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.home}</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Inicio</span>
+                </div>
+                <span class="text-[10px] font-mono text-zinc-700 group-hover:text-cyan-500/50 transition-colors">01</span>
             </a>
-            <a href="noticias.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
-                <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.news}</span>
-                <span class="text-xl font-black uppercase tracking-wider">Journal</span>
+
+            <a href="noticias.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
+                <div class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
+                <div class="flex items-center gap-4">
+                    <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.news}</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Journal</span>
+                </div>
+                <span class="text-[10px] font-mono text-zinc-700 group-hover:text-cyan-500/50 transition-colors">02</span>
             </a>
-            <a href="equipos.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
-                 <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.teams}</span>
-                 <span class="text-xl font-black uppercase tracking-wider">Equipos</span>
+
+            <a href="equipos.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
+                 <div class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
+                 <div class="flex items-center gap-4">
+                     <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.teams}</span>
+                     <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Equipos</span>
+                 </div>
+                 <span class="text-[10px] font-mono text-zinc-700 group-hover:text-cyan-500/50 transition-colors">03</span>
             </a>
-            <a href="calendario.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
-                <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.calendar}</span>
-                <span class="text-xl font-black uppercase tracking-wider">Calendario</span>
+
+            <a href="calendario.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
+                <div class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
+                <div class="flex items-center gap-4">
+                    <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.calendar}</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Calendario</span>
+                </div>
+                <span class="text-[10px] font-mono text-zinc-700 group-hover:text-cyan-500/50 transition-colors">04</span>
             </a>
-            <a href="glosario.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
-                <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.glossary}</span>
-                <span class="text-xl font-black uppercase tracking-wider">Glosario</span>
+
+            <a href="glosario.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
+                <div class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
+                <div class="flex items-center gap-4">
+                    <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.glossary}</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Glosario</span>
+                </div>
+                <span class="text-[10px] font-mono text-zinc-700 group-hover:text-cyan-500/50 transition-colors">05</span>
             </a>
-            <a href="labs.html" class="flex items-center gap-5 p-3 rounded-2xl hover:bg-zinc-800/30 text-zinc-400 hover:text-white transition-all group">
-                <span class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors shadow-md">${icons.lab}</span>
-                <span class="text-xl font-black uppercase tracking-wider">Tech Lab</span>
+
+            <a href="labs.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
+                <div class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
+                <div class="flex items-center gap-4">
+                    <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.lab}</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Tech Lab</span>
+                </div>
+                <span class="text-[10px] font-mono text-zinc-700 group-hover:text-cyan-500/50 transition-colors">06</span>
             </a>
         </div>
         
-        <div class="mt-auto pt-8 pb-4 text-center">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-zinc-600">VeloInsights © 2026</p>
+        <div class="mt-auto pt-8 text-center border-t border-zinc-800/50 w-full max-w-sm mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full">
+                <div class="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse shadow-[0_0_5px_#22d3ee]"></div>
+                <p class="text-[9px] font-bold uppercase tracking-widest text-zinc-500">VeloInsights • Performance Lab</p>
+            </div>
         </div>
     `;
     document.body.appendChild(menu);
