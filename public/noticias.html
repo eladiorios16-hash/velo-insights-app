@@ -27,6 +27,21 @@
         /* Animación suave de entrada */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+
+        /* Colores dinámicos para los filtros */
+        .filter-btn { transition: all 0.3s ease; }
+        
+        .filter-btn[data-theme="all"].active-filter { background: #27272a; border-color: #52525b; color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+        .filter-btn[data-theme="race"].active-filter { background: rgba(244, 63, 94, 0.15); border-color: #f43f5e; color: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.2); }
+        .filter-btn[data-theme="tech"].active-filter { background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+        .filter-btn[data-theme="aero"].active-filter { background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+        .filter-btn[data-theme="data"].active-filter { background: rgba(139, 92, 246, 0.15); border-color: #8b5cf6; color: #8b5cf6; box-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
+
+        .filter-btn[data-theme="all"]:hover:not(.active-filter) { border-color: #52525b; color: #e4e4e7; }
+        .filter-btn[data-theme="race"]:hover:not(.active-filter) { border-color: rgba(244, 63, 94, 0.5); color: #f43f5e; }
+        .filter-btn[data-theme="tech"]:hover:not(.active-filter) { border-color: rgba(16, 185, 129, 0.5); color: #10b981; }
+        .filter-btn[data-theme="aero"]:hover:not(.active-filter) { border-color: rgba(56, 189, 248, 0.5); color: #38bdf8; }
+        .filter-btn[data-theme="data"]:hover:not(.active-filter) { border-color: rgba(139, 92, 246, 0.5); color: #8b5cf6; }
     </style>
 </head>
 <body class="bg-[#050505] antialiased min-h-screen pb-20 text-white selection:bg-cyan-500/30">
@@ -40,12 +55,22 @@
     <script src="layout.js?v=6.1"></script>
     
     <script>
-        // Variables de estado global para la Búsqueda y Paginación
+        // Variables de estado global
         let globalNews = [];
         let filteredNews = [];
-        let itemsToShow = 5; // Cargar 5 noticias por defecto
+        let itemsToShow = 4; // 1 Hero + 3 Normales
         let activeTag = 'ALL';
         let searchQuery = '';
+
+        // Función para inyectar el color de las etiquetas según la categoría
+        function getTagColors(tag) {
+            const t = (tag || '').toUpperCase();
+            if (t.includes('RACE')) return 'bg-rose-500/10 border-rose-500/30 text-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.3)]';
+            if (t.includes('TECH')) return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]';
+            if (t.includes('AERO')) return 'bg-sky-500/10 border-sky-500/30 text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.3)]';
+            if (t.includes('DATA')) return 'bg-violet-500/10 border-violet-500/30 text-violet-400 shadow-[0_0_8px_rgba(139,92,246,0.3)]';
+            return 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.3)]';
+        }
 
         async function initNews() {
             const container = document.getElementById('main-container');
@@ -53,7 +78,6 @@
             const articleId = urlParams.get('article');
 
             try {
-                // Descargar noticias y glosario
                 const [newsRes, glosRes] = await Promise.all([
                     fetch('/api/news').then(r => r.ok ? r.json() : []).catch(() => []),
                     fetch('/api/glossary').then(r => r.ok ? r.json() : []).catch(() => [])
@@ -121,18 +145,20 @@
             // 3. GENERACIÓN DEL HTML RELACIONADO
             let relatedHTML = '';
             if (relatedNews.length > 0 || recommendedTerm) {
-                let newsHTML = relatedNews.map(n => `
-                    <a href="noticias.html?article=${n.id}" class="flex flex-col bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all group shadow-lg">
+                let newsHTML = relatedNews.map(n => {
+                    const badgeClasses = getTagColors(n.tag);
+                    return `
+                    <a href="noticias.html?article=${n.id}" class="flex flex-col bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-600 transition-all group shadow-lg">
                         <div class="h-36 w-full overflow-hidden relative bg-black">
                             <img src="${n.image || 'assets/default-news.jpg'}" class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" alt="Thumbnail">
-                            <div class="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-2 py-1 rounded text-[8px] font-black text-cyan-400 uppercase tracking-widest border border-zinc-700/50">${n.tag || 'Noticia'}</div>
+                            <div class="absolute top-3 left-3 px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest border border-zinc-700/50 ${badgeClasses}">${n.tag || 'Noticia'}</div>
                         </div>
                         <div class="p-4 flex-1 flex flex-col justify-between">
-                            <h4 class="text-sm font-bold text-zinc-300 group-hover:text-cyan-400 leading-snug line-clamp-2 transition-colors">${n.title}</h4>
+                            <h4 class="text-sm font-bold text-zinc-300 group-hover:text-white leading-snug line-clamp-2 transition-colors">${n.title}</h4>
                             <p class="text-[9px] font-mono text-zinc-500 uppercase mt-3">${n.date || 'Archivo'}</p>
                         </div>
                     </a>
-                `).join('');
+                `}).join('');
 
                 let termHTML = recommendedTerm ? `
                     <div class="bg-gradient-to-br from-violet-900/20 to-black border border-violet-500/30 rounded-2xl p-5 flex flex-col justify-between h-full relative overflow-hidden group shadow-lg">
@@ -168,6 +194,8 @@
                 `;
             }
 
+            const headerBadgeClass = getTagColors(article.tag);
+
             // 4. INYECCIÓN DEL ARTÍCULO
             container.innerHTML = `
                 <article class="max-w-4xl mx-auto fade-in">
@@ -177,7 +205,7 @@
                     
                     <header class="mb-10">
                         <div class="flex items-center gap-3 mb-5">
-                            <span class="bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black px-2.5 py-1 rounded uppercase tracking-widest shadow-sm">${article.tag || 'RACE REPORT'}</span>
+                            <span class="px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-widest border ${headerBadgeClass}">${article.tag || 'RACE REPORT'}</span>
                             <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">${article.date || 'Reciente'}</span>
                         </div>
                         <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white italic uppercase tracking-tighter leading-[1.05] mb-6 drop-shadow-lg">
@@ -202,12 +230,12 @@
         }
 
         // ==========================================
-        // VISTA 2: MODO LISTA Y BUSCADOR
+        // VISTA 2: MODO LISTA Y BUSCADOR (3 + 1)
         // ==========================================
         function buildNewsPage() {
             document.title = "Journal | Velo Insights";
             filteredNews = [...globalNews];
-            itemsToShow = 5;
+            itemsToShow = 4; // 1 Hero + 3 Normales = 4 en total
 
             const container = document.getElementById('main-container');
             container.innerHTML = `
@@ -217,19 +245,19 @@
                         Velo <span class="text-zinc-700">Journal</span>
                     </h1>
 
-                    <div class="max-w-3xl mx-auto flex flex-col items-center gap-6 px-2">
-                        <div class="w-full relative group">
+                    <div class="max-w-4xl mx-auto flex flex-col items-center gap-6 px-2">
+                        <div class="w-full max-w-2xl relative group">
                             <svg class="w-5 h-5 text-zinc-500 absolute left-4 top-1/2 transform -translate-y-1/2 group-focus-within:text-cyan-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             <input type="text" id="news-local-search" placeholder="Buscar análisis, carrera o corredor..."
-                                   class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-3.5 pl-12 pr-4 text-white outline-none focus:border-cyan-500 focus:bg-black transition-all text-sm font-bold tracking-wide placeholder-zinc-600 shadow-inner">
+                                   class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-3.5 pl-12 pr-4 text-white outline-none focus:border-cyan-500 focus:bg-black transition-all text-sm font-bold tracking-wide placeholder-zinc-600 shadow-inner text-center">
                         </div>
                         
                         <div class="flex flex-wrap justify-center gap-2 w-full" id="news-filters">
-                            <button onclick="applyFilter('ALL')" id="flt-ALL" class="news-filter active-filter px-4 py-2 rounded-lg border border-zinc-800 text-[9px] font-bold uppercase text-white bg-zinc-800 transition-all shadow-md">Todos</button>
-                            <button onclick="applyFilter('RACE REPORT')" id="flt-RACEREPORT" class="news-filter px-4 py-2 rounded-lg border border-zinc-800 text-[9px] font-bold uppercase text-zinc-500 hover:text-white hover:border-zinc-600 transition-all">Race Report</button>
-                            <button onclick="applyFilter('TECH LAB')" id="flt-TECHLAB" class="news-filter px-4 py-2 rounded-lg border border-zinc-800 text-[9px] font-bold uppercase text-zinc-500 hover:text-white hover:border-zinc-600 transition-all">Tech Lab</button>
-                            <button onclick="applyFilter('AERO LAB')" id="flt-AEROLAB" class="news-filter px-4 py-2 rounded-lg border border-zinc-800 text-[9px] font-bold uppercase text-zinc-500 hover:text-white hover:border-zinc-600 transition-all">Aero Lab</button>
-                            <button onclick="applyFilter('DATA ANALYSIS')" id="flt-DATAANALYSIS" class="news-filter px-4 py-2 rounded-lg border border-zinc-800 text-[9px] font-bold uppercase text-zinc-500 hover:text-white hover:border-zinc-600 transition-all">Data</button>
+                            <button onclick="applyFilter('ALL')" id="flt-ALL" data-theme="all" class="filter-btn active-filter px-5 py-2.5 rounded-xl border border-zinc-800 text-[10px] font-black uppercase text-zinc-500 tracking-widest">Todos</button>
+                            <button onclick="applyFilter('RACE REPORT')" id="flt-RACEREPORT" data-theme="race" class="filter-btn px-5 py-2.5 rounded-xl border border-zinc-800 text-[10px] font-black uppercase text-zinc-500 tracking-widest">Race Report</button>
+                            <button onclick="applyFilter('TECH LAB')" id="flt-TECHLAB" data-theme="tech" class="filter-btn px-5 py-2.5 rounded-xl border border-zinc-800 text-[10px] font-black uppercase text-zinc-500 tracking-widest">Tech Lab</button>
+                            <button onclick="applyFilter('AERO LAB')" id="flt-AEROLAB" data-theme="aero" class="filter-btn px-5 py-2.5 rounded-xl border border-zinc-800 text-[10px] font-black uppercase text-zinc-500 tracking-widest">Aero Lab</button>
+                            <button onclick="applyFilter('DATA ANALYSIS')" id="flt-DATAANALYSIS" data-theme="data" class="filter-btn px-5 py-2.5 rounded-xl border border-zinc-800 text-[10px] font-black uppercase text-zinc-500 tracking-widest">Data Analysis</button>
                         </div>
                     </div>
                 </header>
@@ -240,7 +268,7 @@
             // Evento para buscador en tiempo real
             document.getElementById('news-local-search').addEventListener('input', (e) => {
                 searchQuery = e.target.value.toLowerCase();
-                itemsToShow = 5; // Resetear la paginación al buscar
+                itemsToShow = 4; // Resetear la paginación al buscar
                 processFilters();
             });
 
@@ -249,19 +277,17 @@
 
         window.applyFilter = function(tag) {
             activeTag = tag;
-            itemsToShow = 5; // Resetear paginación
+            itemsToShow = 4; // Resetear paginación (1 + 3)
             
-            // Actualizar diseño de los botones
-            document.querySelectorAll('.news-filter').forEach(btn => {
-                btn.classList.remove('active-filter', 'bg-zinc-800', 'text-white', 'shadow-md');
-                btn.classList.add('text-zinc-500');
+            // Actualizar diseño de los botones usando CSS
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active-filter');
             });
             
             const btnId = 'flt-' + tag.replace(/\s+/g, '');
             const activeBtn = document.getElementById(btnId);
             if(activeBtn) {
-                activeBtn.classList.add('active-filter', 'bg-zinc-800', 'text-white', 'shadow-md');
-                activeBtn.classList.remove('text-zinc-500');
+                activeBtn.classList.add('active-filter');
             }
             
             processFilters();
@@ -287,7 +313,7 @@
         }
 
         window.loadMore = function() {
-            itemsToShow += 6; // Cargar 6 artículos más
+            itemsToShow += 3; // Cargar 3 artículos más en cada clic
             updateGrid();
         };
 
@@ -304,7 +330,6 @@
             let heroArticle = null;
 
             // Extraemos el primer artículo para ponerlo en grande (Destacado)
-            // Si estamos en la vista por defecto, intentamos coger el que esté marcado como isHero=1
             if (activeTag === 'ALL' && searchQuery === '') {
                 const heroIndex = currentList.findIndex(n => n.isHero == 1);
                 if (heroIndex !== -1) {
@@ -317,19 +342,21 @@
             }
             
             if (heroArticle) {
+                const heroBadge = getTagColors(heroArticle.tag);
+                
                 html += `
-                <article class="fade-in group cursor-pointer grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#09090b] border border-zinc-800 rounded-3xl p-4 md:p-8 mb-10 hover:border-cyan-500/50 transition-colors shadow-xl" onclick="window.location.href='?article=${heroArticle.id}'">
+                <article class="fade-in group cursor-pointer grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#09090b] border border-zinc-800 rounded-3xl p-4 md:p-8 mb-10 hover:border-zinc-600 transition-colors shadow-xl" onclick="window.location.href='?article=${heroArticle.id}'">
                     <div class="relative w-full aspect-video md:aspect-[4/3] rounded-2xl overflow-hidden bg-black shadow-inner">
                         <img src="${heroArticle.image || 'assets/default-news.jpg'}" alt="Hero" class="w-full h-full object-cover grayscale opacity-80 transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105">
                         <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-80"></div>
                     </div>
                     <div class="flex flex-col justify-center space-y-4 md:px-4">
                         <div class="flex items-center gap-3 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                            <span class="text-cyan-400 font-black px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded">${heroArticle.tag || 'DESTACADO'}</span>
+                            <span class="font-black px-2.5 py-1 rounded border ${heroBadge}">${heroArticle.tag || 'DESTACADO'}</span>
                             <span>${heroArticle.date || 'HOY'}</span>
                         </div>
                         <h2 class="text-3xl md:text-5xl font-black text-white italic tracking-tighter leading-[1.05] group-hover:text-cyan-400 transition-colors">${heroArticle.title}</h2>
-                        <p class="text-sm md:text-base text-zinc-400 leading-relaxed font-medium line-clamp-4">${heroArticle.lead || heroArticle.excerpt || 'Haz clic para leer el análisis técnico.'}</p>
+                        <p class="text-sm md:text-base text-zinc-400 leading-relaxed font-medium line-clamp-4">${heroArticle.lead || heroArticle.excerpt || 'Haz clic para leer el análisis técnico completo de esta carrera.'}</p>
                         <span class="text-[10px] font-bold text-white uppercase tracking-widest mt-4 flex items-center gap-2 group-hover:text-cyan-400 transition-colors w-max bg-white/5 px-4 py-2 rounded-full border border-white/10 group-hover:border-cyan-500/30">
                             Leer Análisis <svg class="w-4 h-4 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                         </span>
@@ -338,29 +365,31 @@
                 `;
             }
 
-            // Calculamos cuántos artículos normales mostrar (Restamos 1 porque el Hero ya cuenta)
+            // Render de los siguientes artículos (Límite: itemsToShow - 1)
             const itemsToRender = currentList.slice(0, itemsToShow - 1); 
             
             if (itemsToRender.length > 0) {
                 html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 fade-in">`;
                 
-                html += itemsToRender.map(n => `
+                html += itemsToRender.map(n => {
+                    const badgeClasses = getTagColors(n.tag);
+                    return `
                     <a href="?article=${n.id}" class="flex flex-col bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-600 transition-all group hover:-translate-y-1 hover:shadow-2xl shadow-lg">
                         <div class="h-48 md:h-56 w-full overflow-hidden relative bg-black">
                             <div class="absolute top-3 left-3 z-10">
-                                <span class="bg-black/80 backdrop-blur-md text-zinc-300 border border-zinc-700 text-[9px] font-black px-2.5 py-1 rounded uppercase tracking-widest shadow-lg group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors">${n.tag || 'DATA'}</span>
+                                <span class="px-2.5 py-1 rounded text-[8px] font-black uppercase tracking-widest border backdrop-blur-md ${badgeClasses}">${n.tag || 'DATA'}</span>
                             </div>
                             <img src="${n.image || 'assets/default-news.jpg'}" class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" alt="News">
                         </div>
                         <div class="p-5 flex-1 flex flex-col justify-between">
                             <div>
-                                <p class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mb-2">${n.date || 'Archivo'}</p>
+                                <p class="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-2">${n.date || 'Archivo'}</p>
                                 <h3 class="text-lg font-bold text-white leading-tight mb-3 group-hover:text-cyan-400 transition-colors line-clamp-3">${n.title}</h3>
                                 <p class="text-xs text-zinc-500 line-clamp-3 leading-relaxed">${n.lead || n.excerpt || ''}</p>
                             </div>
                         </div>
                     </a>
-                `).join('');
+                `}).join('');
                 
                 html += `</div>`;
             }
