@@ -34,6 +34,7 @@
         <button onclick="loadTable('calendario')" id="btn-calendario" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-calendar-alt text-blue-400"></i> Calendario</button>
         <button onclick="loadTable('equipos')" id="btn-equipos" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-users text-yellow-400"></i> Equipos</button>
         <button onclick="loadTable('glosario')" id="btn-glosario" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-book text-purple-400"></i> Glosario</button>
+        <button onclick="loadTable('trending')" id="btn-trending" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-fire text-orange-400"></i> Trending</button>
     </nav>
 
     <main id="content-area" class="glass rounded-2xl p-8 min-h-[60vh]">
@@ -65,12 +66,12 @@
         let isEditing = false;
         let editId = null;
 
-        // AQUÍ SE AÑADE EL CAMPO 'insight' A LA PLANTILLA DEL GLOSARIO
         const templates = {
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
             calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
             equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
-            glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' } 
+            glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Insight pro...' },
+            trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+10% o Vacio' }
         };
 
         async function loadTable(table) {
@@ -105,7 +106,6 @@
             if (!data || data.length === 0) { container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10">No hay datos.</div>'; return; }
 
             const keys = Object.keys(data[0]);
-            // Ocultamos el campo insight de la tabla visual para no saturar
             const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight'];
             const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
 
@@ -120,10 +120,7 @@
                 tableHtml += `<tr class="hover:bg-slate-800/60 transition group">`;
                 displayCols.forEach(col => {
                     let val = row[col];
-                    // Formateo visual para isHero
-                    if (col === 'isHero') {
-                        val = val == 1 ? '<span class="text-yellow-400">★ SÍ</span>' : '<span class="text-slate-600">No</span>';
-                    }
+                    if (col === 'isHero') val = val == 1 ? '<span class="text-yellow-400">★ SÍ</span>' : '<span class="text-slate-600">No</span>';
                     else if (typeof val === 'string' && val.startsWith('assets/')) val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md">`;
                     else if (typeof val === 'string' && val.length > 40) val = val.substring(0, 40) + '...';
                     
@@ -164,58 +161,41 @@
                 
                 let input;
                 
-                // --- 1. DROPDOWN PARA TAGS ---
                 if (key === 'tag') {
                     input = document.createElement('select');
                     input.className = "input-dark w-full rounded-lg p-3";
-                    const options = ['GENERAL', 'RACE REPORT', 'TECH LAB', 'AERO LAB', 'DATA ANALYSIS', 'PREVIA'];
-                    options.forEach(opt => {
+                    ['GENERAL', 'RACE REPORT', 'TECH LAB', 'AERO LAB', 'DATA ANALYSIS', 'PREVIA'].forEach(opt => {
                         const el = document.createElement('option');
-                        el.value = opt;
-                        el.innerText = opt;
+                        el.value = opt; el.innerText = opt;
                         if (value === opt) el.selected = true;
                         input.appendChild(el);
                     });
-                }
-                // --- 2. DROPDOWN PARA ISHERO ---
-                else if (key === 'isHero') {
+                } else if (key === 'tipo') {
                     input = document.createElement('select');
                     input.className = "input-dark w-full rounded-lg p-3";
-                    
-                    const optNo = document.createElement('option');
-                    optNo.value = "0";
-                    optNo.innerText = "No (Noticia Normal)";
-                    if (value == 0) optNo.selected = true;
-                    
-                    const optYes = document.createElement('option');
-                    optYes.value = "1";
-                    optYes.innerText = "⭐ SÍ (Portada / Hero)";
-                    if (value == 1) optYes.selected = true;
-
-                    input.appendChild(optNo);
-                    input.appendChild(optYes);
-                }
-                // --- 3. TEXTAREAS GRANDES (AÑADIDO 'insight') ---
-                else if (key === 'content' || key === 'riders' || key === 'details' || key === 'definition' || key === 'def' || key === 'insight') {
+                    ['ciclista', 'topic'].forEach(opt => {
+                        const el = document.createElement('option');
+                        el.value = opt; el.innerText = opt.toUpperCase();
+                        if (value === opt) el.selected = true;
+                        input.appendChild(el);
+                    });
+                } else if (key === 'isHero') {
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3";
+                    const optNo = document.createElement('option'); optNo.value = "0"; optNo.innerText = "No (Noticia Normal)"; if (value == 0) optNo.selected = true;
+                    const optYes = document.createElement('option'); optYes.value = "1"; optYes.innerText = "⭐ SÍ (Portada / Hero)"; if (value == 1) optYes.selected = true;
+                    input.appendChild(optNo); input.appendChild(optYes);
+                } else if (['content', 'riders', 'details', 'definition', 'def', 'insight'].includes(key)) {
                     input = document.createElement('textarea');
-                    // Si es insight, lo hacemos un poco más pequeño
                     input.rows = key === 'insight' ? 3 : 8; 
                     input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm";
                     input.value = (typeof value === 'object' && value !== null) ? JSON.stringify(value, null, 4) : value;
-                } 
-                // --- 4. FECHAS ---
-                else if (key === 'dateISO' || key === 'endDateISO') {
+                } else if (key === 'dateISO' || key === 'endDateISO') {
                     input = document.createElement('input');
                     input.type = "date";
                     input.className = "input-dark w-full rounded-lg p-3";
-                    if (value && typeof value === 'string') {
-                        input.value = value.split('T')[0]; 
-                    } else {
-                        input.value = value || '';
-                    }
-                } 
-                // --- 5. TEXTO NORMAL (Resto) ---
-                else {
+                    input.value = (value && typeof value === 'string') ? value.split('T')[0] : value || '';
+                } else {
                     input = document.createElement('input');
                     input.type = "text";
                     input.className = "input-dark w-full rounded-lg p-3";
@@ -253,12 +233,9 @@
                     body: JSON.stringify(dataObj)
                 });
                 if (res.ok) {
-                    closeModal();
-                    loadTable(currentTable);
-                    alert("✅ ¡Guardado con éxito!");
+                    closeModal(); loadTable(currentTable); alert("✅ ¡Guardado con éxito!");
                 } else {
-                    const err = await res.json();
-                    alert("❌ Error: " + JSON.stringify(err));
+                    const err = await res.json(); alert("❌ Error: " + JSON.stringify(err));
                 }
             } catch (e) { alert("Error de red: " + e.message); }
         }
