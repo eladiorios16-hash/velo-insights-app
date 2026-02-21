@@ -32,10 +32,10 @@ app.get('/admin', authMiddleware, (req, res) => {
 
 // --- 4. API MAESTRA DE ADMINISTRACIÓN ---
 
-// A) BORRAR
+// A) BORRAR (Actualizado para permitir 'trending')
 app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     const { table, id } = req.params;
-    const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking'];
+    const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
     
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
@@ -47,11 +47,11 @@ app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// B) EDITAR
+// B) EDITAR (Actualizado para permitir 'trending')
 app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     const { table, id } = req.params;
     let data = req.body; 
-    const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking'];
+    const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
 
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
@@ -81,11 +81,11 @@ app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// C) CREAR
+// C) CREAR (Actualizado para permitir 'trending')
 app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
     const { table } = req.params;
     let data = req.body;
-    const allowed = ['noticias', 'calendario', 'equipos', 'glosario'];
+    const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'trending'];
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
     // Parches
@@ -145,8 +145,17 @@ app.get('/api/glossary', async (req, res) => {
     } catch(e){ res.status(500).json([]); }
 });
 
+// NUEVA API: TRENDING
+app.get('/api/trending', async (req, res) => {
+    try { 
+        const [rows] = await db.query("SELECT * FROM trending ORDER BY id DESC");
+        res.json(rows);
+    } catch(e){ res.status(500).json([]); }
+});
+
 // --- 6. ACTUALIZACIÓN AUTOMÁTICA DE BASE DE DATOS ---
 async function upgradeDatabase() {
+    // 1. Parche Glosario
     try {
         await db.query("ALTER TABLE glosario ADD COLUMN insight TEXT NULL");
         console.log("✅ Base de datos actualizada: Columna 'insight' creada con éxito.");
@@ -154,8 +163,24 @@ async function upgradeDatabase() {
         if (error.code === 'ER_DUP_FIELDNAME' || error.message.includes('Duplicate column')) {
             console.log("⚡ La columna 'insight' ya existe en la base de datos. Todo OK.");
         } else {
-            console.error("⚠️ Aviso al actualizar DB:", error.message);
+            console.error("⚠️ Aviso al actualizar DB (insight):", error.message);
         }
+    }
+    
+    // 2. Creación tabla Trending
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS trending (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                tipo VARCHAR(50) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                subtitle VARCHAR(255),
+                value VARCHAR(50)
+            )
+        `);
+        console.log("✅ Base de datos actualizada: Tabla 'trending' operativa.");
+    } catch (error) { 
+        console.error("⚠️ Aviso DB (trending):", error.message); 
     }
 }
 upgradeDatabase();
