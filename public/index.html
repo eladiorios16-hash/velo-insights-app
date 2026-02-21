@@ -30,35 +30,6 @@
     <meta name="apple-mobile-web-app-title" content="Velo Insights">
     <link rel="apple-touch-icon" href="assets/icon-192.png">
 
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "Velo Insights",
-      "alternateName": "Velo Insights Lab",
-      "url": "https://www.tusitioweb.com/",
-      "description": "Análisis de datos, calendario y rendimiento del ciclismo WorldTour.",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://www.tusitioweb.com/glosario?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    }
-    </script>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Velo Insights",
-      "url": "https://www.tusitioweb.com/",
-      "logo": "https://www.tusitioweb.com/assets/icon-192.png",
-      "sameAs": [
-        "https://twitter.com/veloinsights",
-        "https://instagram.com/veloinsights"
-      ]
-    }
-    </script>
-
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -96,12 +67,11 @@
 
         .timeline-tick { width: 1px; height: 12px; background-color: #3f3f46; margin: 0 auto; transition: all 0.3s; }
         
-        /* Modificación para soportar altura variable si hay muchas carreras */
         .timeline-day { flex: 0 0 52px; height: 75px; display: flex; flex-direction: column; justify-content: start; align-items: center; padding-top: 10px; transition: all 0.2s; position: relative; cursor: pointer; }
         
         /* Estado Activo */
         .day-active { background: rgba(139, 92, 246, 0.05); }
-        .day-active .timeline-tick { display: none; } /* Ocultamos el tick si hay carrera */
+        .day-active .timeline-tick { display: none; } 
         
         .day-number { font-size: 0.9rem; color: #71717a; font-weight: 700; margin-bottom: 4px; transition: color 0.3s; }
         .day-active .day-number { color: #e4e4e7; }
@@ -112,7 +82,7 @@
         .day-empty .day-number { font-size: 0.65rem; color: #52525b; font-weight: 500; margin-bottom: 6px; }
 
         /* Comparison Card */
-        .comparison-card { background: linear-gradient(180deg, rgba(6, 25, 20, 0.6) 0%, rgba(5,5,5,0.9) 100%); position: relative; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.15); }
+        .comparison-card { background: linear-gradient(180deg, rgba(6, 25, 20, 0.6) 0%, rgba(5,5,5,0.9) 100%); position: relative; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.15); height: 100%; }
         .stage-profile-bg { 
             position: absolute; bottom: 0; left: 0; width: 100%; height: 70%; 
             background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300' preserveAspectRatio='none'%3E%3Cpath d='M0,300 L50,280 L150,250 L300,200 L450,150 L600,100 L750,50 L900,20 L1000,300 Z' fill='rgba(16, 185, 129, 0.05)' /%3E%3Cpath d='M0,300 L50,280 L150,250 L300,200 L450,150 L600,100 L750,50 L900,20 L1000,0' fill='none' stroke='rgba(16, 185, 129, 0.15)' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat bottom; 
@@ -121,6 +91,10 @@
 
         input[type=range].slider-green { -webkit-appearance: none; background: #27272a; height: 4px; border-radius: 2px; width: 100%; }
         input[type=range].slider-green::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #10b981; cursor: pointer; border: 2px solid #064e3b; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); margin-top: -8px; }
+        
+        /* Botones Trending */
+        .trending-tag { transition: all 0.2s; }
+        .trending-tag:hover { background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.5); color: #22d3ee; }
     </style>
 </head>
 
@@ -178,12 +152,11 @@
             </div>
             <div class="timeline-container rounded-xl shadow-2xl shadow-violet-900/10">
                 <div id="timeline-scroll" class="flex overflow-x-auto custom-scrollbar pb-0 cursor-grab active:cursor-grabbing select-none py-2 px-4 mask-linear">
-                    </div>
+                </div>
             </div>
         </section>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-            
             <aside class="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-5">
                 <h3 class="text-base font-heading text-white italic uppercase mb-4 border-b border-zinc-800 pb-2">PROXIMAS <span class="text-yellow-500">CARRERAS</span></h3>
                 <div id="upcoming-races" class="space-y-2">
@@ -200,56 +173,118 @@
                     <p class="text-[10px] text-zinc-500 text-center py-4 tracking-widest uppercase animate-pulse">Obteniendo puntos...</p>
                 </div>
             </aside>
-
         </div>
 
-        <section class="comparison-card rounded-2xl p-5 md:p-8 opacity-90 hover:opacity-100 transition-opacity">
-            <div class="stage-profile-bg"></div>
+        <section class="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 items-stretch">
+            
+            <div class="lg:col-span-3">
+                <div class="comparison-card rounded-2xl p-5 md:p-8 opacity-90 hover:opacity-100 transition-opacity flex flex-col justify-between">
+                    <div class="stage-profile-bg"></div>
 
-            <div class="relative z-10">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h3 class="text-sm font-heading text-white italic uppercase">Pro vs Amateur</h3>
-                        <p class="text-[9px] text-zinc-500">Ref: Alpe d'Huez (13.8km @ 8.1%)</p>
-                    </div>
-                    <div id="level-tag" class="text-emerald-400 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm bg-black/40 border border-emerald-500/30 px-3 py-1 rounded">--</div>
-                </div>
+                    <div class="relative z-10 w-full mb-8">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-sm font-heading text-white italic uppercase">Pro vs Amateur</h3>
+                                <p class="text-[9px] text-zinc-500">Ref: Alpe d'Huez (13.8km @ 8.1%)</p>
+                            </div>
+                            <div id="level-tag" class="text-emerald-400 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm bg-black/40 border border-emerald-500/30 px-3 py-1 rounded">--</div>
+                        </div>
 
-                <div class="mb-6 border-l-2 border-zinc-700 pl-3">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[9px] font-bold uppercase text-zinc-400">Tadej Pogačar</span>
-                        <span class="text-xs font-mono text-white font-bold">39' 50"</span>
-                    </div>
-                    <div class="flex justify-between text-[9px] font-mono text-zinc-500">
-                        <span>~445 Watts</span>
-                        <span>6.8 W/kg</span>
-                    </div>
-                    <div class="h-1 bg-zinc-800 rounded-full mt-2 overflow-hidden w-full">
-                        <div class="h-full bg-white w-full shadow-[0_0_10px_white]"></div>
-                    </div>
-                </div>
+                        <div class="mb-6 border-l-2 border-zinc-700 pl-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[9px] font-bold uppercase text-zinc-400">Tadej Pogačar</span>
+                                <span class="text-xs font-mono text-white font-bold">39' 50"</span>
+                            </div>
+                            <div class="flex justify-between text-[9px] font-mono text-zinc-500">
+                                <span>~445 Watts</span>
+                                <span>6.8 W/kg</span>
+                            </div>
+                            <div class="h-1 bg-zinc-800 rounded-full mt-2 overflow-hidden w-full">
+                                <div class="h-full bg-white w-full shadow-[0_0_10px_white]"></div>
+                            </div>
+                        </div>
 
-                <div class="mb-4 border-l-2 border-emerald-500 pl-3">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[9px] font-bold uppercase text-emerald-500">Tu Nivel Estimado</span>
-                        <span id="amateur-time" class="text-xs font-mono text-white font-bold">--</span>
+                        <div class="mb-4 border-l-2 border-emerald-500 pl-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[9px] font-bold uppercase text-emerald-500">Tu Nivel Estimado</span>
+                                <span id="amateur-time" class="text-xs font-mono text-white font-bold">--</span>
+                            </div>
+                            <div class="flex justify-between text-[9px] font-mono text-emerald-400/80">
+                                <span id="amateur-watts">-- Watts</span>
+                                <span id="amateur-wkg">-- W/kg</span>
+                            </div>
+                            <div class="h-1 bg-zinc-800 rounded-full mt-2 overflow-hidden w-full">
+                                <div id="amateur-bar" class="h-full bg-emerald-500 w-[50%] shadow-[0_0_10px_#10b981] transition-all duration-500"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex justify-between text-[9px] font-mono text-emerald-400/80">
-                        <span id="amateur-watts">-- Watts</span>
-                        <span id="amateur-wkg">-- W/kg</span>
-                    </div>
-                    <div class="h-1 bg-zinc-800 rounded-full mt-2 overflow-hidden w-full">
-                        <div id="amateur-bar" class="h-full bg-emerald-500 w-[50%] shadow-[0_0_10px_#10b981]"></div>
-                    </div>
-                </div>
 
-                <div class="pt-2">
-                    <input type="range" min="1" max="10" value="4" class="slider-green w-full block" id="level-slider" aria-label="Ajustar nivel ciclista">
-                    <div class="flex justify-between text-[8px] font-bold text-zinc-600 uppercase mt-2 tracking-widest">
-                        <span>Globero</span><span>World Tour</span>
+                    <div class="pt-2 relative z-10 w-full mt-auto">
+                        <input type="range" min="1" max="10" value="4" class="slider-green w-full block" id="level-slider" aria-label="Ajustar nivel ciclista">
+                        <div class="flex justify-between text-[8px] font-bold text-zinc-600 uppercase mt-2 tracking-widest">
+                            <span>Globero</span><span>World Tour</span>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <div class="lg:col-span-2 flex flex-col gap-6">
+                <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-5 flex-1 shadow-inner">
+                    <h3 class="text-[10px] font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        Ciclistas en Forma
+                    </h3>
+                    <div class="space-y-3">
+                        <a href="noticias.html" class="flex justify-between items-center p-2 hover:bg-white/5 rounded-lg transition-colors group">
+                            <div class="flex items-center gap-3">
+                                <img src="assets/equipos/lidl.png" class="w-6 h-6 object-contain drop-shadow-md grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                                <div>
+                                    <p class="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">Jonathan Milan</p>
+                                    <p class="text-[9px] text-zinc-500 font-mono">Lidl-Trek</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="flex items-center gap-1 text-green-400 text-xs font-bold font-mono">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                                    +15%
+                                </span>
+                                <span class="text-[8px] text-zinc-600 uppercase tracking-widest">OVR Sprint</span>
+                            </div>
+                        </a>
+                        <a href="noticias.html" class="flex justify-between items-center p-2 hover:bg-white/5 rounded-lg transition-colors group">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xl">🇺🇸</span>
+                                <div>
+                                    <p class="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">Matteo Jorgenson</p>
+                                    <p class="text-[9px] text-zinc-500 font-mono">Visma | Lease a Bike</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="flex items-center gap-1 text-green-400 text-xs font-bold font-mono">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                                    +8%
+                                </span>
+                                <span class="text-[8px] text-zinc-600 uppercase tracking-widest">OVR Montaña</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-5 shadow-inner">
+                    <h3 class="text-[10px] font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <svg class="w-3 h-3 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path></svg>
+                        Hot Topics
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="noticias.html" class="trending-tag px-3 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-mono rounded-full border border-zinc-700">#UAETour</a>
+                        <a href="noticias.html" class="trending-tag px-3 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-mono rounded-full border border-zinc-700">#StradeBianche</a>
+                        <a href="noticias.html" class="trending-tag px-3 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-mono rounded-full border border-zinc-700">#Aerodynamics</a>
+                        <a href="glosario.html" class="trending-tag px-3 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-mono rounded-full border border-zinc-700">Hookless</a>
+                        <a href="glosario.html" class="trending-tag px-3 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-mono rounded-full border border-zinc-700">Grupeto</a>
+                    </div>
+                </div>
+            </div>
+
         </section>
 
     </main>
@@ -323,7 +358,6 @@
                 });
         }
 
-        // --- LÓGICA DE RENDERIZADO DE NOTICIAS CON SEO EN ATRIBUTOS ALT ---
         function renderNews(news) {
             const container = document.getElementById('latest-news-container');
             
