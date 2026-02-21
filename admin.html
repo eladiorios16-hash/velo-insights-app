@@ -35,6 +35,7 @@
         <button onclick="loadTable('equipos')" id="btn-equipos" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-users text-yellow-400"></i> Equipos</button>
         <button onclick="loadTable('glosario')" id="btn-glosario" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-book text-purple-400"></i> Glosario</button>
         <button onclick="loadTable('trending')" id="btn-trending" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-fire text-orange-400"></i> Trending</button>
+        <button onclick="loadTable('ranking')" id="btn-ranking" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-trophy text-amber-400"></i> Ranking</button>
     </nav>
 
     <main id="content-area" class="glass rounded-2xl p-8 min-h-[60vh]">
@@ -71,7 +72,8 @@
             calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
             equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
             glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
-            trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' }
+            trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' },
+            ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0 } // NUEVA PLANTILLA RANKING
         };
 
         async function loadTable(table) {
@@ -87,6 +89,7 @@
             if(table === 'equipos') endpoint = 'teams';
             if(table === 'calendario') endpoint = 'calendar';
             if(table === 'glosario') endpoint = 'glossary';
+            if(table === 'ranking') endpoint = 'ranking'; // RUTA RANKING
 
             try {
                 const res = await fetch(`/api/${endpoint}`);
@@ -128,12 +131,19 @@
                 </tr></thead>
                 <tbody class="divide-y divide-slate-700 bg-slate-900/40">`;
 
-            data.forEach(row => {
+            // Si estamos en ranking, los ordenamos de mayor a menor puntuación antes de pintarlos en la tabla
+            let renderData = data;
+            if (currentTable === 'ranking') {
+                renderData = [...data].sort((a, b) => b.points - a.points);
+            }
+
+            renderData.forEach(row => {
                 tableHtml += `<tr class="hover:bg-slate-800/60 transition group">`;
                 displayCols.forEach(col => {
                     let val = row[col];
                     if (col === 'isHero') val = val == 1 ? '<span class="text-yellow-400">★ SÍ</span>' : '<span class="text-slate-600">No</span>';
                     else if (col === 'tipo' && currentTable === 'trending') val = val === 'ciclista' ? '<span class="text-emerald-400 font-bold">🚴‍♂️ CICLISTA</span>' : '<span class="text-cyan-400 font-bold"># TOPIC</span>';
+                    else if (col === 'points' && currentTable === 'ranking') val = `<span class="text-amber-400 font-bold text-base">${val} PTS</span>`;
                     else if (typeof val === 'string' && val.startsWith('assets/')) val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md">`;
                     else if (typeof val === 'string' && val.length > 40) val = val.substring(0, 40) + '...';
                     
@@ -152,7 +162,6 @@
             if(!confirm("Esto analizará tus últimas noticias y extraerá automáticamente carreras y términos técnicos para guardarlos como Trending Topics. ¿Deseas continuar?")) return;
             
             try {
-                // Descargar todo el ecosistema
                 const [newsRes, teamsRes, calRes, glosRes] = await Promise.all([
                     fetch('/api/news').then(r => r.ok ? r.json() : []),
                     fetch('/api/teams').then(r => r.ok ? r.json() : []),
@@ -161,14 +170,9 @@
                 ]);
 
                 const newTrends = [];
-                
-                // Unimos el texto de las últimas 5 noticias para escanear
                 const recentText = newsRes.slice(0, 5).map(n => (n.title + " " + (n.excerpt||"") + " " + (n.content||"")).toLowerCase()).join(' ');
 
-                // 1. EXTRAER HOT TOPICS (Buscando carreras y términos técnicos)
                 let potentialTopics = [];
-                
-                // Buscar Carreras
                 calRes.forEach(r => {
                     if (recentText.includes(r.name.toLowerCase())) {
                         potentialTopics.push({ 
@@ -179,7 +183,6 @@
                     }
                 });
 
-                // Buscar Glosario
                 glosRes.forEach(g => {
                     if (recentText.includes(g.term.toLowerCase())) {
                         potentialTopics.push({ 
@@ -190,7 +193,6 @@
                     }
                 });
 
-                // Ordenar por menciones y coger los 4 mejores
                 potentialTopics.sort((a, b) => b.count - a.count);
                 const topTopics = potentialTopics.slice(0, 4);
 
@@ -198,7 +200,6 @@
                     newTrends.push({ tipo: 'topic', title: t.text, subtitle: t.link, value: '' });
                 });
 
-                // 2. EXTRAER CICLISTAS MENCIONADOS
                 const allProRiders = [];
                 teamsRes.forEach(team => {
                     let rList = [];
@@ -208,7 +209,6 @@
 
                 let addedRiders = 0;
                 allProRiders.forEach(pro => {
-                    // Si el nombre aparece en las noticias recientes
                     if (recentText.includes(pro.name.toLowerCase()) && addedRiders < 2) { 
                         newTrends.push({ tipo: 'ciclista', title: pro.name, subtitle: pro.team, value: '+HOT' });
                         addedRiders++;
@@ -220,12 +220,10 @@
                     return;
                 }
 
-                // GUARDAR EN LA BASE DE DATOS
                 const authHeader = 'Basic ' + btoa('admin:velo2026');
                 let addedCount = 0;
                 
                 for (const trend of newTrends) {
-                    // Evitar duplicados
                     const exists = currentData.find(d => d.title === trend.title);
                     if (!exists) {
                         await fetch(`/api/admin/create/trending`, {
@@ -249,7 +247,6 @@
                 alert("❌ Error generando tendencias: " + e.message);
             }
         }
-        // ==========================================
 
         function openCreateModal() {
             isEditing = false; editId = null;
@@ -312,6 +309,11 @@
                     input.type = "date";
                     input.className = "input-dark w-full rounded-lg p-3";
                     input.value = (value && typeof value === 'string') ? value.split('T')[0] : value || '';
+                } else if (key === 'points') {
+                    input = document.createElement('input');
+                    input.type = "number"; // Permite que sea más fácil introducir números
+                    input.className = "input-dark w-full rounded-lg p-3 font-mono font-bold text-amber-400";
+                    input.value = value || 0;
                 } else {
                     input = document.createElement('input');
                     input.type = "text";
@@ -335,6 +337,10 @@
             for (let [key, value] of formData.entries()) {
                 if ((key === 'riders' || key === 'details') && typeof value === 'string') {
                     try { JSON.parse(value); } catch (e) {}
+                }
+                // Convertir los puntos a número al guardar
+                if (key === 'points') {
+                    value = parseInt(value) || 0;
                 }
                 dataObj[key] = value;
             }
