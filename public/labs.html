@@ -100,10 +100,10 @@
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 pb-20">
         
-        <section class="glass p-5 md:p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between">
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-[80px] pointer-events-none"></div>
+        <section class="glass p-5 md:p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between border-t border-zinc-700/50" id="telemetry-card">
+            <div id="rank-glow" class="absolute -top-24 -right-24 w-64 h-64 rounded-full blur-[100px] pointer-events-none transition-colors duration-700"></div>
 
-            <h3 class="text-lg md:text-xl font-heading text-white italic uppercase mb-8 flex items-center gap-3">
+            <h3 class="text-lg md:text-xl font-heading text-white italic uppercase mb-8 flex items-center gap-3 relative z-10">
                 <span class="w-1.5 h-6 md:w-2 md:h-8 bg-cyan-500 block skew-x-[-10deg] shadow-[0_0_15px_rgba(34,211,238,0.5)]"></span>
                 Telemetría del ciclista
             </h3>
@@ -135,20 +135,22 @@
             <div class="bg-zinc-950 rounded-2xl p-6 border border-zinc-800 flex justify-between items-center relative overflow-hidden group shadow-inner">
                 <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 <div>
-                    <p class="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-2">Rendimiento Relativo</p>
-                    <div class="flex items-center gap-2">
-                        <div id="wkg-dot" class="w-2 h-2 rounded-full bg-zinc-500"></div>
-                        <p id="wkg-level-desc" class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest transition-colors duration-300">Ajusta los controles</p>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span id="rank-badge" class="text-xs font-black px-2 py-0.5 rounded uppercase tracking-widest text-black transition-all duration-300">Rango</span>
+                        <p class="text-[9px] font-black uppercase text-zinc-500 tracking-widest">Rendimiento Relativo</p>
                     </div>
+                    <p id="wkg-level-desc" class="text-xs text-zinc-400 font-bold mt-2 transition-colors duration-300 max-w-[200px]">Ajusta los controles</p>
                 </div>
-                <div class="text-right z-10 flex items-baseline gap-1">
-                    <p class="text-5xl md:text-6xl font-heading italic tracking-tighter transition-colors duration-300" id="wkg-display">0.00</p>
-                    <p class="text-[10px] font-bold text-zinc-500 uppercase">W/kg</p>
+                <div class="text-right z-10 flex flex-col items-end">
+                    <div class="flex items-baseline gap-1">
+                        <p class="text-5xl md:text-6xl font-heading italic tracking-tighter transition-colors duration-300" id="wkg-display">0.00</p>
+                        <p class="text-[10px] font-bold text-zinc-500 uppercase">W/kg</p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section class="glass p-5 md:p-8 rounded-3xl flex flex-col relative overflow-hidden">
+        <section class="glass p-5 md:p-8 rounded-3xl flex flex-col relative overflow-hidden border-t border-zinc-700/50">
             <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-pink-500/10 rounded-full blur-[80px] pointer-events-none"></div>
 
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 relative z-10">
@@ -172,7 +174,7 @@
             </div>
         </section>
 
-        <section class="glass p-5 md:p-8 rounded-3xl col-span-1 lg:col-span-2 relative overflow-hidden">
+        <section class="glass p-5 md:p-8 rounded-3xl col-span-1 lg:col-span-2 relative overflow-hidden border-t border-zinc-700/50">
             <div id="climb-profile-container" class="climb-profile-bg"></div>
 
             <div class="relative z-10">
@@ -260,7 +262,8 @@
         const rivalSelect = document.getElementById('rival-selector');
         const wkgDisplay = document.getElementById('wkg-display');
         const wkgLevelDesc = document.getElementById('wkg-level-desc');
-        const wkgDot = document.getElementById('wkg-dot');
+        const rankBadge = document.getElementById('rank-badge');
+        const rankGlow = document.getElementById('rank-glow');
         const analysisContent = document.getElementById('analysis-content');
         
         const climbSelect = document.getElementById('climb-select');
@@ -300,7 +303,6 @@
         function init() {
             rivalSelect.innerHTML = Object.entries(PRO_STATS).map(([k,v]) => `<option value="${k}">${v.name} (${v.team})</option>`).join('');
             
-            // Cargar datos guardados si existen
             if(localStorage.getItem('velo_weight')) {
                 weightSlider.value = localStorage.getItem('velo_weight');
                 weightNum.value = localStorage.getItem('velo_weight');
@@ -327,33 +329,56 @@
             
             wkgDisplay.innerText = wkg > 0 ? wkg.toFixed(2) : '0.00';
             
-            // Lógica de Niveles y Colores
-            let levelTxt = "Ingresa tus datos";
-            let colorHex = "#52525b"; // zinc-500
+            // NUEVO SISTEMA DE RANGOS (S, A, B, C, D)
+            let levelTxt = "Ingresa datos";
+            let rankClass = "bg-zinc-700 text-zinc-400";
+            let colorHex = "rgba(113, 113, 122, 0.2)"; // zinc-500
             let shadowClass = "";
             let colorClass = "text-zinc-500";
+            let rankLvl = "—";
 
             if (wkg > 0) {
-                if (wkg < 2.5) { levelTxt = "Principiante"; colorHex = "#a1a1aa"; colorClass = "text-zinc-400"; }
-                else if (wkg < 3.5) { levelTxt = "Cicloturista"; colorHex = "#22d3ee"; colorClass = "text-cyan-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]"; }
-                else if (wkg < 4.5) { levelTxt = "Amateur"; colorHex = "#4ade80"; colorClass = "text-green-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]"; }
-                else if (wkg < 5.5) { levelTxt = "Élite Nacional"; colorHex = "#eab308"; colorClass = "text-yellow-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]"; }
-                else if (wkg < 6.2) { levelTxt = "Pro Continental"; colorHex = "#f97316"; colorClass = "text-orange-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]"; }
-                else { levelTxt = "World Tour (Alien)"; colorHex = "#ec4899"; colorClass = "text-pink-500"; shadowClass = "drop-shadow-[0_0_20px_rgba(236,72,153,0.8)]"; }
+                if (wkg < 2.5) { 
+                    rankLvl = "D"; levelTxt = "Principiante. Toca sumar kilómetros."; 
+                    rankClass = "bg-zinc-700 text-zinc-300"; colorClass = "text-zinc-400"; colorHex = "rgba(161, 161, 170, 0.2)";
+                }
+                else if (wkg < 3.5) { 
+                    rankLvl = "C"; levelTxt = "Cicloturista en progresión."; 
+                    rankClass = "bg-cyan-500 text-black"; colorClass = "text-cyan-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]"; colorHex = "rgba(34, 211, 238, 0.2)";
+                }
+                else if (wkg < 4.5) { 
+                    rankLvl = "B"; levelTxt = "Nivel Amateur. Fuerte en grupetas."; 
+                    rankClass = "bg-green-500 text-black"; colorClass = "text-green-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]"; colorHex = "rgba(74, 222, 128, 0.2)";
+                }
+                else if (wkg < 5.5) { 
+                    rankLvl = "A"; levelTxt = "Élite Nacional. Listo para competir."; 
+                    rankClass = "bg-yellow-400 text-black"; colorClass = "text-yellow-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]"; colorHex = "rgba(250, 204, 21, 0.2)";
+                }
+                else if (wkg < 6.2) { 
+                    rankLvl = "S"; levelTxt = "Pro Continental. Puedes ganarte la vida con esto."; 
+                    rankClass = "bg-orange-500 text-black"; colorClass = "text-orange-400"; shadowClass = "drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]"; colorHex = "rgba(249, 115, 22, 0.2)";
+                }
+                else { 
+                    rankLvl = "S+"; levelTxt = "Alien (World Tour). Prepara el Tour."; 
+                    rankClass = "bg-pink-500 text-white animate-pulse"; colorClass = "text-pink-500"; shadowClass = "drop-shadow-[0_0_20px_rgba(236,72,153,0.8)]"; colorHex = "rgba(236, 72, 153, 0.3)";
+                }
             }
             
-            wkgLevelDesc.innerText = `Nivel: ${levelTxt}`;
-            wkgLevelDesc.className = `text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 ${colorClass}`;
-            wkgDot.style.backgroundColor = colorHex;
-            wkgDot.style.boxShadow = `0 0 10px ${colorHex}`;
+            // Actualizar Tarjeta de Telemetría
+            wkgLevelDesc.innerText = levelTxt;
+            wkgLevelDesc.className = `text-xs font-bold transition-colors duration-300 ${colorClass}`;
             
+            rankBadge.innerText = `RANGO ${rankLvl}`;
+            rankBadge.className = `text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest transition-all duration-300 shadow-lg ${rankClass}`;
+            
+            rankGlow.style.backgroundColor = colorHex;
             wkgDisplay.className = `text-5xl md:text-6xl font-heading italic tracking-tighter transition-all duration-300 ${colorClass} ${shadowClass}`;
 
             localStorage.setItem('velo_weight', weightSlider.value);
             localStorage.setItem('velo_watts', wattsSlider.value);
 
             renderRadar();
-            handleClimbSliderInput(); // Actualiza la pestaña de la subida también
+            handleClimbSliderInput(); 
         }
 
         function updateClimbBackground() {
@@ -406,14 +431,14 @@
             // Widget de análisis de texto
             const gap = ((userScore / 100) * 100).toFixed(0);
             let message = "";
-            if(gap < 40) message = "Aún te queda entrenamiento para aguantar un abanico.";
-            else if(gap < 70) message = "Buen nivel amateur, aguantarías en un puerto de 3ª categoría.";
-            else if(gap < 90) message = "Nivel excelente. Podrías correr carreras élite.";
-            else message = "Eres un monstruo genético. Ficha por un WorldTour ya.";
+            if(gap < 40) message = `Te destrozaría en los primeros 5km. A entrenar.`;
+            else if(gap < 70) message = `No podrías seguirle la rueda, pero al menos le verías de lejos.`;
+            else if(gap < 90) message = `Nivel espectacular. Podrías aguantarle un buen rato.`;
+            else message = `¿Eres tú, Tadej? Porque le darías pelea a ${rival.name}.`;
 
             analysisContent.innerHTML = `
                 <div class="flex justify-between items-end mb-3">
-                    <span class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Afinidad Pro</span>
+                    <span class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Afinidad vs ${rival.name.split(' ')[0]}</span>
                     <span class="text-xl font-heading italic text-cyan-400 leading-none">${gap}%</span>
                 </div>
                 <div class="w-full bg-black rounded-full h-2 mb-3 overflow-hidden border border-zinc-800">
@@ -430,7 +455,7 @@
             sliderValDisplay.innerText = `${minutes}m`;
             
             const c = CLIMBS[climbSelect.value];
-            const req = (c.factor / minutes).toFixed(2); // Fórmula básica factor/tiempo
+            const req = (c.factor / minutes).toFixed(2);
             
             climbWkgDisplay.innerText = `${req} W/kg`;
             climbWkgDisplay.style.color = c.color;
@@ -501,6 +526,11 @@
         climbSelect.addEventListener('change', () => { 
             updateClimbBackground(); 
             handleClimbSliderInput(); 
+        });
+
+        // NUEVO: ESTE EVENT LISTENER ARREGLA EL CAMBIO DE RIVAL
+        rivalSelect.addEventListener('change', () => {
+            renderRadar();
         });
         
         window.onload = init;
