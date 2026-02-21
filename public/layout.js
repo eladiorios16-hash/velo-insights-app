@@ -208,10 +208,6 @@ function renderMenuModal() {
     };
 
     menu.innerHTML = `
-        <div class="absolute top-28 right-6 text-[8px] font-mono text-cyan-500/50 text-right uppercase tracking-[0.2em] pointer-events-none">
-            Sys_Nav.Online<br>Mode: Performance
-        </div>
-
         <div class="flex flex-col gap-3 relative z-10 w-full max-w-sm mx-auto">
             
             <button onclick="toggleMenu(); toggleSearch()" class="nav-item group relative flex items-center justify-between w-full p-4 mb-4 rounded-xl bg-zinc-900/60 border border-zinc-700/50 hover:border-cyan-500/80 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)] overflow-hidden">
@@ -220,7 +216,6 @@ function renderMenuModal() {
                     <span class="text-cyan-500">${icons.search}</span>
                     <span class="text-xs font-bold uppercase tracking-widest text-zinc-300 group-hover:text-white transition-colors">Inicializar Búsqueda...</span>
                 </div>
-                <div class="text-[9px] font-mono text-zinc-600 bg-black px-2 py-1 rounded">CMD+K</div>
             </button>
 
             <a href="index.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
