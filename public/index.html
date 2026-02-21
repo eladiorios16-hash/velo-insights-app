@@ -199,7 +199,7 @@
                         Ciclistas en Forma
                     </h3>
                     <div id="trending-riders-container" class="space-y-3">
-                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Analizando pelotón...</p>
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Cargando...</p>
                     </div>
                 </div>
 
@@ -209,7 +209,7 @@
                         Hot Topics
                     </h3>
                     <div id="hot-topics-container" class="flex flex-wrap gap-2">
-                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Escaneando insights...</p>
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Cargando...</p>
                     </div>
                 </div>
             </div>
@@ -247,83 +247,35 @@
         }
 
         async function loadContent() {
-            // DESCARGAMOS TODOS LOS DATOS PARA LA EXTRACCIÓN INTELIGENTE
-            const [newsRes, trendRes, teamsRes, calRes, glosRes] = await Promise.all([
+            const [newsRes, trendRes, calRes, teamsRes] = await Promise.all([
                 fetch('/api/news').then(r => r.ok ? r.json() : []).catch(() => []),
                 fetch('/api/trending').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => []),
                 fetch('/api/calendar').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/glossary').then(r => r.ok ? r.json() : []).catch(() => [])
+                fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => [])
             ]);
 
             renderNews(newsRes);
             
-            // --- 1. HOT TOPICS INTELIGENTES ---
+            // --- 1. HOT TOPICS (ESTRICTAMENTE DESDE BASE DE DATOS) ---
             let topics = [];
-            // 1.1 Insertar los manuales del Admin
             trendRes.filter(t => t.tipo.toLowerCase() === 'topic').forEach(t => topics.push({ text: t.title, link: t.subtitle || 'noticias.html' }));
-            
-            // 1.2 Extracción automática desde las noticias
-            if (newsRes && newsRes.length > 0) {
-                // Unimos los textos de las últimas 5 noticias para escanear
-                const recentText = newsRes.slice(0, 5).map(n => (n.title + " " + (n.excerpt||"") + " " + (n.content||"")).toLowerCase()).join(' ');
-                
-                // A) Buscar Carreras del Calendario en las noticias
-                calRes.forEach(r => {
-                    if (recentText.includes(r.name.toLowerCase())) {
-                        const tag = '#' + r.name.replace(/\s+/g, ''); // Ej: "UAE Tour" -> "#UAETour"
-                        if (!topics.find(t => t.text.toLowerCase() === tag.toLowerCase())) {
-                            topics.push({ text: tag, link: `calendario.html?race=${encodeURIComponent(r.name)}` });
-                        }
-                    }
-                });
 
-                // B) Buscar Términos del Glosario (Datos técnicos) en las noticias
-                glosRes.forEach(g => {
-                    if (recentText.includes(g.term.toLowerCase())) {
-                        const tag = '#' + g.term.replace(/\s+/g, ''); // Ej: "Vatios" -> "#Vatios"
-                        if (!topics.find(t => t.text.toLowerCase() === tag.toLowerCase())) {
-                            topics.push({ text: tag, link: `glosario.html?term=${encodeURIComponent(g.term)}` });
-                        }
-                    }
-                });
-            }
-
-            // Renderizar Topics
             if(topics.length > 0) {
-                document.getElementById('hot-topics-container').innerHTML = topics.slice(0, 8).map(t => 
+                document.getElementById('hot-topics-container').innerHTML = topics.map(t => 
                     `<a href="${t.link}" class="trending-tag px-3 py-1.5 bg-zinc-800/80 text-zinc-300 text-[10px] font-mono rounded-full border border-zinc-700 shadow-sm">${t.text}</a>`
                 ).join('');
             } else {
-                document.getElementById('hot-topics-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">No hay tendencias claras hoy.</p>`;
+                document.getElementById('hot-topics-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">No hay tendencias registradas. Usa el Admin.</p>`;
             }
 
-            // --- 2. CICLISTAS EN FORMA INTELIGENTES CON MAILLOTS A TODO COLOR ---
+            // --- 2. CICLISTAS EN FORMA (ESTRICTAMENTE DESDE BASE DE DATOS) ---
             let riders = [];
-            // 2.1 Manuales del Admin
-            trendRes.filter(t => t.tipo.toLowerCase() === 'ciclista').forEach(r => riders.push({ name: r.title, team: r.subtitle || 'WorldTour', value: r.value || 'HOT', manual: true }));
+            trendRes.filter(t => t.tipo.toLowerCase() === 'ciclista').forEach(r => riders.push({ name: r.title, team: r.subtitle || 'WorldTour', value: r.value || 'HOT' }));
             
-            // 2.2 Extracción automática (buscar corredores de la BD en las últimas noticias)
-            const allProRiders = [];
-            teamsRes.forEach(team => {
-                let rList = [];
-                try { rList = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; } catch(e){}
-                rList.forEach(r => allProRiders.push({ name: r.name, team: team.name }));
-            });
-
-            const recentTitles = newsRes.slice(0, 4).map(n => n.title).join(' ');
-            allProRiders.forEach(pro => {
-                if (recentTitles.includes(pro.name)) {
-                    if(!riders.find(r => r.name === pro.name)) {
-                        riders.push({ name: pro.name, team: pro.team, value: '🔥 INSIGHT', manual: false });
-                    }
-                }
-            });
-
-            // Renderizar Ciclistas
             if(riders.length > 0) {
-                document.getElementById('trending-riders-container').innerHTML = riders.slice(0, 3).map(r => {
-                    let jerseyHTML = `<div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors">🚴‍♂️</div>`;
+                document.getElementById('trending-riders-container').innerHTML = riders.map(r => {
+                    // ICONO MÁS GRANDE (w-10 h-10 y shrink-0)
+                    let jerseyHTML = `<div class="w-10 h-10 shrink-0 rounded-full bg-zinc-800 flex items-center justify-center text-sm border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors">🚴‍♂️</div>`;
                     
                     if (teamsRes && teamsRes.length > 0) {
                         const matchedTeam = teamsRes.find(t => 
@@ -332,8 +284,7 @@
                             t.code.toLowerCase() === r.team.toLowerCase()
                         );
                         if (matchedTeam && matchedTeam.jersey) {
-                            // AQUÍ ESTÁ EL CAMBIO: Quitamos grayscale y opacity, y añadimos hover:scale-110 para mantener la interacción
-                            jerseyHTML = `<img src="${matchedTeam.jersey}" alt="Maillot ${r.team}" class="w-8 h-8 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110">`;
+                            jerseyHTML = `<img src="${matchedTeam.jersey}" alt="Maillot ${r.team}" class="w-10 h-10 shrink-0 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110">`;
                         }
                     }
 
@@ -346,18 +297,18 @@
                                 <p class="text-[9px] text-zinc-500 font-mono truncate max-w-[120px]">${r.team}</p>
                             </div>
                         </div>
-                        <div class="text-right">
+                        <div class="text-right shrink-0">
                             <span class="flex items-center justify-end gap-1 text-green-400 text-xs font-bold font-mono">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
                                 ${r.value}
                             </span>
-                            <span class="text-[8px] text-zinc-600 uppercase tracking-widest">${r.manual ? 'PRO DATA' : 'TENDENCIA'}</span>
+                            <span class="text-[8px] text-zinc-600 uppercase tracking-widest">TENDENCIA</span>
                         </div>
                     </a>
                     `;
                 }).join('');
             } else {
-                document.getElementById('trending-riders-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">Analizando métricas del pelotón...</p>`;
+                document.getElementById('trending-riders-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">No hay ciclistas registrados. Usa el Admin.</p>`;
             }
 
             // CALENDARIO Y RANKING
@@ -381,7 +332,7 @@
                 });
         }
 
-        // Resto de funciones (renderNews, renderRanking, renderUpcomingWidget, renderTimeline)
+        // Resto de funciones estáticas
         function renderNews(news) {
             const container = document.getElementById('latest-news-container');
             if (news && news.length > 0) {
