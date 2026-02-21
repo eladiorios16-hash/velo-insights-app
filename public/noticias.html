@@ -5,119 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
     
-    <title>VELO INSIGHTS | Journal & Análisis</title>
-    
-    <link rel="manifest" href="/manifest.json">
+    <title>VELO INSIGHTS | Journal</title>
+    <meta name="description" content="Archivo profundo de análisis técnico de ciclismo WorldTour. Datos, vatios y tecnología.">
     <meta name="theme-color" content="#050505">
-    <meta name="mobile-web-app-capable" content="yes">
+    
+    <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="/assets/icon-192.png">
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('✅ App registrada', reg.scope))
-                    .catch(err => console.log('❌ Error registro App', err));
-            });
-        }
-    </script>
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="assets/main.css">
 
     <style>
-        body { -webkit-tap-highlight-color: transparent; }
+        body { -webkit-tap-highlight-color: transparent; background-color: #050505; }
         
-        .news-card { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
-        .news-card:hover { transform: translateY(-4px); border-color: #3f3f46; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .news-card:active { transform: translateY(0) scale(0.98); }
-
-        .hero-img-container::after {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(to top, #050505 0%, transparent 50%, transparent 100%);
+        /* Animación Skeleton */
+        @keyframes skeleton-loading {
+            0% { background-color: #09090b; }
+            50% { background-color: #18181b; }
+            100% { background-color: #09090b; }
         }
+        .skeleton { animation: skeleton-loading 1.5s infinite ease-in-out; border-radius: 0.5rem; }
 
+        /* Scrollbar Personalizada */
+        .custom-scrollbar::-webkit-scrollbar { height: 0px; width: 0px; display: none; }
+        .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Filtros */
         .filter-btn { transition: all 0.3s ease; }
         .filter-btn.active { background: #22d3ee; color: #000; border-color: #22d3ee; font-weight: 900; box-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
 
-        /* Estilos del Modal/Página Independiente de la Noticia */
-        #article-modal {
-            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .modal-hidden { opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.98); }
-        .modal-visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
-
-        .article-content { font-size: 1.1rem; line-height: 1.8; color: #a1a1aa; font-family: 'Inter', sans-serif; }
-        .article-content p { margin-bottom: 1.5rem; }
-        .article-content h2, .article-content h3 { color: #f4f4f5; font-weight: 900; margin-top: 2.5rem; margin-bottom: 1.25rem; font-style: italic; text-transform: uppercase; letter-spacing: -0.05em; font-size: 1.5rem; }
-        .article-content strong { color: #fff; }
-        .article-content ul { list-style-type: none; padding-left: 0; margin-bottom: 1.5rem; }
-        .article-content li { position: relative; padding-left: 1.5rem; margin-bottom: 0.75rem; }
-        .article-content li::before { content: '›'; position: absolute; left: 0; color: #22d3ee; font-weight: bold; }
-        .article-content blockquote { border-left: 4px solid #22d3ee; padding-left: 1rem; margin: 2rem 0; font-style: italic; color: #d4d4d8; background: rgba(34, 211, 238, 0.05); padding: 1.5rem; border-radius: 0 1rem 1rem 0; }
+        /* === ESTILOS ACORDEÓN (ESTILO CALENDARIO) === */
+        .news-btn { transition: all 0.3s ease; }
+        .news-btn:hover { background-color: rgba(255, 255, 255, 0.03); }
         
-        .modal-scrollbar::-webkit-scrollbar { display: none; }
-        .modal-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .card-arrow { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .news-btn.active .card-arrow { transform: rotate(180deg); color: #22d3ee; }
+        .news-btn.active .news-title { color: #22d3ee; }
+
+        .news-content { 
+            max-height: 0; 
+            overflow: hidden; 
+            transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; 
+            opacity: 0; 
+            background: #000; 
+        }
+        .news-content.open { 
+            max-height: 8000px; 
+            opacity: 1; 
+            border-top: 1px dashed #27272a; 
+        }
+
+        /* Contenido del Artículo */
+        .article-prose { font-size: 1.05rem; line-height: 1.8; color: #a1a1aa; }
+        .article-prose p { margin-bottom: 1.5rem; }
+        .article-prose h2, .article-prose h3 { color: #f4f4f5; font-weight: 900; margin-top: 2.5rem; margin-bottom: 1rem; font-style: italic; text-transform: uppercase; letter-spacing: -0.05em; font-size: 1.4rem; }
+        .article-prose strong { color: #e4e4e7; font-weight: 700; }
+        .article-prose ul { list-style: none; padding-left: 0; margin-bottom: 1.5rem; }
+        .article-prose li { position: relative; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+        .article-prose li::before { content: '›'; position: absolute; left: 0; color: #22d3ee; font-weight: bold; }
+        .article-prose blockquote { border-left: 4px solid #22d3ee; padding-left: 1rem; margin: 2rem 0; font-style: italic; color: #d4d4d8; background: rgba(34, 211, 238, 0.05); padding: 1.5rem; border-radius: 0 1rem 1rem 0; }
     </style>
 </head>
+<body class="antialiased pb-20 overflow-x-hidden text-white">
 
-<body class="bg-[#050505] antialiased min-h-screen pb-20 selection:bg-cyan-500/30 selection:text-cyan-200 relative">
-
-    <main class="max-w-7xl mx-auto px-4 md:px-6 pt-32 md:pt-40">
+    <main class="max-w-4xl mx-auto px-4 md:px-6 pt-28 md:pt-40">
         
-        <header class="mb-12 md:mb-20 text-center reveal-on-scroll">
-            <p class="text-cyan-500 font-bold tracking-[0.2em] text-[10px] md:text-xs uppercase mb-4 shadow-cyan-500/20 drop-shadow-lg">Velo Insights // Journal</p>
-            <h1 class="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-none text-white drop-shadow-2xl">
-                Análisis <span class="text-zinc-700">&</span><br>Rendimiento
-            </h1>
+        <header class="mb-10 md:mb-16 text-center reveal-on-scroll">
+            <h1 class="text-4xl md:text-6xl font-black italic uppercase tracking-tighter mb-4 leading-none">The Journal <span class="text-cyan-500">///</span></h1>
+            <p class="text-zinc-500 font-medium text-xs md:text-sm mx-auto">Archivo profundo de análisis técnico. No cubrimos rumores, cubrimos vatios.</p>
         </header>
 
-        <div class="flex flex-wrap justify-center gap-2 mb-12" id="filter-container"></div>
+        <div class="flex flex-wrap justify-center gap-2 mb-10" id="filter-container">
+            </div>
 
-        <div id="hero-section" class="mb-12"></div>
-        
-        <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="col-span-full h-40 flex items-center justify-center border border-zinc-800 border-dashed rounded-2xl">
-                <span class="text-zinc-600 text-[10px] font-bold uppercase tracking-widest animate-pulse">Cargando base de datos...</span>
+        <div id="news-feed" class="border-t border-zinc-800">
+            <div class="p-6 border-b border-zinc-800 flex gap-4">
+                <div class="w-8 h-8 skeleton"></div>
+                <div class="flex-1 space-y-3">
+                    <div class="w-2/3 h-6 skeleton"></div>
+                    <div class="w-full h-4 skeleton"></div>
+                    <div class="w-32 h-6 skeleton mt-2"></div>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <div id="article-modal" class="fixed inset-0 z-[200] bg-[#050505] modal-hidden overflow-y-auto modal-scrollbar">
-        <div id="article-modal-content" class="w-full min-h-screen pb-20">
-            </div>
-    </div>
-
-    <script src="layout.js?v=6.1"></script>
-    <script src="renderers.js?v=1"></script>
+    <script src="layout.js?v=6.9"></script>
     
     <script>
         let allNews = [];
-        let currentFilter = 'ALL';
+        const feed = document.getElementById('news-feed');
 
-        async function initNews() {
+        // Paleta de colores para los Tags igual que en el Calendario
+        function getTagStyle(tag) {
+            const t = tag ? tag.toUpperCase() : '';
+            if (t.includes('RACE')) return 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/30';
+            if (t.includes('TECH')) return 'bg-emerald-900/30 text-emerald-400 border border-emerald-500/30';
+            if (t.includes('AERO')) return 'bg-pink-900/30 text-pink-400 border border-pink-500/30';
+            if (t.includes('DATA')) return 'bg-violet-900/30 text-violet-400 border border-violet-500/30';
+            if (t.includes('PREVIA')) return 'bg-yellow-900/30 text-yellow-500 border border-yellow-500/30';
+            return 'bg-zinc-800 text-zinc-300 border border-zinc-700'; // Default
+        }
+
+        async function fetchNews() {
             try {
-                const res = await fetch('/api/news');
-                if(!res.ok) throw new Error("Error API");
-                allNews = await res.json();
-                
-                // Ordenar por ID descendente para que la más reciente sea la primera
-                allNews.sort((a,b) => b.id - a.id);
-                
-                generateFilters();
-                renderNews();
-                
-                // Si viene un ID por URL, abrimos ese artículo a pantalla completa
-                const urlParams = new URLSearchParams(window.location.search);
-                const articleId = urlParams.get('article');
-                if (articleId) {
-                    setTimeout(() => openArticle(articleId), 100);
+                const response = await fetch('/api/news');
+                if (response.ok) {
+                    allNews = await response.json();
+                    
+                    // Asegurar orden (más reciente arriba)
+                    allNews.sort((a, b) => b.id - a.id);
+                    
+                    generateFilters();
+                    renderFeed('ALL');
+
+                    // Si hay un ID en la URL, lo abrimos y hacemos scroll
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const articleId = urlParams.get('article');
+                    if (articleId) {
+                        setTimeout(() => toggleArticle(articleId, true), 300);
+                    }
+                    return;
                 }
-            } catch (e) {
-                document.getElementById('news-grid').innerHTML = `<div class="col-span-full text-center text-red-500 text-[10px] uppercase font-bold py-20">Error de conexión. Inténtalo más tarde.</div>`;
+                throw new Error("API vacía");
+            } catch (error) {
+                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest">No hay noticias disponibles en la base de datos.</p>`;
             }
         }
 
@@ -135,7 +150,6 @@
         }
 
         window.setFilter = function(tag) {
-            currentFilter = tag;
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 if (btn.innerText === tag || (tag === 'ALL' && btn.innerText === 'TODOS')) {
                     btn.classList.add('active');
@@ -145,145 +159,117 @@
                     btn.classList.add('text-zinc-400', 'border-zinc-700');
                 }
             });
-            renderNews();
+            renderFeed(tag);
         }
 
-        function renderNews() {
-            const heroContainer = document.getElementById('hero-section');
-            const gridContainer = document.getElementById('news-grid');
-            
-            heroContainer.innerHTML = '';
-            gridContainer.innerHTML = '';
-
-            let filteredNews = currentFilter === 'ALL' ? allNews : allNews.filter(n => n.tag === currentFilter);
+        function renderFeed(filterTag) {
+            let filteredNews = filterTag === 'ALL' ? allNews : allNews.filter(n => n.tag === filterTag);
 
             if (filteredNews.length === 0) {
-                gridContainer.innerHTML = `<div class="col-span-full text-center text-zinc-600 text-[10px] uppercase font-bold py-20 border border-zinc-800 border-dashed rounded-2xl">No hay artículos en esta categoría.</div>`;
+                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest">Sin resultados.</p>`;
                 return;
             }
 
-            // Separar la primera noticia (la más reciente) para que sea el Hero
-            const heroArticle = filteredNews[0];
-            const restArticles = filteredNews.slice(1);
+            let html = '';
+            filteredNews.forEach((n, index) => {
+                // Numeración estilo calendario (01, 02...)
+                const num = String(index + 1).padStart(2, '0');
+                const tagClass = getTagStyle(n.tag);
+                
+                // La primera noticia se abre por defecto si no hay filtro activo
+                const isOpen = index === 0 ? 'open' : '';
+                const isActive = index === 0 ? 'active' : '';
 
-            // RENDERIZAR HERO ARTICLE (LA ÚLTIMA NOTICIA SIEMPRE ARRIBA)
-            heroContainer.innerHTML = `
-                <div onclick="openArticle('${heroArticle.id}')" class="news-card bg-zinc-900/40 border border-zinc-800 rounded-3xl overflow-hidden mb-8 relative w-full aspect-[16/9] md:aspect-[21/9] hero-img-container group">
-                    <img src="${heroArticle.image || 'assets/placeholder.jpg'}" alt="${heroArticle.title}" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700">
-                    <div class="absolute inset-0 flex flex-col justify-end p-6 md:p-10 z-10">
-                        <div class="flex items-center gap-3 mb-3">
-                            <span class="bg-cyan-500 text-black text-[9px] font-black px-2 py-1 rounded uppercase tracking-widest shadow-[0_0_10px_#22d3ee]">${heroArticle.tag || 'ANALYSIS'}</span>
-                            <span class="text-[10px] font-mono text-zinc-400 font-bold uppercase tracking-widest backdrop-blur-sm bg-black/40 px-2 py-1 rounded">${heroArticle.date || 'HOY'}</span>
-                        </div>
-                        <h2 class="text-2xl md:text-5xl font-black italic uppercase text-white tracking-tight leading-tight group-hover:text-cyan-400 transition-colors">${heroArticle.title}</h2>
-                        <div class="flex items-center justify-between mt-4">
-                            <p class="text-sm md:text-base text-zinc-300 max-w-3xl line-clamp-2 md:line-clamp-none drop-shadow-md">${heroArticle.lead || ''}</p>
-                            <div class="text-cyan-500 ml-4 hidden md:block">
-                                <svg class="w-8 h-8 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // RENDERIZAR RESTO DE ARTÍCULOS EN GRID
-            if (restArticles.length > 0) {
-                gridContainer.innerHTML = restArticles.map(n => `
-                    <div onclick="openArticle('${n.id}')" class="news-card flex flex-col bg-zinc-900/40 border border-zinc-800 rounded-2xl overflow-hidden group">
-                        <div class="relative aspect-[4/3] w-full overflow-hidden">
-                            <img src="${n.image || 'assets/placeholder.jpg'}" alt="${n.title}" loading="lazy" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-500">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-                            <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-cyan-500 text-[9px] font-black uppercase tracking-widest bg-cyan-900/40 border border-cyan-500/30 px-1.5 py-0.5 rounded backdrop-blur-sm">${n.tag || 'INFO'}</span>
-                                    <span class="text-[9px] font-mono text-zinc-400 font-bold uppercase tracking-widest">${n.date || 'HOY'}</span>
+                html += `
+                <div class="border-b border-zinc-800 last:border-0" id="item-${n.id}">
+                    <button onclick="toggleArticle('${n.id}')" id="btn-${n.id}" class="news-btn w-full py-5 px-2 md:px-4 flex items-start justify-between gap-4 text-left group ${isActive}">
+                        
+                        <div class="flex items-start gap-4 md:gap-6 w-full">
+                            <span class="font-black text-2xl md:text-3xl text-zinc-600 mt-0.5 w-6 shrink-0 text-center transition-colors group-hover:text-zinc-400">${num}</span>
+                            
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-baseline gap-3 mb-1">
+                                    <h3 class="news-title text-base md:text-xl font-bold text-white uppercase tracking-tight transition-colors group-hover:text-cyan-400">${n.title}</h3>
+                                    <span class="text-[10px] md:text-xs font-mono text-cyan-500/70 shrink-0 tracking-wider">${n.date || 'HOY'}</span>
+                                </div>
+                                
+                                <p class="text-[10px] md:text-xs text-zinc-500 font-bold uppercase tracking-widest mb-3 truncate pr-4">${n.lead || 'VELO INSIGHTS REPORT'}</p>
+                                
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-widest ${tagClass}">${n.tag || 'INFO'}</span>
+                                    <span class="text-[10px] font-mono text-white opacity-80 border-l border-zinc-700 pl-3">LECTURA: 4 MIN</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="p-5 flex-1 flex flex-col justify-start">
-                            <h3 class="text-lg md:text-xl font-bold text-white leading-tight mb-2 group-hover:text-cyan-400 transition-colors">${n.title}</h3>
-                            <p class="text-[11px] text-zinc-500 leading-relaxed line-clamp-3">${n.lead || ''}</p>
+                        
+                        <div class="card-arrow text-zinc-600 shrink-0 mt-2">
+                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </button>
+                    
+                    <div id="content-${n.id}" class="news-content ${isOpen}">
+                        <div class="p-4 md:p-8 pt-6">
+                            
+                            <div class="flex justify-center mb-6">
+                                <span class="text-[9px] font-mono text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-2">DATA DRIVEN ANALYSIS</span>
+                            </div>
+
+                            ${n.image ? `
+                                <div class="bg-white rounded-xl p-1 md:p-2 mb-8 overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.05)] cursor-pointer group/img" onclick="openLightbox('${n.image}')" title="Ampliar imagen">
+                                    <img src="${n.image}" class="w-full h-auto object-cover max-h-[400px] md:max-h-[500px] rounded-lg group-hover/img:scale-[1.02] transition-transform duration-500">
+                                </div>
+                            ` : ''}
+                            
+                            <div class="article-prose">
+                                ${n.content || '<p class="italic text-center text-zinc-600">No hay contenido disponible para este artículo.</p>'}
+                            </div>
+                            
+                            <div class="mt-10 pt-6 border-t border-zinc-800 flex justify-between items-center">
+                                <button onclick="toggleArticle('${n.id}')" class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-cyan-400 flex items-center gap-2 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                                    Cerrar Artículo
+                                </button>
+                                <button onclick="shareArticle('${n.title}', '${n.id}')" class="flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase hover:bg-cyan-500 hover:text-black transition-all">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 12a3 3 0 100-2.684 3 3 0 000 2.684z"></path></svg>
+                                    Compartir
+                                </button>
+                            </div>
                         </div>
                     </div>
-                `).join('');
-            }
+                </div>
+                `;
+            });
+
+            feed.innerHTML = html;
         }
 
-        // --- LÓGICA DE LA PÁGINA INDEPENDIENTE (FULL-SCREEN MODAL) ---
-        window.openArticle = function(id) {
-            const article = allNews.find(n => n.id == id);
-            if (!article) return;
+        window.toggleArticle = function(id, forceScroll = false) {
+            const content = document.getElementById(`content-${id}`);
+            const btn = document.getElementById(`btn-${id}`);
+            const item = document.getElementById(`item-${id}`);
+            const isOpen = content.classList.contains('open');
 
-            const modal = document.getElementById('article-modal');
-            const contentContainer = document.getElementById('article-modal-content');
+            // Cierra todos los demás
+            document.querySelectorAll('.news-content').forEach(el => el.classList.remove('open'));
+            document.querySelectorAll('.news-btn').forEach(el => el.classList.remove('active'));
 
-            // Actualizar la URL sin recargar la página (para poder compartir el link)
-            window.history.pushState({ articleId: id }, '', `?article=${id}`);
+            // Si estaba cerrado, lo abre
+            if (!isOpen) {
+                content.classList.add('open');
+                btn.classList.add('active');
+                
+                // Actualiza la URL para poder compartir el link directo
+                window.history.replaceState(null, '', `?article=${id}`);
 
-            // Construir el HTML de la "página independiente"
-            contentContainer.innerHTML = `
-                <div class="sticky top-0 left-0 w-full z-50 bg-[#050505]/80 backdrop-blur-xl border-b border-zinc-800 px-4 md:px-8 py-4 flex justify-between items-center">
-                    <button onclick="closeArticle()" class="flex items-center gap-2 text-zinc-400 hover:text-cyan-400 font-bold text-[10px] uppercase tracking-widest transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                        Volver
-                    </button>
-                    <button onclick="shareArticle('${article.title}', '${article.id}')" class="bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500 text-cyan-400 hover:text-black px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 12a3 3 0 100-2.684 3 3 0 000 2.684z"></path></svg>
-                        Compartir
-                    </button>
-                </div>
-
-                <div class="relative w-full h-[40vh] md:h-[60vh] overflow-hidden">
-                    <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent"></div>
-                    <div class="absolute bottom-0 left-0 w-full max-w-4xl mx-auto px-4 md:px-8 pb-8 transform translate-y-4">
-                        <div class="flex items-center gap-3 mb-4">
-                            <span class="bg-cyan-500 text-black text-[10px] font-black px-2 py-1 rounded uppercase tracking-widest">${article.tag || 'INFO'}</span>
-                            <span class="text-[11px] font-mono text-zinc-400 font-bold uppercase tracking-widest">${article.date || 'HOY'}</span>
-                        </div>
-                        <h1 class="text-3xl md:text-5xl lg:text-6xl font-black italic uppercase text-white tracking-tight leading-none drop-shadow-lg mb-4">${article.title}</h1>
-                    </div>
-                </div>
-
-                <div class="max-w-3xl mx-auto px-4 md:px-8 pt-8 md:pt-12 article-content">
-                    ${article.lead ? `<p class="text-xl md:text-2xl text-zinc-200 font-medium italic mb-10 leading-snug border-l-4 border-cyan-500 pl-6">${article.lead}</p>` : ''}
-                    
-                    ${article.content || '<p class="text-center text-zinc-600">El contenido completo estará disponible pronto.</p>'}
-                </div>
-            `;
-
-            // Mostrar el modal y bloquear el scroll del fondo
-            document.body.style.overflow = 'hidden';
-            modal.scrollTop = 0; // Iniciar desde arriba
-            modal.classList.remove('modal-hidden');
-            modal.classList.add('modal-visible');
-        };
-
-        window.closeArticle = function() {
-            const modal = document.getElementById('article-modal');
-            modal.classList.remove('modal-visible');
-            modal.classList.add('modal-hidden');
-            
-            // Devolver el scroll a la página principal
-            document.body.style.overflow = '';
-            
-            // Limpiar la URL para que no quede el ?article=ID
-            window.history.replaceState({}, document.title, window.location.pathname);
-        };
-
-        // Cerrar con la tecla Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeArticle();
-        });
-
-        // Evento de retroceso en el navegador (si el usuario le da a "Atrás" en el móvil)
-        window.addEventListener('popstate', (e) => {
-            if (e.state && e.state.articleId) {
-                openArticle(e.state.articleId);
+                // Scroll suave hasta el título
+                setTimeout(() => {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
             } else {
-                closeArticle();
+                // Si lo cerramos, limpiamos la URL
+                window.history.replaceState(null, '', window.location.pathname);
             }
-        });
+        };
 
         window.shareArticle = function(title, id) {
             const url = window.location.origin + window.location.pathname + '?article=' + id;
@@ -294,7 +280,7 @@
             }
         };
 
-        document.addEventListener('DOMContentLoaded', initNews);
+        document.addEventListener('DOMContentLoaded', fetchNews);
     </script>
 </body>
 </html>
