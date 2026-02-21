@@ -247,10 +247,12 @@
         }
 
         async function loadContent() {
-            const [newsRes, trendRes, calRes] = await Promise.all([
+            // DESCARGAMOS TODOS LOS DATOS (AÑADIDO TEAMS PARA LAS CAMISETAS)
+            const [newsRes, trendRes, calRes, teamsRes] = await Promise.all([
                 fetch('/api/news').then(r => r.ok ? r.json() : []).catch(() => []),
                 fetch('/api/trending').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/calendar').then(r => r.ok ? r.json() : []).catch(() => [])
+                fetch('/api/calendar').then(r => r.ok ? r.json() : []).catch(() => []),
+                fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => [])
             ]);
 
             renderNews(newsRes);
@@ -267,15 +269,31 @@
                 document.getElementById('hot-topics-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">No hay tendencias claras hoy.</p>`;
             }
 
-            // --- 2. CICLISTAS EN FORMA (100% LEÍDOS DE LA BASE DE DATOS) ---
+            // --- 2. CICLISTAS EN FORMA CON CAMISETAS ---
             let riders = [];
             trendRes.filter(t => t.tipo.toLowerCase() === 'ciclista').forEach(r => riders.push({ name: r.title, team: r.subtitle || 'WorldTour', value: r.value || 'HOT' }));
             
             if(riders.length > 0) {
-                document.getElementById('trending-riders-container').innerHTML = riders.slice(0, 3).map(r => `
+                document.getElementById('trending-riders-container').innerHTML = riders.slice(0, 3).map(r => {
+                    // Buscar el maillot del equipo en la base de datos
+                    let jerseyHTML = `<div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors">🚴‍♂️</div>`;
+                    
+                    if (teamsRes && teamsRes.length > 0) {
+                        // Buscar coincidencia parcial del nombre del equipo (ej: "Visma" coincide con "Visma | Lease a Bike")
+                        const matchedTeam = teamsRes.find(t => 
+                            t.name.toLowerCase().includes(r.team.toLowerCase()) || 
+                            r.team.toLowerCase().includes(t.name.toLowerCase()) ||
+                            t.code.toLowerCase() === r.team.toLowerCase()
+                        );
+                        if (matchedTeam && matchedTeam.jersey) {
+                            jerseyHTML = `<img src="${matchedTeam.jersey}" alt="Maillot ${r.team}" class="w-8 h-8 object-contain drop-shadow-md grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300">`;
+                        }
+                    }
+
+                    return `
                     <a href="noticias.html" class="flex justify-between items-center p-2.5 hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-zinc-700/50 group">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors">🚴‍♂️</div>
+                            ${jerseyHTML}
                             <div>
                                 <p class="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">${r.name}</p>
                                 <p class="text-[9px] text-zinc-500 font-mono truncate max-w-[120px]">${r.team}</p>
@@ -289,7 +307,8 @@
                             <span class="text-[8px] text-zinc-600 uppercase tracking-widest">TENDENCIA</span>
                         </div>
                     </a>
-                `).join('');
+                    `;
+                }).join('');
             } else {
                 document.getElementById('trending-riders-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">Sin datos registrados.</p>`;
             }
