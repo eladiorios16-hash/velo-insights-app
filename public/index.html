@@ -58,7 +58,7 @@
         input[type=range].slider-green::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #10b981; cursor: pointer; border: 2px solid #064e3b; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); margin-top: -8px; }
         
         .trending-tag { transition: all 0.2s; }
-        .trending-tag:hover { background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.5); color: #22d3ee; }
+        .trending-tag:hover { background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.5); color: #22d3ee; transform: translateY(-2px); }
     </style>
 </head>
 
@@ -199,7 +199,7 @@
                         Ciclistas en Forma
                     </h3>
                     <div id="trending-riders-container" class="space-y-3">
-                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Calculando métricas...</p>
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Analizando pelotón...</p>
                     </div>
                 </div>
 
@@ -209,7 +209,7 @@
                         Hot Topics
                     </h3>
                     <div id="hot-topics-container" class="flex flex-wrap gap-2">
-                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Escaneando tags...</p>
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Escaneando insights...</p>
                     </div>
                 </div>
             </div>
@@ -247,48 +247,63 @@
         }
 
         async function loadContent() {
-            // DESCARGAR TODOS LOS DATOS PARA LA FUSIÓN HÍBRIDA
-            const [newsRes, trendRes, teamsRes] = await Promise.all([
+            // DESCARGAMOS TODOS LOS DATOS PARA LA EXTRACCIÓN INTELIGENTE
+            const [newsRes, trendRes, teamsRes, calRes, glosRes] = await Promise.all([
                 fetch('/api/news').then(r => r.ok ? r.json() : []).catch(() => []),
                 fetch('/api/trending').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => [])
+                fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => []),
+                fetch('/api/calendar').then(r => r.ok ? r.json() : []).catch(() => []),
+                fetch('/api/glossary').then(r => r.ok ? r.json() : []).catch(() => [])
             ]);
 
-            // Renderizar Noticias Clásicas
             renderNews(newsRes);
             
-            // FUSIÓN HÍBRIDA: HOT TOPICS
+            // --- 1. HOT TOPICS INTELIGENTES ---
             let topics = [];
-            // 1. Manuales (desde admin)
-            trendRes.filter(t => t.tipo === 'topic').forEach(t => topics.push({ text: t.title, link: t.subtitle || 'noticias.html' }));
-            // 2. Automáticos (contando tags de noticias)
+            // 1.1 Insertar los manuales del Admin
+            trendRes.filter(t => t.tipo.toLowerCase() === 'topic').forEach(t => topics.push({ text: t.title, link: t.subtitle || 'noticias.html' }));
+            
+            // 1.2 Extracción automática desde las noticias
             if (newsRes && newsRes.length > 0) {
-                const tagCounts = {};
-                newsRes.forEach(n => {
-                    if (n.tag) {
-                        const tagStr = '#' + n.tag.replace(/\s+/g, '');
-                        tagCounts[tagStr] = (tagCounts[tagStr] || 0) + 1;
+                // Unimos los textos de las últimas 5 noticias para escanear
+                const recentText = newsRes.slice(0, 5).map(n => (n.title + " " + (n.excerpt||"") + " " + (n.content||"")).toLowerCase()).join(' ');
+                
+                // A) Buscar Carreras del Calendario en las noticias
+                calRes.forEach(r => {
+                    if (recentText.includes(r.name.toLowerCase())) {
+                        const tag = '#' + r.name.replace(/\s+/g, ''); // Ej: "UAE Tour" -> "#UAETour"
+                        if (!topics.find(t => t.text.toLowerCase() === tag.toLowerCase())) {
+                            topics.push({ text: tag, link: `calendario.html?race=${encodeURIComponent(r.name)}` });
+                        }
                     }
                 });
-                const sortedTags = Object.keys(tagCounts).sort((a,b) => tagCounts[b] - tagCounts[a]);
-                sortedTags.forEach(tag => {
-                    if (!topics.find(t => t.text.toLowerCase() === tag.toLowerCase())) {
-                        topics.push({ text: tag, link: 'noticias.html' });
+
+                // B) Buscar Términos del Glosario (Datos técnicos) en las noticias
+                glosRes.forEach(g => {
+                    if (recentText.includes(g.term.toLowerCase())) {
+                        const tag = '#' + g.term.replace(/\s+/g, ''); // Ej: "Vatios" -> "#Vatios"
+                        if (!topics.find(t => t.text.toLowerCase() === tag.toLowerCase())) {
+                            topics.push({ text: tag, link: `glosario.html?term=${encodeURIComponent(g.term)}` });
+                        }
                     }
                 });
             }
-            if(topics.length === 0) topics = [{text: '#CiclismoWT', link: 'noticias.html'}]; // Fallback
-            
-            document.getElementById('hot-topics-container').innerHTML = topics.slice(0, 6).map(t => 
-                `<a href="${t.link}" class="trending-tag px-3 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-mono rounded-full border border-zinc-700">${t.text}</a>`
-            ).join('');
 
-            // FUSIÓN HÍBRIDA: CICLISTAS EN FORMA
+            // Renderizar Topics
+            if(topics.length > 0) {
+                document.getElementById('hot-topics-container').innerHTML = topics.slice(0, 8).map(t => 
+                    `<a href="${t.link}" class="trending-tag px-3 py-1.5 bg-zinc-800/80 text-zinc-300 text-[10px] font-mono rounded-full border border-zinc-700 shadow-sm">${t.text}</a>`
+                ).join('');
+            } else {
+                document.getElementById('hot-topics-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">No hay tendencias claras hoy.</p>`;
+            }
+
+            // --- 2. CICLISTAS EN FORMA INTELIGENTES ---
             let riders = [];
-            // 1. Manuales (desde admin)
-            trendRes.filter(t => t.tipo === 'ciclista').forEach(r => riders.push({ name: r.title, team: r.subtitle || 'WorldTour', value: r.value || 'HOT', manual: true }));
+            // 2.1 Manuales del Admin
+            trendRes.filter(t => t.tipo.toLowerCase() === 'ciclista').forEach(r => riders.push({ name: r.title, team: r.subtitle || 'WorldTour', value: r.value || 'HOT', manual: true }));
             
-            // 2. Automáticos (buscando nombres de la DB de equipos dentro de las noticias recientes)
+            // 2.2 Extracción automática (buscar corredores de la BD en las últimas noticias)
             const allProRiders = [];
             teamsRes.forEach(team => {
                 let rList = [];
@@ -300,16 +315,17 @@
             allProRiders.forEach(pro => {
                 if (recentTitles.includes(pro.name)) {
                     if(!riders.find(r => r.name === pro.name)) {
-                        riders.push({ name: pro.name, team: pro.team, value: '+HOT', manual: false });
+                        riders.push({ name: pro.name, team: pro.team, value: '🔥 INSIGHT', manual: false });
                     }
                 }
             });
 
+            // Renderizar Ciclistas
             if(riders.length > 0) {
-                document.getElementById('trending-riders-container').innerHTML = riders.slice(0, 2).map(r => `
-                    <a href="noticias.html" class="flex justify-between items-center p-2 hover:bg-white/5 rounded-lg transition-colors group">
+                document.getElementById('trending-riders-container').innerHTML = riders.slice(0, 3).map(r => `
+                    <a href="noticias.html" class="flex justify-between items-center p-2.5 hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-zinc-700/50 group">
                         <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] border border-zinc-700">🚴‍♂️</div>
+                            <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors">🚴‍♂️</div>
                             <div>
                                 <p class="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">${r.name}</p>
                                 <p class="text-[9px] text-zinc-500 font-mono truncate max-w-[120px]">${r.team}</p>
@@ -320,22 +336,18 @@
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
                                 ${r.value}
                             </span>
-                            <span class="text-[8px] text-zinc-600 uppercase tracking-widest">${r.manual ? 'PRO INSIGHT' : 'EN NOTICIAS'}</span>
+                            <span class="text-[8px] text-zinc-600 uppercase tracking-widest">${r.manual ? 'PRO DATA' : 'TENDENCIA'}</span>
                         </div>
                     </a>
                 `).join('');
             } else {
-                document.getElementById('trending-riders-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">No hay tendencias claras hoy.</p>`;
+                document.getElementById('trending-riders-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">Analizando métricas del pelotón...</p>`;
             }
 
-            // CALENDARIO Y RANKING (Igual que antes)
-            fetch('/api/calendar')
-                .then(res => res.json())
-                .then(raw => {
-                    const races = raw.map(r => ({ ...r, ...(typeof r.details === 'string' ? JSON.parse(r.details || '{}') : r.details || {}) }));
-                    renderTimeline(races);
-                    renderUpcomingWidget(races);
-                }).catch(e => console.error("Error Calendar:", e));
+            // CALENDARIO Y RANKING
+            const races = calRes.map(r => ({ ...r, ...(typeof r.details === 'string' ? JSON.parse(r.details || '{}') : r.details || {}) }));
+            renderTimeline(races);
+            renderUpcomingWidget(races);
 
             fetch('/api/ranking')
                 .then(res => res.ok ? res.json() : [])
@@ -353,7 +365,7 @@
                 });
         }
 
-        // Resto de funciones (renderNews, renderRanking, renderUpcomingWidget, renderTimeline) sin cambios en estructura visual interna
+        // Resto de funciones (renderNews, renderRanking, renderUpcomingWidget, renderTimeline)
         function renderNews(news) {
             const container = document.getElementById('latest-news-container');
             if (news && news.length > 0) {
@@ -491,7 +503,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             updateComparison();
-            loadContent(); // Función que ahora lo gestiona todo
+            loadContent(); 
             if(slider) slider.addEventListener('input', updateComparison);
         });
     </script>
