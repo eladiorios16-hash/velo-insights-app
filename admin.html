@@ -64,6 +64,7 @@
     <script>
         let currentTable = '';
         let currentData = [];
+        let globalTeamsData = []; // Guardamos los equipos aquí para el desplegable
         let isEditing = false;
         let editId = null;
 
@@ -73,8 +74,19 @@
             equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
             glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
             trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' },
-            ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0 } // NUEVA PLANTILLA RANKING
+            ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0 }
         };
+
+        // Al iniciar, descargamos los equipos para tenerlos listos en memoria
+        async function fetchGlobalTeams() {
+            try {
+                const res = await fetch('/api/teams');
+                if(res.ok) {
+                    globalTeamsData = await res.json();
+                }
+            } catch (e) { console.error("Error cargando equipos", e); }
+        }
+        fetchGlobalTeams();
 
         async function loadTable(table) {
             currentTable = table;
@@ -89,7 +101,7 @@
             if(table === 'equipos') endpoint = 'teams';
             if(table === 'calendario') endpoint = 'calendar';
             if(table === 'glosario') endpoint = 'glossary';
-            if(table === 'ranking') endpoint = 'ranking'; // RUTA RANKING
+            if(table === 'ranking') endpoint = 'ranking';
 
             try {
                 const res = await fetch(`/api/${endpoint}`);
@@ -131,7 +143,6 @@
                 </tr></thead>
                 <tbody class="divide-y divide-slate-700 bg-slate-900/40">`;
 
-            // Si estamos en ranking, los ordenamos de mayor a menor puntuación antes de pintarlos en la tabla
             let renderData = data;
             if (currentTable === 'ranking') {
                 renderData = [...data].sort((a, b) => b.points - a.points);
@@ -157,7 +168,6 @@
             container.innerHTML = headerHtml + tableHtml + `</tbody></table></div>`;
         }
 
-        // === MAGIA: AUTO-GENERADOR INTELIGENTE ===
         async function autoGenerateTrending() {
             if(!confirm("Esto analizará tus últimas noticias y extraerá automáticamente carreras y términos técnicos para guardarlos como Trending Topics. ¿Deseas continuar?")) return;
             
@@ -266,9 +276,15 @@
         function buildForm(data) {
             const form = document.getElementById('dynamicForm');
             form.innerHTML = '';
+            
+            // --- INICIO LÓGICA ESPECIAL PARA TRENDING ---
+            let isTrendingRider = currentTable === 'trending' && (data.tipo === 'ciclista' || !data.tipo);
+            
             for (const [key, value] of Object.entries(data)) {
                 if (key === 'id') continue;
+                
                 const wrapper = document.createElement('div');
+                wrapper.id = `wrapper-${key}`; // ID para ocultar/mostrar
                 const label = document.createElement('label');
                 label.className = "block text-xs uppercase text-emerald-500 font-bold mb-2 tracking-widest";
                 label.innerText = key;
@@ -293,6 +309,14 @@
                         if (value === opt) el.selected = true;
                         input.appendChild(el);
                     });
+                    // Event listener para cambiar el formulario dinámicamente
+                    input.addEventListener('change', (e) => {
+                        if (currentTable === 'trending') {
+                            isTrendingRider = e.target.value === 'ciclista';
+                            rebuildTrendingFields(data);
+                        }
+                    });
+
                 } else if (key === 'isHero') {
                     input = document.createElement('select');
                     input.className = "input-dark w-full rounded-lg p-3";
@@ -311,20 +335,102 @@
                     input.value = (value && typeof value === 'string') ? value.split('T')[0] : value || '';
                 } else if (key === 'points') {
                     input = document.createElement('input');
-                    input.type = "number"; // Permite que sea más fácil introducir números
+                    input.type = "number"; 
                     input.className = "input-dark w-full rounded-lg p-3 font-mono font-bold text-amber-400";
                     input.value = value || 0;
-                } else {
+                } 
+                // --- LÓGICA DE MENÚS DESPLEGABLES PARA EQUIPOS Y CICLISTAS ---
+                else if (currentTable === 'trending' && key === 'subtitle' && isTrendingRider) {
+                    label.innerText = 'EQUIPO DEL CICLISTA';
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3 font-bold text-cyan-400";
+                    input.id = 'select-trending-team';
+                    
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = ""; defaultOpt.innerText = "Selecciona un equipo...";
+                    input.appendChild(defaultOpt);
+
+                    globalTeamsData.forEach(team => {
+                        const opt = document.createElement('option');
+                        opt.value = team.name; opt.innerText = team.name;
+                        if (value === team.name) opt.selected = true;
+                        input.appendChild(opt);
+                    });
+
+                    // Al cambiar el equipo, actualizamos la lista de ciclistas
+                    input.addEventListener('change', (e) => {
+                        populateRidersDropdown(e.target.value);
+                    });
+
+                } else if (currentTable === 'trending' && key === 'title' && isTrendingRider) {
+                    label.innerText = 'NOMBRE DEL CICLISTA';
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3 font-bold text-white";
+                    input.id = 'select-trending-rider';
+                    
+                    const opt = document.createElement('option');
+                    opt.value = value || ""; opt.innerText = value || "Selecciona equipo primero...";
+                    input.appendChild(opt);
+                } 
+                else {
                     input = document.createElement('input');
                     input.type = "text";
                     input.className = "input-dark w-full rounded-lg p-3";
                     input.value = value || '';
+                    if(currentTable === 'trending' && key === 'value') {
+                        input.placeholder = "Ej: +HOT, -DOWN, +5 PTS";
+                    }
                 }
                 
                 input.name = key;
                 wrapper.appendChild(label);
                 wrapper.appendChild(input);
                 form.appendChild(wrapper);
+            }
+
+            // Si abrimos la edición de un ciclista, rellenamos el segundo select con su equipo actual
+            if (isTrendingRider && data.subtitle && data.title) {
+                setTimeout(() => populateRidersDropdown(data.subtitle, data.title), 50);
+            }
+        }
+
+        // Función auxiliar para repintar el formulario si cambian de "ciclista" a "topic"
+        function rebuildTrendingFields(data) {
+            const isEditingMem = isEditing;
+            const editIdMem = editId;
+            
+            const form = document.getElementById('dynamicForm');
+            const currentDataObj = {};
+            new FormData(form).forEach((value, key) => currentDataObj[key] = value);
+            
+            buildForm(currentDataObj);
+            
+            isEditing = isEditingMem;
+            editId = editIdMem;
+        }
+
+        // Función que rellena el segundo select con los ciclistas del equipo seleccionado
+        function populateRidersDropdown(teamName, selectedRider = null) {
+            const riderSelect = document.getElementById('select-trending-rider');
+            if (!riderSelect) return;
+            
+            riderSelect.innerHTML = '';
+            const team = globalTeamsData.find(t => t.name === teamName);
+            
+            if (team && team.riders) {
+                let riders = [];
+                try { riders = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; } catch(e){}
+                
+                riders.sort((a,b) => a.name.localeCompare(b.name)).forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.name; opt.innerText = r.name;
+                    if (r.name === selectedRider) opt.selected = true;
+                    riderSelect.appendChild(opt);
+                });
+            } else {
+                const opt = document.createElement('option');
+                opt.value = ""; opt.innerText = "Sin ciclistas...";
+                riderSelect.appendChild(opt);
             }
         }
 
@@ -338,7 +444,6 @@
                 if ((key === 'riders' || key === 'details') && typeof value === 'string') {
                     try { JSON.parse(value); } catch (e) {}
                 }
-                // Convertir los puntos a número al guardar
                 if (key === 'points') {
                     value = parseInt(value) || 0;
                 }
