@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v6.8 (Dot Grid + Interactive Zoom Lightbox + HUD Mobile Menu) */
+/* VELO INSIGHTS - LAYOUT ENGINE v6.9 (Dot Grid + Interactive Zoom Lightbox + HUD Mobile Menu) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -129,8 +129,9 @@ function renderNavbar() {
                 <span class="font-black italic text-white uppercase tracking-tighter text-2xl md:text-3xl ml-1 drop-shadow-lg">VELO<span class="text-cyan-500">INSIGHTS</span></span>
             </a>
 
-            <button onclick="toggleMenu()" class="md:hidden p-2 text-zinc-400 hover:text-white active:scale-95 transition-transform bg-zinc-900/90 backdrop-blur-xl rounded-full border border-zinc-700 shadow-[0_5px_15px_rgba(0,0,0,0.8)] group">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button onclick="toggleMenu()" class="md:hidden flex items-center gap-2 px-3 py-1.5 text-zinc-400 hover:text-white active:scale-95 transition-all bg-zinc-900/90 backdrop-blur-xl rounded-full border border-zinc-700 shadow-[0_5px_15px_rgba(0,0,0,0.8)] group">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-widest pt-0.5 group-hover:text-cyan-400 transition-colors">Menu</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 group-hover:rotate-90 group-hover:text-cyan-400 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
                 </svg>
             </button>
@@ -194,8 +195,7 @@ function initNavbarScrollBehavior() {
 function renderMenuModal() {
     const menu = document.createElement('div');
     menu.id = "main-menu";
-    // Fondo más inmersivo con gradiente muy oscuro hacia abajo
- menu.className = "menu-hidden fixed inset-0 w-full h-[100dvh] bg-[#08151b]/60 backdrop-blur-2xl z-[90] flex flex-col pt-28 px-4 pb-10 md:hidden overflow-y-auto";
+    menu.className = "menu-hidden fixed inset-0 w-full h-[100dvh] bg-[#08151b]/60 backdrop-blur-2xl z-[90] flex flex-col pt-28 px-4 pb-10 md:hidden overflow-y-auto";
     
     const icons = {
         home: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 01-1 1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
