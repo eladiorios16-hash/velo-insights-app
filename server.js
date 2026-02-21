@@ -32,7 +32,7 @@ app.get('/admin', authMiddleware, (req, res) => {
 
 // --- 4. API MAESTRA DE ADMINISTRACIÓN ---
 
-// A) BORRAR (Actualizado para permitir 'trending')
+// A) BORRAR
 app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     const { table, id } = req.params;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
@@ -47,7 +47,7 @@ app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// B) EDITAR (Actualizado para permitir 'trending')
+// B) EDITAR
 app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     const { table, id } = req.params;
     let data = req.body; 
@@ -81,11 +81,11 @@ app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// C) CREAR (Actualizado para permitir 'trending')
+// C) CREAR (Ahora incluye 'ranking')
 app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
     const { table } = req.params;
     let data = req.body;
-    const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'trending'];
+    const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'trending', 'ranking'];
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
     // Parches
@@ -145,10 +145,17 @@ app.get('/api/glossary', async (req, res) => {
     } catch(e){ res.status(500).json([]); }
 });
 
-// NUEVA API: TRENDING
 app.get('/api/trending', async (req, res) => {
     try { 
         const [rows] = await db.query("SELECT * FROM trending ORDER BY id DESC");
+        res.json(rows);
+    } catch(e){ res.status(500).json([]); }
+});
+
+// NUEVA API: RANKING
+app.get('/api/ranking', async (req, res) => {
+    try { 
+        const [rows] = await db.query("SELECT * FROM ranking ORDER BY points DESC");
         res.json(rows);
     } catch(e){ res.status(500).json([]); }
 });
@@ -181,6 +188,21 @@ async function upgradeDatabase() {
         console.log("✅ Base de datos actualizada: Tabla 'trending' operativa.");
     } catch (error) { 
         console.error("⚠️ Aviso DB (trending):", error.message); 
+    }
+
+    // 3. Creación tabla Ranking (NUEVO)
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS ranking (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                team VARCHAR(255),
+                points INT DEFAULT 0
+            )
+        `);
+        console.log("✅ Base de datos actualizada: Tabla 'ranking' operativa.");
+    } catch (error) { 
+        console.error("⚠️ Aviso DB (ranking):", error.message); 
     }
 }
 upgradeDatabase();
