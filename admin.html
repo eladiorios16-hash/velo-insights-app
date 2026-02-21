@@ -98,10 +98,9 @@
         function renderUI(data) {
             const container = document.getElementById('content-area');
             
-            // Botón Extra solo para Trending
             let extraBtn = '';
             if (currentTable === 'trending') {
-                extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 mr-3 shadow-lg transition-transform active:scale-95"><i class="fas fa-magic"></i> AUTO-GENERAR</button>`;
+                extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 mr-3 shadow-lg transition-transform active:scale-95"><i class="fas fa-brain"></i> AUTO-GENERAR (IA)</button>`;
             }
 
             let headerHtml = `
@@ -114,7 +113,7 @@
                 </div>`;
 
             if (!data || data.length === 0) { 
-                container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10 bg-slate-900/50 rounded-xl border border-slate-800">No hay datos en esta categoría. Puedes añadirlos a mano o usar el autogenerador.</div>'; 
+                container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10 bg-slate-900/50 rounded-xl border border-slate-800">No hay datos en esta categoría. Puedes añadirlos a mano o usar el auto-generador.</div>'; 
                 return; 
             }
 
@@ -148,34 +147,58 @@
             container.innerHTML = headerHtml + tableHtml + `</tbody></table></div>`;
         }
 
-        // === MAGIA: AUTO-GENERADOR DE TENDENCIAS ===
+        // === MAGIA: AUTO-GENERADOR INTELIGENTE ===
         async function autoGenerateTrending() {
-            if(!confirm("Esto analizará tus últimas noticias y extraerá automáticamente a los ciclistas y hashtags más mencionados para guardarlos en la tabla. ¿Deseas continuar?")) return;
+            if(!confirm("Esto analizará tus últimas noticias y extraerá automáticamente carreras y términos técnicos para guardarlos como Trending Topics. ¿Deseas continuar?")) return;
             
             try {
-                // Descargamos las noticias y los equipos para cruzar datos
-                const [newsRes, teamsRes] = await Promise.all([
+                // Descargar todo el ecosistema
+                const [newsRes, teamsRes, calRes, glosRes] = await Promise.all([
                     fetch('/api/news').then(r => r.ok ? r.json() : []),
-                    fetch('/api/teams').then(r => r.ok ? r.json() : [])
+                    fetch('/api/teams').then(r => r.ok ? r.json() : []),
+                    fetch('/api/calendar').then(r => r.ok ? r.json() : []),
+                    fetch('/api/glossary').then(r => r.ok ? r.json() : [])
                 ]);
 
                 const newTrends = [];
+                
+                // Unimos el texto de las últimas 5 noticias para escanear
+                const recentText = newsRes.slice(0, 5).map(n => (n.title + " " + (n.excerpt||"") + " " + (n.content||"")).toLowerCase()).join(' ');
 
-                // 1. Extraer hashtags de las etiquetas (tags) de las noticias
-                const tagCounts = {};
-                newsRes.forEach(n => {
-                    if (n.tag) {
-                        const tagStr = '#' + n.tag.replace(/\s+/g, '');
-                        tagCounts[tagStr] = (tagCounts[tagStr] || 0) + 1;
+                // 1. EXTRAER HOT TOPICS (Buscando carreras y términos técnicos)
+                let potentialTopics = [];
+                
+                // Buscar Carreras
+                calRes.forEach(r => {
+                    if (recentText.includes(r.name.toLowerCase())) {
+                        potentialTopics.push({ 
+                            text: '#' + r.name.replace(/\s+/g, ''), 
+                            link: `calendario.html?race=${encodeURIComponent(r.name)}`,
+                            count: recentText.split(r.name.toLowerCase()).length - 1 
+                        });
                     }
                 });
-                // Cogemos los 3 tags más usados
-                const sortedTags = Object.keys(tagCounts).sort((a,b) => tagCounts[b] - tagCounts[a]).slice(0, 3);
-                sortedTags.forEach(tag => {
-                    newTrends.push({ tipo: 'topic', title: tag, subtitle: 'noticias.html', value: '' });
+
+                // Buscar Glosario
+                glosRes.forEach(g => {
+                    if (recentText.includes(g.term.toLowerCase())) {
+                        potentialTopics.push({ 
+                            text: '#' + g.term.replace(/\s+/g, ''), 
+                            link: `glosario.html?term=${encodeURIComponent(g.term)}`,
+                            count: recentText.split(g.term.toLowerCase()).length - 1 
+                        });
+                    }
                 });
 
-                // 2. Extraer ciclistas mencionados en los títulos
+                // Ordenar por menciones y coger los 4 mejores
+                potentialTopics.sort((a, b) => b.count - a.count);
+                const topTopics = potentialTopics.slice(0, 4);
+
+                topTopics.forEach(t => {
+                    newTrends.push({ tipo: 'topic', title: t.text, subtitle: t.link, value: '' });
+                });
+
+                // 2. EXTRAER CICLISTAS MENCIONADOS
                 const allProRiders = [];
                 teamsRes.forEach(team => {
                     let rList = [];
@@ -183,27 +206,26 @@
                     rList.forEach(r => allProRiders.push({ name: r.name, team: team.name }));
                 });
 
-                // Miramos solo en los títulos de las últimas 5 noticias
-                const recentTitles = newsRes.slice(0, 5).map(n => n.title).join(' ');
                 let addedRiders = 0;
                 allProRiders.forEach(pro => {
-                    if (recentTitles.includes(pro.name) && addedRiders < 2) { // Limitamos a 2 ciclistas automáticos
+                    // Si el nombre aparece en las noticias recientes
+                    if (recentText.includes(pro.name.toLowerCase()) && addedRiders < 2) { 
                         newTrends.push({ tipo: 'ciclista', title: pro.name, subtitle: pro.team, value: '+HOT' });
                         addedRiders++;
                     }
                 });
 
                 if(newTrends.length === 0) {
-                    alert("⚠️ No hay suficientes noticias en la base de datos para generar tendencias automáticamente.");
+                    alert("⚠️ No se encontraron carreras ni términos del glosario en las últimas noticias.");
                     return;
                 }
 
-                // Guardar todo en la base de datos automáticamente
+                // GUARDAR EN LA BASE DE DATOS
                 const authHeader = 'Basic ' + btoa('admin:velo2026');
                 let addedCount = 0;
                 
                 for (const trend of newTrends) {
-                    // Verificamos si ya existe para no duplicarlo cada vez que se pulsa el botón
+                    // Evitar duplicados
                     const exists = currentData.find(d => d.title === trend.title);
                     if (!exists) {
                         await fetch(`/api/admin/create/trending`, {
@@ -216,12 +238,11 @@
                 }
 
                 if (addedCount > 0) {
-                    alert(`✅ Proceso completado: Se han inyectado ${addedCount} nuevas tendencias.`);
+                    alert(`✅ Proceso completado: Se han inyectado ${addedCount} nuevas tendencias basadas en el contexto de tus noticias.`);
                 } else {
                     alert("ℹ️ Todo está al día. No se detectaron tendencias nuevas que no estuvieran ya en la tabla.");
                 }
                 
-                // Recargamos la tabla para ver los resultados
                 loadTable('trending');
 
             } catch (e) {
