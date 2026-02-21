@@ -21,7 +21,6 @@
         /* ESTILOS BASE */
         body { -webkit-tap-highlight-color: transparent; background-color: #050505; }
         
-        /* Animación de carga Skeleton */
         @keyframes skeleton-loading {
             0% { background-color: #09090b; }
             50% { background-color: #18181b; }
@@ -29,14 +28,13 @@
         }
         .skeleton { animation: skeleton-loading 1.5s infinite ease-in-out; border-radius: 1rem; }
         
-        /* Animación suave al cargar las noticias */
         .fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         @keyframes fadeInUp {
             0% { opacity: 0; transform: translateY(20px); }
             100% { opacity: 1; transform: translateY(0); }
         }
 
-        /* Estilo Prosa Modal (Contenido del artículo) */
+        /* Estilo Prosa Modal */
         .prose-custom p { color: #a1a1aa; font-size: 1.125rem; line-height: 1.8; margin-bottom: 1.5rem; font-family: 'Inter', sans-serif; }
         .prose-custom h2, .prose-custom h3 { color: white; font-weight: 900; text-transform: uppercase; font-style: italic; font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem; }
         .prose-custom ul { list-style: none; padding-left: 0; color: #a1a1aa; margin-bottom: 2rem; }
@@ -45,14 +43,24 @@
         .prose-custom strong { color: white; font-weight: 700; }
         .prose-custom blockquote { border-left: 4px solid #22d3ee; padding-left: 1rem; margin: 2rem 0; font-style: italic; color: #d4d4d8; background: rgba(34, 211, 238, 0.05); padding: 1.5rem; border-radius: 0 1rem 1rem 0; }
 
-        /* Scrollbars Personalizadas */
+        /* Scrollbars */
         .custom-scrollbar::-webkit-scrollbar { height: 0px; width: 0px; display: none; }
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .modal-scroll::-webkit-scrollbar { width: 4px; }
         .modal-scroll::-webkit-scrollbar-track { background: #050505; }
         .modal-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
 
-        /* Animación Modal (Pantalla Completa) */
+        /* Chips Filtros Activos */
+        .filter-chip { transition: all 0.3s ease; }
+        .filter-chip.active { box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+        .filter-chip.active-cyan { background: rgba(34, 211, 238, 0.1); border-color: #22d3ee; color: #22d3ee; }
+        .filter-chip.active-emerald { background: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #10b981; }
+        .filter-chip.active-pink { background: rgba(236, 72, 153, 0.1); border-color: #ec4899; color: #ec4899; }
+        .filter-chip.active-violet { background: rgba(139, 92, 246, 0.1); border-color: #8b5cf6; color: #8b5cf6; }
+        .filter-chip.active-yellow { background: rgba(234, 179, 8, 0.1); border-color: #eab308; color: #eab308; }
+        .filter-chip.active-white { background: rgba(255, 255, 255, 0.1); border-color: #ffffff; color: #ffffff; }
+
+        /* Animación Modal */
         #article-modal { transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .modal-hidden { opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.98); }
         .modal-visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
@@ -60,55 +68,45 @@
 </head>
 <body class="bg-[#050505] antialiased pb-20 overflow-x-hidden selection:bg-cyan-500/30">
 
-    <header class="pt-28 md:pt-40 pb-6 px-4 md:px-6 max-w-4xl mx-auto text-center reveal-on-scroll">
+    <header class="pt-28 md:pt-40 pb-6 px-4 md:px-6 max-w-5xl mx-auto text-center reveal-on-scroll">
         <h1 class="text-5xl md:text-7xl font-black italic text-white uppercase tracking-tighter mb-4 leading-none drop-shadow-2xl">
             The Journal <span class="text-cyan-500">///</span>
         </h1>
         <p class="text-zinc-500 font-medium text-xs md:text-sm mx-auto max-w-xl">Archivo profundo de análisis técnico. No cubrimos rumores, cubrimos vatios.</p>
     </header>
 
-    <main class="max-w-4xl mx-auto px-4 md:px-6">
+    <main class="max-w-5xl mx-auto px-4 md:px-6">
         
         <div class="overflow-x-auto pb-4 custom-scrollbar flex justify-center md:flex-wrap gap-2 mb-10" id="filter-container">
-            </div>
+        </div>
 
-        <div id="news-feed" class="space-y-12">
-            <div class="border-b border-zinc-900 pb-10">
-                <div class="aspect-[21/9] w-full skeleton mb-6"></div>
-                <div class="h-3 w-32 skeleton mb-3"></div>
-                <div class="h-8 w-full skeleton mb-3"></div>
-                <div class="h-5 w-2/3 skeleton"></div>
-            </div>
-            <div class="border-b border-zinc-900 pb-10">
-                <div class="aspect-[21/9] w-full skeleton mb-6"></div>
-                <div class="h-3 w-32 skeleton mb-3"></div>
-                <div class="h-8 w-full skeleton mb-3"></div>
-                <div class="h-5 w-2/3 skeleton"></div>
-            </div>
+        <div id="hero-section" class="mb-8 md:mb-12">
+            <div class="aspect-[21/9] w-full skeleton mb-6"></div>
+        </div>
+        
+        <div id="news-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
         </div>
         
     </main>
 
     <div id="article-modal" class="fixed inset-0 z-[200] bg-[#050505] modal-hidden overflow-y-auto modal-scroll">
-        
-        <button onclick="closeArticle()" class="fixed top-6 right-6 z-[210] p-3 bg-black/50 text-white rounded-full hover:bg-white hover:text-black transition-all backdrop-blur-xl border border-white/20 shadow-2xl">
+        <button onclick="closeArticle()" class="fixed top-6 right-6 z-[210] p-3 bg-black/60 text-white rounded-full hover:bg-white hover:text-black transition-all backdrop-blur-xl border border-white/20 shadow-2xl">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
-
-        <div id="modal-content" class="w-full min-h-screen pb-20">
-            </div>
+        <div id="modal-content" class="w-full min-h-screen pb-20"></div>
     </div>
 
     <script src="layout.js?v=7.0"></script>
     
     <script>
         let allNews = [];
+        let allGlossary = []; // Para cruzar datos con el diccionario
         let currentFilter = 'ALL';
-        const feed = document.getElementById('news-feed');
+        const feedHero = document.getElementById('hero-section');
+        const feedGrid = document.getElementById('news-grid');
         const modal = document.getElementById('article-modal');
         const modalContent = document.getElementById('modal-content');
 
-        // COLORES DE LAS ETIQUETAS Y FILTROS
         const TAG_COLORS = {
             'TECH LAB': { bg: 'bg-emerald-500', text: 'text-black', filter: 'bg-emerald-900/30 border-emerald-500/30 text-emerald-500' },
             'AERO LAB': { bg: 'bg-pink-500', text: 'text-white', filter: 'bg-pink-900/30 border-pink-500/30 text-pink-500' },
@@ -121,27 +119,30 @@
 
         async function initNews() {
             try {
-                const response = await fetch('/api/news');
-                if (response.ok) {
-                    allNews = await response.json();
-                    
-                    // Orden descendente (Más recientes primero)
-                    allNews.sort((a, b) => b.id - a.id); 
+                // Descargamos Noticias y Glosario al mismo tiempo
+                const [resNews, resGlos] = await Promise.all([
+                    fetch('/api/news').catch(() => null),
+                    fetch('/api/glossary').catch(() => null)
+                ]);
+
+                if (resGlos && resGlos.ok) { allGlossary = await resGlos.json(); }
+
+                if (resNews && resNews.ok) {
+                    allNews = await resNews.json();
+                    allNews.sort((a, b) => b.id - a.id); // Orden descendente
                     
                     generateFilters();
                     renderFeed('ALL');
                     
-                    // Comprobar si hay un ID en la URL para abrir el modal directamente
                     const urlParams = new URLSearchParams(window.location.search);
                     const articleId = urlParams.get('article');
-                    if (articleId) {
-                        setTimeout(() => openArticle(articleId), 200);
-                    }
+                    if (articleId) setTimeout(() => openArticle(articleId), 200);
                     return;
                 }
                 throw new Error("Error API");
             } catch (error) {
-                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest border border-zinc-800 border-dashed rounded-2xl">No hay noticias publicadas.</p>`;
+                feedHero.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest border border-zinc-800 border-dashed rounded-2xl">No hay noticias publicadas.</p>`;
+                feedGrid.innerHTML = '';
             }
         }
 
@@ -150,32 +151,27 @@
             const tags = new Set();
             allNews.forEach(n => { if(n.tag) tags.add(n.tag.toUpperCase()); });
             
-            // Botón "Todos"
-            let html = `<button onclick="setFilter('ALL')" id="btn-filter-ALL" class="filter-chip px-4 py-1.5 rounded-full border text-[10px] font-bold uppercase transition-all shadow-lg active:scale-95 ${TAG_COLORS['ALL'].filter}">TODOS</button>`;
+            let html = `<button onclick="setFilter('ALL')" id="btn-filter-ALL" class="filter-chip active active-white whitespace-nowrap px-5 py-2 rounded-full border border-zinc-700 text-[10px] font-bold uppercase text-white hover:bg-zinc-800 transition-all">TODOS</button>`;
             
-            // Resto de botones
             Array.from(tags).sort().forEach(tag => {
                 const colorData = TAG_COLORS[tag] || TAG_COLORS['DEFAULT'];
-                html += `<button onclick="setFilter('${tag}')" id="btn-filter-${tag.replace(/\s+/g, '')}" class="filter-chip px-4 py-1.5 rounded-full border text-[10px] font-bold uppercase transition-all active:scale-95 opacity-50 hover:opacity-100 ${colorData.filter}">${tag}</button>`;
+                html += `<button onclick="setFilter('${tag}')" id="btn-filter-${tag.replace(/\s+/g, '')}" class="filter-chip whitespace-nowrap px-5 py-2 rounded-full border border-zinc-700 text-[10px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-500 bg-zinc-900/40 transition-all">${tag}</button>`;
             });
             container.innerHTML = html;
         }
 
         window.setFilter = function(tag) {
             currentFilter = tag;
-            
-            // Actualizar estilo visual de los botones
             document.querySelectorAll('.filter-chip').forEach(btn => {
                 const btnTag = btn.innerText.toUpperCase();
+                btn.className = "filter-chip whitespace-nowrap px-5 py-2 rounded-full border border-zinc-700 text-[10px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-500 bg-zinc-900/40 transition-all";
+                
                 if (btnTag === tag || (tag === 'ALL' && btnTag === 'TODOS')) {
-                    btn.classList.remove('opacity-50');
-                    btn.classList.add('shadow-lg');
-                } else {
-                    btn.classList.add('opacity-50');
-                    btn.classList.remove('shadow-lg');
+                    const colorData = TAG_COLORS[tag] || TAG_COLORS['DEFAULT'];
+                    btn.classList.add('active', colorData.active);
+                    btn.classList.remove('text-zinc-400', 'border-zinc-700', 'bg-zinc-900/40');
                 }
             });
-            
             renderFeed(tag);
         }
 
@@ -183,105 +179,174 @@
             let filteredNews = filterTag === 'ALL' ? allNews : allNews.filter(n => (n.tag || '').toUpperCase() === filterTag);
 
             if (filteredNews.length === 0) {
-                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest border border-zinc-800 border-dashed rounded-2xl">Sin resultados.</p>`;
+                feedHero.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest border border-zinc-800 border-dashed rounded-2xl">Sin resultados.</p>`;
+                feedGrid.innerHTML = '';
                 return;
             }
 
-            // Diseño de las tarjetas idéntico a las capturas
-            feed.innerHTML = filteredNews.map((news, idx) => {
-                const tagColor = TAG_COLORS[(news.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
-                
-                return `
-                <article class="group cursor-pointer border-b border-zinc-900/80 pb-12 mb-10 transition-all fade-in-up" style="animation-delay: ${idx * 0.05}s" onclick="openArticle('${news.id}')">
-                    
-                    <div class="w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden rounded-2xl mb-5 bg-zinc-900 relative border border-zinc-800 shadow-xl">
-                        <img src="${news.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700">
+            // --- LÍMITE: 1 HERO + 3 GRID (4 MAX) ---
+            const displayNews = filteredNews.slice(0, 4);
+            const hero = displayNews[0];
+            const rest = displayNews.slice(1);
+
+            // 1. RENDERIZAR HERO (MÁS GRANDE)
+            const heroTag = TAG_COLORS[(hero.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+            feedHero.innerHTML = `
+                <article class="group cursor-pointer border-b border-zinc-900/80 pb-10 md:pb-12 transition-all fade-in-up" onclick="openArticle('${hero.id}')">
+                    <div class="w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden rounded-2xl md:rounded-[2rem] mb-6 md:mb-8 bg-zinc-900 relative border border-zinc-800 shadow-xl">
+                        <img src="${hero.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         <div class="absolute top-4 left-4 md:top-6 md:left-6">
-                             <span class="px-3 py-1 ${tagColor.bg} ${tagColor.text} text-[10px] font-black uppercase rounded shadow-2xl tracking-widest">${news.tag || 'INFO'}</span>
+                             <span class="px-3 py-1.5 ${heroTag.bg} ${heroTag.text} text-[10px] font-black uppercase rounded shadow-2xl tracking-widest">${hero.tag || 'INFO'}</span>
                         </div>
                     </div>
-                    
-                    <div class="flex items-center gap-2 mb-3 px-1">
-                        <span class="text-[10px] font-mono font-bold text-zinc-500 tracking-widest uppercase">${news.date || 'HOY'}</span>
+                    <div class="flex items-center gap-2 mb-3 md:mb-4 px-1">
+                        <span class="text-[10px] font-mono font-bold text-cyan-500 tracking-widest uppercase">${hero.date || 'HOY'}</span>
                         <span class="text-zinc-700 text-[10px]">•</span>
                         <span class="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">TECHNICAL JOURNAL</span>
                     </div>
-                    
-                    <h2 class="text-3xl md:text-5xl font-black italic uppercase leading-[0.9] mb-4 group-hover:text-cyan-400 transition-colors tracking-tighter text-white px-1 drop-shadow-md">${news.title}</h2>
-                    <p class="text-zinc-400 text-sm md:text-base leading-relaxed line-clamp-2 md:line-clamp-3 px-1">${news.lead || news.excerpt || ''}</p>
-                    
+                    <h2 class="text-3xl md:text-5xl lg:text-6xl font-black italic uppercase leading-[0.9] mb-4 group-hover:text-cyan-400 transition-colors tracking-tighter text-white px-1 drop-shadow-md">${hero.title}</h2>
+                    <p class="text-zinc-400 text-sm md:text-base leading-relaxed line-clamp-2 md:line-clamp-3 px-1">${hero.lead || hero.excerpt || ''}</p>
                 </article>
-                `;
-            }).join('');
+            `;
+
+            // 2. RENDERIZAR GRID (MÁS PEQUEÑOS)
+            if (rest.length > 0) {
+                feedGrid.innerHTML = rest.map((news, idx) => {
+                    const tColor = TAG_COLORS[(news.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+                    return `
+                    <article class="group cursor-pointer transition-all fade-in-up flex flex-col" style="animation-delay: ${(idx + 1) * 0.1}s" onclick="openArticle('${news.id}')">
+                        <div class="w-full aspect-[16/9] overflow-hidden rounded-xl mb-4 bg-zinc-900 relative border border-zinc-800 shadow-lg">
+                            <img src="${news.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-500">
+                            <div class="absolute bottom-3 left-3">
+                                 <span class="px-2 py-1 ${tColor.bg} ${tColor.text} text-[8px] font-black uppercase rounded shadow-2xl tracking-widest">${news.tag || 'INFO'}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2 px-1">
+                            <span class="text-[9px] font-mono font-bold text-zinc-500 tracking-widest uppercase">${news.date || 'HOY'}</span>
+                        </div>
+                        <h3 class="text-lg md:text-xl font-black italic uppercase leading-[1.1] mb-2 group-hover:text-cyan-400 transition-colors tracking-tight text-white px-1">${news.title}</h3>
+                    </article>
+                    `;
+                }).join('');
+            } else {
+                feedGrid.innerHTML = '';
+            }
         }
 
-        // --- SISTEMA DE PANTALLA COMPLETA (MODAL) ---
+        // --- SISTEMA MODAL (PANTALLA COMPLETA) ---
         window.openArticle = (id) => {
             const article = allNews.find(n => n.id == id);
             if(!article) return;
 
-            // Cambiar URL sin recargar para poder compartirla
             window.history.pushState({ articleId: id }, '', `?article=${id}`);
-            
             const tagColor = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
 
+            // 1. OBTENER NOTICIAS SIMILARES
+            const similarArticles = allNews.filter(n => n.tag === article.tag && n.id !== article.id).slice(0, 2);
+            let similarHTML = '';
+            if (similarArticles.length > 0) {
+                similarHTML = `
+                <div class="mt-20 pt-12 border-t border-zinc-900">
+                    <h3 class="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-8 border-l-2 border-cyan-500 pl-3">También te puede interesar</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        ${similarArticles.map(s => `
+                            <div class="group cursor-pointer flex gap-4 items-center bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/50 hover:border-zinc-700 transition-colors" onclick="openArticle('${s.id}')">
+                                <div class="w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-zinc-900">
+                                    <img src="${s.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                                </div>
+                                <div class="flex-1">
+                                    <span class="text-[9px] font-black text-cyan-500 uppercase tracking-widest">${s.tag || 'INFO'}</span>
+                                    <h4 class="text-sm font-bold text-zinc-200 group-hover:text-white mt-1 leading-tight line-clamp-2">${s.title}</h4>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }
+
+            // 2. DETECTOR DEL GLOSARIO (VELO DICTIONARY)
+            let glossaryHTML = '';
+            const fullText = (article.title + " " + (article.lead||"") + " " + (article.content||"")).toLowerCase();
+            
+            // Busca la primera palabra del glosario que coincida
+            const matchedGlossary = allGlossary.find(g => fullText.includes(g.term.toLowerCase()));
+            
+            if (matchedGlossary) {
+                glossaryHTML = `
+                <div class="my-12 p-6 md:p-8 bg-gradient-to-br from-violet-900/20 to-zinc-900 border border-violet-500/30 rounded-2xl border-l-4 border-l-violet-500 shadow-lg relative overflow-hidden">
+                    <svg class="absolute -right-6 -bottom-6 w-32 h-32 text-violet-500/10 pointer-events-none transform -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    
+                    <h4 class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
+                        Velo Dictionary
+                    </h4>
+                    <p class="text-xl md:text-2xl font-black italic text-white uppercase tracking-tight mb-2">${matchedGlossary.term}</p>
+                    <p class="text-sm md:text-base text-zinc-300 leading-relaxed">${matchedGlossary.def}</p>
+                    
+                    <div class="mt-4">
+                        <a href="glosario.html?term=${encodeURIComponent(matchedGlossary.term)}" class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-violet-400 hover:text-white transition-colors bg-violet-900/30 px-3 py-1.5 rounded-full">
+                            Ver en Glosario →
+                        </a>
+                    </div>
+                </div>`;
+            }
+
+            // 3. RENDERIZAR TODO EN EL MODAL
             modalContent.innerHTML = `
                 <div class="h-[50vh] md:h-[65vh] w-full relative">
                     <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-90">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent"></div>
                     
-                    <div class="absolute bottom-0 left-0 w-full p-6 md:p-16 max-w-4xl mx-auto">
-                        <span class="px-3 py-1 ${tagColor.bg} ${tagColor.text} rounded text-[10px] font-black uppercase mb-4 md:mb-6 inline-block tracking-widest shadow-lg">${article.tag || 'INFO'}</span>
-                        <h1 class="text-3xl md:text-5xl lg:text-6xl font-black italic uppercase text-white leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">${article.title}</h1>
+                    <div class="absolute bottom-0 left-0 w-full p-6 md:p-16 max-w-5xl mx-auto">
+                        <span class="px-3 py-1 md:px-4 md:py-1.5 ${tagColor.bg} ${tagColor.text} rounded text-[9px] md:text-[10px] font-black uppercase mb-4 md:mb-6 inline-block tracking-widest shadow-lg">${article.tag || 'INFO'}</span>
+                        <h1 class="text-4xl md:text-6xl lg:text-7xl font-black italic uppercase text-white leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">${article.title}</h1>
                         <p class="text-zinc-400 font-mono text-[10px] md:text-xs uppercase tracking-widest">${article.date || 'HOY'} • VELO INSIGHTS</p>
                     </div>
                 </div>
 
                 <div class="p-6 md:p-16 pt-8 md:pt-12">
                     <div class="max-w-3xl mx-auto">
-                        
                         ${article.lead ? `<p class="text-xl md:text-2xl text-zinc-300 font-serif leading-relaxed mb-10 md:mb-14 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
                         
                         <div class="prose-custom">
                             ${article.content || '<p class="text-center text-zinc-600">No hay contenido disponible.</p>'}
                         </div>
+
+                        ${glossaryHTML}
+
+                        ${similarHTML}
                         
                         <div class="mt-16 pt-10 border-t border-zinc-900 text-center">
-                            <p class="text-[10px] text-zinc-600 uppercase font-black tracking-widest mb-4">Fin del Análisis</p>
                             <button onclick="shareNative()" class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-cyan-500 transition-all active:scale-95">
                                 <svg class="w-4 h-4 text-zinc-400 group-hover:text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-                                <span id="share-btn-text" class="text-[10px] font-bold uppercase text-zinc-300 group-hover:text-white tracking-widest">Compartir Artículo</span>
+                                <span id="share-btn-text" class="text-[10px] font-bold uppercase text-zinc-300 group-hover:text-white tracking-widest">Compartir</span>
                             </button>
                         </div>
                     </div>
                 </div>
             `;
             
-            // Bloquea el scroll de la página trasera y muestra el modal
             document.body.style.overflow = 'hidden';
             modal.classList.remove('modal-hidden');
             modal.classList.add('modal-visible');
-            modal.scrollTop = 0; // Inicia arriba del todo
+            modal.scrollTop = 0; 
         };
 
         window.closeArticle = () => {
             modal.classList.remove('modal-visible');
             modal.classList.add('modal-hidden');
-            document.body.style.overflow = ''; // Devuelve el scroll
+            document.body.style.overflow = '';
             
-            // Limpia la URL
             const url = new URL(window.location);
             url.searchParams.delete('article');
             window.history.pushState({}, '', url);
         };
 
-        // Cerrar con la tecla Escape (PC)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && modal.classList.contains('modal-visible')) closeArticle();
         });
 
-        // Evento botón Atrás del móvil
         window.addEventListener('popstate', (e) => {
             if (e.state && e.state.articleId) {
                 openArticle(e.state.articleId);
@@ -290,7 +355,6 @@
             }
         });
 
-        // Compartir (Nativo en móvil, portapapeles en PC)
         window.shareNative = async () => {
             const titleElement = document.querySelector('#modal-content h1');
             const title = titleElement ? titleElement.innerText : 'VELO INSIGHTS';
@@ -303,10 +367,10 @@
                     await navigator.clipboard.writeText(url);
                     const btnText = document.getElementById('share-btn-text');
                     const originalText = btnText.innerText;
-                    btnText.innerText = "¡ENLACE COPIADO!";
+                    btnText.innerText = "¡COPIADO!";
                     btnText.classList.add('text-cyan-400');
                     setTimeout(() => { btnText.innerText = originalText; btnText.classList.remove('text-cyan-400'); }, 2000);
-                } catch (err) { alert('Copia la URL manualmente: ' + url); }
+                } catch (err) { alert('Copia la URL: ' + url); }
             }
         };
 
