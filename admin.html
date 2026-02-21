@@ -70,8 +70,8 @@
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
             calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
             equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
-            glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Insight pro...' },
-            trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+10% o Vacio' }
+            glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
+            trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' }
         };
 
         async function loadTable(table) {
@@ -97,13 +97,26 @@
 
         function renderUI(data) {
             const container = document.getElementById('content-area');
+            
+            // Botón Extra solo para Trending
+            let extraBtn = '';
+            if (currentTable === 'trending') {
+                extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 mr-3 shadow-lg transition-transform active:scale-95"><i class="fas fa-magic"></i> AUTO-GENERAR</button>`;
+            }
+
             let headerHtml = `
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-white capitalize flex items-center gap-3"><span class="w-2 h-8 bg-emerald-500 rounded-full"></span>${currentTable}</h2>
-                    <button onclick="openCreateModal()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3 rounded-xl font-bold flex items-center gap-2"><i class="fas fa-plus-circle"></i> AÑADIR NUEVO</button>
+                    <div class="flex items-center">
+                        ${extraBtn}
+                        <button onclick="openCreateModal()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform active:scale-95"><i class="fas fa-plus-circle"></i> AÑADIR NUEVO</button>
+                    </div>
                 </div>`;
 
-            if (!data || data.length === 0) { container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10">No hay datos.</div>'; return; }
+            if (!data || data.length === 0) { 
+                container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10 bg-slate-900/50 rounded-xl border border-slate-800">No hay datos en esta categoría. Puedes añadirlos a mano o usar el autogenerador.</div>'; 
+                return; 
+            }
 
             const keys = Object.keys(data[0]);
             const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight'];
@@ -121,6 +134,7 @@
                 displayCols.forEach(col => {
                     let val = row[col];
                     if (col === 'isHero') val = val == 1 ? '<span class="text-yellow-400">★ SÍ</span>' : '<span class="text-slate-600">No</span>';
+                    else if (col === 'tipo' && currentTable === 'trending') val = val === 'ciclista' ? '<span class="text-emerald-400 font-bold">🚴‍♂️ CICLISTA</span>' : '<span class="text-cyan-400 font-bold"># TOPIC</span>';
                     else if (typeof val === 'string' && val.startsWith('assets/')) val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md">`;
                     else if (typeof val === 'string' && val.length > 40) val = val.substring(0, 40) + '...';
                     
@@ -133,6 +147,88 @@
             });
             container.innerHTML = headerHtml + tableHtml + `</tbody></table></div>`;
         }
+
+        // === MAGIA: AUTO-GENERADOR DE TENDENCIAS ===
+        async function autoGenerateTrending() {
+            if(!confirm("Esto analizará tus últimas noticias y extraerá automáticamente a los ciclistas y hashtags más mencionados para guardarlos en la tabla. ¿Deseas continuar?")) return;
+            
+            try {
+                // Descargamos las noticias y los equipos para cruzar datos
+                const [newsRes, teamsRes] = await Promise.all([
+                    fetch('/api/news').then(r => r.ok ? r.json() : []),
+                    fetch('/api/teams').then(r => r.ok ? r.json() : [])
+                ]);
+
+                const newTrends = [];
+
+                // 1. Extraer hashtags de las etiquetas (tags) de las noticias
+                const tagCounts = {};
+                newsRes.forEach(n => {
+                    if (n.tag) {
+                        const tagStr = '#' + n.tag.replace(/\s+/g, '');
+                        tagCounts[tagStr] = (tagCounts[tagStr] || 0) + 1;
+                    }
+                });
+                // Cogemos los 3 tags más usados
+                const sortedTags = Object.keys(tagCounts).sort((a,b) => tagCounts[b] - tagCounts[a]).slice(0, 3);
+                sortedTags.forEach(tag => {
+                    newTrends.push({ tipo: 'topic', title: tag, subtitle: 'noticias.html', value: '' });
+                });
+
+                // 2. Extraer ciclistas mencionados en los títulos
+                const allProRiders = [];
+                teamsRes.forEach(team => {
+                    let rList = [];
+                    try { rList = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; } catch(e){}
+                    rList.forEach(r => allProRiders.push({ name: r.name, team: team.name }));
+                });
+
+                // Miramos solo en los títulos de las últimas 5 noticias
+                const recentTitles = newsRes.slice(0, 5).map(n => n.title).join(' ');
+                let addedRiders = 0;
+                allProRiders.forEach(pro => {
+                    if (recentTitles.includes(pro.name) && addedRiders < 2) { // Limitamos a 2 ciclistas automáticos
+                        newTrends.push({ tipo: 'ciclista', title: pro.name, subtitle: pro.team, value: '+HOT' });
+                        addedRiders++;
+                    }
+                });
+
+                if(newTrends.length === 0) {
+                    alert("⚠️ No hay suficientes noticias en la base de datos para generar tendencias automáticamente.");
+                    return;
+                }
+
+                // Guardar todo en la base de datos automáticamente
+                const authHeader = 'Basic ' + btoa('admin:velo2026');
+                let addedCount = 0;
+                
+                for (const trend of newTrends) {
+                    // Verificamos si ya existe para no duplicarlo cada vez que se pulsa el botón
+                    const exists = currentData.find(d => d.title === trend.title);
+                    if (!exists) {
+                        await fetch(`/api/admin/create/trending`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+                            body: JSON.stringify(trend)
+                        });
+                        addedCount++;
+                    }
+                }
+
+                if (addedCount > 0) {
+                    alert(`✅ Proceso completado: Se han inyectado ${addedCount} nuevas tendencias.`);
+                } else {
+                    alert("ℹ️ Todo está al día. No se detectaron tendencias nuevas que no estuvieran ya en la tabla.");
+                }
+                
+                // Recargamos la tabla para ver los resultados
+                loadTable('trending');
+
+            } catch (e) {
+                alert("❌ Error generando tendencias: " + e.message);
+            }
+        }
+        // ==========================================
 
         function openCreateModal() {
             isEditing = false; editId = null;
@@ -241,7 +337,7 @@
         }
 
         async function deleteItem(id) {
-            if(!confirm("⚠️ ¿Estás seguro?")) return;
+            if(!confirm("⚠️ ¿Estás seguro de borrar esto?")) return;
             const authHeader = 'Basic ' + btoa('admin:velo2026');
             try {
                 await fetch(`/api/admin/${currentTable}/${id}`, { method: 'DELETE', headers: { 'Authorization': authHeader } });
