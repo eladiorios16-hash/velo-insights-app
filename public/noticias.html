@@ -12,12 +12,14 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Velo">
     <link rel="apple-touch-icon" href="assets/icon-192.png">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="assets/main.css">
 
     <style>
+        /* ESTILOS BASE */
         body { -webkit-tap-highlight-color: transparent; background-color: #050505; }
         
         /* Animación Skeleton */
@@ -26,261 +28,280 @@
             50% { background-color: #18181b; }
             100% { background-color: #09090b; }
         }
-        .skeleton { animation: skeleton-loading 1.5s infinite ease-in-out; border-radius: 0.5rem; }
+        .skeleton {
+            animation: skeleton-loading 1.5s infinite ease-in-out;
+            border-radius: 1.5rem;
+        }
+        
+        /* Estilo Prosa Modal (Contenido del artículo) */
+        .prose-custom p { color: #a1a1aa; font-size: 1.125rem; line-height: 1.8; margin-bottom: 1.5rem; }
+        .prose-custom h2, .prose-custom h3 { color: white; font-weight: 900; text-transform: uppercase; font-style: italic; font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem; }
+        .prose-custom ul { list-style: none; padding-left: 0; color: #a1a1aa; margin-bottom: 2rem; }
+        .prose-custom li { position: relative; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+        .prose-custom li::before { content: '›'; position: absolute; left: 0; color: #22d3ee; font-weight: bold; }
+        .prose-custom strong { color: white; font-weight: 700; }
+        .prose-custom blockquote { border-left: 4px solid #22d3ee; padding-left: 1rem; margin: 2rem 0; font-style: italic; color: #d4d4d8; background: rgba(34, 211, 238, 0.05); padding: 1.5rem; border-radius: 0 1rem 1rem 0; }
 
         /* Scrollbar Personalizada */
         .custom-scrollbar::-webkit-scrollbar { height: 0px; width: 0px; display: none; }
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Filtros */
-        .filter-btn { transition: all 0.3s ease; }
-        .filter-btn.active { background: #22d3ee; color: #000; border-color: #22d3ee; font-weight: 900; box-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
-
-        /* === ESTILOS ACORDEÓN (ESTILO CALENDARIO) === */
-        .news-btn { transition: all 0.3s ease; }
-        .news-btn:hover { background-color: rgba(255, 255, 255, 0.03); }
         
-        .card-arrow { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .news-btn.active .card-arrow { transform: rotate(180deg); color: #22d3ee; }
-        .news-btn.active .news-title { color: #22d3ee; }
+        .modal-scroll::-webkit-scrollbar { width: 6px; }
+        .modal-scroll::-webkit-scrollbar-track { background: #000; }
+        .modal-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
 
-        .news-content { 
-            max-height: 0; 
-            overflow: hidden; 
-            transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; 
-            opacity: 0; 
-            background: #000; 
-        }
-        .news-content.open { 
-            max-height: 8000px; 
-            opacity: 1; 
-            border-top: 1px dashed #27272a; 
-        }
+        /* Chips Filtros Activos */
+        .filter-chip { transition: all 0.3s ease; }
+        .filter-chip.active { box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+        .filter-chip.active-cyan { background: rgba(34, 211, 238, 0.1); border-color: #22d3ee; color: #22d3ee; }
+        .filter-chip.active-emerald { background: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #10b981; }
+        .filter-chip.active-pink { background: rgba(236, 72, 153, 0.1); border-color: #ec4899; color: #ec4899; }
+        .filter-chip.active-violet { background: rgba(139, 92, 246, 0.1); border-color: #8b5cf6; color: #8b5cf6; }
+        .filter-chip.active-yellow { background: rgba(234, 179, 8, 0.1); border-color: #eab308; color: #eab308; }
+        .filter-chip.active-white { background: rgba(255, 255, 255, 0.1); border-color: #ffffff; color: #ffffff; }
 
-        /* Contenido del Artículo */
-        .article-prose { font-size: 1.05rem; line-height: 1.8; color: #a1a1aa; }
-        .article-prose p { margin-bottom: 1.5rem; }
-        .article-prose h2, .article-prose h3 { color: #f4f4f5; font-weight: 900; margin-top: 2.5rem; margin-bottom: 1rem; font-style: italic; text-transform: uppercase; letter-spacing: -0.05em; font-size: 1.4rem; }
-        .article-prose strong { color: #e4e4e7; font-weight: 700; }
-        .article-prose ul { list-style: none; padding-left: 0; margin-bottom: 1.5rem; }
-        .article-prose li { position: relative; padding-left: 1.5rem; margin-bottom: 0.5rem; }
-        .article-prose li::before { content: '›'; position: absolute; left: 0; color: #22d3ee; font-weight: bold; }
-        .article-prose blockquote { border-left: 4px solid #22d3ee; padding-left: 1rem; margin: 2rem 0; font-style: italic; color: #d4d4d8; background: rgba(34, 211, 238, 0.05); padding: 1.5rem; border-radius: 0 1rem 1rem 0; }
+        /* Animación Modal */
+        #article-modal { transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .modal-hidden { opacity: 0; pointer-events: none; transform: translateY(10px) scale(0.99); }
+        .modal-visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
     </style>
 </head>
-<body class="antialiased pb-20 overflow-x-hidden text-white">
+<body class="bg-[#050505] antialiased pb-20 overflow-x-hidden selection:bg-cyan-500/30">
 
-    <main class="max-w-4xl mx-auto px-4 md:px-6 pt-28 md:pt-40">
+    <header class="pt-28 md:pt-40 pb-8 px-4 md:px-6 max-w-5xl mx-auto text-center reveal-on-scroll">
+        <h1 class="text-5xl md:text-7xl font-black italic text-white uppercase tracking-tighter mb-4 leading-none drop-shadow-2xl">
+            The Journal <span class="text-cyan-500">///</span>
+        </h1>
+        <p class="text-zinc-500 font-medium text-xs md:text-sm mx-auto max-w-xl">Archivo profundo de análisis técnico. No cubrimos rumores, cubrimos vatios.</p>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 md:px-6">
         
-        <header class="mb-10 md:mb-16 text-center reveal-on-scroll">
-            <h1 class="text-4xl md:text-6xl font-black italic uppercase tracking-tighter mb-4 leading-none">The Journal <span class="text-cyan-500">///</span></h1>
-            <p class="text-zinc-500 font-medium text-xs md:text-sm mx-auto">Archivo profundo de análisis técnico. No cubrimos rumores, cubrimos vatios.</p>
-        </header>
-
-        <div class="flex flex-wrap justify-center gap-2 mb-10" id="filter-container">
+        <div class="overflow-x-auto pb-4 custom-scrollbar flex justify-center gap-3 mb-10" id="filter-container">
             </div>
 
-        <div id="news-feed" class="border-t border-zinc-800">
-            <div class="p-6 border-b border-zinc-800 flex gap-4">
-                <div class="w-8 h-8 skeleton"></div>
-                <div class="flex-1 space-y-3">
-                    <div class="w-2/3 h-6 skeleton"></div>
-                    <div class="w-full h-4 skeleton"></div>
-                    <div class="w-32 h-6 skeleton mt-2"></div>
-                </div>
+        <div id="news-feed" class="space-y-16">
+            <div class="border-b border-zinc-900 pb-12">
+                <div class="aspect-[21/9] w-full skeleton mb-6"></div>
+                <div class="h-4 w-32 skeleton mb-3"></div>
+                <div class="h-10 w-full skeleton mb-3"></div>
+                <div class="h-6 w-2/3 skeleton"></div>
             </div>
         </div>
-
+        
     </main>
 
-    <script src="layout.js?v=6.9"></script>
+    <div id="article-modal" class="fixed inset-0 z-[200] bg-[#050505] modal-hidden overflow-y-auto modal-scroll">
+        
+        <button onclick="closeArticle()" class="fixed top-6 right-6 z-[210] p-3 bg-black/60 text-white rounded-full hover:bg-white hover:text-black transition-all backdrop-blur-xl border border-white/20 shadow-2xl">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <div id="modal-content" class="w-full min-h-screen pb-20">
+            </div>
+    </div>
+
+    <script src="layout.js?v=7.0"></script>
     
     <script>
         let allNews = [];
+        let currentFilter = 'ALL';
         const feed = document.getElementById('news-feed');
+        const modal = document.getElementById('article-modal');
+        const modalContent = document.getElementById('modal-content');
 
-        // Paleta de colores para los Tags igual que en el Calendario
-        function getTagStyle(tag) {
-            const t = tag ? tag.toUpperCase() : '';
-            if (t.includes('RACE')) return 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/30';
-            if (t.includes('TECH')) return 'bg-emerald-900/30 text-emerald-400 border border-emerald-500/30';
-            if (t.includes('AERO')) return 'bg-pink-900/30 text-pink-400 border border-pink-500/30';
-            if (t.includes('DATA')) return 'bg-violet-900/30 text-violet-400 border border-violet-500/30';
-            if (t.includes('PREVIA')) return 'bg-yellow-900/30 text-yellow-500 border border-yellow-500/30';
-            return 'bg-zinc-800 text-zinc-300 border border-zinc-700'; // Default
-        }
+        // COLORES DE LAS ETIQUETAS
+        const TAG_COLORS = {
+            'TECH LAB': { bg: 'bg-emerald-500', text: 'text-black', active: 'active-emerald' },
+            'AERO LAB': { bg: 'bg-pink-500', text: 'text-white', active: 'active-pink' },
+            'DATA ANALYSIS': { bg: 'bg-violet-500', text: 'text-white', active: 'active-violet' },
+            'RACE REPORT': { bg: 'bg-cyan-500', text: 'text-black', active: 'active-cyan' },
+            'PREVIA': { bg: 'bg-yellow-500', text: 'text-black', active: 'active-yellow' },
+            'DEFAULT': { bg: 'bg-zinc-700', text: 'text-white', active: 'active-white' }
+        };
 
-        async function fetchNews() {
+        async function initNews() {
             try {
                 const response = await fetch('/api/news');
                 if (response.ok) {
                     allNews = await response.json();
-                    
-                    // Asegurar orden (más reciente arriba)
-                    allNews.sort((a, b) => b.id - a.id);
+                    allNews.sort((a, b) => b.id - a.id); // Orden descendente (Más recientes primero)
                     
                     generateFilters();
                     renderFeed('ALL');
-
-                    // Si hay un ID en la URL, lo abrimos y hacemos scroll
+                    
+                    // Manejo del Deep Link (?article=id)
                     const urlParams = new URLSearchParams(window.location.search);
                     const articleId = urlParams.get('article');
                     if (articleId) {
-                        setTimeout(() => toggleArticle(articleId, true), 300);
+                        setTimeout(() => openArticle(articleId), 200);
                     }
                     return;
                 }
-                throw new Error("API vacía");
+                throw new Error("Error obteniendo noticias");
             } catch (error) {
-                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest">No hay noticias disponibles en la base de datos.</p>`;
+                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase">No hay noticias publicadas.</p>`;
             }
         }
 
         function generateFilters() {
             const container = document.getElementById('filter-container');
             const tags = new Set();
-            allNews.forEach(n => { if(n.tag) tags.add(n.tag); });
+            allNews.forEach(n => { if(n.tag) tags.add(n.tag.toUpperCase()); });
             
-            let html = `<button onclick="setFilter('ALL')" class="filter-btn active px-4 py-1.5 rounded-full border border-zinc-700 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white hover:border-zinc-500">TODOS</button>`;
+            let html = `<button onclick="setFilter('ALL')" id="btn-filter-ALL" class="filter-chip active active-white whitespace-nowrap px-5 py-2 rounded-full border border-zinc-700 text-[10px] font-bold uppercase text-white hover:bg-zinc-800 transition-all">TODOS</button>`;
             
             Array.from(tags).sort().forEach(tag => {
-                html += `<button onclick="setFilter('${tag}')" class="filter-btn px-4 py-1.5 rounded-full border border-zinc-700 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white hover:border-zinc-500">${tag}</button>`;
+                const colors = TAG_COLORS[tag] || TAG_COLORS['DEFAULT'];
+                html += `<button onclick="setFilter('${tag}')" id="btn-filter-${tag.replace(/\s+/g, '')}" class="filter-chip whitespace-nowrap px-5 py-2 rounded-full border border-zinc-700 text-[10px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-500 bg-zinc-900/40 transition-all">${tag}</button>`;
             });
             container.innerHTML = html;
         }
 
         window.setFilter = function(tag) {
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                if (btn.innerText === tag || (tag === 'ALL' && btn.innerText === 'TODOS')) {
-                    btn.classList.add('active');
-                    btn.classList.remove('text-zinc-400', 'border-zinc-700');
-                } else {
-                    btn.classList.remove('active');
-                    btn.classList.add('text-zinc-400', 'border-zinc-700');
+            currentFilter = tag;
+            document.querySelectorAll('.filter-chip').forEach(btn => {
+                const btnTag = btn.innerText.toUpperCase();
+                btn.className = "filter-chip whitespace-nowrap px-5 py-2 rounded-full border border-zinc-700 text-[10px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-500 bg-zinc-900/40 transition-all";
+                
+                if (btnTag === tag || (tag === 'ALL' && btnTag === 'TODOS')) {
+                    const colorData = TAG_COLORS[tag] || TAG_COLORS['DEFAULT'];
+                    btn.classList.add('active', colorData.active);
+                    btn.classList.remove('text-zinc-400', 'border-zinc-700', 'bg-zinc-900/40');
                 }
             });
             renderFeed(tag);
         }
 
         function renderFeed(filterTag) {
-            let filteredNews = filterTag === 'ALL' ? allNews : allNews.filter(n => n.tag === filterTag);
+            let filteredNews = filterTag === 'ALL' ? allNews : allNews.filter(n => (n.tag || '').toUpperCase() === filterTag);
 
             if (filteredNews.length === 0) {
-                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest">Sin resultados.</p>`;
+                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase">Sin resultados.</p>`;
                 return;
             }
 
-            let html = '';
-            filteredNews.forEach((n, index) => {
-                // Numeración estilo calendario (01, 02...)
-                const num = String(index + 1).padStart(2, '0');
-                const tagClass = getTagStyle(n.tag);
+            feed.innerHTML = filteredNews.map(news => {
+                const tagColor = TAG_COLORS[(news.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
                 
-                // La primera noticia se abre por defecto si no hay filtro activo
-                const isOpen = index === 0 ? 'open' : '';
-                const isActive = index === 0 ? 'active' : '';
-
-                html += `
-                <div class="border-b border-zinc-800 last:border-0" id="item-${n.id}">
-                    <button onclick="toggleArticle('${n.id}')" id="btn-${n.id}" class="news-btn w-full py-5 px-2 md:px-4 flex items-start justify-between gap-4 text-left group ${isActive}">
-                        
-                        <div class="flex items-start gap-4 md:gap-6 w-full">
-                            <span class="font-black text-2xl md:text-3xl text-zinc-600 mt-0.5 w-6 shrink-0 text-center transition-colors group-hover:text-zinc-400">${num}</span>
-                            
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-baseline gap-3 mb-1">
-                                    <h3 class="news-title text-base md:text-xl font-bold text-white uppercase tracking-tight transition-colors group-hover:text-cyan-400">${n.title}</h3>
-                                    <span class="text-[10px] md:text-xs font-mono text-cyan-500/70 shrink-0 tracking-wider">${n.date || 'HOY'}</span>
-                                </div>
-                                
-                                <p class="text-[10px] md:text-xs text-zinc-500 font-bold uppercase tracking-widest mb-3 truncate pr-4">${n.lead || 'VELO INSIGHTS REPORT'}</p>
-                                
-                                <div class="flex items-center gap-3">
-                                    <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-widest ${tagClass}">${n.tag || 'INFO'}</span>
-                                    <span class="text-[10px] font-mono text-white opacity-80 border-l border-zinc-700 pl-3">LECTURA: 4 MIN</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="card-arrow text-zinc-600 shrink-0 mt-2">
-                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                    </button>
+                return `
+                <article class="group cursor-pointer border-b border-zinc-900/80 pb-12 transition-all reveal-on-scroll" onclick="openArticle('${news.id}')">
                     
-                    <div id="content-${n.id}" class="news-content ${isOpen}">
-                        <div class="p-4 md:p-8 pt-6">
-                            
-                            <div class="flex justify-center mb-6">
-                                <span class="text-[9px] font-mono text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-2">DATA DRIVEN ANALYSIS</span>
-                            </div>
+                    <div class="w-full aspect-[2/1] md:aspect-[21/9] overflow-hidden rounded-2xl mb-5 bg-zinc-900 relative border border-zinc-800 shadow-lg">
+                        <img src="${news.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700">
+                        <div class="absolute top-4 left-4 md:top-5 md:left-5">
+                             <span class="px-2.5 py-1 ${tagColor.bg} ${tagColor.text} text-[9px] font-black uppercase rounded shadow-lg tracking-widest">${news.tag || 'INFO'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 mb-2 px-1">
+                        <span class="text-[10px] font-black text-cyan-500 tracking-widest uppercase">${news.date || 'HOY'}</span>
+                        <span class="text-zinc-600 text-[10px]">•</span>
+                        <span class="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">TECHNICAL JOURNAL</span>
+                    </div>
+                    
+                    <h2 class="text-3xl md:text-5xl font-black italic uppercase leading-[0.9] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter text-white px-1 drop-shadow-md">${news.title}</h2>
+                    <p class="text-zinc-400 text-sm md:text-base leading-relaxed line-clamp-2 md:line-clamp-3 px-1">${news.lead || news.excerpt || ''}</p>
+                    
+                </article>
+                `;
+            }).join('');
+        }
 
-                            ${n.image ? `
-                                <div class="bg-white rounded-xl p-1 md:p-2 mb-8 overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.05)] cursor-pointer group/img" onclick="openLightbox('${n.image}')" title="Ampliar imagen">
-                                    <img src="${n.image}" class="w-full h-auto object-cover max-h-[400px] md:max-h-[500px] rounded-lg group-hover/img:scale-[1.02] transition-transform duration-500">
-                                </div>
-                            ` : ''}
-                            
-                            <div class="article-prose">
-                                ${n.content || '<p class="italic text-center text-zinc-600">No hay contenido disponible para este artículo.</p>'}
-                            </div>
-                            
-                            <div class="mt-10 pt-6 border-t border-zinc-800 flex justify-between items-center">
-                                <button onclick="toggleArticle('${n.id}')" class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-cyan-400 flex items-center gap-2 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
-                                    Cerrar Artículo
-                                </button>
-                                <button onclick="shareArticle('${n.title}', '${n.id}')" class="flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase hover:bg-cyan-500 hover:text-black transition-all">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 12a3 3 0 100-2.684 3 3 0 000 2.684z"></path></svg>
-                                    Compartir
-                                </button>
-                            </div>
+        // --- SISTEMA DE PANTALLA COMPLETA ---
+        window.openArticle = (id) => {
+            const article = allNews.find(n => n.id == id);
+            if(!article) return;
+
+            // Cambiar URL sin recargar
+            window.history.pushState({ articleId: id }, '', `?article=${id}`);
+            
+            const tagColor = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+
+            modalContent.innerHTML = `
+                <div class="h-[50vh] md:h-[65vh] w-full relative">
+                    <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-90">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent"></div>
+                    
+                    <div class="absolute bottom-0 left-0 w-full p-6 md:p-16 max-w-5xl mx-auto">
+                        <span class="px-3 py-1 md:px-4 md:py-1.5 ${tagColor.bg} ${tagColor.text} rounded text-[9px] md:text-[10px] font-black uppercase mb-4 md:mb-6 inline-block tracking-widest shadow-lg">${article.tag || 'INFO'}</span>
+                        <h1 class="text-4xl md:text-6xl lg:text-7xl font-black italic uppercase text-white leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">${article.title}</h1>
+                        <p class="text-zinc-400 font-mono text-[10px] md:text-xs uppercase tracking-widest">${article.date || 'HOY'} • VELO INSIGHTS</p>
+                    </div>
+                </div>
+
+                <div class="p-6 md:p-16 pt-8 md:pt-12">
+                    <div class="max-w-3xl mx-auto">
+                        
+                        ${article.lead ? `<p class="text-xl md:text-2xl text-zinc-300 font-serif leading-relaxed mb-10 md:mb-14 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
+                        
+                        <div class="prose-custom">
+                            ${article.content || '<p class="text-center text-zinc-600">No hay contenido disponible.</p>'}
+                        </div>
+                        
+                        <div class="mt-16 pt-10 border-t border-zinc-900 text-center">
+                            <p class="text-[10px] text-zinc-600 uppercase font-black tracking-widest mb-4">Fin del Análisis</p>
+                            <button onclick="shareNative()" class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-cyan-500 transition-all active:scale-95">
+                                <svg class="w-4 h-4 text-zinc-400 group-hover:text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                                <span id="share-btn-text" class="text-[10px] font-bold uppercase text-zinc-300 group-hover:text-white tracking-widest">Compartir</span>
+                            </button>
                         </div>
                     </div>
                 </div>
-                `;
-            });
-
-            feed.innerHTML = html;
-        }
-
-        window.toggleArticle = function(id, forceScroll = false) {
-            const content = document.getElementById(`content-${id}`);
-            const btn = document.getElementById(`btn-${id}`);
-            const item = document.getElementById(`item-${id}`);
-            const isOpen = content.classList.contains('open');
-
-            // Cierra todos los demás
-            document.querySelectorAll('.news-content').forEach(el => el.classList.remove('open'));
-            document.querySelectorAll('.news-btn').forEach(el => el.classList.remove('active'));
-
-            // Si estaba cerrado, lo abre
-            if (!isOpen) {
-                content.classList.add('open');
-                btn.classList.add('active');
-                
-                // Actualiza la URL para poder compartir el link directo
-                window.history.replaceState(null, '', `?article=${id}`);
-
-                // Scroll suave hasta el título
-                setTimeout(() => {
-                    item.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 300);
-            } else {
-                // Si lo cerramos, limpiamos la URL
-                window.history.replaceState(null, '', window.location.pathname);
-            }
+            `;
+            
+            // Bloquea el scroll de la página trasera y muestra el modal
+            document.body.style.overflow = 'hidden';
+            modal.classList.remove('modal-hidden');
+            modal.classList.add('modal-visible');
+            modal.scrollTop = 0; // Inicia arriba del todo
         };
 
-        window.shareArticle = function(title, id) {
-            const url = window.location.origin + window.location.pathname + '?article=' + id;
+        window.closeArticle = () => {
+            modal.classList.remove('modal-visible');
+            modal.classList.add('modal-hidden');
+            document.body.style.overflow = 'auto'; // Devuelve el scroll
+            
+            // Limpia la URL
+            const url = new URL(window.location);
+            url.searchParams.delete('article');
+            window.history.pushState({}, '', url);
+        };
+
+        // Cerrar con Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('modal-visible')) closeArticle();
+        });
+
+        // Evento botón Atrás del móvil
+        window.addEventListener('popstate', (e) => {
+            if (e.state && e.state.articleId) {
+                openArticle(e.state.articleId);
+            } else {
+                closeArticle();
+            }
+        });
+
+        window.shareNative = async () => {
+            const titleElement = document.querySelector('#modal-content h1');
+            const title = titleElement ? titleElement.innerText : 'VELO INSIGHTS';
+            const url = window.location.href;
+
             if (navigator.share) {
-                navigator.share({ title: title, url: url }).catch(console.error);
+                try { await navigator.share({ title: 'VELO INSIGHTS', text: title, url: url }); } catch (err) { }
             } else {
-                navigator.clipboard.writeText(url).then(() => alert("Enlace copiado al portapapeles."));
+                try {
+                    await navigator.clipboard.writeText(url);
+                    const btnText = document.getElementById('share-btn-text');
+                    const originalText = btnText.innerText;
+                    btnText.innerText = "¡COPIADO!";
+                    btnText.classList.add('text-cyan-400');
+                    setTimeout(() => { btnText.innerText = originalText; btnText.classList.remove('text-cyan-400'); }, 2000);
+                } catch (err) { alert('Copia la URL: ' + url); }
             }
         };
 
-        document.addEventListener('DOMContentLoaded', fetchNews);
+        document.addEventListener('DOMContentLoaded', initNews);
     </script>
 </body>
 </html>
