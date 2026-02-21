@@ -658,10 +658,10 @@
                 const heartColor = isFavorite ? 'text-yellow-500' : 'text-zinc-700 hover:text-zinc-500';
                 const hl = (key) => key === currentSortCriteria ? 'text-yellow-400 font-black scale-110 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'text-zinc-200';
 
+                // AQUI: HEMOS ELIMINADO EL ONMOUSEENTER PARA QUE SOLO SE ACTUALICE AL HACER CLIC
                 return `
                 <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between p-3"
-                     onclick="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')"
-                     onmouseenter="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')">
+                     onclick="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')">
                     
                     <div class="flex items-center gap-3 w-full">
                         <button onclick="event.stopPropagation(); toggleFavorite('${rider.name}', '${teamCode}')" class="z-50 p-1 -ml-1 focus:outline-none">
