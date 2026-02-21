@@ -169,8 +169,8 @@
                 <canvas id="radarChart"></canvas>
             </div>
             
-            <div id="analysis-content" class="mt-auto p-5 bg-black/60 rounded-xl border border-zinc-800 z-10 backdrop-blur-md">
-                <p class="text-xs text-zinc-600 text-center animate-pulse tracking-widest uppercase">Calculando datos...</p>
+            <div id="analysis-content" class="mt-auto p-5 bg-black/60 rounded-xl border border-zinc-800 z-10 backdrop-blur-md min-h-[90px] flex flex-col justify-center">
+                <p class="text-[10px] text-zinc-500 text-center animate-pulse tracking-widest uppercase">Actualizando telemetría...</p>
             </div>
         </section>
 
@@ -277,6 +277,7 @@
 
         let radarChart = null, climbChart = null;
         let climbDebounceTimer;
+        let radarDebounceTimer; // <-- Nuevo timer para el retraso del gráfico Radar
 
         // Sync inputs and sliders
         function syncInputs(slider, numBox) {
@@ -329,10 +330,9 @@
             
             wkgDisplay.innerText = wkg > 0 ? wkg.toFixed(2) : '0.00';
             
-            // NUEVO SISTEMA DE RANGOS (S, A, B, C, D)
             let levelTxt = "Ingresa datos";
             let rankClass = "bg-zinc-700 text-zinc-400";
-            let colorHex = "rgba(113, 113, 122, 0.2)"; // zinc-500
+            let colorHex = "rgba(113, 113, 122, 0.2)"; 
             let shadowClass = "";
             let colorClass = "text-zinc-500";
             let rankLvl = "—";
@@ -364,7 +364,6 @@
                 }
             }
             
-            // Actualizar Tarjeta de Telemetría
             wkgLevelDesc.innerText = levelTxt;
             wkgLevelDesc.className = `text-xs font-bold transition-colors duration-300 ${colorClass}`;
             
@@ -377,7 +376,15 @@
             localStorage.setItem('velo_weight', weightSlider.value);
             localStorage.setItem('velo_watts', wattsSlider.value);
 
-            renderRadar();
+            // Muestra mensaje de "Calculando..." temporalmente
+            analysisContent.innerHTML = `<p class="text-[10px] text-zinc-500 text-center animate-pulse tracking-widest uppercase">Actualizando telemetría...</p>`;
+            
+            // Retraso de medio segundo antes de renderizar la gráfica (DEBOUNCE)
+            clearTimeout(radarDebounceTimer);
+            radarDebounceTimer = setTimeout(() => {
+                renderRadar();
+            }, 500);
+
             handleClimbSliderInput(); 
         }
 
@@ -428,7 +435,6 @@
                 }
             });
             
-            // Widget de análisis de texto
             const gap = ((userScore / 100) * 100).toFixed(0);
             let message = "";
             if(gap < 40) message = `Te destrozaría en los primeros 5km. A entrenar.`;
@@ -436,17 +442,20 @@
             else if(gap < 90) message = `Nivel espectacular. Podrías aguantarle un buen rato.`;
             else message = `¿Eres tú, Tadej? Porque le darías pelea a ${rival.name}.`;
 
+            // Actualiza el texto con animación de entrada
             analysisContent.innerHTML = `
-                <div class="flex justify-between items-end mb-3">
-                    <span class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Afinidad vs ${rival.name.split(' ')[0]}</span>
-                    <span class="text-xl font-heading italic text-cyan-400 leading-none">${gap}%</span>
-                </div>
-                <div class="w-full bg-black rounded-full h-2 mb-3 overflow-hidden border border-zinc-800">
-                    <div class="bg-gradient-to-r from-zinc-700 via-cyan-500 to-cyan-300 h-full relative" style="width: ${gap}%">
-                        <div class="absolute right-0 top-0 bottom-0 w-4 bg-white/50 blur-sm"></div>
+                <div class="animate-fade-in">
+                    <div class="flex justify-between items-end mb-3">
+                        <span class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Afinidad vs ${rival.name.split(' ')[0]}</span>
+                        <span class="text-xl font-heading italic text-cyan-400 leading-none">${gap}%</span>
                     </div>
-                </div>
-                <p class="text-[10px] text-zinc-500 italic">${message}</p>`;
+                    <div class="w-full bg-black rounded-full h-2 mb-3 overflow-hidden border border-zinc-800">
+                        <div class="bg-gradient-to-r from-zinc-700 via-cyan-500 to-cyan-300 h-full relative" style="width: ${gap}%; transition: width 0.5s ease-out;">
+                            <div class="absolute right-0 top-0 bottom-0 w-4 bg-white/50 blur-sm"></div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-zinc-500 italic">${message}</p>
+                </div>`;
         }
 
         function handleClimbSliderInput() {
@@ -520,7 +529,6 @@
             });
         }
 
-        // EVENT LISTENERS ACTIVADOS CORRECTAMENTE
         climbSlider.addEventListener('input', handleClimbSliderInput);
         
         climbSelect.addEventListener('change', () => { 
@@ -528,7 +536,6 @@
             handleClimbSliderInput(); 
         });
 
-        // NUEVO: ESTE EVENT LISTENER ARREGLA EL CAMBIO DE RIVAL
         rivalSelect.addEventListener('change', () => {
             renderRadar();
         });
