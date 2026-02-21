@@ -31,7 +31,7 @@
 </head>
 <body class="bg-[#050505] antialiased min-h-screen pb-20 text-white selection:bg-cyan-500/30">
 
-    <main id="main-container" class="max-w-7xl mx-auto px-4 md:px-6 pt-28 md:pt-40 min-h-[70vh]">
+    <main id="main-container" class="max-w-7xl mx-auto px-4 md:px-6 pt-28 md:pt-36 min-h-[70vh]">
         <div class="flex justify-center items-center h-64">
             <div class="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_#22d3ee]"></div>
         </div>
@@ -40,32 +40,38 @@
     <script src="layout.js?v=6.1"></script>
     
     <script>
+        // Variables de estado global para la Búsqueda y Paginación
+        let globalNews = [];
+        let filteredNews = [];
+        let itemsToShow = 5; // Cargar 5 noticias por defecto
+        let activeTag = 'ALL';
+        let searchQuery = '';
+
         async function initNews() {
             const container = document.getElementById('main-container');
             const urlParams = new URLSearchParams(window.location.search);
             const articleId = urlParams.get('article');
 
             try {
-                // Descargar noticias y glosario en paralelo
+                // Descargar noticias y glosario
                 const [newsRes, glosRes] = await Promise.all([
                     fetch('/api/news').then(r => r.ok ? r.json() : []).catch(() => []),
                     fetch('/api/glossary').then(r => r.ok ? r.json() : []).catch(() => [])
                 ]);
 
-                // Asegurar que son arrays válidos
-                const newsData = Array.isArray(newsRes) ? newsRes : [];
+                globalNews = Array.isArray(newsRes) ? newsRes : [];
                 const glosData = Array.isArray(glosRes) ? glosRes : [];
 
                 if (articleId) {
-                    const article = newsData.find(n => n.id == articleId);
+                    const article = globalNews.find(n => n.id == articleId);
                     if (article) {
-                        renderSingleArticle(article, newsData, glosData, container);
+                        renderSingleArticle(article, globalNews, glosData, container);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     } else {
-                        renderNewsGrid(newsData, container);
+                        buildNewsPage();
                     }
                 } else {
-                    renderNewsGrid(newsData, container);
+                    buildNewsPage();
                 }
             } catch (error) {
                 console.error("Error crítico procesando noticias:", error);
@@ -79,15 +85,11 @@
         function renderSingleArticle(article, allNews, glossaryData, container) {
             document.title = `${article.title || 'Noticia'} | Velo Insights`;
 
-            // 1. MOTOR DE NOTICIAS RELACIONADAS (A prueba de nulos)
+            // 1. MOTOR DE NOTICIAS RELACIONADAS
             const otherNews = allNews.filter(n => n.id !== article.id);
-            
             let scoredNews = otherNews.map(n => {
                 let score = 0;
-                // Si comparten etiqueta exacta suman puntos
                 if (n.tag && article.tag && n.tag === article.tag) score += 5;
-                
-                // Buscar palabras clave en el título
                 const safeTitle = (article.title || '').toLowerCase();
                 const mainWords = safeTitle.split(' ').filter(w => w.length > 4);
                 
@@ -98,7 +100,6 @@
                 return { ...n, score };
             });
 
-            // Ordenar por puntos y coger las 2 mejores
             const relatedNews = scoredNews.sort((a, b) => b.score - a.score).slice(0, 2);
 
             // 2. MOTOR DEL GLOSARIO CONTEXTUAL
@@ -120,7 +121,6 @@
             // 3. GENERACIÓN DEL HTML RELACIONADO
             let relatedHTML = '';
             if (relatedNews.length > 0 || recommendedTerm) {
-                
                 let newsHTML = relatedNews.map(n => `
                     <a href="noticias.html?article=${n.id}" class="flex flex-col bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all group shadow-lg">
                         <div class="h-36 w-full overflow-hidden relative bg-black">
@@ -171,7 +171,7 @@
             // 4. INYECCIÓN DEL ARTÍCULO
             container.innerHTML = `
                 <article class="max-w-4xl mx-auto fade-in">
-                    <button onclick="window.history.back()" class="mb-8 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors bg-zinc-900/50 px-4 py-2 rounded-full border border-zinc-800 w-max">
+                    <button onclick="window.location.href='noticias.html'" class="mb-8 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors bg-zinc-900/50 px-4 py-2 rounded-full border border-zinc-800 w-max">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l-7-7m-7 7h18"></path></svg> Volver al Journal
                     </button>
                     
@@ -202,51 +202,134 @@
         }
 
         // ==========================================
-        // VISTA 2: MODO LISTA (GRID GENERAL)
+        // VISTA 2: MODO LISTA Y BUSCADOR
         // ==========================================
-        function renderNewsGrid(news, container) {
+        function buildNewsPage() {
             document.title = "Journal | Velo Insights";
+            filteredNews = [...globalNews];
+            itemsToShow = 5;
 
-            if (!news || news.length === 0) {
-                container.innerHTML = `<div class="text-center py-20 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20"><p class="text-zinc-600 font-bold uppercase text-xs tracking-widest">No hay análisis publicados aún en la base de datos.</p></div>`;
+            const container = document.getElementById('main-container');
+            container.innerHTML = `
+                <header class="text-center mb-12 fade-in">
+                    <p class="text-cyan-500 font-bold tracking-[0.2em] text-[9px] uppercase mb-3">EL LABORATORIO</p>
+                    <h1 class="text-4xl md:text-7xl lg:text-8xl font-black italic uppercase tracking-tighter text-white leading-none mb-10">
+                        Velo <span class="text-zinc-700">Journal</span>
+                    </h1>
+
+                    <div class="max-w-3xl mx-auto flex flex-col items-center gap-6 px-2">
+                        <div class="w-full relative group">
+                            <svg class="w-5 h-5 text-zinc-500 absolute left-4 top-1/2 transform -translate-y-1/2 group-focus-within:text-cyan-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" id="news-local-search" placeholder="Buscar análisis, carrera o corredor..."
+                                   class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-3.5 pl-12 pr-4 text-white outline-none focus:border-cyan-500 focus:bg-black transition-all text-sm font-bold tracking-wide placeholder-zinc-600 shadow-inner">
+                        </div>
+                        
+                        <div class="flex flex-wrap justify-center gap-2 w-full" id="news-filters">
+                            <button onclick="applyFilter('ALL')" id="flt-ALL" class="news-filter active-filter px-4 py-2 rounded-lg border border-zinc-800 text-[9px] font-bold uppercase text-white bg-zinc-800 transition-all shadow-md">Todos</button>
+                            <button onclick="applyFilter('RACE REPORT')" id="flt-RACEREPORT" class="news-filter px-4 py-2 rounded-lg border border-zinc-800 text-[9px] font-bold uppercase text-zinc-500 hover:text-white hover:border-zinc-600 transition-all">Race Report</button>
+                            <button onclick="applyFilter('TECH LAB')" id="flt-TECHLAB" class="news-filter px-4 py-2 rounded-lg border border-zinc-800 text-[9px] font-bold uppercase text-zinc-500 hover:text-white hover:border-zinc-600 transition-all">Tech Lab</button>
+                            <button onclick="applyFilter('AERO LAB')" id="flt-AEROLAB" class="news-filter px-4 py-2 rounded-lg border border-zinc-800 text-[9px] font-bold uppercase text-zinc-500 hover:text-white hover:border-zinc-600 transition-all">Aero Lab</button>
+                            <button onclick="applyFilter('DATA ANALYSIS')" id="flt-DATAANALYSIS" class="news-filter px-4 py-2 rounded-lg border border-zinc-800 text-[9px] font-bold uppercase text-zinc-500 hover:text-white hover:border-zinc-600 transition-all">Data</button>
+                        </div>
+                    </div>
+                </header>
+                
+                <div id="news-grid-content"></div>
+            `;
+
+            // Evento para buscador en tiempo real
+            document.getElementById('news-local-search').addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                itemsToShow = 5; // Resetear la paginación al buscar
+                processFilters();
+            });
+
+            updateGrid();
+        }
+
+        window.applyFilter = function(tag) {
+            activeTag = tag;
+            itemsToShow = 5; // Resetear paginación
+            
+            // Actualizar diseño de los botones
+            document.querySelectorAll('.news-filter').forEach(btn => {
+                btn.classList.remove('active-filter', 'bg-zinc-800', 'text-white', 'shadow-md');
+                btn.classList.add('text-zinc-500');
+            });
+            
+            const btnId = 'flt-' + tag.replace(/\s+/g, '');
+            const activeBtn = document.getElementById(btnId);
+            if(activeBtn) {
+                activeBtn.classList.add('active-filter', 'bg-zinc-800', 'text-white', 'shadow-md');
+                activeBtn.classList.remove('text-zinc-500');
+            }
+            
+            processFilters();
+        };
+
+        function processFilters() {
+            filteredNews = globalNews.filter(n => {
+                const safeTag = (n.tag || '').toUpperCase();
+                const matchTag = activeTag === 'ALL' || safeTag === activeTag;
+                
+                const safeTitle = (n.title || '').toLowerCase();
+                const safeLead = (n.lead || n.excerpt || '').toLowerCase();
+                const safeContent = (n.content || '').toLowerCase();
+                
+                const matchSearch = searchQuery === '' || 
+                                    safeTitle.includes(searchQuery) || 
+                                    safeLead.includes(searchQuery) ||
+                                    safeContent.includes(searchQuery);
+                                    
+                return matchTag && matchSearch;
+            });
+            updateGrid();
+        }
+
+        window.loadMore = function() {
+            itemsToShow += 6; // Cargar 6 artículos más
+            updateGrid();
+        };
+
+        function updateGrid() {
+            const container = document.getElementById('news-grid-content');
+            
+            if (filteredNews.length === 0) {
+                container.innerHTML = `<div class="text-center py-24 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/10 fade-in"><p class="text-zinc-600 font-bold uppercase text-xs tracking-widest">No se encontraron resultados.</p></div>`;
                 return;
             }
 
-            // Separar la noticia destacada
-            const heroIndex = news.findIndex(n => n.isHero == 1);
+            let html = '';
+            let currentList = [...filteredNews];
             let heroArticle = null;
-            let standardNews = [...news];
 
-            if (heroIndex !== -1) {
-                heroArticle = standardNews.splice(heroIndex, 1)[0];
+            // Extraemos el primer artículo para ponerlo en grande (Destacado)
+            // Si estamos en la vista por defecto, intentamos coger el que esté marcado como isHero=1
+            if (activeTag === 'ALL' && searchQuery === '') {
+                const heroIndex = currentList.findIndex(n => n.isHero == 1);
+                if (heroIndex !== -1) {
+                    heroArticle = currentList.splice(heroIndex, 1)[0];
+                } else {
+                    heroArticle = currentList.shift();
+                }
             } else {
-                heroArticle = standardNews.shift();
+                heroArticle = currentList.shift();
             }
-
-            let html = `
-                <header class="text-center mb-16 fade-in">
-                    <p class="text-cyan-500 font-bold tracking-[0.2em] text-[9px] uppercase mb-3">EL LABORATORIO</p>
-                    <h1 class="text-4xl md:text-7xl lg:text-8xl font-black italic uppercase tracking-tighter text-white leading-none">
-                        Velo <span class="text-zinc-700">Journal</span>
-                    </h1>
-                </header>
-            `;
-
-            // Artículo Destacado (Hero)
+            
             if (heroArticle) {
                 html += `
-                <article class="fade-in group cursor-pointer grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-zinc-900/40 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-12 hover:border-cyan-500/50 transition-colors shadow-xl" onclick="window.location.href='?article=${heroArticle.id}'">
-                    <div class="relative w-full aspect-video md:aspect-square lg:aspect-[4/3] rounded-2xl overflow-hidden bg-black shadow-inner">
-                        <img src="${heroArticle.image || 'assets/default-news.jpg'}" alt="Hero Image" class="w-full h-full object-cover grayscale opacity-80 transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105">
+                <article class="fade-in group cursor-pointer grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#09090b] border border-zinc-800 rounded-3xl p-4 md:p-8 mb-10 hover:border-cyan-500/50 transition-colors shadow-xl" onclick="window.location.href='?article=${heroArticle.id}'">
+                    <div class="relative w-full aspect-video md:aspect-[4/3] rounded-2xl overflow-hidden bg-black shadow-inner">
+                        <img src="${heroArticle.image || 'assets/default-news.jpg'}" alt="Hero" class="w-full h-full object-cover grayscale opacity-80 transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105">
                         <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-80"></div>
                     </div>
                     <div class="flex flex-col justify-center space-y-4 md:px-4">
                         <div class="flex items-center gap-3 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                            <span class="text-cyan-400 font-black px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded">${heroArticle.tag || 'ÚLTIMA HORA'}</span>
+                            <span class="text-cyan-400 font-black px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded">${heroArticle.tag || 'DESTACADO'}</span>
                             <span>${heroArticle.date || 'HOY'}</span>
                         </div>
                         <h2 class="text-3xl md:text-5xl font-black text-white italic tracking-tighter leading-[1.05] group-hover:text-cyan-400 transition-colors">${heroArticle.title}</h2>
-                        <p class="text-sm md:text-base text-zinc-400 leading-relaxed font-medium line-clamp-4">${heroArticle.lead || heroArticle.excerpt || 'Haz clic para leer el análisis técnico completo de esta etapa.'}</p>
+                        <p class="text-sm md:text-base text-zinc-400 leading-relaxed font-medium line-clamp-4">${heroArticle.lead || heroArticle.excerpt || 'Haz clic para leer el análisis técnico.'}</p>
                         <span class="text-[10px] font-bold text-white uppercase tracking-widest mt-4 flex items-center gap-2 group-hover:text-cyan-400 transition-colors w-max bg-white/5 px-4 py-2 rounded-full border border-white/10 group-hover:border-cyan-500/30">
                             Leer Análisis <svg class="w-4 h-4 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                         </span>
@@ -255,17 +338,19 @@
                 `;
             }
 
-            // Grid del resto de artículos
-            if (standardNews.length > 0) {
+            // Calculamos cuántos artículos normales mostrar (Restamos 1 porque el Hero ya cuenta)
+            const itemsToRender = currentList.slice(0, itemsToShow - 1); 
+            
+            if (itemsToRender.length > 0) {
                 html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 fade-in">`;
                 
-                html += standardNews.map(n => `
+                html += itemsToRender.map(n => `
                     <a href="?article=${n.id}" class="flex flex-col bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-600 transition-all group hover:-translate-y-1 hover:shadow-2xl shadow-lg">
                         <div class="h-48 md:h-56 w-full overflow-hidden relative bg-black">
                             <div class="absolute top-3 left-3 z-10">
-                                <span class="bg-black/80 backdrop-blur-md text-zinc-300 border border-zinc-700 text-[9px] font-black px-2 py-1 rounded uppercase tracking-widest shadow-lg group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors">${n.tag || 'DATA'}</span>
+                                <span class="bg-black/80 backdrop-blur-md text-zinc-300 border border-zinc-700 text-[9px] font-black px-2.5 py-1 rounded uppercase tracking-widest shadow-lg group-hover:border-cyan-500/50 group-hover:text-cyan-400 transition-colors">${n.tag || 'DATA'}</span>
                             </div>
-                            <img src="${n.image || 'assets/default-news.jpg'}" class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" alt="News Image">
+                            <img src="${n.image || 'assets/default-news.jpg'}" class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" alt="News">
                         </div>
                         <div class="p-5 flex-1 flex flex-col justify-between">
                             <div>
@@ -278,6 +363,18 @@
                 `).join('');
                 
                 html += `</div>`;
+            }
+
+            // BOTÓN DE CARGAR MÁS
+            if (filteredNews.length > itemsToShow) {
+                html += `
+                    <div class="flex justify-center mt-12 fade-in">
+                        <button onclick="loadMore()" class="group flex items-center gap-3 px-8 py-3 bg-zinc-900 border border-zinc-700 hover:border-cyan-500 hover:bg-black rounded-full text-xs font-bold text-white uppercase tracking-widest transition-all shadow-lg active:scale-95">
+                            Cargar Más Análisis
+                            <svg class="w-4 h-4 text-cyan-500 group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
+                `;
             }
 
             container.innerHTML = html;
