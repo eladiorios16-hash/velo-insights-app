@@ -59,6 +59,12 @@
         
         .trending-tag { transition: all 0.2s; }
         .trending-tag:hover { background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.5); color: #22d3ee; transform: translateY(-2px); }
+
+        /* TICKER ANIMATION */
+        .ticker-wrap { overflow: hidden; white-space: nowrap; box-sizing: border-box; }
+        .ticker { display: inline-block; padding-left: 100%; animation: ticker 25s linear infinite; }
+        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+        .ticker-item { display: inline-flex; items-center; gap: 0.5rem; margin-right: 3rem; font-family: monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #a1a1aa; }
     </style>
 </head>
 
@@ -79,14 +85,37 @@
         </div>
     </div>
 
-    <header class="relative pt-28 md:pt-40 pb-6 px-4 text-center">
-        <div class="max-w-4xl mx-auto mb-2 animate-fade-in-up">
-            <p class="text-cyan-500 font-bold tracking-[0.2em] text-[9px] uppercase mb-3">VELO INSIGHTS</p>
-            <h1 class="text-5xl md:text-8xl font-heading text-white italic uppercase tracking-tighter leading-[0.9] drop-shadow-2xl">
-                Data <span class="text-zinc-700">Driven</span><br>Cycling
-            </h1>
+    <header class="relative pt-28 md:pt-36 pb-6 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 animate-fade-in-up">
+            
+            <div class="text-center md:text-left z-10">
+                <p class="text-cyan-500 font-bold tracking-[0.2em] text-[9px] uppercase mb-3">VELO INSIGHTS</p>
+                <h1 class="text-5xl md:text-7xl lg:text-8xl font-heading text-white italic uppercase tracking-tighter leading-[0.9] drop-shadow-2xl">
+                    Data <span class="text-zinc-700">Driven</span><br>Cycling
+                </h1>
+            </div>
+
+            <div class="hidden md:flex flex-col bg-zinc-900/40 border border-zinc-800 backdrop-blur-md rounded-2xl p-5 max-w-sm w-full relative overflow-hidden group shadow-2xl">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="flex items-center gap-2 mb-3 border-b border-zinc-800 pb-2">
+                    <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span class="text-[9px] font-black uppercase text-zinc-400 tracking-widest">Dato Destacado</span>
+                </div>
+                <p id="header-insight-text" class="text-xs text-zinc-300 italic leading-relaxed font-medium">Cargando base de datos técnica...</p>
+                <a href="glosario.html" class="mt-4 text-[9px] font-bold text-cyan-500 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1 w-max">
+                    Ver Glosario <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </a>
+            </div>
         </div>
     </header>
+
+    <div class="w-full bg-zinc-950 border-y border-zinc-900 py-2 mb-10 overflow-hidden shadow-inner">
+        <div class="ticker-wrap w-full">
+            <div id="data-ticker" class="ticker">
+                <div class="ticker-item"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse"></span> INICIALIZANDO TELEMETRÍA GLOBAL...</div>
+            </div>
+        </div>
+    </div>
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 space-y-12 pb-12">
         
@@ -95,7 +124,6 @@
                 <h2 class="text-xl font-heading text-white italic uppercase tracking-tight">ULTIMAS <span class="text-cyan-500">NOTICIAS</span></h2>
                 <a href="noticias.html" class="text-[10px] font-bold text-zinc-500 hover:text-cyan-400 uppercase tracking-widest transition-colors">Ver Journal →</a>
             </div>
-            
             <div id="latest-news-container" class="w-full">
                 <div class="h-64 bg-zinc-900/50 rounded-2xl animate-pulse flex items-center justify-center border border-zinc-800/50">
                     <span class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Conectando con el Lab...</span>
@@ -146,9 +174,12 @@
                     <div class="stage-profile-bg"></div>
 
                     <div class="relative z-10 w-full mb-8">
-                        <div class="flex justify-between items-center mb-6">
+                        <div class="flex justify-between items-start mb-6">
                             <div>
-                                <h3 class="text-sm font-heading text-white italic uppercase">Pro vs Amateur</h3>
+                                <h3 class="text-sm font-heading text-white italic uppercase flex items-center gap-2">
+                                    Pro vs Amateur 
+                                    <span id="sync-badge" class="hidden bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[8px] px-1.5 py-0.5 rounded uppercase tracking-widest">Tech Lab Sync ON</span>
+                                </h3>
                                 <p class="text-[9px] text-zinc-500">Ref: Alpe d'Huez (13.8km @ 8.1%)</p>
                             </div>
                             <div id="level-tag" class="text-emerald-400 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm bg-black/40 border border-emerald-500/30 px-3 py-1 rounded">--</div>
@@ -170,7 +201,7 @@
 
                         <div class="mb-4 border-l-2 border-emerald-500 pl-3">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="text-[9px] font-bold uppercase text-emerald-500">Tu Nivel Estimado</span>
+                                <span id="amateur-label" class="text-[9px] font-bold uppercase text-emerald-500">Tu Nivel Estimado</span>
                                 <span id="amateur-time" class="text-xs font-mono text-white font-bold">--</span>
                             </div>
                             <div class="flex justify-between text-[9px] font-mono text-emerald-400/80">
@@ -183,7 +214,7 @@
                         </div>
                     </div>
 
-                    <div class="pt-2 relative z-10 w-full mt-auto">
+                    <div id="slider-container" class="pt-2 relative z-10 w-full mt-auto">
                         <input type="range" min="1" max="10" value="4" class="slider-green w-full block" id="level-slider" aria-label="Ajustar nivel ciclista">
                         <div class="flex justify-between text-[8px] font-bold text-zinc-600 uppercase mt-2 tracking-widest">
                             <span>Globero</span><span>World Tour</span>
@@ -199,7 +230,7 @@
                         Ciclistas en Forma
                     </h3>
                     <div id="trending-riders-container" class="space-y-3">
-                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Cargando...</p>
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Extrayendo datos de noticias...</p>
                     </div>
                 </div>
 
@@ -209,7 +240,7 @@
                         Hot Topics
                     </h3>
                     <div id="hot-topics-container" class="flex flex-wrap gap-2">
-                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Cargando...</p>
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Analizando términos...</p>
                     </div>
                 </div>
             </div>
@@ -223,6 +254,9 @@
     
     <script>
         const slider = document.getElementById('level-slider');
+        const sliderContainer = document.getElementById('slider-container');
+        const syncBadge = document.getElementById('sync-badge');
+        
         const levels = {
             1:  { tag: "Globero", time: "01:25:00", watts: "168W", wkg: "2.4", b: "35%" },
             2:  { tag: "Iniciado", time: "01:15:00", watts: "196W", wkg: "2.8", b: "42%" },
@@ -236,7 +270,44 @@
             10: { tag: "World Tour", time: "00:39:50", watts: "445W", wkg: "6.8", b: "100%" }
         };
 
-        function updateComparison() {
+        function initComparisonEngine() {
+            const savedWatts = localStorage.getItem('velo_watts');
+            const savedWeight = localStorage.getItem('velo_weight');
+
+            if (savedWatts && savedWeight) {
+                const w = parseFloat(savedWatts);
+                const kg = parseFloat(savedWeight);
+                const wkg = (w / kg).toFixed(2);
+                
+                const factorAlpe = 248;
+                const minutes = (factorAlpe / wkg).toFixed(0);
+                const timeString = `${Math.floor(minutes/60)}h ${minutes%60}m`;
+                
+                let t = "Globero";
+                if(wkg >= 6.2) t = "Pro Conti";
+                else if (wkg >= 5.0) t = "Elite Nacional";
+                else if (wkg >= 4.0) t = "Amateur";
+                else if (wkg >= 3.0) t = "Cicloturista";
+
+                const percentage = Math.min(100, Math.max(20, (wkg / 6.8) * 100));
+
+                document.getElementById('level-tag').innerText = t;
+                document.getElementById('amateur-time').innerText = timeString;
+                document.getElementById('amateur-watts').innerText = `~${w} W`;
+                document.getElementById('amateur-wkg').innerText = `${wkg} W/kg`;
+                document.getElementById('amateur-bar').style.width = `${percentage}%`;
+                
+                document.getElementById('amateur-label').innerText = "Tus Datos (Tech Lab)";
+                
+                sliderContainer.classList.add('hidden');
+                syncBadge.classList.remove('hidden');
+            } else {
+                updateComparisonSlider();
+                if(slider) slider.addEventListener('input', updateComparisonSlider);
+            }
+        }
+
+        function updateComparisonSlider() {
             if(!slider) return;
             const d = levels[slider.value];
             document.getElementById('level-tag').innerText = d.tag;
@@ -246,52 +317,106 @@
             document.getElementById('amateur-bar').style.width = d.b;
         }
 
+        // --- EXTRACCIÓN INTELIGENTE 100% AUTOMÁTICA ---
         async function loadContent() {
-            const [newsRes, trendRes, calRes, teamsRes] = await Promise.all([
+            const [newsRes, calRes, teamsRes, glosRes, rankRes] = await Promise.all([
                 fetch('/api/news').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/trending').then(r => r.ok ? r.json() : []).catch(() => []),
                 fetch('/api/calendar').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => [])
+                fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => []),
+                fetch('/api/glossary').then(r => r.ok ? r.json() : []).catch(() => []),
+                fetch('/api/ranking').then(r => r.ok ? r.json() : []).catch(() => [])
             ]);
 
             renderNews(newsRes);
             
-            // --- 1. HOT TOPICS (ESTRICTAMENTE DESDE BASE DE DATOS) ---
-            let topics = [];
-            trendRes.filter(t => t.tipo.toLowerCase() === 'topic').forEach(t => topics.push({ text: t.title, link: t.subtitle || 'noticias.html' }));
+            // INSIGHT EN CABECERA
+            const insightCard = document.getElementById('header-insight-text');
+            if (glosRes && glosRes.length > 0) {
+                const itemsWithInsight = glosRes.filter(g => g.insight && g.insight.length > 5);
+                if (itemsWithInsight.length > 0) {
+                    const selected = itemsWithInsight[Math.floor(Math.random() * itemsWithInsight.length)];
+                    insightCard.innerHTML = `<strong class="text-white">${selected.term}:</strong> ${selected.insight}`;
+                }
+            }
 
-            if(topics.length > 0) {
-                document.getElementById('hot-topics-container').innerHTML = topics.map(t => 
+            // TICKER
+            const ticker = document.getElementById('data-ticker');
+            let tickerItems = [];
+            if (newsRes.length > 0) tickerItems.push(`<span class="text-white">ÚLTIMA HORA:</span> ${newsRes[0].title}`);
+            if (rankRes && rankRes.length > 0) {
+                const topRider = [...rankRes].sort((a,b) => b.points - a.points)[0];
+                tickerItems.push(`<span class="text-amber-500">UCI #1:</span> ${topRider.name} (${topRider.points} pts)`);
+            }
+            if(tickerItems.length > 0) {
+                ticker.innerHTML = `<div class="ticker-item">` + tickerItems.join(`</div><div class="ticker-item"><span class="mx-6 text-zinc-800">///</span>`) + `</div>`;
+            }
+
+            // --- CEREBRO: LECTURA INTELIGENTE DE NOTICIAS ---
+            const topicsMap = new Map();
+            const ridersMap = new Map();
+            
+            // Solo escaneamos las últimas 5 noticias.
+            // Para evitar "falsos positivos", SOLO leemos Título y Excerpt (Lead). Ignoramos el contenido largo.
+            const recentNews = newsRes.slice(0, 5);
+            const textToScan = recentNews.map(n => (n.title + " " + (n.lead || n.excerpt || "")).toLowerCase()).join(' ');
+
+            if (textToScan.length > 0) {
+                // 1. EXTRAER TOPICS (De Etiquetas Oficiales y Calendario)
+                recentNews.forEach(n => {
+                    if (n.tag) {
+                        const tagStr = '#' + n.tag.replace(/\s+/g, '');
+                        topicsMap.set(tagStr, { text: tagStr, link: 'noticias.html', score: 10 });
+                    }
+                });
+
+                calRes.forEach(r => {
+                    if (textToScan.includes(r.name.toLowerCase())) {
+                        const tagStr = '#' + r.name.replace(/\s+/g, '');
+                        topicsMap.set(tagStr, { text: tagStr, link: `calendario.html?race=${encodeURIComponent(r.name)}`, score: 5 });
+                    }
+                });
+
+                // 2. EXTRAER CICLISTAS (De la Base de Datos de Equipos)
+                const allRiders = [];
+                teamsRes.forEach(team => {
+                    let rList = [];
+                    try { rList = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; } catch(e){}
+                    rList.forEach(r => allRiders.push({ name: r.name, team: team.name, jersey: team.jersey }));
+                });
+
+                allRiders.forEach(pro => {
+                    // Usamos RegExp con límites de palabra (\b) para no confundir "La Vuelta" con una palabra normal si aplicara a corredores
+                    const regex = new RegExp(`\\b${pro.name.toLowerCase()}\\b`, 'g');
+                    const match = textToScan.match(regex);
+                    
+                    if (match && match.length > 0) {
+                        ridersMap.set(pro.name, {
+                            name: pro.name,
+                            team: pro.team,
+                            jersey: pro.jersey,
+                            mentions: match.length
+                        });
+                    }
+                });
+            }
+
+            // --- PINTAR TOPICS ---
+            const finalTopics = Array.from(topicsMap.values()).sort((a,b) => b.score - a.score).slice(0, 6);
+            if(finalTopics.length > 0) {
+                document.getElementById('hot-topics-container').innerHTML = finalTopics.map(t => 
                     `<a href="${t.link}" class="trending-tag px-3 py-1.5 bg-zinc-800/80 text-zinc-300 text-[10px] font-mono rounded-full border border-zinc-700 shadow-sm">${t.text}</a>`
                 ).join('');
             } else {
-                document.getElementById('hot-topics-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">No hay tendencias registradas. Usa el Admin.</p>`;
+                document.getElementById('hot-topics-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">Analizando temporada...</p>`;
             }
 
-            // --- 2. CICLISTAS EN FORMA (ESTRICTAMENTE DESDE BASE DE DATOS) ---
-            let riders = [];
-            trendRes.filter(t => t.tipo.toLowerCase() === 'ciclista').forEach(r => riders.push({ name: r.title, team: r.subtitle || 'WorldTour', value: r.value || 'HOT' }));
-            
-            if(riders.length > 0) {
-                document.getElementById('trending-riders-container').innerHTML = riders.map(r => {
-                    // ICONO MÁS GRANDE (w-10 h-10 y shrink-0)
-                    let jerseyHTML = `<div class="w-10 h-10 shrink-0 rounded-full bg-zinc-800 flex items-center justify-center text-sm border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors">🚴‍♂️</div>`;
-                    
-                    if (teamsRes && teamsRes.length > 0) {
-                        const matchedTeam = teamsRes.find(t => 
-                            t.name.toLowerCase().includes(r.team.toLowerCase()) || 
-                            r.team.toLowerCase().includes(t.name.toLowerCase()) ||
-                            t.code.toLowerCase() === r.team.toLowerCase()
-                        );
-                        if (matchedTeam && matchedTeam.jersey) {
-                            jerseyHTML = `<img src="${matchedTeam.jersey}" alt="Maillot ${r.team}" class="w-10 h-10 shrink-0 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110">`;
-                        }
-                    }
-
-                    return `
+            // --- PINTAR CICLISTAS ---
+            const finalRiders = Array.from(ridersMap.values()).sort((a,b) => b.mentions - a.mentions).slice(0, 3);
+            if(finalRiders.length > 0) {
+                document.getElementById('trending-riders-container').innerHTML = finalRiders.map(r => `
                     <a href="noticias.html" class="flex justify-between items-center p-2.5 hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-zinc-700/50 group">
                         <div class="flex items-center gap-3">
-                            ${jerseyHTML}
+                            <img src="${r.jersey}" alt="Maillot" class="w-10 h-10 shrink-0 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110">
                             <div>
                                 <p class="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">${r.name}</p>
                                 <p class="text-[9px] text-zinc-500 font-mono truncate max-w-[120px]">${r.team}</p>
@@ -300,44 +425,31 @@
                         <div class="text-right shrink-0">
                             <span class="flex items-center justify-end gap-1 text-green-400 text-xs font-bold font-mono">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-                                ${r.value}
+                                TREND
                             </span>
-                            <span class="text-[8px] text-zinc-600 uppercase tracking-widest">TENDENCIA</span>
+                            <span class="text-[8px] text-zinc-600 uppercase tracking-widest">${r.mentions} MENCIÓN${r.mentions > 1 ? 'ES' : ''}</span>
                         </div>
                     </a>
-                    `;
-                }).join('');
+                `).join('');
             } else {
-                document.getElementById('trending-riders-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">No hay ciclistas registrados. Usa el Admin.</p>`;
+                document.getElementById('trending-riders-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">Esperando resultados...</p>`;
             }
 
-            // CALENDARIO Y RANKING
+            // CALENDARIO Y RANKING (Igual)
             const races = calRes.map(r => ({ ...r, ...(typeof r.details === 'string' ? JSON.parse(r.details || '{}') : r.details || {}) }));
             renderTimeline(races);
             renderUpcomingWidget(races);
 
-            fetch('/api/ranking')
-                .then(res => res.ok ? res.json() : [])
-                .then(data => {
-                    if (data && data.length > 0) renderRanking(data);
-                    else throw new Error("Empty");
-                }).catch(e => {
-                    renderRanking([
-                        { name: "Tadej Pogačar", team: "UAE Team Emirates", points: 7890 },
-                        { name: "Jonas Vingegaard", team: "Visma | Lease a Bike", points: 6540 },
-                        { name: "Remco Evenepoel", team: "Soudal Quick-Step", points: 5430 },
-                        { name: "Mathieu van der Poel", team: "Alpecin-Deceuninck", points: 4890 },
-                        { name: "Primož Roglič", team: "Red Bull - BORA", points: 4210 }
-                    ]);
-                });
+            if(rankRes && rankRes.length > 0) renderRanking(rankRes);
+            else renderRanking([{ name: "Pogačar", team: "UAE", points: 7890 }]);
         }
 
-        // Resto de funciones estáticas
+        // Resto de funciones
         function renderNews(news) {
             const container = document.getElementById('latest-news-container');
             if (news && news.length > 0) {
                 const n = news[0]; 
-                const excerpt = n.excerpt || "Descubre el análisis de datos completo, las métricas clave de rendimiento y el desglose táctico de la jornada.";
+                const excerpt = n.excerpt || n.lead || "Descubre el análisis de datos completo, las métricas clave de rendimiento y el desglose táctico de la jornada.";
 
                 let html = `
                     <article class="group cursor-pointer grid grid-cols-1 md:grid-cols-12 gap-6 items-center transform transition-all active:scale-[0.99] duration-200" onclick="window.location.href='noticias.html?article=${n.id}'">
@@ -469,9 +581,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            updateComparison();
+            initComparisonEngine();
             loadContent(); 
-            if(slider) slider.addEventListener('input', updateComparison);
         });
     </script>
 </body>
