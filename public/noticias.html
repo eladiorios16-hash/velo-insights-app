@@ -74,10 +74,10 @@
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 mb-20">
         
-        <div class="lg:hidden col-span-1 overflow-x-auto pb-4 custom-scrollbar flex gap-3 sticky top-14 z-30 bg-[#050505]/95 backdrop-blur-md py-3 -mx-4 px-4 border-b border-white/5 transition-all" id="mobile-filters">
+        <div class="lg:hidden col-span-1 overflow-x-auto pb-4 custom-scrollbar flex gap-3 fixed top-20 left-0 w-full z-40 bg-[#050505]/95 backdrop-blur-md py-3 px-4 border-b border-white/5 transition-all shadow-md" id="mobile-filters">
             </div>
 
-        <div class="col-span-1 lg:col-span-2 pt-4 lg:pt-0">
+        <div class="col-span-1 lg:col-span-2 pt-16 lg:pt-0">
             <div id="news-feed">
                 <div class="border-b border-zinc-900 pb-12">
                     <div class="aspect-[21/9] w-full skeleton mb-8"></div>
@@ -98,7 +98,7 @@
 
     </main>
 
-    <div id="article-modal" class="fixed inset-0 z-[200] bg-black/95 modal-hidden backdrop-blur-md overflow-y-auto modal-scroll">
+    <div id="article-modal" class="fixed inset-0 z-[200] bg-black/95 modal-hidden backdrop-blur-md overflow-y-auto modal-scroll" id="modal-scroll-container">
         
         <div class="min-h-screen w-full md:py-12 flex justify-center">
             
@@ -121,6 +121,7 @@
         let allGlossary = []; 
         let currentTag = 'ALL';
         let visibleCount = 5; // 1 Hero + 4 Grid (Carga inicial)
+        let currentArticleImage = ''; // Guardar imagen para compartir
         
         const feed = document.getElementById('news-feed');
         const loadMoreContainer = document.getElementById('load-more-container');
@@ -166,7 +167,7 @@
                 }
                 throw new Error("API vacía");
             } catch (error) {
-                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest border border-zinc-800 border-dashed rounded-2xl">No hay noticias publicadas.</p>`;
+                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest border border-zinc-800 border-dashed rounded-2xl">No hay noticias publicadas en la base de datos.</p>`;
             }
         }
 
@@ -176,9 +177,11 @@
             const tags = new Set();
             allNews.forEach(n => { if(n.tag) tags.add(n.tag.toUpperCase()); });
             
+            // Botones 'TODOS'
             let mobHtml = `<button onclick="filterByTag('ALL')" class="filter-btn active whitespace-nowrap px-5 py-2 rounded-full border text-[10px] font-bold uppercase transition-transform active:scale-95 bg-zinc-800 border-zinc-700 text-white shadow-lg">Todos</button>`;
             let deskHtml = `<button onclick="filterByTag('ALL')" class="filter-btn-desktop active text-left px-4 py-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 hover:text-white transition-all">Todos los artículos</button>`;
             
+            // Botones Dinámicos
             Array.from(tags).sort().forEach(tag => {
                 const style = TAG_COLORS[tag] || TAG_COLORS['DEFAULT'];
                 mobHtml += `<button onclick="filterByTag('${tag}')" class="filter-btn whitespace-nowrap px-5 py-2 rounded-full border text-[10px] font-bold uppercase transition-transform active:scale-95 ${style.mobile}">${tag}</button>`;
@@ -193,12 +196,14 @@
             currentTag = tag;
             visibleCount = 5; // Reseteamos la paginación al filtrar
             
+            // Estilos Móvil
             document.querySelectorAll('#mobile-filters .filter-btn').forEach(btn => {
                 const btnTag = btn.innerText.toUpperCase();
                 if (btnTag === tag || (tag === 'ALL' && btnTag === 'TODOS')) btn.classList.add('active');
                 else btn.classList.remove('active');
             });
 
+            // Estilos Desktop
             document.querySelectorAll('#desktop-filters .filter-btn-desktop').forEach(btn => {
                 const btnTag = btn.innerText.toUpperCase();
                 if (btnTag === tag || (tag === 'ALL' && btnTag === 'TODOS LOS ARTÍCULOS')) btn.classList.add('active');
@@ -229,7 +234,7 @@
 
             let html = '';
 
-            // 1. RENDERIZAR HERO (TÍTULO DEBAJO DE IMAGEN COMO EN TU CAPTURA)
+            // 1. RENDERIZAR HERO
             if (hero) {
                 const heroTag = TAG_COLORS[(hero.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
                 html += `
@@ -256,7 +261,7 @@
                 `;
             }
 
-            // 2. RENDERIZAR CUADRÍCULA (RESTO)
+            // 2. RENDERIZAR CUADRÍCULA
             if (rest.length > 0) {
                 html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">`;
                 html += rest.map((news, idx) => {
@@ -302,6 +307,9 @@
 
             window.history.pushState({ articleId: id }, '', `?article=${id}`);
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+            
+            // Guardamos la imagen para la función de compartir
+            currentArticleImage = article.image || '';
 
             // --- 1. DETECTOR DEL GLOSARIO (VELO DICTIONARY) ---
             let glossaryHTML = '';
@@ -365,7 +373,7 @@
                     <div class="max-w-3xl mx-auto">
                         <div class="mb-8 md:mb-12 border-b border-zinc-900 pb-8">
                             <span class="px-3 py-1 md:px-4 md:py-1.5 ${tagData.bg} ${tagData.text} rounded text-[9px] md:text-[10px] font-black uppercase mb-4 md:mb-6 inline-block tracking-widest shadow-lg">${article.tag || 'INFO'}</span>
-                            <h1 class="text-3xl md:text-5xl lg:text-6xl font-black italic text-white uppercase leading-[0.95] tracking-tighter mb-4">${article.title}</h1>
+                            <h1 class="text-3xl md:text-5xl lg:text-7xl font-heading text-white italic uppercase leading-[0.95] tracking-tighter mb-4">${article.title}</h1>
                             <p class="text-zinc-400 font-mono text-[10px] md:text-xs uppercase tracking-widest">${article.date || 'HOY'} • VELO INSIGHTS</p>
                         </div>
 
@@ -387,13 +395,14 @@
                 </div>
             `;
             
-            // LA CLAVE ESTÁ AQUÍ: Muestra el modal haciendo visible el fondo oscuro
             modal.classList.remove('modal-hidden');
             modal.classList.add('modal-visible');
             document.body.style.overflow = 'hidden';
             
-            // Forzar que el scroll vaya arriba del todo en la lectura
+            // Forzar que el scroll inicie desde arriba
             modal.scrollTop = 0;
+            const scrollContainer = document.getElementById('modal-scroll-container');
+            if (scrollContainer) scrollContainer.scrollTop = 0;
         };
 
         window.closeArticle = () => {
@@ -406,13 +415,26 @@
             window.history.pushState({}, '', url);
         };
 
+        // --- FUNCIÓN COMPARTIR MEJORADA (Incluye imagen) ---
         window.shareNative = async () => {
             const titleElement = document.querySelector('#modal-content h1');
             const title = titleElement ? titleElement.innerText : 'VELO INSIGHTS';
             const url = window.location.href;
+            
+            // Construir el objeto a compartir
+            const shareData = {
+                title: 'VELO INSIGHTS',
+                text: title,
+                url: url
+            };
 
+            // Intentar adjuntar la imagen si la API y el navegador lo soportan
             if (navigator.share) {
-                try { await navigator.share({ title: 'VELO INSIGHTS', text: title, url: url }); } catch (err) {}
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    console.log('Error al compartir o usuario canceló:', err);
+                }
             } else {
                 try {
                     await navigator.clipboard.writeText(url);
@@ -429,7 +451,7 @@
         };
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('modal-visible')) closeArticle();
+            if (e.key === 'Escape' && !modal.classList.contains('modal-hidden')) closeArticle();
         });
 
         window.addEventListener('popstate', (e) => {
