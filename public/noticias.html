@@ -255,6 +255,54 @@
             } else loadMoreContainer.innerHTML = '';
         }
 
+        // --- EL NUEVO ALGORITMO DE SUGERENCIAS ---
+        function getSimilarArticles(currentArticle) {
+            // Palabras comunes a ignorar para el SEO
+            const stopWords = ['para', 'como', 'pero', 'este', 'esta', 'sobre', 'entre', 'cuando', 'desde', 'hasta', 'tiene', 'también', 'puede', 'hacia', 'donde', 'porque', 'todo'];
+
+            // Función para extraer palabras clave de un texto
+            const extractKeywords = (text) => {
+                if (!text) return [];
+                const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/[^\w\sáéíóúüñ]/gi, '').toLowerCase();
+                return cleanText.split(/\s+/).filter(w => w.length > 3 && !stopWords.includes(w));
+            };
+
+            // Extraemos las palabras clave del título y entradilla del artículo actual
+            const baseText = currentArticle.title + " " + (currentArticle.lead || "");
+            const currentKeywords = [...new Set(extractKeywords(baseText))];
+
+            // Puntuamos todos los demás artículos
+            let scoredArticles = allNews.filter(n => n.id != currentArticle.id).map(article => {
+                let score = 0;
+                
+                // 1. Puntos masivos si son de la misma categoría
+                if ((article.tag || '').toUpperCase() === (currentArticle.tag || '').toUpperCase()) {
+                    score += 50; 
+                }
+
+                // 2. Comparamos palabras clave
+                const targetText = (article.title + " " + (article.lead || "") + " " + (article.content || "")).toLowerCase();
+                
+                currentKeywords.forEach(kw => {
+                    // Puntos muy altos si comparten palabras en el Título (ej: Vingegaard, Aerodinámica)
+                    if (article.title.toLowerCase().includes(kw)) score += 15;
+                    // Puntos normales si la palabra está en el cuerpo del texto
+                    else if (targetText.includes(kw)) score += 2;
+                });
+
+                // Para evitar empates matemáticos, añadimos un pequeño factor aleatorio mínimo
+                score += Math.random();
+
+                return { article, score };
+            });
+
+            // Ordenamos los artículos según su puntuación
+            scoredArticles.sort((a, b) => b.score - a.score);
+
+            // Devolvemos las 2 mejores coincidencias
+            return scoredArticles.slice(0, 2).map(item => item.article);
+        }
+
         window.openArticle = (id) => {
             const article = allNews.find(n => n.id == id);
             if(!article) return;
@@ -262,7 +310,6 @@
             window.history.pushState({ articleId: id }, '', `?article=${id}`);
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
 
-            // 1. GLOSARIO AUTOMÁTICO
             let glossaryHTML = '';
             const fullText = (article.title + " " + (article.lead||"") + " " + (article.content||"")).toLowerCase();
             const matchedGlossary = allGlossary.find(g => g && g.term && fullText.includes(g.term.toLowerCase()));
@@ -280,28 +327,14 @@
                 </div>`;
             }
 
-            // 2. SISTEMA DE NOTICIAS RELACIONADAS ALEATORIAS (MEJORADO)
-            // Filtramos las que son de la misma categoría (excluyendo la actual)
-            let similarArticles = allNews.filter(n => (n.tag || '').toUpperCase() === (article.tag || '').toUpperCase() && n.id != article.id);
-            
-            // Barajamos (shuffle) las noticias para que no sean siempre las mismas
-            similarArticles = similarArticles.sort(() => 0.5 - Math.random());
-            
-            // Nos quedamos solo con 2
-            let finalSuggestions = similarArticles.slice(0, 2);
-
-            // Respaldo Inteligente: Si no hay 2 de la misma categoría, cogemos de otras categorías al azar
-            if (finalSuggestions.length < 2) {
-                let otherArticles = allNews.filter(n => n.id != article.id && !finalSuggestions.some(s => s.id === n.id));
-                otherArticles = otherArticles.sort(() => 0.5 - Math.random());
-                finalSuggestions = finalSuggestions.concat(otherArticles).slice(0, 2);
-            }
+            // Ejecutamos nuestro nuevo algoritmo inteligente
+            const finalSuggestions = getSimilarArticles(article);
 
             let similarHTML = '';
             if (finalSuggestions.length > 0) {
                 similarHTML = `
-                <div class="mt-16 pt-12 border-t border-zinc-900">
-                    <h3 class="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-8 border-l-2 border-cyan-500 pl-3">También te puede interesar</h3>
+                <div class="mt-12 pt-12 border-t border-zinc-900">
+                    <h3 class="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-8 border-l-2 border-cyan-500 pl-3">Lecturas Relacionadas</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         ${finalSuggestions.map(s => {
                             const sTagData = TAG_COLORS[(s.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
@@ -322,8 +355,8 @@
                 </div>`;
             }
 
-            // 3. RENDERIZAR TODO EN PANTALLA
             const safeTitle = article.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
             modalContent.innerHTML = `
                 <div class="h-[30vh] md:h-[50vh] w-full relative border-b border-zinc-900">
                     <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-90">
@@ -360,9 +393,9 @@
             modal.classList.add('modal-visible');
             document.body.style.overflow = 'hidden';
             
-            // Forzar scroll arriba
             const scrollContainer = document.getElementById('modal-scroll-container');
             if (scrollContainer) scrollContainer.scrollTop = 0;
+            modal.scrollTop = 0; 
         };
 
         window.closeArticle = () => {
@@ -380,8 +413,14 @@
         window.shareNative = async (articleTitle, articleId) => {
             const originUrl = window.location.origin + window.location.pathname + '?article=' + articleId;
 
+            let shareData = {
+                title: 'VELO INSIGHTS',
+                text: articleTitle,
+                url: originUrl
+            };
+
             if (navigator.share) {
-                try { await navigator.share({ title: 'VELO INSIGHTS', text: articleTitle, url: originUrl }); } catch (err) {}
+                try { await navigator.share(shareData); } catch (err) {}
             } else {
                 try {
                     await navigator.clipboard.writeText(originUrl);
