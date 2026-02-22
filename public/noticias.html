@@ -261,14 +261,13 @@
 
             let html = '';
 
-            // 1. RENDERIZAR HERO (DISEÑO FIEL A LA CAPTURA)
+            // 1. RENDERIZAR HERO (DISEÑO FIEL A LA CAPTURA: TEXTO ABAJO)
             if (hero) {
                 const heroTag = TAG_COLORS[(hero.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
                 html += `
-                    <article class="group cursor-pointer border-b border-zinc-900/80 pb-12 mb-12 transition-all fade-in-up" onclick="openArticle('${hero.id}')">
+                    <article class="group cursor-pointer border-b border-zinc-900/80 pb-10 md:pb-12 mb-10 md:mb-12 transition-all fade-in-up" onclick="openArticle('${hero.id}')">
                         <div class="w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden rounded-2xl md:rounded-[2rem] mb-5 md:mb-6 bg-zinc-900 relative border border-zinc-800 shadow-xl">
                             <img src="${hero.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             
                             <div class="absolute top-4 left-4 md:top-6 md:left-6">
                                  <span class="px-3.5 py-1.5 ${heroTag.bg} ${heroTag.text} text-[10px] md:text-xs font-black uppercase rounded shadow-2xl tracking-widest">${hero.tag || 'INFO'}</span>
