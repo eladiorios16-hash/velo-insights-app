@@ -117,7 +117,7 @@
         </div>
     </div>
 
-    <script src="layout.js?v=7.0"></script>
+    <script src="layout.js?v=7.1"></script>
     
     <script>
         let allNews = [];
@@ -126,10 +126,10 @@
         let visibleCount = 5; 
         
         // Variables para la LECTURA CONTINUA
-        let currentReadingList = []; // La lista de la que estamos tirando
-        let currentReadingIndex = 0; // Índice de la noticia actual
-        let isFetchingNext = false; // Evita que cargue 10 a la vez al hacer scroll rápido
-        let scrollObserver = null; // El vigía que cambia la URL
+        let currentReadingList = []; 
+        let currentReadingIndex = 0; 
+        let isFetchingNext = false; 
+        let scrollObserver = null; 
         
         const feed = document.getElementById('news-feed');
         const loadMoreContainer = document.getElementById('load-more-container');
@@ -147,7 +147,6 @@
             'DEFAULT': { mobile: 'bg-zinc-800 border-zinc-700 text-white', bg: 'bg-zinc-700', text: 'text-white', hover: 'hover:border-zinc-500' }
         };
 
-        // ... (Tu código de carga inicial y filtros se mantiene igual) ...
         async function fetchNews() {
             try {
                 const [resNews, resGlos] = await Promise.all([
@@ -229,7 +228,7 @@
                         </div>
                         <div class="px-2">
                             <div class="flex items-center gap-2 mb-3"><span class="text-[11px] font-mono font-bold text-cyan-400 tracking-widest uppercase">${hero.date || 'HOY'}</span></div>
-                            <h2 class="text-3xl md:text-5xl font-black italic uppercase leading-[0.95] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter text-white drop-shadow-sm">${hero.title}</h2>
+                            <h2 class="text-2xl md:text-4xl font-black italic uppercase leading-[1.05] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter text-white drop-shadow-sm">${hero.title}</h2>
                             <p class="text-zinc-400 text-sm md:text-lg leading-relaxed line-clamp-2 md:line-clamp-3">${hero.lead || ''}</p>
                         </div>
                     </article>
@@ -263,7 +262,6 @@
         }
 
         // --- SISTEMA DE GENERACIÓN DE ARTÍCULO INDIVIDUAL ---
-        // Extraemos la lógica de pintar el HTML a una función para poder reutilizarla
         function generateArticleBlock(article) {
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
             
@@ -281,7 +279,6 @@
                 </div>`;
             }
 
-            // Escapamos comillas en el título para la función shareNative
             const safeTitle = article.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
             return `
@@ -295,11 +292,11 @@
                         <div class="max-w-3xl mx-auto">
                             <div class="mb-8 md:mb-12 border-b border-zinc-900 pb-8">
                                 <span class="px-3 py-1 md:px-4 md:py-1.5 ${tagData.bg} ${tagData.text} rounded text-[9px] md:text-[10px] font-black uppercase mb-4 md:mb-6 inline-block tracking-widest shadow-lg">${article.tag || 'INFO'}</span>
-                                <h1 class="text-3xl md:text-5xl lg:text-7xl font-heading text-white italic uppercase leading-[0.95] tracking-tighter mb-4">${article.title}</h1>
+                                <h1 class="text-2xl md:text-4xl lg:text-5xl font-heading text-white italic uppercase leading-[1.05] tracking-tighter mb-4">${article.title}</h1>
                                 <p class="text-zinc-400 font-mono text-[10px] md:text-xs uppercase tracking-widest">${article.date || 'HOY'} • VELO INSIGHTS</p>
                             </div>
 
-                            ${article.lead ? `<p class="text-lg md:text-2xl text-zinc-200 font-serif leading-relaxed mb-8 md:mb-16 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
+                            ${article.lead ? `<p class="text-lg md:text-xl text-zinc-200 font-serif leading-relaxed mb-8 md:mb-16 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
                             
                             <div class="prose-custom text-sm md:text-base">${article.content || '<p class="text-center text-zinc-600">No hay contenido disponible.</p>'}</div>
                             
@@ -318,9 +315,7 @@
             `;
         }
 
-        // --- LÓGICA PRINCIPAL: ABRIR NOTICIA Y PREPARAR INFINITE SCROLL ---
         window.openArticle = (id) => {
-            // Guardamos la lista de la que estamos tirando para el infinite scroll (todas las noticias para que no se acaben)
             currentReadingList = allNews;
             currentReadingIndex = currentReadingList.findIndex(n => n.id == id);
             
@@ -329,7 +324,6 @@
             const article = currentReadingList[currentReadingIndex];
             window.history.pushState({ articleId: id }, '', `?article=${id}`);
 
-            // 1. Limpiamos el modal y cargamos la primera noticia
             modalContent.innerHTML = generateArticleBlock(article);
             
             modal.classList.remove('modal-hidden');
@@ -338,20 +332,17 @@
             
             modal.scrollTop = 0;
             
-            // 2. Activamos el vigilante de scroll
             setupScrollObserver();
         };
 
-        // Función que carga el siguiente artículo cuando llegamos al final
         function loadNextArticle() {
             if (isFetchingNext) return;
-            if (currentReadingIndex + 1 >= currentReadingList.length) return; // Fin de los artículos
+            if (currentReadingIndex + 1 >= currentReadingList.length) return; 
 
             isFetchingNext = true;
             currentReadingIndex++;
             const nextArticle = currentReadingList[currentReadingIndex];
 
-            // Línea separadora visual de transición
             const separator = `
                 <div class="w-full flex items-center justify-center py-16 bg-[#050505] relative z-10">
                     <div class="h-px bg-gradient-to-r from-transparent to-cyan-900 w-1/3"></div>
@@ -360,38 +351,31 @@
                 </div>
             `;
 
-            // Añadimos el nuevo contenido al final del modal
             modalContent.insertAdjacentHTML('beforeend', separator + generateArticleBlock(nextArticle));
             
-            // Actualizamos el vigilante para que vea las nuevas noticias
             setupScrollObserver();
             
-            setTimeout(() => { isFetchingNext = false; }, 500); // Pausa de seguridad
+            setTimeout(() => { isFetchingNext = false; }, 500); 
         }
 
-        // Detectar si el usuario llega al final del modal
         modal.addEventListener('scroll', () => {
-            // Si nos acercamos a 800px del final de todo el contenido, cargamos el siguiente
             if (modal.scrollTop + modal.clientHeight >= modal.scrollHeight - 800) {
                 loadNextArticle();
             }
         });
 
-        // Este vigilante actualiza la URL arriba en el navegador según el artículo que estés leyendo en pantalla
         function setupScrollObserver() {
             if (scrollObserver) scrollObserver.disconnect();
             
             scrollObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
-                    // Si un bloque de artículo ocupa al menos la mitad de la pantalla
                     if(entry.isIntersecting) {
                         const visibleId = entry.target.getAttribute('data-id');
                         window.history.replaceState({ articleId: visibleId }, '', `?article=${visibleId}`);
                     }
                 });
-            }, { root: modal, threshold: 0.5 }); // threshold 0.5 = 50% de la pantalla
+            }, { root: modal, threshold: 0.5 }); 
 
-            // Poner a vigilar todos los artículos que estén en el modal
             document.querySelectorAll('.article-wrapper').forEach(block => scrollObserver.observe(block));
         }
 
@@ -404,13 +388,10 @@
             url.searchParams.delete('article');
             window.history.pushState({}, '', url);
             
-            // Limpiamos contenido para la próxima vez
             setTimeout(() => { modalContent.innerHTML = ''; }, 300);
         };
 
-        // --- COMPARTIR ---
         window.shareNative = async (articleTitle, articleId) => {
-            // Reconstruimos la URL exacta por si el usuario copió mientras hacía scroll
             const originUrl = window.location.origin + window.location.pathname + '?article=' + articleId;
 
             if (navigator.share) {
