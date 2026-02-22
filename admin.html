@@ -208,36 +208,70 @@
                 
                 let input;
 
-                // --- 1. NUEVO CONSTRUCTOR DE ETAPAS CON DESPLEGABLE ---
+                // --- 1. CONSTRUCTOR DE ETAPAS (CORREGIDO PARA EVITAR BLOQUEOS CON DATOS ANTIGUOS) ---
                 if (currentTable === 'calendario' && key === 'details') {
                     label.innerText = 'CONSTRUCTOR DE ETAPAS (SELECCIONA ETAPA A EDITAR)';
-                    try {
-                        tempDetails = (typeof value === 'string' && value.trim() !== '') ? JSON.parse(value) : { totalEtapas: 1, etapas: [] };
-                    } catch(e) { tempDetails = { totalEtapas: 1, etapas: [] }; }
                     
-                    if(!tempDetails.etapas) tempDetails.etapas = [];
-                    currentStageIndex = 0; // Reiniciamos a la primera etapa al abrir
+                    let parsedObj = {};
+                    try {
+                        parsedObj = (typeof value === 'string' && value.trim() !== '') ? JSON.parse(value) : {};
+                    } catch(e) {}
+                    
+                    tempDetails = { ...parsedObj };
+
+                    // MIGRACIÓN DE RESCATE: Si la DB antigua guardaba un número simple en 'etapas'
+                    if (typeof tempDetails.etapas === 'number') {
+                        let total = tempDetails.etapas;
+                        tempDetails.totalEtapas = total;
+                        tempDetails.etapas = [];
+                        for(let i=0; i<total; i++) {
+                            tempDetails.etapas.push({ name: `Etapa ${i+1}`, type: 'Llana', km: '', desnivel: '', profile: '' });
+                        }
+                    } 
+                    
+                    // Asegurarnos de que etapas siempre sea un array válido
+                    if (!Array.isArray(tempDetails.etapas)) {
+                        tempDetails.etapas = [];
+                    }
+                    if (!tempDetails.totalEtapas) {
+                        tempDetails.totalEtapas = tempDetails.etapas.length > 0 ? tempDetails.etapas.length : 1;
+                    }
+
+                    currentStageIndex = 0; 
 
                     input = document.createElement('div');
                     input.className = "bg-slate-900/50 p-4 rounded-xl border border-slate-700";
                     input.id = "stage-builder-container";
                     
+                    // Adjuntamos al form directamente para saltarnos el render normal
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(input);
+                    form.appendChild(wrapper);
+                    
                     renderStageBuilder(input);
+                    continue; 
                 } 
                 // --- 2. CONSTRUCTOR DE CICLISTAS (EQUIPOS) ---
                 else if (currentTable === 'equipos' && key === 'riders') {
                     label.innerText = 'PLANTILLA DE CICLISTAS';
+                    
                     try {
-                        tempRiders = (typeof value === 'string' && value.trim() !== '') ? JSON.parse(value) : [];
+                        let parsedRiders = (typeof value === 'string' && value.trim() !== '') ? JSON.parse(value) : [];
+                        tempRiders = Array.isArray(parsedRiders) ? parsedRiders : [];
                     } catch(e) { tempRiders = []; }
 
                     input = document.createElement('div');
                     input.className = "bg-slate-900/50 p-4 rounded-xl border border-slate-700";
                     input.id = "rider-builder-container";
                     
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(input);
+                    form.appendChild(wrapper);
+
                     renderRiderBuilder(input);
+                    continue; 
                 }
-                // --- 3. CAMPOS NORMALES ---
+                // --- 3. CAMPOS NORMALES (TEXTO, FECHA, SELECTORES) ---
                 else if (key === 'tag') {
                     input = document.createElement('select');
                     input.className = "input-dark w-full rounded-lg p-3";
@@ -306,7 +340,7 @@
 
             if (tempDetails.etapas.length === 0) {
                 html += `<div class="text-slate-500 text-sm italic text-center py-8">No hay etapas configuradas. Haz clic en "Añadir Etapa".</div>`;
-                container.innerHTML = html;
+                if (container) container.innerHTML = html;
                 return;
             }
 
@@ -319,12 +353,12 @@
 
             // Barra de selección de etapa
             html += `
-                <div class="flex items-center gap-3 mb-6 bg-slate-800 p-3 rounded-xl border border-blue-500/30">
+                <div class="flex flex-col md:flex-row items-center gap-3 mb-6 bg-slate-800 p-3 rounded-xl border border-blue-500/30">
                     <label class="text-xs text-blue-400 font-black uppercase tracking-widest pl-2 whitespace-nowrap">Editando:</label>
-                    <select class="input-dark flex-1 rounded-lg p-2 font-bold text-white text-base" onchange="changeStageSelection(this.value)">
+                    <select class="input-dark flex-1 w-full rounded-lg p-2 font-bold text-white text-base" onchange="changeStageSelection(this.value)">
                         ${tempDetails.etapas.map((s, i) => `<option value="${i}" ${i == currentStageIndex ? 'selected' : ''}>Etapa ${i+1}: ${s.name || 'Sin nombre'}</option>`).join('')}
                     </select>
-                    <button type="button" onclick="removeStage(${currentStageIndex})" class="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2 rounded-lg transition" title="Eliminar esta etapa"><i class="fas fa-trash"></i></button>
+                    <button type="button" onclick="removeStage(${currentStageIndex})" class="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2 w-full md:w-auto rounded-lg transition" title="Eliminar esta etapa"><i class="fas fa-trash"></i> Borrar</button>
                 </div>
             `;
 
@@ -357,8 +391,8 @@
                         </div>
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Imagen del Perfil (URL/Ruta)</label>
-                        <input type="text" value="${stage.profile || ''}" placeholder="Ej: assets/profiles/stage1.jpg" class="input-dark w-full rounded p-3 text-sm text-cyan-400 font-mono" onchange="updateStageField('profile', this.value)">
+                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Imagen del Perfil (Ruta local o Web)</label>
+                        <input type="text" value="${stage.profile || ''}" placeholder="Ej: assets/profiles/stage1.jpg o https://..." class="input-dark w-full rounded p-3 text-sm text-cyan-400 font-mono" onchange="updateStageField('profile', this.value)">
                     </div>
                 </div>
             `;
@@ -395,7 +429,7 @@
         }
 
         function removeStage(index) {
-            if(!confirm("⚠️ ¿Eliminar esta etapa?")) return;
+            if(!confirm("⚠️ ¿Estás seguro de eliminar esta etapa de la lista?")) return;
             tempDetails.etapas.splice(index, 1);
             if (currentStageIndex >= tempDetails.etapas.length) {
                 currentStageIndex = Math.max(0, tempDetails.etapas.length - 1);
@@ -423,7 +457,7 @@
                 `;
             });
             html += `</div>`;
-            container.innerHTML = html;
+            if(container) container.innerHTML = html;
         }
 
         function updateRiderField(index, value) { tempRiders[index] = { name: value }; }
