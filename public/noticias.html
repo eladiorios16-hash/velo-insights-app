@@ -23,10 +23,8 @@
     <link rel="stylesheet" href="assets/main.css">
 
     <style>
-        /* ESTILOS BASE */
         body { -webkit-tap-highlight-color: transparent; background-color: #050505; }
         
-        /* Animación Skeleton */
         @keyframes skeleton-loading {
             0% { background-color: #09090b; }
             50% { background-color: #18181b; }
@@ -34,22 +32,23 @@
         }
         .skeleton { border-radius: 1rem; animation: skeleton-loading 1.5s infinite ease-in-out; }
         
-        /* Animación suave para tarjetas */
         .fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         @keyframes fadeInUp {
             0% { opacity: 0; transform: translateY(20px); }
             100% { opacity: 1; transform: translateY(0); }
         }
 
-        /* Estilo Prosa Modal */
+        /* KIT EDITORIAL */
         .prose-custom p { color: #a1a1aa; font-size: 1.125rem; line-height: 1.8; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
         .prose-custom h3, .prose-custom h2 { color: white; font-family: 'Archivo Black', sans-serif; text-transform: uppercase; font-style: italic; font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem; }
         .prose-custom ul { list-style: disc; padding-left: 1.5rem; color: #a1a1aa; margin-bottom: 2rem; }
         .prose-custom li { margin-bottom: 0.5rem; }
         .prose-custom strong { color: white; font-weight: 700; }
         .prose-custom blockquote { border-left: 4px solid #22d3ee; padding-left: 1rem; margin: 2rem 0; font-style: italic; color: #d4d4d8; background: rgba(34, 211, 238, 0.05); padding: 1.5rem; border-radius: 0 1rem 1rem 0; }
+        
+        .prose-custom p.intro-text { color: #e4e4e7 !important; font-size: 1.25rem !important; font-weight: 500; }
+        .prose-custom p.drop-cap::first-letter { color: #22d3ee; font-size: 4.5rem; font-weight: 900; font-style: italic; font-family: 'Archivo Black', sans-serif; float: left; line-height: 0.8; margin-right: 0.75rem; margin-top: 0.2rem; text-shadow: 0 0 20px rgba(34, 211, 238, 0.4); }
 
-        /* Scrollbar Personalizada */
         .custom-scrollbar::-webkit-scrollbar { height: 0px; width: 0px; display: none; }
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -57,12 +56,10 @@
         .modal-scroll::-webkit-scrollbar-track { background: #050505; }
         .modal-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
 
-        /* Modal Transiciones */
         #article-modal { transition: opacity 0.3s ease; }
         .modal-hidden { opacity: 0; pointer-events: none; }
         .modal-visible { opacity: 1; pointer-events: auto; }
         
-        /* Botones de Filtro Activos */
         .filter-btn { opacity: 0.5; transition: all 0.3s ease; flex-shrink: 0; }
         .filter-btn:hover { opacity: 1; }
         .filter-btn.active { opacity: 1; box-shadow: 0 0 15px rgba(255,255,255,0.1); transform: scale(1.05); border-color: currentColor; }
@@ -87,8 +84,7 @@
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 mb-20">
         
-        <div class="lg:hidden col-span-1 overflow-x-auto pb-4 custom-scrollbar flex gap-3 relative z-30 py-3 -mx-4 px-4 border-b border-zinc-800/50" id="mobile-filters">
-            </div>
+        <div class="lg:hidden col-span-1 overflow-x-auto pb-4 custom-scrollbar flex gap-3 relative z-30 py-3 -mx-4 px-4 border-b border-zinc-800/50" id="mobile-filters"></div>
 
         <div class="col-span-1 lg:col-span-2 pt-4 lg:pt-0">
             <div id="news-feed">
@@ -96,33 +92,27 @@
                     <div class="aspect-[21/9] w-full skeleton mb-8"></div>
                     <div class="h-4 w-32 skeleton mb-4"></div>
                     <div class="h-10 w-full skeleton mb-4"></div>
-                    <div class="h-6 w-2/3 skeleton"></div>
                 </div>
             </div>
-            
             <div id="load-more-container" class="mt-12 text-center"></div>
         </div>
         
         <aside class="hidden lg:block sticky top-32 h-fit reveal-on-scroll">
             <h4 class="text-[10px] font-black uppercase text-zinc-500 mb-6 tracking-widest border-l-2 border-cyan-500 pl-3">Filtrar por Tema</h4>
-            <div class="flex flex-col gap-2" id="desktop-filters">
-                </div>
+            <div class="flex flex-col gap-2" id="desktop-filters"></div>
         </aside>
 
     </main>
 
     <div id="article-modal" class="fixed inset-0 z-[200] bg-black/95 modal-hidden backdrop-blur-md overflow-y-auto modal-scroll" id="modal-scroll-container">
-        
         <div class="min-h-screen w-full md:py-12 flex justify-center">
             
             <button onclick="closeArticle()" class="fixed top-4 right-4 md:top-8 md:right-8 z-[210] p-3 bg-black/60 text-white rounded-full hover:bg-white hover:text-black transition-all backdrop-blur-md border border-white/20 shadow-2xl">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
-            <div class="w-full max-w-5xl bg-[#050505] md:border border-zinc-800 md:rounded-[2rem] overflow-hidden relative shadow-[0_0_50px_rgba(0,0,0,0.8)] pb-20 md:pb-10">
-                <div id="modal-content">
-                    </div>
-            </div>
+            <div class="w-full max-w-5xl bg-[#050505] md:border border-zinc-800 md:rounded-[2rem] overflow-hidden relative shadow-[0_0_50px_rgba(0,0,0,0.8)]" id="modal-content">
+                </div>
 
         </div>
     </div>
@@ -134,6 +124,12 @@
         let allGlossary = []; 
         let currentTag = 'ALL';
         let visibleCount = 5; 
+        
+        // Variables para la LECTURA CONTINUA
+        let currentReadingList = []; // La lista de la que estamos tirando
+        let currentReadingIndex = 0; // Índice de la noticia actual
+        let isFetchingNext = false; // Evita que cargue 10 a la vez al hacer scroll rápido
+        let scrollObserver = null; // El vigía que cambia la URL
         
         const feed = document.getElementById('news-feed');
         const loadMoreContainer = document.getElementById('load-more-container');
@@ -151,6 +147,7 @@
             'DEFAULT': { mobile: 'bg-zinc-800 border-zinc-700 text-white', bg: 'bg-zinc-700', text: 'text-white', hover: 'hover:border-zinc-500' }
         };
 
+        // ... (Tu código de carga inicial y filtros se mantiene igual) ...
         async function fetchNews() {
             try {
                 const [resNews, resGlos] = await Promise.all([
@@ -158,27 +155,20 @@
                     fetch('/api/glossary').catch(() => null)
                 ]);
 
-                if (resGlos && resGlos.ok) {
-                    allGlossary = await resGlos.json();
-                }
-
+                if (resGlos && resGlos.ok) allGlossary = await resGlos.json();
                 if (resNews && resNews.ok) {
                     const data = await resNews.json();
                     if (data && data.length > 0) {
-                        allNews = data;
-                        allNews.sort((a, b) => b.id - a.id); 
-                        generateFilters();
-                        renderFeed();
-                        
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const articleId = urlParams.get('article');
+                        allNews = data.sort((a, b) => b.id - a.id); 
+                        generateFilters(); renderFeed();
+                        const articleId = new URLSearchParams(window.location.search).get('article');
                         if (articleId) setTimeout(() => openArticle(articleId), 200);
                         return;
                     }
                 }
                 throw new Error("API vacía");
             } catch (error) {
-                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest">No hay noticias publicadas en la base de datos.</p>`;
+                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest">No hay noticias publicadas.</p>`;
             }
         }
 
@@ -196,55 +186,32 @@
                 mobHtml += `<button onclick="filterByTag('${tag}')" class="filter-btn whitespace-nowrap px-5 py-2 rounded-full border text-[10px] font-bold uppercase transition-transform active:scale-95 ${style.mobile}">${tag}</button>`;
                 deskHtml += `<button onclick="filterByTag('${tag}')" class="filter-btn-desktop text-left px-4 py-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 hover:text-white ${style.hover} transition-all">${tag}</button>`;
             });
-
-            mobileContainer.innerHTML = mobHtml;
-            desktopContainer.innerHTML = deskHtml;
+            mobileContainer.innerHTML = mobHtml; desktopContainer.innerHTML = deskHtml;
         }
 
         window.filterByTag = (tag) => {
-            currentTag = tag;
-            visibleCount = 5; 
-            
-            document.querySelectorAll('#mobile-filters .filter-btn').forEach(btn => {
-                const btnTag = btn.innerText.toUpperCase();
-                if (btnTag === tag || (tag === 'ALL' && btnTag === 'TODOS')) btn.classList.add('active');
-                else btn.classList.remove('active');
+            currentTag = tag; visibleCount = 5; 
+            document.querySelectorAll('.filter-btn, .filter-btn-desktop').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.innerText.toUpperCase() === tag || (tag === 'ALL' && btn.innerText.toUpperCase().includes('TODO'))) btn.classList.add('active');
             });
-
-            document.querySelectorAll('#desktop-filters .filter-btn-desktop').forEach(btn => {
-                const btnTag = btn.innerText.toUpperCase();
-                if (btnTag === tag || (tag === 'ALL' && btnTag === 'TODOS LOS ARTÍCULOS')) btn.classList.add('active');
-                else btn.classList.remove('active');
-            });
-
             renderFeed();
         };
 
-        window.loadMore = () => {
-            visibleCount += 4; 
-            renderFeed();
-        };
-
-        searchInput.addEventListener('input', () => {
-            visibleCount = 5; 
-            renderFeed();
-        });
+        window.loadMore = () => { visibleCount += 4; renderFeed(); };
+        searchInput.addEventListener('input', () => { visibleCount = 5; renderFeed(); });
 
         function renderFeed() {
             const searchTerm = searchInput.value.toLowerCase().trim();
-            
             let filteredNews = allNews.filter(n => {
                 const matchesTag = currentTag === 'ALL' || (n.tag || '').toUpperCase() === currentTag;
-                const matchesSearch = n.title.toLowerCase().includes(searchTerm) || 
-                                      (n.lead && n.lead.toLowerCase().includes(searchTerm)) || 
-                                      (n.content && n.content.toLowerCase().includes(searchTerm));
+                const matchesSearch = n.title.toLowerCase().includes(searchTerm) || (n.lead && n.lead.toLowerCase().includes(searchTerm));
                 return matchesTag && matchesSearch;
             });
 
             if (filteredNews.length === 0) {
                 feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono uppercase text-xs">Sin resultados.</p>`;
-                loadMoreContainer.innerHTML = '';
-                return;
+                loadMoreContainer.innerHTML = ''; return;
             }
 
             const newsToRender = filteredNews.slice(0, visibleCount);
@@ -252,27 +219,18 @@
             const rest = newsToRender.slice(1);
 
             let html = '';
-
             if (hero) {
                 const heroTag = TAG_COLORS[(hero.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
                 html += `
-                    <article class="group cursor-pointer border-b border-zinc-900/80 pb-10 md:pb-12 mb-10 md:mb-12 transition-all fade-in-up" onclick="openArticle('${hero.id}')">
-                        <div class="w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden rounded-2xl md:rounded-[2rem] mb-5 md:mb-6 bg-zinc-900 relative border border-zinc-800 shadow-xl">
+                    <article class="group cursor-pointer border-b border-zinc-900/80 pb-10 mb-10 transition-all fade-in-up" onclick="openArticle('${hero.id}')">
+                        <div class="w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden rounded-2xl md:rounded-[2rem] mb-5 bg-zinc-900 relative shadow-xl">
                             <img src="${hero.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700">
-                            
-                            <div class="absolute top-4 left-4 md:top-6 md:left-6">
-                                 <span class="px-3.5 py-1.5 ${heroTag.bg} ${heroTag.text} text-[10px] md:text-xs font-black uppercase rounded shadow-2xl tracking-widest">${hero.tag || 'INFO'}</span>
-                            </div>
+                            <div class="absolute top-4 left-4"><span class="px-3.5 py-1.5 ${heroTag.bg} ${heroTag.text} text-[10px] md:text-xs font-black uppercase rounded shadow-2xl tracking-widest">${hero.tag || 'INFO'}</span></div>
                         </div>
-                        
                         <div class="px-2">
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="text-[11px] font-mono font-bold text-cyan-400 tracking-widest uppercase">${hero.date || 'HOY'}</span>
-                                <span class="text-zinc-500 text-[11px]">•</span>
-                                <span class="text-[10px] text-zinc-400 font-mono tracking-widest uppercase">TECHNICAL JOURNAL</span>
-                            </div>
+                            <div class="flex items-center gap-2 mb-3"><span class="text-[11px] font-mono font-bold text-cyan-400 tracking-widest uppercase">${hero.date || 'HOY'}</span></div>
                             <h2 class="text-3xl md:text-5xl font-black italic uppercase leading-[0.95] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter text-white drop-shadow-sm">${hero.title}</h2>
-                            <p class="text-zinc-400 text-sm md:text-lg leading-relaxed line-clamp-2 md:line-clamp-3">${hero.lead || hero.excerpt || ''}</p>
+                            <p class="text-zinc-400 text-sm md:text-lg leading-relaxed line-clamp-2 md:line-clamp-3">${hero.lead || ''}</p>
                         </div>
                     </article>
                 `;
@@ -284,16 +242,12 @@
                     const tagClass = TAG_COLORS[(news.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
                     return `
                         <article class="group cursor-pointer transition-all fade-in-up flex flex-col" style="animation-delay: ${(idx + 1) * 0.1}s" onclick="openArticle('${news.id}')">
-                            <div class="aspect-[16/9] w-full overflow-hidden rounded-2xl mb-4 bg-zinc-900 relative border border-zinc-800 shadow-lg">
+                            <div class="aspect-[16/9] w-full overflow-hidden rounded-2xl mb-4 bg-zinc-900 relative shadow-lg">
                                 <img src="${news.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700">
-                                <div class="absolute bottom-3 left-3">
-                                     <span class="px-2.5 py-1 ${tagClass.bg} ${tagClass.text} text-[8px] font-black uppercase rounded shadow-lg tracking-widest">${news.tag || 'INFO'}</span>
-                                </div>
+                                <div class="absolute bottom-3 left-3"><span class="px-2.5 py-1 ${tagClass.bg} ${tagClass.text} text-[8px] font-black uppercase rounded shadow-lg tracking-widest">${news.tag || 'INFO'}</span></div>
                             </div>
                             <div class="px-1">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="text-[10px] font-mono font-bold text-zinc-500 tracking-widest uppercase">${news.date || 'HOY'}</span>
-                                </div>
+                                <div class="flex items-center gap-2 mb-2"><span class="text-[10px] font-mono font-bold text-zinc-500 tracking-widest uppercase">${news.date || 'HOY'}</span></div>
                                 <h3 class="text-xl font-black italic text-white uppercase leading-[1.05] group-hover:text-cyan-400 transition-colors tracking-tighter">${news.title}</h3>
                             </div>
                         </article>
@@ -301,116 +255,145 @@
                 }).join('');
                 html += `</div>`;
             }
-
             feed.innerHTML = html;
 
             if (filteredNews.length > visibleCount) {
-                loadMoreContainer.innerHTML = `
-                    <button onclick="loadMore()" class="group inline-flex items-center gap-3 px-8 py-4 rounded-full border border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 hover:border-cyan-500 transition-all text-zinc-300 hover:text-white text-xs font-bold uppercase tracking-widest active:scale-95 shadow-xl">
-                        Cargar más noticias
-                        <svg class="w-4 h-4 text-cyan-500 group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                `;
-            } else {
-                loadMoreContainer.innerHTML = '';
-            }
+                loadMoreContainer.innerHTML = `<button onclick="loadMore()" class="group inline-flex items-center gap-3 px-8 py-4 rounded-full border border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 hover:border-cyan-500 transition-all text-zinc-300 hover:text-white text-xs font-bold uppercase tracking-widest active:scale-95 shadow-xl">Cargar más noticias</button>`;
+            } else loadMoreContainer.innerHTML = '';
         }
 
-        window.openArticle = (id) => {
-            const article = allNews.find(n => n.id == id);
-            if(!article) return;
-
-            window.history.pushState({ articleId: id }, '', `?article=${id}`);
+        // --- SISTEMA DE GENERACIÓN DE ARTÍCULO INDIVIDUAL ---
+        // Extraemos la lógica de pintar el HTML a una función para poder reutilizarla
+        function generateArticleBlock(article) {
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
-
+            
+            // Glosario automático
             let glossaryHTML = '';
             const fullText = (article.title + " " + (article.lead||"") + " " + (article.content||"")).toLowerCase();
             const matchedGlossary = allGlossary.find(g => g && g.term && fullText.includes(g.term.toLowerCase()));
-            
             if (matchedGlossary) {
                 glossaryHTML = `
                 <div class="my-12 p-6 md:p-8 bg-gradient-to-br from-violet-900/20 to-zinc-900 border border-violet-500/30 rounded-2xl border-l-4 border-l-violet-500 shadow-lg relative overflow-hidden">
-                    <svg class="absolute -right-6 -bottom-6 w-32 h-32 text-violet-500/10 pointer-events-none transform -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                    
-                    <h4 class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
-                        Velo Dictionary
-                    </h4>
+                    <h4 class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-3 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>Velo Dictionary</h4>
                     <p class="text-xl md:text-2xl font-black italic text-white uppercase tracking-tight mb-2">${matchedGlossary.term}</p>
                     <p class="text-sm md:text-base text-zinc-300 leading-relaxed">${matchedGlossary.def}</p>
-                    <div class="mt-4">
-                        <a href="glosario.html?term=${encodeURIComponent(matchedGlossary.term)}" class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-violet-400 hover:text-white transition-colors bg-violet-900/30 px-3 py-1.5 rounded-full">Ver en Glosario →</a>
-                    </div>
+                    <a href="glosario.html?term=${encodeURIComponent(matchedGlossary.term)}" class="inline-flex mt-4 items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-violet-400 hover:text-white transition-colors bg-violet-900/30 px-3 py-1.5 rounded-full">Ver en Glosario →</a>
                 </div>`;
             }
 
-            const similarArticles = allNews.filter(n => (n.tag || '').toUpperCase() === (article.tag || '').toUpperCase() && n.id != article.id).slice(0, 2);
-            let similarHTML = '';
-            
-            if (similarArticles.length > 0) {
-                similarHTML = `
-                <div class="mt-12 pt-12 border-t border-zinc-900">
-                    <h3 class="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-8 border-l-2 border-cyan-500 pl-3">También te puede interesar</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        ${similarArticles.map(s => {
-                            const sTagData = TAG_COLORS[(s.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
-                            const textColor = sTagData.text === 'text-white' ? 'text-white' : 'text-cyan-400';
-                            return `
-                            <div class="group cursor-pointer flex gap-4 items-center bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/50 hover:border-zinc-700 transition-colors" onclick="openArticle('${s.id}')">
-                                <div class="w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-zinc-900">
-                                    <img src="${s.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
-                                </div>
-                                <div class="flex-1">
-                                    <span class="text-[9px] font-black ${textColor} uppercase tracking-widest">${s.tag || 'INFO'}</span>
-                                    <h4 class="text-sm font-bold text-zinc-200 group-hover:text-white mt-1 leading-tight line-clamp-2">${s.title}</h4>
-                                </div>
+            // Escapamos comillas en el título para la función shareNative
+            const safeTitle = article.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+            return `
+                <div class="article-wrapper pb-20" data-id="${article.id}">
+                    <div class="h-[30vh] md:h-[50vh] w-full relative border-b border-zinc-900">
+                        <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-90">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
+                    </div>
+                    
+                    <div class="p-6 md:p-20 pt-8 md:pt-12">
+                        <div class="max-w-3xl mx-auto">
+                            <div class="mb-8 md:mb-12 border-b border-zinc-900 pb-8">
+                                <span class="px-3 py-1 md:px-4 md:py-1.5 ${tagData.bg} ${tagData.text} rounded text-[9px] md:text-[10px] font-black uppercase mb-4 md:mb-6 inline-block tracking-widest shadow-lg">${article.tag || 'INFO'}</span>
+                                <h1 class="text-3xl md:text-5xl lg:text-7xl font-heading text-white italic uppercase leading-[0.95] tracking-tighter mb-4">${article.title}</h1>
+                                <p class="text-zinc-400 font-mono text-[10px] md:text-xs uppercase tracking-widest">${article.date || 'HOY'} • VELO INSIGHTS</p>
                             </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>`;
-            }
 
-            modalContent.innerHTML = `
-                <div class="h-[30vh] md:h-[50vh] w-full relative border-b border-zinc-900">
-                    <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-90">
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
-                </div>
-                
-                <div class="p-6 md:p-20 pt-8 md:pt-12">
-                    <div class="max-w-3xl mx-auto">
-                        <div class="mb-8 md:mb-12 border-b border-zinc-900 pb-8">
-                            <span class="px-3 py-1 md:px-4 md:py-1.5 ${tagData.bg} ${tagData.text} rounded text-[9px] md:text-[10px] font-black uppercase mb-4 md:mb-6 inline-block tracking-widest shadow-lg">${article.tag || 'INFO'}</span>
-                            <h1 class="text-2xl md:text-4xl lg:text-5xl font-heading text-white italic uppercase leading-[0.95] tracking-tighter mb-4">${article.title}</h1>
-                            <p class="text-zinc-400 font-mono text-[10px] md:text-xs uppercase tracking-widest">${article.date || 'HOY'} • VELO INSIGHTS</p>
-                        </div>
+                            ${article.lead ? `<p class="text-lg md:text-2xl text-zinc-200 font-serif leading-relaxed mb-8 md:mb-16 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
+                            
+                            <div class="prose-custom text-sm md:text-base">${article.content || '<p class="text-center text-zinc-600">No hay contenido disponible.</p>'}</div>
+                            
+                            ${glossaryHTML}
 
-                        ${article.lead ? `<p class="text-lg md:text-xl text-zinc-200 font-serif leading-relaxed mb-8 md:mb-16 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
-                        
-                        <div class="prose-custom text-sm md:text-base">${article.content || '<p class="text-center text-zinc-600">No hay contenido disponible.</p>'}</div>
-                        
-                        ${glossaryHTML}
-                        ${similarHTML}
-
-                        <div class="mt-12 md:mt-16 pt-8 md:pt-10 border-t border-zinc-900 text-center">
-                            <p class="text-[10px] text-zinc-600 uppercase font-black tracking-widest mb-4">Fin del Análisis</p>
-                            <button onclick="shareNative('${article.image || ''}')" class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-cyan-500 transition-all active:scale-95">
-                                <svg class="w-4 h-4 text-zinc-400 group-hover:text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-                                <span id="share-btn-text" class="text-[10px] font-bold uppercase text-zinc-300 group-hover:text-white tracking-widest">Compartir Artículo</span>
-                            </button>
+                            <div class="mt-12 md:mt-16 pt-8 md:pt-10 border-t border-zinc-900 text-center">
+                                <p class="text-[10px] text-zinc-600 uppercase font-black tracking-widest mb-4">Compartir Informe</p>
+                                <button onclick="shareNative('${safeTitle}', '${article.id}')" class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-cyan-500 transition-all active:scale-95">
+                                    <svg class="w-4 h-4 text-zinc-400 group-hover:text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                                    <span class="text-[10px] font-bold uppercase text-zinc-300 group-hover:text-white tracking-widest">Enviar Enlace</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
+        }
+
+        // --- LÓGICA PRINCIPAL: ABRIR NOTICIA Y PREPARAR INFINITE SCROLL ---
+        window.openArticle = (id) => {
+            // Guardamos la lista de la que estamos tirando para el infinite scroll (todas las noticias para que no se acaben)
+            currentReadingList = allNews;
+            currentReadingIndex = currentReadingList.findIndex(n => n.id == id);
+            
+            if(currentReadingIndex === -1) return;
+
+            const article = currentReadingList[currentReadingIndex];
+            window.history.pushState({ articleId: id }, '', `?article=${id}`);
+
+            // 1. Limpiamos el modal y cargamos la primera noticia
+            modalContent.innerHTML = generateArticleBlock(article);
             
             modal.classList.remove('modal-hidden');
             modal.classList.add('modal-visible');
             document.body.style.overflow = 'hidden';
             
-            const scrollContainer = document.getElementById('modal-scroll-container');
-            if (scrollContainer) scrollContainer.scrollTop = 0;
-            modal.scrollTop = 0; 
+            modal.scrollTop = 0;
+            
+            // 2. Activamos el vigilante de scroll
+            setupScrollObserver();
         };
+
+        // Función que carga el siguiente artículo cuando llegamos al final
+        function loadNextArticle() {
+            if (isFetchingNext) return;
+            if (currentReadingIndex + 1 >= currentReadingList.length) return; // Fin de los artículos
+
+            isFetchingNext = true;
+            currentReadingIndex++;
+            const nextArticle = currentReadingList[currentReadingIndex];
+
+            // Línea separadora visual de transición
+            const separator = `
+                <div class="w-full flex items-center justify-center py-16 bg-[#050505] relative z-10">
+                    <div class="h-px bg-gradient-to-r from-transparent to-cyan-900 w-1/3"></div>
+                    <span class="px-6 text-[10px] text-cyan-500 font-black uppercase tracking-widest animate-pulse">Siguiente Lectura</span>
+                    <div class="h-px bg-gradient-to-l from-transparent to-cyan-900 w-1/3"></div>
+                </div>
+            `;
+
+            // Añadimos el nuevo contenido al final del modal
+            modalContent.insertAdjacentHTML('beforeend', separator + generateArticleBlock(nextArticle));
+            
+            // Actualizamos el vigilante para que vea las nuevas noticias
+            setupScrollObserver();
+            
+            setTimeout(() => { isFetchingNext = false; }, 500); // Pausa de seguridad
+        }
+
+        // Detectar si el usuario llega al final del modal
+        modal.addEventListener('scroll', () => {
+            // Si nos acercamos a 800px del final de todo el contenido, cargamos el siguiente
+            if (modal.scrollTop + modal.clientHeight >= modal.scrollHeight - 800) {
+                loadNextArticle();
+            }
+        });
+
+        // Este vigilante actualiza la URL arriba en el navegador según el artículo que estés leyendo en pantalla
+        function setupScrollObserver() {
+            if (scrollObserver) scrollObserver.disconnect();
+            
+            scrollObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    // Si un bloque de artículo ocupa al menos la mitad de la pantalla
+                    if(entry.isIntersecting) {
+                        const visibleId = entry.target.getAttribute('data-id');
+                        window.history.replaceState({ articleId: visibleId }, '', `?article=${visibleId}`);
+                    }
+                });
+            }, { root: modal, threshold: 0.5 }); // threshold 0.5 = 50% de la pantalla
+
+            // Poner a vigilar todos los artículos que estén en el modal
+            document.querySelectorAll('.article-wrapper').forEach(block => scrollObserver.observe(block));
+        }
 
         window.closeArticle = () => {
             modal.classList.remove('modal-visible');
@@ -420,35 +403,23 @@
             const url = new URL(window.location);
             url.searchParams.delete('article');
             window.history.pushState({}, '', url);
+            
+            // Limpiamos contenido para la próxima vez
+            setTimeout(() => { modalContent.innerHTML = ''; }, 300);
         };
 
-        window.shareNative = async (imageUrl = '') => {
-            const titleElement = document.querySelector('#modal-content h1');
-            const title = titleElement ? titleElement.innerText : 'VELO INSIGHTS';
-            const url = window.location.href;
-
-            let shareData = {
-                title: 'VELO INSIGHTS',
-                text: title,
-                url: url
-            };
+        // --- COMPARTIR ---
+        window.shareNative = async (articleTitle, articleId) => {
+            // Reconstruimos la URL exacta por si el usuario copió mientras hacía scroll
+            const originUrl = window.location.origin + window.location.pathname + '?article=' + articleId;
 
             if (navigator.share) {
-                try { 
-                    await navigator.share(shareData); 
-                } catch (err) {}
+                try { await navigator.share({ title: 'VELO INSIGHTS', text: articleTitle, url: originUrl }); } catch (err) {}
             } else {
                 try {
-                    await navigator.clipboard.writeText(url);
-                    const btnText = document.getElementById('share-btn-text');
-                    const originalText = btnText.innerText;
-                    btnText.innerText = "¡ENLACE COPIADO!";
-                    btnText.classList.add('text-green-500');
-                    setTimeout(() => {
-                        btnText.innerText = originalText;
-                        btnText.classList.remove('text-green-500');
-                    }, 2000);
-                } catch (err) { alert('Copia la URL: ' + url); }
+                    await navigator.clipboard.writeText(originUrl);
+                    alert("¡Enlace copiado al portapapeles!");
+                } catch (err) { alert('Copia la URL: ' + originUrl); }
             }
         };
 
