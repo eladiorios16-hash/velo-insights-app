@@ -34,6 +34,13 @@
         }
         .skeleton { border-radius: 1.5rem; animation: skeleton-loading 1.5s infinite ease-in-out; }
         
+        /* Animación suave para tarjetas */
+        .fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
         /* Estilo Prosa Modal */
         .prose-custom p { color: #a1a1aa; font-size: 1.125rem; line-height: 1.8; margin-bottom: 2rem; font-family: 'Inter', sans-serif; }
         .prose-custom h3 { color: white; font-family: 'Archivo Black', sans-serif; text-transform: uppercase; font-style: italic; font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem; }
@@ -45,22 +52,14 @@
         /* Scrollbar Personalizada */
         .custom-scrollbar::-webkit-scrollbar { height: 0px; width: 0px; display: none; }
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
         .modal-scroll::-webkit-scrollbar { width: 6px; }
         .modal-scroll::-webkit-scrollbar-track { background: #000; }
         .modal-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
 
-        /* Animación suave para tarjetas */
-        .fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-        @keyframes fadeInUp {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
         /* Modal Transiciones */
-        #article-modal { transition: opacity 0.3s ease; }
-        .modal-hidden { opacity: 0; pointer-events: none; }
-        .modal-visible { opacity: 1; pointer-events: auto; }
+        #article-modal { transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .modal-hidden { opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.98); }
+        .modal-visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
         
         /* Botones de Filtro Activos */
         .filter-btn { opacity: 0.5; transition: all 0.3s ease; flex-shrink: 0; }
@@ -117,13 +116,13 @@
         </div>
     </div>
 
-    <script src="layout.js?v=7.0"></script>
+    <script src="layout.js?v=7.2"></script>
     
     <script>
         let allNews = [];
         let allGlossary = []; // Base de datos del Glosario
         let currentTag = 'ALL';
-        let visibleCount = 4; // Cantidad inicial a mostrar
+        let visibleCount = 5; // 1 Hero + 4 Grid = 5 Iniciales
         
         const feed = document.getElementById('news-feed');
         const loadMoreContainer = document.getElementById('load-more-container');
@@ -136,6 +135,7 @@
             'DATA ANALYSIS': { mobile: 'bg-violet-900/30 border-violet-500/30 text-violet-500', card: 'bg-violet-500 text-white', hover: 'hover:border-violet-500' },
             'RACE REPORT': { mobile: 'bg-cyan-900/30 border-cyan-500/30 text-cyan-500', card: 'bg-cyan-500 text-black', hover: 'hover:border-cyan-500' },
             'PREVIA': { mobile: 'bg-yellow-900/30 border-yellow-500/30 text-yellow-500', card: 'bg-yellow-500 text-black', hover: 'hover:border-yellow-500' },
+            'ALL': { filter: 'bg-zinc-800 border-zinc-700 text-white' },
             'DEFAULT': { mobile: 'bg-zinc-800 border-zinc-700 text-white', card: 'bg-zinc-700 text-white', hover: 'hover:border-zinc-500' }
         };
 
@@ -194,7 +194,7 @@
 
         window.filterByTag = (tag) => {
             currentTag = tag;
-            visibleCount = 4; // Reiniciar cuenta al cambiar categoría
+            visibleCount = 5; // Reiniciar cuenta al cambiar categoría
             
             // Estilos Móvil
             document.querySelectorAll('#mobile-filters .filter-btn').forEach(btn => {
@@ -229,35 +229,64 @@
             }
 
             const newsToRender = filteredNews.slice(0, visibleCount);
+            const hero = newsToRender[0];
+            const rest = newsToRender.slice(1);
 
-            // Construcción manual de las tarjetas para garantizar que funcione el clic (Ignorando renderers.js)
-            let html = newsToRender.map((news, idx) => {
-                const tagData = TAG_COLORS[(news.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
-                const tagClass = tagData.card;
-                
-                return `
-                <article class="group cursor-pointer border-b border-zinc-900 pb-12 mb-12 last:border-0 transition-all fade-in-up" style="animation-delay: ${idx * 0.05}s" onclick="openArticle('${news.id}')">
-                    <div class="aspect-[16/9] md:aspect-[21/9] w-full overflow-hidden rounded-2xl md:rounded-[2rem] mb-6 md:mb-8 bg-zinc-900 relative border border-zinc-800 shadow-xl">
-                        <img src="${news.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="absolute top-4 left-4 md:top-6 md:left-6">
-                             <span class="px-3 py-1.5 ${tagClass} text-[9px] md:text-[10px] font-black uppercase rounded-lg shadow-xl tracking-widest border border-white/10">${news.tag || 'INFO'}</span>
+            let html = '';
+
+            // 1. RENDERIZAR HERO (DESTACADO Y ENORME)
+            if (hero) {
+                const heroTag = TAG_COLORS[(hero.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+                html += `
+                    <article class="group cursor-pointer border-b border-zinc-900/80 pb-12 mb-12 transition-all fade-in-up relative" onclick="openArticle('${hero.id}')">
+                        <div class="w-full aspect-[4/5] md:aspect-[21/9] overflow-hidden rounded-3xl mb-5 bg-zinc-900 relative border border-zinc-800 shadow-2xl">
+                            <img src="${hero.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700">
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#050505]/90 via-[#050505]/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
+                            
+                            <div class="absolute top-5 left-5 md:top-8 md:left-8">
+                                 <span class="px-3.5 py-1.5 ${heroTag.card} text-[10px] font-black uppercase rounded shadow-2xl tracking-widest">${hero.tag || 'INFO'}</span>
+                            </div>
+                            
+                            <div class="absolute bottom-0 left-0 w-full p-5 md:p-8">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="text-[11px] font-mono font-bold text-cyan-400 tracking-widest uppercase">${hero.date || 'HOY'}</span>
+                                    <span class="text-zinc-500 text-[11px]">•</span>
+                                    <span class="text-[10px] text-zinc-400 font-mono tracking-widest uppercase">LATEST NEWS</span>
+                                </div>
+                                <h2 class="text-4xl md:text-6xl font-black italic uppercase leading-[0.9] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter text-white drop-shadow-lg">${hero.title}</h2>
+                                <p class="text-zinc-300 text-sm md:text-lg leading-relaxed line-clamp-2 md:line-clamp-3 drop-shadow-md hidden md:block">${hero.lead || hero.excerpt || ''}</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex items-center gap-3 mb-3 px-1">
-                        <span class="text-[10px] font-mono font-bold text-cyan-500 tracking-widest uppercase">${news.date || 'HOY'}</span>
-                        <span class="text-zinc-700 text-[10px]">•</span>
-                        <span class="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">TECHNICAL JOURNAL</span>
-                    </div>
-                    <h2 class="text-2xl md:text-5xl font-heading text-white italic uppercase leading-[0.9] mb-4 group-hover:text-cyan-400 transition-colors tracking-tighter drop-shadow-md px-1">${news.title}</h2>
-                    ${news.lead ? `<p class="text-zinc-400 text-sm md:text-base leading-relaxed line-clamp-2 md:line-clamp-3 px-1">${news.lead}</p>` : ''}
-                </article>
+                    </article>
                 `;
-            }).join('');
+            }
+
+            // 2. RENDERIZAR CUADRÍCULA (RESTO)
+            if (rest.length > 0) {
+                html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">`;
+                html += rest.map((news, idx) => {
+                    const tagClass = TAG_COLORS[(news.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+                    return `
+                        <article class="group cursor-pointer transition-all fade-in-up flex flex-col" style="animation-delay: ${(idx + 1) * 0.1}s" onclick="openArticle('${news.id}')">
+                            <div class="aspect-[16/9] w-full overflow-hidden rounded-2xl mb-4 bg-zinc-900 relative border border-zinc-800 shadow-lg">
+                                <img src="${news.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700">
+                                <div class="absolute bottom-3 left-3">
+                                     <span class="px-2 py-1 ${tagClass.card} text-[8px] font-black uppercase rounded shadow-lg tracking-widest">${news.tag || 'INFO'}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2 px-1">
+                                <span class="text-[9px] font-mono font-bold text-zinc-500 tracking-widest uppercase">${news.date || 'HOY'}</span>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-heading text-white italic uppercase leading-[1.05] group-hover:text-cyan-400 transition-colors tracking-tighter">${news.title}</h3>
+                        </article>
+                    `;
+                }).join('');
+                html += `</div>`;
+            }
 
             feed.innerHTML = html;
 
-            // Renderizar el botón de "Cargar más" si hay noticias ocultas
+            // 3. BOTÓN CARGAR MÁS
             if (filteredNews.length > visibleCount) {
                 loadMoreContainer.innerHTML = `
                     <button onclick="loadMore()" class="group inline-flex items-center gap-3 px-8 py-4 rounded-full border border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 hover:border-cyan-500 transition-all text-zinc-300 hover:text-white text-xs font-bold uppercase tracking-widest active:scale-95 shadow-xl">
@@ -282,7 +311,8 @@
             let glossaryHTML = '';
             const fullText = (article.title + " " + (article.lead||"") + " " + (article.content||"")).toLowerCase();
             
-            const matchedGlossary = allGlossary.find(g => fullText.includes(g.term.toLowerCase()));
+            // Protección contra errores en la BD del glosario
+            const matchedGlossary = allGlossary.find(g => g && g.term && fullText.includes(g.term.toLowerCase()));
             
             if (matchedGlossary) {
                 glossaryHTML = `
@@ -332,7 +362,7 @@
                 </div>`;
             }
 
-            // --- 3. RENDERIZADO DEL MODAL (TÍTULO DEBAJO DE IMAGEN) ---
+            // --- 3. RENDERIZADO DEL MODAL (TÍTULO DEBAJO DE IMAGEN PARA PC) ---
             modalContent.innerHTML = `
                 <div class="h-[30vh] md:h-[50vh] w-full relative border-b border-zinc-900">
                     <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-90">
@@ -365,7 +395,9 @@
                 </div>
             `;
             
-            modal.classList.remove('hidden');
+            // ¡ESTO ES LO QUE ARREGLA EL ERROR!
+            modal.classList.remove('modal-hidden');
+            modal.classList.add('modal-visible');
             document.body.style.overflow = 'hidden';
             
             const scrollContainer = document.getElementById('modal-scroll-container');
@@ -373,8 +405,11 @@
         };
 
         window.closeArticle = () => {
-            modal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
+            // ¡AQUÍ TAMBIÉN CORREGIDO!
+            modal.classList.remove('modal-visible');
+            modal.classList.add('modal-hidden');
+            document.body.style.overflow = '';
+            
             const url = new URL(window.location);
             url.searchParams.delete('article');
             window.history.pushState({}, '', url);
@@ -403,7 +438,7 @@
         };
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeArticle();
+            if (e.key === 'Escape' && !modal.classList.contains('modal-hidden')) closeArticle();
         });
 
         window.addEventListener('popstate', (e) => {
