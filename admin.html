@@ -16,7 +16,6 @@
         .input-dark { background-color: #0f172a; border: 1px solid #334155; color: #f1f5f9; transition: all 0.3s; }
         .input-dark:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
         
-        /* Estilos para el constructor de JSON (Equipos) */
         .json-builder-item { background-color: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; gap: 0.5rem; align-items: center; }
     </style>
 </head>
@@ -73,7 +72,7 @@
 
         // Variables de estado para los constructores visuales JSON
         let tempDetails = { totalEtapas: 1, etapas: [] }; 
-        let currentStageIndex = 0; // Para saber qué etapa estamos editando ahora mismo
+        let currentStageIndex = 0; 
         let tempRiders = []; 
 
         const templates = {
@@ -175,7 +174,6 @@
             container.innerHTML = headerHtml + tableHtml + `</tbody></table></div>`;
         }
 
-        // --- SISTEMA DE FORMULARIO DINÁMICO ---
         function openCreateModal() {
             isEditing = false; editId = null;
             document.getElementById('modal-title').innerHTML = '<span class="text-emerald-400 text-2xl mr-2">+</span> Añadir Nuevo';
@@ -208,16 +206,21 @@
                 
                 let input;
 
-                // --- 1. CONSTRUCTOR DE ETAPAS (CORREGIDO PARA EVITAR BLOQUEOS CON DATOS ANTIGUOS) ---
+                // --- 1. CONSTRUCTOR DE ETAPAS (CARGA INTELIGENTE DE DATOS) ---
                 if (currentTable === 'calendario' && key === 'details') {
                     label.innerText = 'CONSTRUCTOR DE ETAPAS (SELECCIONA ETAPA A EDITAR)';
                     
                     let parsedObj = {};
-                    try {
-                        parsedObj = (typeof value === 'string' && value.trim() !== '') ? JSON.parse(value) : {};
-                    } catch(e) {}
                     
-                    tempDetails = { ...parsedObj };
+                    // LÓGICA DE CARGA CORREGIDA: Si es un texto lo parseamos, si ya es un objeto lo usamos
+                    if (typeof value === 'string' && value.trim() !== '') {
+                        try { parsedObj = JSON.parse(value); } catch(e) { console.log('No se pudo parsear texto', e); }
+                    } else if (typeof value === 'object' && value !== null) {
+                        // Clonamos el objeto para no modificar la tabla principal por accidente
+                        parsedObj = JSON.parse(JSON.stringify(value));
+                    }
+                    
+                    tempDetails = { totalEtapas: 1, etapas: [], ...parsedObj };
 
                     // MIGRACIÓN DE RESCATE: Si la DB antigua guardaba un número simple en 'etapas'
                     if (typeof tempDetails.etapas === 'number') {
@@ -243,7 +246,6 @@
                     input.className = "bg-slate-900/50 p-4 rounded-xl border border-slate-700";
                     input.id = "stage-builder-container";
                     
-                    // Adjuntamos al form directamente para saltarnos el render normal
                     wrapper.appendChild(label);
                     wrapper.appendChild(input);
                     form.appendChild(wrapper);
@@ -251,14 +253,19 @@
                     renderStageBuilder(input);
                     continue; 
                 } 
-                // --- 2. CONSTRUCTOR DE CICLISTAS (EQUIPOS) ---
+                // --- 2. CONSTRUCTOR DE CICLISTAS (CARGA INTELIGENTE DE DATOS) ---
                 else if (currentTable === 'equipos' && key === 'riders') {
                     label.innerText = 'PLANTILLA DE CICLISTAS';
                     
-                    try {
-                        let parsedRiders = (typeof value === 'string' && value.trim() !== '') ? JSON.parse(value) : [];
-                        tempRiders = Array.isArray(parsedRiders) ? parsedRiders : [];
-                    } catch(e) { tempRiders = []; }
+                    tempRiders = [];
+                    if (typeof value === 'string' && value.trim() !== '') {
+                        try { 
+                            let parsed = JSON.parse(value); 
+                            if (Array.isArray(parsed)) tempRiders = parsed;
+                        } catch(e) {}
+                    } else if (Array.isArray(value)) {
+                        tempRiders = JSON.parse(JSON.stringify(value));
+                    }
 
                     input = document.createElement('div');
                     input.className = "bg-slate-900/50 p-4 rounded-xl border border-slate-700";
@@ -271,7 +278,7 @@
                     renderRiderBuilder(input);
                     continue; 
                 }
-                // --- 3. CAMPOS NORMALES (TEXTO, FECHA, SELECTORES) ---
+                // --- 3. CAMPOS NORMALES ---
                 else if (key === 'tag') {
                     input = document.createElement('select');
                     input.className = "input-dark w-full rounded-lg p-3";
@@ -408,7 +415,6 @@
 
         function updateStageField(field, value) {
             tempDetails.etapas[currentStageIndex][field] = value;
-            // Si cambiamos el nombre, repintamos para que se actualice el nombre en el desplegable superior
             if(field === 'name') {
                 renderStageBuilder(document.getElementById('stage-builder-container'));
             }
@@ -429,7 +435,7 @@
         }
 
         function removeStage(index) {
-            if(!confirm("⚠️ ¿Estás seguro de eliminar esta etapa de la lista?")) return;
+            if(!confirm("⚠️ ¿Eliminar esta etapa de la lista?")) return;
             tempDetails.etapas.splice(index, 1);
             if (currentStageIndex >= tempDetails.etapas.length) {
                 currentStageIndex = Math.max(0, tempDetails.etapas.length - 1);
