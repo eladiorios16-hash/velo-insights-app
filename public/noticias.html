@@ -70,10 +70,10 @@
         .filter-btn-desktop.active { background-color: rgba(255,255,255,0.05); color: white; border-color: #22d3ee; border-left-width: 4px; }
     </style>
 </head>
-<body class="bg-grid antialiased pb-20 overflow-x-hidden selection:bg-cyan-500/30">
+<body class="bg-[#050505] antialiased pb-20 overflow-x-hidden selection:bg-cyan-500/30">
 
     <header class="pt-28 md:pt-40 pb-8 md:pb-12 px-4 md:px-6 max-w-7xl mx-auto text-center md:text-left reveal-on-scroll">
-        <h1 class="text-4xl md:text-6xl font-heading text-white italic uppercase tracking-tighter mb-4 drop-shadow-2xl">The Journal <span class="text-cyan-500">///</span></h1>
+        <h1 class="text-4xl md:text-5xl font-heading text-white italic uppercase tracking-tighter mb-4 drop-shadow-2xl">The Journal <span class="text-cyan-500">///</span></h1>
         <p class="text-zinc-500 max-w-lg font-medium text-xs md:text-base mx-auto md:mx-0 mb-8">Archivo profundo de análisis técnico. No cubrimos rumores, cubrimos vatios.</p>
         
         <div class="max-w-xl relative group px-2 md:px-0">
@@ -133,7 +133,7 @@
         let allNews = [];
         let allGlossary = []; 
         let currentTag = 'ALL';
-        let visibleCount = 5; // 1 Hero + 4 Grid (Carga inicial)
+        let visibleCount = 5; 
         
         const feed = document.getElementById('news-feed');
         const loadMoreContainer = document.getElementById('load-more-container');
@@ -153,7 +153,6 @@
 
         async function fetchNews() {
             try {
-                // Descargar Noticias y Glosario al mismo tiempo
                 const [resNews, resGlos] = await Promise.all([
                     fetch('/api/news').catch(() => null),
                     fetch('/api/glossary').catch(() => null)
@@ -167,11 +166,10 @@
                     const data = await resNews.json();
                     if (data && data.length > 0) {
                         allNews = data;
-                        allNews.sort((a, b) => b.id - a.id); // Orden cronológico inverso
+                        allNews.sort((a, b) => b.id - a.id); 
                         generateFilters();
                         renderFeed();
                         
-                        // Si hay URL profunda, abrir la noticia
                         const urlParams = new URLSearchParams(window.location.search);
                         const articleId = urlParams.get('article');
                         if (articleId) setTimeout(() => openArticle(articleId), 200);
@@ -190,11 +188,9 @@
             const tags = new Set();
             allNews.forEach(n => { if(n.tag) tags.add(n.tag.toUpperCase()); });
             
-            // Botones 'TODOS'
             let mobHtml = `<button onclick="filterByTag('ALL')" class="filter-btn active whitespace-nowrap px-5 py-2 rounded-full border text-[10px] font-bold uppercase transition-transform active:scale-95 bg-zinc-800 border-zinc-700 text-white shadow-lg">Todos</button>`;
             let deskHtml = `<button onclick="filterByTag('ALL')" class="filter-btn-desktop active text-left px-4 py-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 hover:text-white transition-all">Todos los artículos</button>`;
             
-            // Botones Dinámicos
             Array.from(tags).sort().forEach(tag => {
                 const style = TAG_COLORS[tag] || TAG_COLORS['DEFAULT'];
                 mobHtml += `<button onclick="filterByTag('${tag}')" class="filter-btn whitespace-nowrap px-5 py-2 rounded-full border text-[10px] font-bold uppercase transition-transform active:scale-95 ${style.mobile}">${tag}</button>`;
@@ -207,16 +203,14 @@
 
         window.filterByTag = (tag) => {
             currentTag = tag;
-            visibleCount = 5; // Reseteamos la paginación al filtrar
+            visibleCount = 5; 
             
-            // Estilos Móvil
             document.querySelectorAll('#mobile-filters .filter-btn').forEach(btn => {
                 const btnTag = btn.innerText.toUpperCase();
                 if (btnTag === tag || (tag === 'ALL' && btnTag === 'TODOS')) btn.classList.add('active');
                 else btn.classList.remove('active');
             });
 
-            // Estilos Desktop
             document.querySelectorAll('#desktop-filters .filter-btn-desktop').forEach(btn => {
                 const btnTag = btn.innerText.toUpperCase();
                 if (btnTag === tag || (tag === 'ALL' && btnTag === 'TODOS LOS ARTÍCULOS')) btn.classList.add('active');
@@ -227,20 +221,18 @@
         };
 
         window.loadMore = () => {
-            visibleCount += 4; // Añadir 4 noticias al hacer clic
+            visibleCount += 4; 
             renderFeed();
         };
 
-        // Escuchar el buscador
         searchInput.addEventListener('input', () => {
-            visibleCount = 5; // Resetear cuenta al buscar
+            visibleCount = 5; 
             renderFeed();
         });
 
         function renderFeed() {
             const searchTerm = searchInput.value.toLowerCase().trim();
             
-            // Filtrado múltiple (por Tag y por Buscador)
             let filteredNews = allNews.filter(n => {
                 const matchesTag = currentTag === 'ALL' || (n.tag || '').toUpperCase() === currentTag;
                 const matchesSearch = n.title.toLowerCase().includes(searchTerm) || 
@@ -261,7 +253,6 @@
 
             let html = '';
 
-            // 1. RENDERIZAR HERO (DISEÑO FIEL A LA CAPTURA: TEXTO ABAJO)
             if (hero) {
                 const heroTag = TAG_COLORS[(hero.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
                 html += `
@@ -280,14 +271,13 @@
                                 <span class="text-zinc-500 text-[11px]">•</span>
                                 <span class="text-[10px] text-zinc-400 font-mono tracking-widest uppercase">TECHNICAL JOURNAL</span>
                             </div>
-                            <h2 class="text-4xl md:text-6xl font-black italic uppercase leading-[0.95] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter text-white drop-shadow-sm">${hero.title}</h2>
+                            <h2 class="text-3xl md:text-5xl font-black italic uppercase leading-[0.95] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter text-white drop-shadow-sm">${hero.title}</h2>
                             <p class="text-zinc-400 text-sm md:text-lg leading-relaxed line-clamp-2 md:line-clamp-3">${hero.lead || hero.excerpt || ''}</p>
                         </div>
                     </article>
                 `;
             }
 
-            // 2. RENDERIZAR CUADRÍCULA (RESTO)
             if (rest.length > 0) {
                 html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">`;
                 html += rest.map((news, idx) => {
@@ -304,7 +294,7 @@
                                 <div class="flex items-center gap-2 mb-2">
                                     <span class="text-[10px] font-mono font-bold text-zinc-500 tracking-widest uppercase">${news.date || 'HOY'}</span>
                                 </div>
-                                <h3 class="text-xl md:text-2xl font-black italic text-white uppercase leading-[1.05] group-hover:text-cyan-400 transition-colors tracking-tighter">${news.title}</h3>
+                                <h3 class="text-xl font-black italic text-white uppercase leading-[1.05] group-hover:text-cyan-400 transition-colors tracking-tighter">${news.title}</h3>
                             </div>
                         </article>
                     `;
@@ -314,7 +304,6 @@
 
             feed.innerHTML = html;
 
-            // 3. BOTÓN CARGAR MÁS
             if (filteredNews.length > visibleCount) {
                 loadMoreContainer.innerHTML = `
                     <button onclick="loadMore()" class="group inline-flex items-center gap-3 px-8 py-4 rounded-full border border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 hover:border-cyan-500 transition-all text-zinc-300 hover:text-white text-xs font-bold uppercase tracking-widest active:scale-95 shadow-xl">
@@ -334,10 +323,8 @@
             window.history.pushState({ articleId: id }, '', `?article=${id}`);
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
 
-            // --- 1. DETECTOR DEL GLOSARIO (VELO DICTIONARY) ---
             let glossaryHTML = '';
             const fullText = (article.title + " " + (article.lead||"") + " " + (article.content||"")).toLowerCase();
-            
             const matchedGlossary = allGlossary.find(g => g && g.term && fullText.includes(g.term.toLowerCase()));
             
             if (matchedGlossary) {
@@ -357,7 +344,6 @@
                 </div>`;
             }
 
-            // --- 2. NOTICIAS SIMILARES ---
             const similarArticles = allNews.filter(n => (n.tag || '').toUpperCase() === (article.tag || '').toUpperCase() && n.id != article.id).slice(0, 2);
             let similarHTML = '';
             
@@ -385,7 +371,6 @@
                 </div>`;
             }
 
-            // --- 3. RENDERIZADO DEL MODAL (IMAGEN ARRIBA, TEXTO ABAJO) ---
             modalContent.innerHTML = `
                 <div class="h-[30vh] md:h-[50vh] w-full relative border-b border-zinc-900">
                     <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-90">
@@ -396,11 +381,11 @@
                     <div class="max-w-3xl mx-auto">
                         <div class="mb-8 md:mb-12 border-b border-zinc-900 pb-8">
                             <span class="px-3 py-1 md:px-4 md:py-1.5 ${tagData.bg} ${tagData.text} rounded text-[9px] md:text-[10px] font-black uppercase mb-4 md:mb-6 inline-block tracking-widest shadow-lg">${article.tag || 'INFO'}</span>
-                            <h1 class="text-3xl md:text-5xl lg:text-7xl font-heading text-white italic uppercase leading-[0.95] tracking-tighter mb-4">${article.title}</h1>
+                            <h1 class="text-2xl md:text-4xl lg:text-5xl font-heading text-white italic uppercase leading-[0.95] tracking-tighter mb-4">${article.title}</h1>
                             <p class="text-zinc-400 font-mono text-[10px] md:text-xs uppercase tracking-widest">${article.date || 'HOY'} • VELO INSIGHTS</p>
                         </div>
 
-                        ${article.lead ? `<p class="text-lg md:text-2xl text-zinc-200 font-serif leading-relaxed mb-8 md:mb-16 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
+                        ${article.lead ? `<p class="text-lg md:text-xl text-zinc-200 font-serif leading-relaxed mb-8 md:mb-16 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
                         
                         <div class="prose-custom text-sm md:text-base">${article.content || '<p class="text-center text-zinc-600">No hay contenido disponible.</p>'}</div>
                         
@@ -422,7 +407,6 @@
             modal.classList.add('modal-visible');
             document.body.style.overflow = 'hidden';
             
-            // Forzar que el modal inicie el scroll desde arriba del todo
             const scrollContainer = document.getElementById('modal-scroll-container');
             if (scrollContainer) scrollContainer.scrollTop = 0;
             modal.scrollTop = 0; 
@@ -438,13 +422,11 @@
             window.history.pushState({}, '', url);
         };
 
-        // --- FUNCIÓN DE COMPARTIR ACTUALIZADA ---
         window.shareNative = async (imageUrl = '') => {
             const titleElement = document.querySelector('#modal-content h1');
             const title = titleElement ? titleElement.innerText : 'VELO INSIGHTS';
             const url = window.location.href;
 
-            // Preparamos los datos a compartir
             let shareData = {
                 title: 'VELO INSIGHTS',
                 text: title,
