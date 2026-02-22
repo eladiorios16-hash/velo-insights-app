@@ -16,7 +16,7 @@
         .input-dark { background-color: #0f172a; border: 1px solid #334155; color: #f1f5f9; transition: all 0.3s; }
         .input-dark:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
         
-        /* Estilos para el constructor de JSON (Etapas/Ciclistas) */
+        /* Estilos para el constructor de JSON (Equipos) */
         .json-builder-item { background-color: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; gap: 0.5rem; align-items: center; }
     </style>
 </head>
@@ -73,6 +73,7 @@
 
         // Variables de estado para los constructores visuales JSON
         let tempDetails = { totalEtapas: 1, etapas: [] }; 
+        let currentStageIndex = 0; // Para saber qué etapa estamos editando ahora mismo
         let tempRiders = []; 
 
         const templates = {
@@ -207,14 +208,15 @@
                 
                 let input;
 
-                // --- 1. LÓGICA ESPECIAL PARA CONSTRUCTOR DE ETAPAS (CALENDARIO) ---
+                // --- 1. NUEVO CONSTRUCTOR DE ETAPAS CON DESPLEGABLE ---
                 if (currentTable === 'calendario' && key === 'details') {
-                    label.innerText = 'CONSTRUCTOR DE ETAPAS';
+                    label.innerText = 'CONSTRUCTOR DE ETAPAS (SELECCIONA ETAPA A EDITAR)';
                     try {
                         tempDetails = (typeof value === 'string' && value.trim() !== '') ? JSON.parse(value) : { totalEtapas: 1, etapas: [] };
                     } catch(e) { tempDetails = { totalEtapas: 1, etapas: [] }; }
                     
                     if(!tempDetails.etapas) tempDetails.etapas = [];
+                    currentStageIndex = 0; // Reiniciamos a la primera etapa al abrir
 
                     input = document.createElement('div');
                     input.className = "bg-slate-900/50 p-4 rounded-xl border border-slate-700";
@@ -222,7 +224,7 @@
                     
                     renderStageBuilder(input);
                 } 
-                // --- 2. LÓGICA ESPECIAL PARA CONSTRUCTOR DE CICLISTAS (EQUIPOS) ---
+                // --- 2. CONSTRUCTOR DE CICLISTAS (EQUIPOS) ---
                 else if (currentTable === 'equipos' && key === 'riders') {
                     label.innerText = 'PLANTILLA DE CICLISTAS';
                     try {
@@ -290,66 +292,133 @@
             }
         }
 
-        // --- CONSTRUCTOR VISUAL DE ETAPAS (CALENDARIO) ---
+        // --- CONSTRUCTOR VISUAL DE ETAPAS AVANZADO (DESPLEGABLE) ---
         function renderStageBuilder(container) {
             let html = `
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
                     <div class="flex items-center gap-2">
-                        <span class="text-sm text-slate-300">Total Etapas:</span>
-                        <input type="number" id="builder-total-stages" value="${tempDetails.totalEtapas || 1}" class="input-dark w-20 rounded p-1 text-center font-bold" onchange="updateTotalStages(this.value)">
+                        <span class="text-sm text-slate-300 font-bold">Total Etapas Carrera:</span>
+                        <input type="number" id="builder-total-stages" value="${tempDetails.totalEtapas || 1}" class="input-dark w-20 rounded p-1 text-center font-bold text-lg" onchange="updateTotalStages(this.value)">
                     </div>
-                    <button type="button" onclick="addStage()" class="bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white px-3 py-1 rounded text-xs font-bold transition">+ Añadir Etapa</button>
+                    <button type="button" onclick="addStage()" class="bg-blue-500 hover:bg-blue-400 text-black px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-lg"><i class="fas fa-plus"></i> Añadir Etapa</button>
                 </div>
-                <div id="stages-list">
             `;
-            
-            tempDetails.etapas.forEach((stage, index) => {
-                html += `
-                    <div class="json-builder-item">
-                        <span class="text-xs font-bold text-slate-500 w-8">#${index+1}</span>
-                        <input type="text" value="${stage.name || ''}" placeholder="Nombre (Ej: Etapa 1)" class="input-dark flex-1 rounded p-2 text-sm" onchange="updateStageField(${index}, 'name', this.value)">
-                        <select class="input-dark w-32 rounded p-2 text-sm" onchange="updateStageField(${index}, 'type', this.value)">
+
+            if (tempDetails.etapas.length === 0) {
+                html += `<div class="text-slate-500 text-sm italic text-center py-8">No hay etapas configuradas. Haz clic en "Añadir Etapa".</div>`;
+                container.innerHTML = html;
+                return;
+            }
+
+            // Aseguramos que el índice no se rompa si borramos etapas
+            if (currentStageIndex >= tempDetails.etapas.length) {
+                currentStageIndex = Math.max(0, tempDetails.etapas.length - 1);
+            }
+
+            const stage = tempDetails.etapas[currentStageIndex];
+
+            // Barra de selección de etapa
+            html += `
+                <div class="flex items-center gap-3 mb-6 bg-slate-800 p-3 rounded-xl border border-blue-500/30">
+                    <label class="text-xs text-blue-400 font-black uppercase tracking-widest pl-2 whitespace-nowrap">Editando:</label>
+                    <select class="input-dark flex-1 rounded-lg p-2 font-bold text-white text-base" onchange="changeStageSelection(this.value)">
+                        ${tempDetails.etapas.map((s, i) => `<option value="${i}" ${i == currentStageIndex ? 'selected' : ''}>Etapa ${i+1}: ${s.name || 'Sin nombre'}</option>`).join('')}
+                    </select>
+                    <button type="button" onclick="removeStage(${currentStageIndex})" class="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2 rounded-lg transition" title="Eliminar esta etapa"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+
+            // Formulario de los detalles de la etapa seleccionada
+            html += `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 bg-slate-900/80 p-5 rounded-xl border border-slate-700">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Nombre de la Etapa</label>
+                        <input type="text" value="${stage.name || ''}" placeholder="Ej: Etapa 1 - Turín" class="input-dark w-full rounded p-3 text-sm font-bold" onchange="updateStageField('name', this.value)">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Tipo de Perfil</label>
+                        <select class="input-dark w-full rounded p-3 text-sm" onchange="updateStageField('type', this.value)">
                             <option value="Llana" ${stage.type === 'Llana' ? 'selected' : ''}>Llana</option>
                             <option value="Montaña" ${stage.type === 'Montaña' ? 'selected' : ''}>Montaña</option>
-                            <option value="Media Montaña" ${stage.type === 'Media Montaña' ? 'selected' : ''}>M. Montaña</option>
+                            <option value="Media Montaña" ${stage.type === 'Media Montaña' ? 'selected' : ''}>Media Montaña</option>
                             <option value="CRI" ${stage.type === 'CRI' ? 'selected' : ''}>Crono (CRI)</option>
                             <option value="CRE" ${stage.type === 'CRE' ? 'selected' : ''}>Crono Eq (CRE)</option>
                             <option value="Clásica" ${stage.type === 'Clásica' ? 'selected' : ''}>Clásica</option>
                         </select>
-                        <button type="button" onclick="removeStage(${index})" class="text-red-500 hover:text-red-400 p-2"><i class="fas fa-trash"></i></button>
                     </div>
-                `;
-            });
-            html += `</div>`;
-            container.innerHTML = html;
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Distancia (km)</label>
+                            <input type="text" value="${stage.km || ''}" placeholder="Ej: 156.5" class="input-dark w-full rounded p-3 text-sm" onchange="updateStageField('km', this.value)">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Desnivel (m)</label>
+                            <input type="text" value="${stage.desnivel || ''}" placeholder="Ej: 2500" class="input-dark w-full rounded p-3 text-sm" onchange="updateStageField('desnivel', this.value)">
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Imagen del Perfil (URL/Ruta)</label>
+                        <input type="text" value="${stage.profile || ''}" placeholder="Ej: assets/profiles/stage1.jpg" class="input-dark w-full rounded p-3 text-sm text-cyan-400 font-mono" onchange="updateStageField('profile', this.value)">
+                    </div>
+                </div>
+            `;
+            
+            if (container) container.innerHTML = html;
         }
 
-        function updateTotalStages(val) { tempDetails.totalEtapas = parseInt(val) || 1; }
-        function updateStageField(index, field, value) { tempDetails.etapas[index][field] = value; }
+        // Acciones del constructor de etapas
+        function changeStageSelection(index) {
+            currentStageIndex = parseInt(index);
+            renderStageBuilder(document.getElementById('stage-builder-container'));
+        }
+
+        function updateStageField(field, value) {
+            tempDetails.etapas[currentStageIndex][field] = value;
+            // Si cambiamos el nombre, repintamos para que se actualice el nombre en el desplegable superior
+            if(field === 'name') {
+                renderStageBuilder(document.getElementById('stage-builder-container'));
+            }
+        }
+
         function addStage() {
-            tempDetails.etapas.push({ name: `Etapa ${tempDetails.etapas.length + 1}`, type: 'Llana' });
+            const nextNum = tempDetails.etapas.length + 1;
+            tempDetails.etapas.push({ 
+                name: `Etapa ${nextNum}`, 
+                type: 'Llana',
+                km: '',
+                desnivel: '',
+                profile: ''
+            });
+            // Hacemos que la nueva etapa sea la que está seleccionada para editar
+            currentStageIndex = tempDetails.etapas.length - 1; 
             renderStageBuilder(document.getElementById('stage-builder-container'));
         }
+
         function removeStage(index) {
+            if(!confirm("⚠️ ¿Eliminar esta etapa?")) return;
             tempDetails.etapas.splice(index, 1);
+            if (currentStageIndex >= tempDetails.etapas.length) {
+                currentStageIndex = Math.max(0, tempDetails.etapas.length - 1);
+            }
             renderStageBuilder(document.getElementById('stage-builder-container'));
         }
+        function updateTotalStages(val) { tempDetails.totalEtapas = parseInt(val) || 1; }
 
         // --- CONSTRUCTOR VISUAL DE CICLISTAS (EQUIPOS) ---
         function renderRiderBuilder(container) {
             let html = `
                 <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
                     <span class="text-sm text-slate-300 font-bold">Ciclistas registrados: ${tempRiders.length}</span>
-                    <button type="button" onclick="addRider()" class="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-black px-3 py-1 rounded text-xs font-bold transition">+ Añadir Ciclista</button>
+                    <button type="button" onclick="addRider()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-lg">+ Añadir Ciclista</button>
                 </div>
                 <div id="riders-list" class="grid grid-cols-1 md:grid-cols-2 gap-2">
             `;
             
             tempRiders.forEach((rider, index) => {
                 html += `
-                    <div class="json-builder-item justify-between bg-slate-800/50">
-                        <input type="text" value="${rider.name || ''}" placeholder="Nombre del Ciclista" class="input-dark flex-1 rounded p-2 text-sm font-bold text-white" onchange="updateRiderField(${index}, this.value)">
-                        <button type="button" onclick="removeRider(${index})" class="text-red-500 hover:text-red-400 p-2"><i class="fas fa-times"></i></button>
+                    <div class="json-builder-item justify-between bg-slate-800/50 hover:border-emerald-500/50 transition-colors">
+                        <input type="text" value="${rider.name || ''}" placeholder="Nombre del Ciclista" class="input-dark flex-1 rounded p-2 text-sm font-bold text-white border-transparent focus:border-emerald-500 bg-transparent" onchange="updateRiderField(${index}, this.value)">
+                        <button type="button" onclick="removeRider(${index})" class="text-slate-500 hover:text-red-400 p-2 transition"><i class="fas fa-times"></i></button>
                     </div>
                 `;
             });
@@ -359,7 +428,7 @@
 
         function updateRiderField(index, value) { tempRiders[index] = { name: value }; }
         function addRider() {
-            tempRiders.unshift({ name: "" }); // Añade al principio para que sea visible rápido
+            tempRiders.unshift({ name: "" }); 
             renderRiderBuilder(document.getElementById('rider-builder-container'));
         }
         function removeRider(index) {
@@ -388,7 +457,6 @@
                 dataObj['details'] = JSON.stringify(tempDetails);
             }
             if (currentTable === 'equipos') {
-                // Filtramos por si ha dejado algún nombre en blanco
                 const cleanRiders = tempRiders.filter(r => r.name.trim() !== '');
                 dataObj['riders'] = JSON.stringify(cleanRiders);
             }
