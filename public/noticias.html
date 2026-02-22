@@ -137,7 +137,7 @@
             showSkeletons();
             try {
                 // Intentamos API (si estás en local con server.js)
-                const response = await fetch('/api/noticias');
+                const response = await fetch('/api/news');
                 if (response.ok) {
                     const data = await response.json();
                     if (data && data.length > 0) {
