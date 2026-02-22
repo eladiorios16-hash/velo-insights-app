@@ -8,6 +8,11 @@
     <meta name="description" content="Archivo profundo de análisis técnico de ciclismo WorldTour. Datos, vatios y tecnología.">
     <meta name="theme-color" content="#050505">
     
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="VELO INSIGHTS | Technical Journal">
+    <meta property="og:description" content="No cubrimos rumores, cubrimos vatios. Análisis profundo del pelotón profesional.">
+    
+    <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -52,7 +57,7 @@
         .modal-scroll::-webkit-scrollbar-track { background: #050505; }
         .modal-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
 
-        /* Modal Transiciones - Corregido para scroll */
+        /* Modal Transiciones */
         #article-modal { transition: opacity 0.3s ease; }
         .modal-hidden { opacity: 0; pointer-events: none; }
         .modal-visible { opacity: 1; pointer-events: auto; }
@@ -69,15 +74,23 @@
 
     <header class="pt-28 md:pt-40 pb-8 md:pb-12 px-4 md:px-6 max-w-7xl mx-auto text-center md:text-left reveal-on-scroll">
         <h1 class="text-4xl md:text-6xl font-heading text-white italic uppercase tracking-tighter mb-4 drop-shadow-2xl">The Journal <span class="text-cyan-500">///</span></h1>
-        <p class="text-zinc-500 max-w-lg font-medium text-xs md:text-base mx-auto md:mx-0">Archivo profundo de análisis técnico. No cubrimos rumores, cubrimos vatios.</p>
+        <p class="text-zinc-500 max-w-lg font-medium text-xs md:text-base mx-auto md:mx-0 mb-8">Archivo profundo de análisis técnico. No cubrimos rumores, cubrimos vatios.</p>
+        
+        <div class="max-w-xl relative group px-2 md:px-0">
+            <input type="text" id="news-search" placeholder="BUSCAR NOTICIAS..." 
+                   class="w-full bg-zinc-900/80 border border-zinc-800 rounded-full py-3 md:py-4 px-6 text-white outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(34,211,238,0.1)] transition-all uppercase font-bold tracking-wider text-xs md:text-sm placeholder-zinc-600">
+            <div class="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-cyan-500 transition-colors hidden md:block">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 mb-20">
         
-        <div class="lg:hidden col-span-1 overflow-x-auto pb-4 custom-scrollbar flex gap-3 fixed top-20 left-0 w-full z-40 bg-[#050505]/95 backdrop-blur-md py-3 px-4 border-b border-white/5 transition-all shadow-md" id="mobile-filters">
+        <div class="lg:hidden col-span-1 overflow-x-auto pb-4 custom-scrollbar flex gap-3 relative z-30 py-3 -mx-4 px-4 border-b border-zinc-800/50" id="mobile-filters">
             </div>
 
-        <div class="col-span-1 lg:col-span-2 pt-16 lg:pt-0">
+        <div class="col-span-1 lg:col-span-2 pt-4 lg:pt-0">
             <div id="news-feed">
                 <div class="border-b border-zinc-900 pb-12">
                     <div class="aspect-[21/9] w-full skeleton mb-8"></div>
@@ -121,12 +134,12 @@
         let allGlossary = []; 
         let currentTag = 'ALL';
         let visibleCount = 5; // 1 Hero + 4 Grid (Carga inicial)
-        let currentArticleImage = ''; // Guardar imagen para compartir
         
         const feed = document.getElementById('news-feed');
         const loadMoreContainer = document.getElementById('load-more-container');
         const modal = document.getElementById('article-modal');
         const modalContent = document.getElementById('modal-content');
+        const searchInput = document.getElementById('news-search');
 
         const TAG_COLORS = {
             'TECH LAB': { mobile: 'bg-emerald-900/30 border-emerald-500/30 text-emerald-500', bg: 'bg-emerald-500', text: 'text-black', hover: 'hover:border-emerald-500' },
@@ -156,7 +169,7 @@
                         allNews = data;
                         allNews.sort((a, b) => b.id - a.id); // Orden cronológico inverso
                         generateFilters();
-                        renderFeed('ALL');
+                        renderFeed();
                         
                         // Si hay URL profunda, abrir la noticia
                         const urlParams = new URLSearchParams(window.location.search);
@@ -167,7 +180,7 @@
                 }
                 throw new Error("API vacía");
             } catch (error) {
-                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest border border-zinc-800 border-dashed rounded-2xl">No hay noticias publicadas en la base de datos.</p>`;
+                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest">No hay noticias publicadas en la base de datos.</p>`;
             }
         }
 
@@ -210,17 +223,31 @@
                 else btn.classList.remove('active');
             });
 
-            renderFeed(tag);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            renderFeed();
         };
 
         window.loadMore = () => {
             visibleCount += 4; // Añadir 4 noticias al hacer clic
-            renderFeed(currentTag);
+            renderFeed();
         };
 
-        function renderFeed(filterTag) {
-            let filteredNews = filterTag === 'ALL' ? allNews : allNews.filter(n => (n.tag || '').toUpperCase() === filterTag);
+        // Escuchar el buscador
+        searchInput.addEventListener('input', () => {
+            visibleCount = 5; // Resetear cuenta al buscar
+            renderFeed();
+        });
+
+        function renderFeed() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            
+            // Filtrado múltiple (por Tag y por Buscador)
+            let filteredNews = allNews.filter(n => {
+                const matchesTag = currentTag === 'ALL' || (n.tag || '').toUpperCase() === currentTag;
+                const matchesSearch = n.title.toLowerCase().includes(searchTerm) || 
+                                      (n.lead && n.lead.toLowerCase().includes(searchTerm)) || 
+                                      (n.content && n.content.toLowerCase().includes(searchTerm));
+                return matchesTag && matchesSearch;
+            });
 
             if (filteredNews.length === 0) {
                 feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono uppercase text-xs">Sin resultados.</p>`;
@@ -234,7 +261,7 @@
 
             let html = '';
 
-            // 1. RENDERIZAR HERO
+            // 1. RENDERIZAR HERO (DISEÑO FIEL A LA CAPTURA)
             if (hero) {
                 const heroTag = TAG_COLORS[(hero.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
                 html += `
@@ -261,7 +288,7 @@
                 `;
             }
 
-            // 2. RENDERIZAR CUADRÍCULA
+            // 2. RENDERIZAR CUADRÍCULA (RESTO)
             if (rest.length > 0) {
                 html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">`;
                 html += rest.map((news, idx) => {
@@ -307,9 +334,6 @@
 
             window.history.pushState({ articleId: id }, '', `?article=${id}`);
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
-            
-            // Guardamos la imagen para la función de compartir
-            currentArticleImage = article.image || '';
 
             // --- 1. DETECTOR DEL GLOSARIO (VELO DICTIONARY) ---
             let glossaryHTML = '';
@@ -362,7 +386,7 @@
                 </div>`;
             }
 
-            // --- 3. RENDERIZADO DEL MODAL ---
+            // --- 3. RENDERIZADO DEL MODAL (IMAGEN ARRIBA, TEXTO ABAJO) ---
             modalContent.innerHTML = `
                 <div class="h-[30vh] md:h-[50vh] w-full relative border-b border-zinc-900">
                     <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-90">
@@ -386,7 +410,7 @@
 
                         <div class="mt-12 md:mt-16 pt-8 md:pt-10 border-t border-zinc-900 text-center">
                             <p class="text-[10px] text-zinc-600 uppercase font-black tracking-widest mb-4">Fin del Análisis</p>
-                            <button onclick="shareNative()" class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-cyan-500 transition-all active:scale-95">
+                            <button onclick="shareNative('${article.image || ''}')" class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-cyan-500 transition-all active:scale-95">
                                 <svg class="w-4 h-4 text-zinc-400 group-hover:text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                                 <span id="share-btn-text" class="text-[10px] font-bold uppercase text-zinc-300 group-hover:text-white tracking-widest">Compartir Artículo</span>
                             </button>
@@ -399,42 +423,39 @@
             modal.classList.add('modal-visible');
             document.body.style.overflow = 'hidden';
             
-            // Forzar que el scroll inicie desde arriba
-            modal.scrollTop = 0;
+            // Forzar que el modal inicie el scroll desde arriba del todo
             const scrollContainer = document.getElementById('modal-scroll-container');
             if (scrollContainer) scrollContainer.scrollTop = 0;
+            modal.scrollTop = 0; 
         };
 
         window.closeArticle = () => {
             modal.classList.remove('modal-visible');
             modal.classList.add('modal-hidden');
-            document.body.style.overflow = 'auto'; // Devuelve el scroll al feed
+            document.body.style.overflow = 'auto'; 
             
             const url = new URL(window.location);
             url.searchParams.delete('article');
             window.history.pushState({}, '', url);
         };
 
-        // --- FUNCIÓN COMPARTIR MEJORADA (Incluye imagen) ---
-        window.shareNative = async () => {
+        // --- FUNCIÓN DE COMPARTIR ACTUALIZADA ---
+        window.shareNative = async (imageUrl = '') => {
             const titleElement = document.querySelector('#modal-content h1');
             const title = titleElement ? titleElement.innerText : 'VELO INSIGHTS';
             const url = window.location.href;
-            
-            // Construir el objeto a compartir
-            const shareData = {
+
+            // Preparamos los datos a compartir
+            let shareData = {
                 title: 'VELO INSIGHTS',
                 text: title,
                 url: url
             };
 
-            // Intentar adjuntar la imagen si la API y el navegador lo soportan
             if (navigator.share) {
-                try {
-                    await navigator.share(shareData);
-                } catch (err) {
-                    console.log('Error al compartir o usuario canceló:', err);
-                }
+                try { 
+                    await navigator.share(shareData); 
+                } catch (err) {}
             } else {
                 try {
                     await navigator.clipboard.writeText(url);
