@@ -152,6 +152,7 @@
                 if (resNews && resNews.ok) {
                     const data = await resNews.json();
                     if (data && data.length > 0) {
+                        // ORDENAMOS TODAS LAS NOTICIAS DE MÁS NUEVA A MÁS ANTIGUA
                         allNews = data.sort((a, b) => b.id - a.id); 
                         generateFilters(); renderFeed();
                         const articleId = new URLSearchParams(window.location.search).get('article');
@@ -255,52 +256,55 @@
             } else loadMoreContainer.innerHTML = '';
         }
 
-        // --- EL NUEVO ALGORITMO DE SUGERENCIAS ---
-        function getSimilarArticles(currentArticle) {
-            // Palabras comunes a ignorar para el SEO
-            const stopWords = ['para', 'como', 'pero', 'este', 'esta', 'sobre', 'entre', 'cuando', 'desde', 'hasta', 'tiene', 'también', 'puede', 'hacia', 'donde', 'porque', 'todo'];
+        // --- EL NUEVO ALGORITMO DE SUGERENCIAS "EXPLORACIÓN VS EXPLOTACIÓN" ---
+        function getSmartSuggestions(currentArticle) {
+            // Si solo hay una noticia en toda la base de datos, no hay nada que sugerir
+            if (allNews.length <= 1) return [];
 
-            // Función para extraer palabras clave de un texto
+            const stopWords = ['para', 'como', 'pero', 'este', 'esta', 'sobre', 'entre', 'cuando', 'desde', 'hasta', 'tiene', 'también', 'puede', 'hacia', 'donde', 'porque', 'todo'];
             const extractKeywords = (text) => {
                 if (!text) return [];
                 const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/[^\w\sáéíóúüñ]/gi, '').toLowerCase();
                 return cleanText.split(/\s+/).filter(w => w.length > 3 && !stopWords.includes(w));
             };
 
-            // Extraemos las palabras clave del título y entradilla del artículo actual
             const baseText = currentArticle.title + " " + (currentArticle.lead || "");
             const currentKeywords = [...new Set(extractKeywords(baseText))];
 
-            // Puntuamos todos los demás artículos
+            // 1. Buscamos el MEJOR MATCH (Explotación)
             let scoredArticles = allNews.filter(n => n.id != currentArticle.id).map(article => {
                 let score = 0;
+                if ((article.tag || '').toUpperCase() === (currentArticle.tag || '').toUpperCase()) score += 50; 
                 
-                // 1. Puntos masivos si son de la misma categoría
-                if ((article.tag || '').toUpperCase() === (currentArticle.tag || '').toUpperCase()) {
-                    score += 50; 
-                }
-
-                // 2. Comparamos palabras clave
                 const targetText = (article.title + " " + (article.lead || "") + " " + (article.content || "")).toLowerCase();
-                
                 currentKeywords.forEach(kw => {
-                    // Puntos muy altos si comparten palabras en el Título (ej: Vingegaard, Aerodinámica)
                     if (article.title.toLowerCase().includes(kw)) score += 15;
-                    // Puntos normales si la palabra está en el cuerpo del texto
                     else if (targetText.includes(kw)) score += 2;
                 });
-
-                // Para evitar empates matemáticos, añadimos un pequeño factor aleatorio mínimo
-                score += Math.random();
-
+                score += Math.random(); // Factor aleatorio para desempates
                 return { article, score };
             });
 
-            // Ordenamos los artículos según su puntuación
             scoredArticles.sort((a, b) => b.score - a.score);
+            let bestMatch = scoredArticles.length > 0 ? scoredArticles[0].article : null;
 
-            // Devolvemos las 2 mejores coincidencias
-            return scoredArticles.slice(0, 2).map(item => item.article);
+            // 2. Buscamos la NOTICIA MÁS RECIENTE para romper la burbuja (Exploración)
+            // Recordamos que 'allNews' ya viene ordenada de más nueva a más antigua
+            let latestNews = allNews.find(n => n.id != currentArticle.id && (!bestMatch || n.id != bestMatch.id));
+
+            let suggestions = [];
+            
+            // Metemos la noticia similar primero (y le ponemos su "razón")
+            if (bestMatch) {
+                suggestions.push({ article: bestMatch, reason: '🔥 Relacionado' });
+            }
+            
+            // Metemos la noticia más nueva después
+            if (latestNews) {
+                suggestions.push({ article: latestNews, reason: '⚡ Lo Último' });
+            }
+
+            return suggestions;
         }
 
         window.openArticle = (id) => {
@@ -327,26 +331,29 @@
                 </div>`;
             }
 
-            // Ejecutamos nuestro nuevo algoritmo inteligente
-            const finalSuggestions = getSimilarArticles(article);
+            // Conseguimos las sugerencias con nuestro algoritmo "1+1"
+            const smartSuggestions = getSmartSuggestions(article);
 
             let similarHTML = '';
-            if (finalSuggestions.length > 0) {
+            if (smartSuggestions.length > 0) {
                 similarHTML = `
                 <div class="mt-12 pt-12 border-t border-zinc-900">
-                    <h3 class="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-8 border-l-2 border-cyan-500 pl-3">Lecturas Relacionadas</h3>
+                    <h3 class="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-8 border-l-2 border-cyan-500 pl-3">Lecturas Sugeridas</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        ${finalSuggestions.map(s => {
-                            const sTagData = TAG_COLORS[(s.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+                        ${smartSuggestions.map(s => {
+                            const sugArticle = s.article;
+                            const sTagData = TAG_COLORS[(sugArticle.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
                             const textColor = sTagData.text === 'text-white' ? 'text-white' : 'text-cyan-400';
+                            
+                            // Añadimos la razón de la sugerencia encima del título
                             return `
-                            <div class="group cursor-pointer flex gap-4 items-center bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/50 hover:border-zinc-700 transition-colors" onclick="openArticle('${s.id}')">
-                                <div class="w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-zinc-900">
-                                    <img src="${s.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                            <div class="group cursor-pointer flex gap-4 items-center bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/50 hover:border-zinc-700 transition-colors" onclick="openArticle('${sugArticle.id}')">
+                                <div class="w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-zinc-900 relative">
+                                    <img src="${sugArticle.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
                                 </div>
-                                <div class="flex-1">
-                                    <span class="text-[9px] font-black ${textColor} uppercase tracking-widest">${s.tag || 'INFO'}</span>
-                                    <h4 class="text-sm font-bold text-zinc-200 group-hover:text-white mt-1 leading-tight line-clamp-2">${s.title}</h4>
+                                <div class="flex-1 flex flex-col justify-center">
+                                    <span class="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">${s.reason}</span>
+                                    <h4 class="text-sm font-bold text-zinc-200 group-hover:text-white leading-tight line-clamp-2">${sugArticle.title}</h4>
                                 </div>
                             </div>
                             `;
