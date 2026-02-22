@@ -122,7 +122,7 @@
         
         <div id="no-results" class="hidden text-center py-20 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20">
             <p class="text-zinc-600 uppercase font-black tracking-widest text-xs">No se encontraron definiciones</p>
-            <button onclick="filterGlosario('all'); document.getElementById('term-search').value = ''" class="mt-4 text-[10px] font-bold text-cyan-500 underline hover:text-white transition-colors">Ver todo</button>
+            <button onclick="filterGlosario('all'); document.getElementById('term-search').value = ''; applyFilters();" class="mt-4 text-[10px] font-bold text-cyan-500 underline hover:text-white transition-colors">Ver todo</button>
         </div>
     </main>
 
@@ -182,7 +182,18 @@
                     if (sqlData && sqlData.length > 0) {
                         fullGlossary = sqlData;
                         fullGlossary.sort((a, b) => a.term.localeCompare(b.term));
-                        renderGlossary(fullGlossary);
+                        
+                        // --- MAGIA: BÚSQUEDA AUTOMÁTICA DESDE NOTICIAS ---
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const searchTerm = urlParams.get('term');
+                        
+                        if (searchTerm) {
+                            searchInput.value = searchTerm; // Escribe el término automáticamente
+                            applyFilters(); // Aplica el filtro con esa palabra
+                        } else {
+                            renderGlossary(fullGlossary); // Si no hay palabra, muestra todo normal
+                        }
+                        
                     } else {
                          container.innerHTML = `<p class="text-zinc-500 text-center col-span-3 text-xs uppercase font-bold">Base de datos vacía.</p>`;
                     }
