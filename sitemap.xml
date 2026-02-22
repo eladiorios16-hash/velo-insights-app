@@ -1,0 +1,64 @@
+// --- RUTA SITEMAP PARA GOOGLE SEO ---
+app.get('/sitemap.xml', async (req, res) => {
+    try {
+        // 1. Pon aquí tu dominio real en internet
+        const baseUrl = 'https://www.tudominio.com'; 
+
+        let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+        xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+        // 2. Añadir las páginas estáticas principales
+        const staticPages = ['/', '/noticias.html', '/glosario.html', '/calendario.html', '/ranking.html'];
+        staticPages.forEach(page => {
+            xml += `  <url>\n`;
+            xml += `    <loc>${baseUrl}${page}</loc>\n`;
+            xml += `    <changefreq>daily</changefreq>\n`;
+            xml += `    <priority>1.0</priority>\n`;
+            xml += `  </url>\n`;
+        });
+
+        // 3. Obtener Noticias de tu Base de Datos
+        // NOTA: Ajusta esta consulta según cómo llames a tu BD en server.js (ej: db.all, db.query, etc.)
+        const noticias = await new Promise((resolve, reject) => {
+            db.all("SELECT id, date FROM news ORDER BY id DESC", [], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+
+        noticias.forEach(news => {
+            xml += `  <url>\n`;
+            xml += `    <loc>${baseUrl}/noticias.html?article=${news.id}</loc>\n`;
+            xml += `    <changefreq>weekly</changefreq>\n`;
+            xml += `    <priority>0.8</priority>\n`;
+            xml += `  </url>\n`;
+        });
+
+        // 4. Obtener Términos del Glosario de tu Base de Datos
+        const glosario = await new Promise((resolve, reject) => {
+            db.all("SELECT term FROM glossary", [], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+
+        glosario.forEach(item => {
+            xml += `  <url>\n`;
+            // Usamos encodeURIComponent para que palabras con tildes (ej: Pavé) sean válidas en la URL
+            xml += `    <loc>${baseUrl}/glosario.html?term=${encodeURIComponent(item.term)}</loc>\n`;
+            xml += `    <changefreq>monthly</changefreq>\n`;
+            xml += `    <priority>0.6</priority>\n`;
+            xml += `  </url>\n`;
+        });
+
+        xml += `</urlset>`;
+
+        // 5. Enviar al navegador como archivo XML puro
+        res.header('Content-Type', 'application/xml');
+        res.send(xml);
+
+    } catch (error) {
+        console.error('Error generando sitemap:', error);
+        res.status(500).send('Error generando sitemap');
+    }
+});
