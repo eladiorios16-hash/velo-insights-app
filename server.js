@@ -5,7 +5,7 @@ const path = require('path');
 const db = require('./db');
 
 // --- 1. CONFIGURACIÓN IA (VELO COPILOT) ---
-const GEMINI_API_KEY = "AIzaSyCrSBfWeCsaJhcchjrJTzuxhdWTkyY1mwI"; // <-- PEGA AQUÍ TU CLAVE DE GOOGLE AI STUDIO
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // <-- PEGA AQUÍ TU CLAVE DE GOOGLE AI STUDIO
 const { GoogleGenAI } = require('@google/genai');
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
