@@ -39,22 +39,22 @@ app.get('/admin', authMiddleware, (req, res) => {
 app.post('/api/admin/copilot', authMiddleware, async (req, res) => {
     const { prompt, type } = req.body;
 
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === "AIzaSyCrSBfWeCsaJhcchjrJTzuxhdWTkyY1mwI") {
-        return res.status(500).json({ error: "API Key de IA no configurada en el servidor." });
+    // Usamos process.env para que lo lea de Railway de forma segura
+    if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "API Key de IA no configurada en las variables de entorno de Railway." });
     }
 
     try {
         let systemInstruction = "";
 
-        // Instrucciones secretas para que la IA escriba como tú
         if (type === 'article') {
             systemInstruction = `
             Eres el Editor Jefe de 'Velo Insights', una revista digital de ciclismo muy técnica, centrada en datos (W/kg, CdA, Crr), telemetría y táctica.
             Escribe un artículo completo en formato HTML basado en el prompt del usuario.
             REGLAS ESTRICTAS DE FORMATO:
             1. No incluyas etiquetas <html>, <head> o <body>. Solo el contenido puro.
-            2. El primer párrafo DEBE empezar con esta clase para la letra gigante: <p class="drop-cap-pink intro-text"> (o drop-cap si prefieres color cian).
-            3. Usa <h3> para los subtítulos, con este formato: <h3 class="text-cyan-400 border-l-4 border-cyan-400 pl-3 mt-12">TITULO</h3> (puedes cambiar cyan por violet, pink o red según el tema).
+            2. El primer párrafo DEBE empezar con esta clase para la letra gigante: <p class="drop-cap-pink intro-text">
+            3. Usa <h3> para los subtítulos, con este formato: <h3 class="text-cyan-400 border-l-4 border-cyan-400 pl-3 mt-12">TITULO</h3>
             4. Resalta nombres de corredores importantes con clases de Tailwind, ej: <strong class="text-white">Pogacar</strong> o <span class="text-pink-400 font-bold">Evenepoel</span>.
             5. Si mencionas datos clave de potencia, mételos en una caja de Telemetry Insight con este código exacto:
                <div class="my-10 p-6 md:p-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-950/60 to-[#050505] border border-cyan-500/30">
@@ -65,7 +65,6 @@ app.post('/api/admin/copilot', authMiddleware, async (req, res) => {
         } else if (type === 'telemetry') {
             systemInstruction = `
             Genera únicamente el código HTML de una caja 'Telemetry Insight' basada en los datos proporcionados.
-            Usa colores cian para sprints, rojo para general, violeta para montaña o rosa para aerodinámica.
             FORMATO ESTRICTO:
             <div class="my-10 p-6 md:p-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-[COLOR]-950/60 to-[#050505] border border-[COLOR]-500/30">
             <p class="text-[10px] font-black uppercase text-[COLOR]-400 tracking-widest mb-4">Telemetry Insight // [TIPO DE DATO]</p>
@@ -75,26 +74,33 @@ app.post('/api/admin/copilot', authMiddleware, async (req, res) => {
         }
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash', // El modelo más rápido para texto
+            model: 'gemini-2.5-flash',
             contents: prompt,
             config: {
                 systemInstruction: systemInstruction,
-                temperature: 0.7 // Un poco de creatividad, pero manteniendo el rigor técnico
+                temperature: 0.7,
+                // He relajado un poco el filtro a BLOCK_ONLY_HIGH en lugar de BLOCK_NONE 
+                // para evitar que Google rechace la petición por permisos de cuenta gratuita.
+                safetySettings: [
+                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
+                ]
             }
         });
 
-        // Limpiar la respuesta por si la IA añade markdown de bloque de código (```html ... ```)
         let cleanText = response.text;
         cleanText = cleanText.replace(/^```html\n?/gm, '').replace(/^```\n?/gm, '').replace(/```$/gm, '');
 
         res.json({ result: cleanText });
 
     } catch (error) {
-        console.error("Error en Copilot IA:", error);
-        res.status(500).json({ error: "Fallo en la comunicación con el cerebro IA." });
+        console.error("Error detallado de Google AI:", error);
+        // ✨ LA MAGIA: Ahora devolverá el mensaje exacto del error de Google
+        res.status(500).json({ error: error.message || "Error desconocido al conectar con Gemini" });
     }
 });
-
 
 // --- 6. API MAESTRA DE ADMINISTRACIÓN ---
 
