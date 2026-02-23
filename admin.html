@@ -47,13 +47,13 @@
         </div>
     </main>
 
-    <div id="modal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-center z-50 p-4 backdrop-blur-sm transition-opacity">
-        <div class="modal-glass w-full max-w-4xl max-h-[90vh] rounded-2xl flex flex-col shadow-2xl">
+    <div id="modal" class="fixed inset-0 bg-black/95 hidden flex justify-center items-center z-50 p-4 backdrop-blur-sm transition-opacity">
+        <div class="modal-glass w-full max-w-4xl max-h-[95vh] rounded-2xl flex flex-col shadow-2xl">
             <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-2xl">
                 <h2 id="modal-title" class="text-xl font-bold text-white flex items-center gap-3">✏️ Editar Elemento</h2>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-700"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-8 overflow-y-auto flex-1 custom-scrollbar">
+            <div class="p-8 overflow-y-auto flex-1 custom-scrollbar bg-[#0f172a]">
                 <form id="dynamicForm" class="grid grid-cols-1 gap-6"></form>
             </div>
             <div class="p-6 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex justify-end gap-4">
@@ -70,15 +70,14 @@
         let isEditing = false;
         let editId = null;
 
-        // Variables de estado para los constructores
-        let tempDetails = { etapas: [] }; 
+        // Variables globales para los constructores
+        let tempDetails = { totalEtapas: 1, etapas: [] }; 
         let currentStageIndex = 0; 
         let tempRiders = []; 
-        let calendarDetailsKey = 'details'; // Clave dinámica para la BBDD
 
         const templates = {
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
-            calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{"etapas":[]}', winner: null },
+            calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{"totalEtapas":1, "etapas":[]}', winner: null },
             equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
             glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
             trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' },
@@ -89,7 +88,7 @@
             try {
                 const res = await fetch('/api/teams');
                 if(res.ok) globalTeamsData = await res.json();
-            } catch (e) { console.error("Error cargando equipos", e); }
+            } catch (e) {}
         }
         fetchGlobalTeams();
 
@@ -117,7 +116,11 @@
 
         function renderUI(data) {
             const container = document.getElementById('content-area');
-            let extraBtn = currentTable === 'trending' ? `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 mr-3 shadow-lg transition-transform active:scale-95"><i class="fas fa-brain"></i> AUTO-GENERAR (IA)</button>` : '';
+            
+            let extraBtn = '';
+            if (currentTable === 'trending') {
+                extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 mr-3 shadow-lg transition-transform active:scale-95"><i class="fas fa-brain"></i> AUTO-GENERAR (IA)</button>`;
+            }
 
             let headerHtml = `
                 <div class="flex justify-between items-center mb-6">
@@ -129,13 +132,13 @@
                 </div>`;
 
             if (!data || data.length === 0) { 
-                container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10 bg-slate-900/50 rounded-xl border border-slate-800">No hay datos en esta categoría.</div>'; 
+                container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10 bg-slate-900/50 rounded-xl border border-slate-800">No hay datos en esta categoría. Puedes añadirlos a mano o usar el auto-generador.</div>'; 
                 return; 
             }
 
             const keys = Object.keys(data[0]);
-            const hiddenCols = ['id', 'riders', 'details', 'etapas', 'content', 'profile', 'riders_json', 'insight'];
-            const displayCols = keys.filter(k => !hiddenCols.includes(k.toLowerCase())).slice(0, 5);
+            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight'];
+            const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
 
             let tableHtml = `<div class="overflow-hidden rounded-xl border border-slate-700 shadow-2xl"><table class="w-full text-left text-sm text-slate-300">
                 <thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr>
@@ -144,7 +147,8 @@
                 </tr></thead>
                 <tbody class="divide-y divide-slate-700 bg-slate-900/40">`;
 
-            let renderData = currentTable === 'ranking' ? [...data].sort((a, b) => b.points - a.points) : data;
+            let renderData = data;
+            if (currentTable === 'ranking') renderData = [...data].sort((a, b) => b.points - a.points);
 
             renderData.forEach(row => {
                 tableHtml += `<tr class="hover:bg-slate-800/60 transition group">`;
@@ -155,6 +159,7 @@
                     else if (col === 'points' && currentTable === 'ranking') val = `<span class="text-amber-400 font-bold text-base">${val} PTS</span>`;
                     else if (typeof val === 'string' && val.startsWith('assets/')) val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md border border-slate-700">`;
                     else if (typeof val === 'string' && val.length > 40) val = val.substring(0, 40) + '...';
+                    
                     tableHtml += `<td class="p-4 font-medium">${val || '-'}</td>`;
                 });
                 tableHtml += `<td class="p-4 text-right flex justify-end gap-2">
@@ -185,7 +190,7 @@
             form.innerHTML = '';
             
             for (const [key, value] of Object.entries(data)) {
-                if (key.toLowerCase() === 'id') continue;
+                if (key === 'id') continue;
                 
                 const wrapper = document.createElement('div');
                 wrapper.id = `wrapper-${key}`;
@@ -195,101 +200,125 @@
                 
                 let input;
 
-                // --- 1. CONSTRUCTOR DE ETAPAS (CALENDARIO) ---
-                let isCalendarField = currentTable === 'calendario' && ['details', 'etapas', 'stages'].includes(key.toLowerCase());
-                
-                if (isCalendarField) {
-                    calendarDetailsKey = key; // Guardamos el nombre real de la columna para luego
-                    label.innerText = '🗺️ PANEL DE CONTROL DE ETAPAS';
+                // --- 1. CONSTRUCTOR DE ETAPAS (TRADUCTOR UNIVERSAL DE BASES DE DATOS) ---
+                if (currentTable === 'calendario' && key === 'details') {
+                    label.innerText = 'GESTOR DE ETAPAS (SELECCIONAR ETAPA)';
                     
-                    let parsedObj = {};
+                    let parsedData = null;
                     
-                    // Traductor a prueba de fallos
-                    if (typeof value === 'string' && value.trim() !== '') {
-                        try { parsedObj = JSON.parse(value); } catch(e) {}
-                    } else if (typeof value === 'object' && value !== null) {
-                        parsedObj = JSON.parse(JSON.stringify(value));
-                    }
-                    
-                    tempDetails = { etapas: [], ...parsedObj };
-
-                    // MIGRACIÓN: Si etapas venía como un simple número (Ej: 21)
-                    if (typeof tempDetails.etapas === 'number' || typeof tempDetails.totalEtapas === 'number' && tempDetails.etapas.length === 0) {
-                        let total = tempDetails.etapas || tempDetails.totalEtapas || 1;
-                        tempDetails.etapas = [];
-                        for(let i=0; i<total; i++) {
-                            tempDetails.etapas.push({ name: `Etapa ${i+1}`, type: 'Llana', km: '', desnivel: '', profile: '' });
+                    // PASO 1: Desencriptar la Base de Datos
+                    try {
+                        let rawValue = value;
+                        if (typeof rawValue === 'string' && rawValue.trim() !== '') {
+                            parsedData = JSON.parse(rawValue);
+                            // Cazar doble stringify (muy común en SQLite)
+                            if (typeof parsedData === 'string') {
+                                parsedData = JSON.parse(parsedData);
+                            }
+                        } else if (typeof rawValue === 'object' && rawValue !== null) {
+                            parsedData = rawValue;
                         }
-                    } 
-                    
+                    } catch(e) { console.warn("Error leyendo datos, se creará vacío."); }
+
+                    // PASO 2: Transformar a la estructura limpia
+                    tempDetails = { totalEtapas: 1, etapas: [] };
+
+                    if (parsedData) {
+                        if (Array.isArray(parsedData)) {
+                            // FORMATO A: Si era una lista directa [ {etapa1}, {etapa2} ]
+                            tempDetails.etapas = parsedData;
+                            tempDetails.totalEtapas = parsedData.length;
+                        } else if (typeof parsedData === 'object') {
+                            if (Array.isArray(parsedData.etapas)) {
+                                // FORMATO B: Si ya tiene el formato correcto { etapas: [...] }
+                                tempDetails.etapas = parsedData.etapas;
+                                tempDetails.totalEtapas = parsedData.totalEtapas || parsedData.etapas.length;
+                            } else if (typeof parsedData.etapas === 'number') {
+                                // FORMATO C: Si antes guardabas solo el número { etapas: 21 }
+                                tempDetails.totalEtapas = parsedData.etapas;
+                                for(let i=0; i<parsedData.etapas; i++) {
+                                    tempDetails.etapas.push({ name: `Etapa ${i+1}`, type: 'Llana', km: '', desnivel: '', profile: '' });
+                                }
+                            } else if (typeof parsedData.totalEtapas === 'number' && !parsedData.etapas) {
+                                // FORMATO D: { totalEtapas: 21 } sin array
+                                tempDetails.totalEtapas = parsedData.totalEtapas;
+                                for(let i=0; i<parsedData.totalEtapas; i++) {
+                                    tempDetails.etapas.push({ name: `Etapa ${i+1}`, type: 'Llana', km: '', desnivel: '', profile: '' });
+                                }
+                            }
+                        }
+                    }
+
+                    // Limpieza de seguridad
                     if (!Array.isArray(tempDetails.etapas)) tempDetails.etapas = [];
+                    if (tempDetails.totalEtapas < tempDetails.etapas.length) tempDetails.totalEtapas = tempDetails.etapas.length;
+                    if (tempDetails.totalEtapas === 0) tempDetails.totalEtapas = 1;
+
                     currentStageIndex = 0; 
 
                     input = document.createElement('div');
-                    input.className = "bg-[#0f172a] p-5 rounded-xl border-2 border-blue-500/30 shadow-inner";
+                    input.className = "bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner";
                     input.id = "stage-builder-container";
                     
                     wrapper.appendChild(label);
                     wrapper.appendChild(input);
                     form.appendChild(wrapper);
-                    
                     renderStageBuilder(input);
                     continue; 
                 } 
-                // --- 2. CONSTRUCTOR DE CICLISTAS (EQUIPOS) ---
-                else if (currentTable === 'equipos' && key.toLowerCase() === 'riders') {
-                    label.innerText = '🚴‍♂️ PLANTILLA DE CICLISTAS';
+                // --- 2. CONSTRUCTOR DE CICLISTAS (TRADUCTOR UNIVERSAL) ---
+                else if (currentTable === 'equipos' && key === 'riders') {
+                    label.innerText = 'PLANTILLA DE CICLISTAS';
                     
                     tempRiders = [];
-                    if (typeof value === 'string' && value.trim() !== '') {
-                        try { 
-                            let parsed = JSON.parse(value); 
-                            if (Array.isArray(parsed)) tempRiders = parsed;
-                        } catch(e) {}
-                    } else if (Array.isArray(value)) {
-                        tempRiders = JSON.parse(JSON.stringify(value));
-                    }
+                    try {
+                        let rData = value;
+                        if (typeof rData === 'string' && rData.trim() !== '') {
+                            rData = JSON.parse(rData);
+                            if (typeof rData === 'string') rData = JSON.parse(rData); // Cazar doble stringify
+                        }
+                        if (Array.isArray(rData)) {
+                            tempRiders = rData;
+                        } else if (rData && typeof rData === 'object') {
+                            tempRiders = Object.values(rData); // Por si guardó como objeto de índices
+                        }
+                    } catch(e) {}
 
                     input = document.createElement('div');
-                    input.className = "bg-slate-900/50 p-4 rounded-xl border border-slate-700";
+                    input.className = "bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner";
                     input.id = "rider-builder-container";
                     
                     wrapper.appendChild(label);
                     wrapper.appendChild(input);
                     form.appendChild(wrapper);
-
                     renderRiderBuilder(input);
                     continue; 
                 }
-                // --- 3. CAMPOS NORMALES ---
-                else if (key === 'tag') {
-                    input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-3";
-                    ['GENERAL', 'RACE REPORT', 'TECH LAB', 'AERO LAB', 'DATA ANALYSIS', 'PREVIA'].forEach(opt => {
-                        const el = document.createElement('option'); el.value = opt; el.innerText = opt;
-                        if (value === opt) el.selected = true; input.appendChild(el);
-                    });
-                } else if (key === 'status') {
-                    input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-3";
-                    ['Upcoming', 'Live', 'Finished'].forEach(opt => {
-                        const el = document.createElement('option'); el.value = opt; el.innerText = opt;
-                        if (value === opt) el.selected = true; input.appendChild(el);
-                    });
-                } else if (['content', 'definition', 'def', 'insight'].includes(key)) {
+                // --- 3. CAMPOS ESTÁNDAR ---
+                else if (['content', 'definition', 'def', 'insight'].includes(key)) {
                     input = document.createElement('textarea');
-                    input.rows = key === 'insight' ? 3 : 8; 
+                    input.rows = 6; 
                     input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm";
                     input.value = value || '';
-                } else if (key === 'dateISO' || key === 'endDateISO') {
-                    input = document.createElement('input');
-                    input.type = "date";
+                } else if (key === 'tag' || key === 'status' || key === 'isHero') {
+                    input = document.createElement('select');
                     input.className = "input-dark w-full rounded-lg p-3";
-                    input.value = (value && typeof value === 'string') ? value.split('T')[0] : value || '';
-                } 
-                else {
+                    let opts = [];
+                    if(key==='tag') opts = ['GENERAL', 'RACE REPORT', 'TECH LAB', 'AERO LAB', 'DATA ANALYSIS', 'PREVIA'];
+                    if(key==='status') opts = ['Upcoming', 'Live', 'Finished'];
+                    if(key==='isHero') {
+                        const op1 = document.createElement('option'); op1.value="0"; op1.innerText="No"; if(value==0) op1.selected=true;
+                        const op2 = document.createElement('option'); op2.value="1"; op2.innerText="SÍ (Hero)"; if(value==1) op2.selected=true;
+                        input.appendChild(op1); input.appendChild(op2);
+                    } else {
+                        opts.forEach(o => {
+                            const el = document.createElement('option'); el.value=o; el.innerText=o; if(value===o) el.selected=true;
+                            input.appendChild(el);
+                        });
+                    }
+                } else {
                     input = document.createElement('input');
-                    input.type = "text";
+                    input.type = (key === 'dateISO' || key === 'endDateISO') ? 'date' : 'text';
                     input.className = "input-dark w-full rounded-lg p-3";
                     input.value = value || '';
                 }
@@ -301,119 +330,123 @@
             }
         }
 
-        // --- RENDERIZADOR DEL PANEL DE ETAPAS ---
+        // --- RENDERIZADOR DE ETAPAS (DESPLEGABLE AMARILLO) ---
         function renderStageBuilder(container) {
-            if (!container) container = document.getElementById('stage-builder-container');
-            if (!container) return;
-
-            let html = `
-                <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-700">
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm text-slate-300 font-bold">Etapas Creadas:</span>
-                        <span class="bg-blue-500 text-white px-3 py-1 rounded-lg font-black text-lg">${tempDetails.etapas.length}</span>
-                    </div>
-                    <button type="button" onclick="addStage()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-lg"><i class="fas fa-plus"></i> Nueva Etapa</button>
-                </div>
-            `;
-
             if (tempDetails.etapas.length === 0) {
-                html += `<div class="text-slate-500 text-sm italic text-center py-8">La carrera no tiene etapas. Pulsa en "Nueva Etapa" para empezar.</div>`;
-                container.innerHTML = html;
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-slate-400 mb-4">No hay etapas definidas.</p>
+                        <button type="button" onclick="generateStagesStructure()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3 rounded-xl font-bold shadow-lg transition transform active:scale-95">
+                            <i class="fas fa-magic mr-2"></i> GENERAR ESTRUCTURA
+                        </button>
+                    </div>`;
                 return;
             }
 
-            if (currentStageIndex >= tempDetails.etapas.length) currentStageIndex = Math.max(0, tempDetails.etapas.length - 1);
-            const stage = tempDetails.etapas[currentStageIndex] || {};
+            if (currentStageIndex >= tempDetails.etapas.length) currentStageIndex = 0;
+            const stage = tempDetails.etapas[currentStageIndex];
 
-            // EL DESPLEGABLE MÁGICO
-            html += `
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-600 mb-6 shadow-lg">
-                    <label class="block text-xs text-blue-400 font-black uppercase tracking-widest mb-3">👉 1. Elige qué etapa quieres rellenar:</label>
-                    <div class="flex gap-3">
-                        <select class="input-dark flex-1 rounded-lg p-3 font-bold text-white text-lg border-2 border-blue-500/50 focus:border-emerald-500 transition-colors" onchange="changeStageSelection(this.value)">
-                            ${tempDetails.etapas.map((s, i) => `<option value="${i}" ${i == currentStageIndex ? 'selected' : ''}>Etapa ${i+1}: ${s.name || 'Sin nombre'}</option>`).join('')}
+            container.innerHTML = `
+                <div class="flex items-center gap-3 mb-6 bg-yellow-500/10 p-4 rounded-xl border border-yellow-500/30">
+                    <div class="flex-1">
+                        <label class="block text-[10px] text-yellow-500 uppercase font-black mb-1 tracking-widest">SELECCIONA ETAPA A EDITAR</label>
+                        <select class="w-full bg-black border border-yellow-500 text-yellow-400 font-bold rounded-lg p-3 text-lg focus:ring-2 focus:ring-yellow-500 outline-none" onchange="changeStageSelection(this.value)">
+                            ${tempDetails.etapas.map((s, i) => `<option value="${i}" ${i == currentStageIndex ? 'selected' : ''}>📍 ETAPA ${i+1}: ${s.name || 'Sin nombre'}</option>`).join('')}
                         </select>
-                        <button type="button" onclick="removeStage(${currentStageIndex})" class="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-5 rounded-lg transition font-bold" title="Eliminar etapa de la lista"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div class="flex items-end h-full pt-5">
+                        <button type="button" onclick="addStage()" class="bg-slate-700 hover:bg-white hover:text-black text-white p-3 rounded-lg mr-2 transition" title="Añadir nueva etapa al final"><i class="fas fa-plus"></i></button>
+                        <button type="button" onclick="removeStage(${currentStageIndex})" class="bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white p-3 rounded-lg transition" title="Borrar etapa actual"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
 
-                <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
-                    <h3 class="text-emerald-400 text-xs font-black tracking-widest mb-4 border-b border-slate-700 pb-2">✏️ 2. DATOS DE LA ETAPA SELECCIONADA</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div class="md:col-span-2">
-                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Nombre (Salida - Llegada)</label>
-                            <input type="text" value="${stage.name || ''}" placeholder="Ej: Venaria Reale - Torino" class="input-dark w-full rounded p-3 text-sm font-bold" onchange="updateStageField('name', this.value)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Nombre de la Etapa</label>
+                        <input type="text" value="${stage.name || ''}" placeholder="Ej: Turín - Milán" class="input-dark w-full rounded p-3 text-sm font-bold text-white" oninput="updateStageField('name', this.value)">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Tipo de Perfil</label>
+                        <select class="input-dark w-full rounded p-3 text-sm font-bold text-cyan-400" onchange="updateStageField('type', this.value)">
+                            <option value="Llana" ${stage.type === 'Llana' ? 'selected' : ''}>Llana</option>
+                            <option value="Montaña" ${stage.type === 'Montaña' ? 'selected' : ''}>Montaña</option>
+                            <option value="Media Montaña" ${stage.type === 'Media Montaña' ? 'selected' : ''}>Media Montaña</option>
+                            <option value="CRI" ${stage.type === 'CRI' ? 'selected' : ''}>Crono Individual (CRI)</option>
+                            <option value="CRE" ${stage.type === 'CRE' ? 'selected' : ''}>Crono Equipos (CRE)</option>
+                            <option value="Clásica" ${stage.type === 'Clásica' ? 'selected' : ''}>Clásica</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Distancia (km)</label>
+                            <input type="text" value="${stage.km || ''}" placeholder="Ej: 180.5" class="input-dark w-full rounded p-3 text-sm" oninput="updateStageField('km', this.value)">
                         </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Tipo de Perfil</label>
-                            <select class="input-dark w-full rounded p-3 text-sm" onchange="updateStageField('type', this.value)">
-                                <option value="Llana" ${stage.type === 'Llana' ? 'selected' : ''}>Llana</option>
-                                <option value="Montaña" ${stage.type === 'Montaña' ? 'selected' : ''}>Montaña</option>
-                                <option value="Media Montaña" ${stage.type === 'Media Montaña' ? 'selected' : ''}>Media Montaña</option>
-                                <option value="CRI" ${stage.type === 'CRI' ? 'selected' : ''}>Crono (CRI)</option>
-                                <option value="CRE" ${stage.type === 'CRE' ? 'selected' : ''}>Crono Eq (CRE)</option>
-                                <option value="Clásica" ${stage.type === 'Clásica' ? 'selected' : ''}>Clásica</option>
-                            </select>
+                        <div class="flex-1">
+                            <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Desnivel (m)</label>
+                            <input type="text" value="${stage.desnivel || ''}" placeholder="Ej: 3200" class="input-dark w-full rounded p-3 text-sm" oninput="updateStageField('desnivel', this.value)">
                         </div>
-                        <div class="flex gap-4">
-                            <div class="flex-1">
-                                <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Distancia (km)</label>
-                                <input type="text" value="${stage.km || ''}" placeholder="Ej: 156.5" class="input-dark w-full rounded p-3 text-sm" onchange="updateStageField('km', this.value)">
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Desnivel (m)</label>
-                                <input type="text" value="${stage.desnivel || ''}" placeholder="Ej: 2500" class="input-dark w-full rounded p-3 text-sm" onchange="updateStageField('desnivel', this.value)">
-                            </div>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">URL de la Imagen del Perfil</label>
-                            <input type="text" value="${stage.profile || ''}" placeholder="Ej: assets/profiles/etapa1.jpg o https://..." class="input-dark w-full rounded p-3 text-sm text-cyan-400 font-mono" onchange="updateStageField('profile', this.value)">
-                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Perfil (URL Imagen)</label>
+                        <input type="text" value="${stage.profile || ''}" placeholder="assets/profiles/..." class="input-dark w-full rounded p-3 text-sm font-mono text-purple-400" oninput="updateStageField('profile', this.value)">
                     </div>
                 </div>
             `;
-            
-            container.innerHTML = html;
+        }
+
+        // --- FUNCIONES DEL CONSTRUCTOR ---
+        function generateStagesStructure() {
+            let num = prompt("¿Cuántas etapas tiene esta carrera?", "1");
+            if(num) {
+                num = parseInt(num);
+                tempDetails.etapas = [];
+                for(let i=0; i<num; i++) tempDetails.etapas.push({ name: `Etapa ${i+1}`, type: 'Llana', km: '', desnivel: '', profile: '' });
+                tempDetails.totalEtapas = num;
+                renderStageBuilder(document.getElementById('stage-builder-container'));
+            }
         }
 
         function changeStageSelection(index) {
             currentStageIndex = parseInt(index);
-            renderStageBuilder();
+            renderStageBuilder(document.getElementById('stage-builder-container'));
         }
 
         function updateStageField(field, value) {
             tempDetails.etapas[currentStageIndex][field] = value;
-            if(field === 'name') renderStageBuilder(); // Refresca para actualizar el texto del desplegable
+            if(field === 'name') {
+                const select = document.querySelector('#stage-builder-container select');
+                select.options[select.selectedIndex].text = `📍 ETAPA ${currentStageIndex+1}: ${value}`;
+            }
         }
 
         function addStage() {
             const nextNum = tempDetails.etapas.length + 1;
             tempDetails.etapas.push({ name: `Etapa ${nextNum}`, type: 'Llana', km: '', desnivel: '', profile: '' });
-            currentStageIndex = tempDetails.etapas.length - 1; // Auto-selecciona la nueva
-            renderStageBuilder();
+            currentStageIndex = tempDetails.etapas.length - 1; // Ir a la nueva
+            renderStageBuilder(document.getElementById('stage-builder-container'));
         }
 
         function removeStage(index) {
-            if(!confirm("⚠️ ¿Eliminar esta etapa por completo?")) return;
+            if(!confirm("¿Borrar esta etapa?")) return;
             tempDetails.etapas.splice(index, 1);
-            renderStageBuilder();
+            renderStageBuilder(document.getElementById('stage-builder-container'));
         }
 
-        // --- CONSTRUCTOR VISUAL DE CICLISTAS ---
+        // --- RENDERIZADOR DE CICLISTAS ---
         function renderRiderBuilder(container) {
-            if(!container) container = document.getElementById('rider-builder-container');
             let html = `
                 <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
-                    <span class="text-sm text-slate-300 font-bold">Ciclistas registrados: ${tempRiders.length}</span>
-                    <button type="button" onclick="addRider()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-lg">+ Añadir Ciclista</button>
+                    <span class="text-sm text-slate-300 font-bold">Ciclistas: ${tempRiders.length}</span>
+                    <button type="button" onclick="addRider()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-lg">+ Añadir</button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div id="riders-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
             `;
             tempRiders.forEach((rider, index) => {
                 html += `
-                    <div class="json-builder-item justify-between bg-slate-800/50 hover:border-emerald-500/50 transition-colors">
-                        <input type="text" value="${rider.name || ''}" placeholder="Nombre del Ciclista" class="input-dark flex-1 rounded p-2 text-sm font-bold text-white border-transparent focus:border-emerald-500 bg-transparent" onchange="updateRiderField(${index}, this.value)">
-                        <button type="button" onclick="removeRider(${index})" class="text-slate-500 hover:text-red-400 p-2 transition"><i class="fas fa-times"></i></button>
+                    <div class="flex items-center gap-2 bg-slate-800 p-2 rounded-lg border border-slate-700">
+                        <span class="text-xs font-mono text-slate-500 w-4">${index+1}</span>
+                        <input type="text" value="${rider.name || ''}" class="bg-transparent text-white text-sm font-bold flex-1 outline-none" oninput="updateRiderField(${index}, this.value)">
+                        <button type="button" onclick="removeRider(${index})" class="text-slate-500 hover:text-red-400"><i class="fas fa-times"></i></button>
                     </div>
                 `;
             });
@@ -422,8 +455,14 @@
         }
 
         function updateRiderField(index, value) { tempRiders[index] = { name: value }; }
-        function addRider() { tempRiders.unshift({ name: "" }); renderRiderBuilder(); }
-        function removeRider(index) { tempRiders.splice(index, 1); renderRiderBuilder(); }
+        function addRider() {
+            tempRiders.unshift({ name: "" }); // Añadir al principio para que se vea rápido
+            renderRiderBuilder(document.getElementById('rider-builder-container'));
+        }
+        function removeRider(index) {
+            tempRiders.splice(index, 1);
+            renderRiderBuilder(document.getElementById('rider-builder-container'));
+        }
 
         // --- GUARDADO ---
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
@@ -439,10 +478,11 @@
             }
 
             if (currentTable === 'calendario') {
-                dataObj[calendarDetailsKey] = JSON.stringify(tempDetails);
+                tempDetails.totalEtapas = tempDetails.etapas.length;
+                dataObj['details'] = JSON.stringify(tempDetails);
             }
             if (currentTable === 'equipos') {
-                const cleanRiders = tempRiders.filter(r => r.name.trim() !== '');
+                const cleanRiders = tempRiders.filter(r => r.name && r.name.trim() !== '');
                 dataObj['riders'] = JSON.stringify(cleanRiders);
             }
 
@@ -456,11 +496,8 @@
                     headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
                     body: JSON.stringify(dataObj)
                 });
-                if (res.ok) {
-                    closeModal(); loadTable(currentTable); alert("✅ ¡Guardado con éxito!");
-                } else {
-                    const err = await res.json(); alert("❌ Error: " + JSON.stringify(err));
-                }
+                if (res.ok) { closeModal(); loadTable(currentTable); alert("✅ Guardado"); }
+                else { const err = await res.json(); alert("❌ Error: " + JSON.stringify(err)); }
             } catch (e) { alert("Error de red: " + e.message); }
         }
 
