@@ -1,483 +1,693 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Velo Admin - Command Center</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .modal-glass { background: #1e293b; border: 1px solid #475569; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .input-dark { background-color: #0f172a; border: 1px solid #334155; color: #f1f5f9; transition: all 0.3s; }
-        .input-dark:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velo Admin - Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .modal-glass { background: #1e293b; border: 1px solid #475569; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .input-dark { background-color: #0f172a; border: 1px solid #334155; color: #f1f5f9; transition: all 0.3s; }
+        .input-dark:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+        .json-builder-item { background-color: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; gap: 0.5rem; align-items: center; }
+    </style>
 </head>
 <body class="min-h-screen p-6">
 
-    <header class="flex justify-between items-center mb-10 px-4">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-black text-xl">V</div>
-            <h1 class="text-2xl font-bold text-white tracking-tight">VELO <span class="text-emerald-400">ADMIN</span></h1>
-        </div>
-        <button onclick="logout()" class="text-slate-400 hover:text-red-400 transition text-sm font-semibold flex items-center gap-2">
-            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-        </button>
-    </header>
+    <header class="flex justify-between items-center mb-10 px-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-black text-xl">V</div>
+            <h1 class="text-2xl font-bold text-white tracking-tight">VELO <span class="text-emerald-400">ADMIN</span></h1>
+        </div>
+        <button onclick="logout()" class="text-slate-400 hover:text-red-400 transition text-sm font-semibold flex items-center gap-2">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+    </header>
 
-    <nav class="flex flex-wrap gap-4 mb-8 border-b border-slate-700 pb-6">
-        <button onclick="loadTable('noticias')" id="btn-noticias" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-newspaper text-emerald-400"></i> Noticias</button>
-        <button onclick="loadTable('calendario')" id="btn-calendario" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-calendar-alt text-blue-400"></i> Calendario</button>
-        <button onclick="loadTable('equipos')" id="btn-equipos" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-users text-yellow-400"></i> Equipos</button>
-        <button onclick="loadTable('glosario')" id="btn-glosario" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-book text-purple-400"></i> Glosario</button>
-        <button onclick="loadTable('trending')" id="btn-trending" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-fire text-orange-400"></i> Trending</button>
-        <button onclick="loadTable('ranking')" id="btn-ranking" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-trophy text-amber-400"></i> Ranking</button>
-    </nav>
+    <nav class="flex flex-wrap gap-4 mb-8 border-b border-slate-700 pb-6">
+        <button onclick="loadTable('noticias')" id="btn-noticias" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-newspaper text-emerald-400"></i> Noticias</button>
+        <button onclick="loadTable('calendario')" id="btn-calendario" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-calendar-alt text-blue-400"></i> Calendario</button>
+        <button onclick="loadTable('equipos')" id="btn-equipos" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-users text-yellow-400"></i> Equipos</button>
+        <button onclick="loadTable('glosario')" id="btn-glosario" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-book text-purple-400"></i> Glosario</button>
+        <button onclick="loadTable('trending')" id="btn-trending" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-fire text-orange-400"></i> Trending</button>
+        <button onclick="loadTable('ranking')" id="btn-ranking" class="nav-btn px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-3 border border-slate-700 font-medium"><i class="fas fa-trophy text-amber-400"></i> Ranking</button>
+    </nav>
 
-    <main id="content-area" class="glass rounded-2xl p-8 min-h-[60vh]">
-        <div class="flex flex-col items-center justify-center h-64 text-slate-500">
-            <i class="fas fa-database text-4xl mb-4 opacity-50"></i>
-            <p>Selecciona una categoría arriba para gestionar la base de datos.</p>
-        </div>
-    </main>
+    <main id="content-area" class="glass rounded-2xl p-8 min-h-[60vh]">
+        <div class="flex flex-col items-center justify-center h-64 text-slate-500">
+            <i class="fas fa-database text-4xl mb-4 opacity-50"></i>
+            <p>Selecciona una categoría arriba para gestionar la base de datos.</p>
+        </div>
+    </main>
 
-    <div id="modal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-center z-50 p-4 backdrop-blur-sm transition-opacity">
-        <div class="modal-glass w-full max-w-4xl max-h-[90vh] rounded-2xl flex flex-col shadow-2xl">
-            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-2xl">
-                <h2 id="modal-title" class="text-xl font-bold text-white flex items-center gap-3">✏️ Editar Elemento</h2>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-700"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="p-8 overflow-y-auto flex-1 custom-scrollbar">
-                <form id="dynamicForm" class="grid grid-cols-1 gap-6"></form>
-            </div>
-            <div class="p-6 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex justify-end gap-4">
-                <button onclick="closeModal()" class="px-6 py-2 text-slate-300 hover:text-white font-medium">Cancelar</button>
-                <button onclick="saveData()" class="px-8 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg shadow-lg flex items-center gap-2"><i class="fas fa-save"></i> Guardar</button>
-            </div>
-        </div>
-    </div>
+    <div id="modal" class="fixed inset-0 bg-black/95 hidden flex justify-center items-center z-50 p-4 backdrop-blur-sm transition-opacity">
+        <div class="modal-glass w-full max-w-4xl max-h-[95vh] rounded-2xl flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-2xl">
+                <h2 id="modal-title" class="text-xl font-bold text-white flex items-center gap-3">✏️ Editar Elemento</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-700"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-8 overflow-y-auto flex-1 custom-scrollbar bg-[#0f172a]">
+                <form id="dynamicForm" class="grid grid-cols-1 gap-6"></form>
+            </div>
+            <div class="p-6 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex justify-end gap-4">
+                <button onclick="closeModal()" class="px-6 py-2 text-slate-300 hover:text-white font-medium">Cancelar</button>
+                <button onclick="saveData()" class="px-8 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg shadow-lg flex items-center gap-2"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        let currentTable = '';
-        let currentData = [];
-        let globalTeamsData = []; // Guardamos los equipos aquí para el desplegable
-        let isEditing = false;
-        let editId = null;
+    <script>
+        let currentTable = '';
+        let currentData = [];
+        let globalTeamsData = []; 
+        let isEditing = false;
+        let editId = null;
 
-        const templates = {
-            noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
-            calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
-            equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
-            glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
-            trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' },
-            ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0 }
-        };
+        // Variables globales para los constructores
+        let tempDetails = { totalEtapas: 1, etapas: [] }; 
+        let currentStageIndex = 0; 
+        let tempRiders = []; 
 
-        // Al iniciar, descargamos los equipos para tenerlos listos en memoria
-        async function fetchGlobalTeams() {
-            try {
-                const res = await fetch('/api/teams');
-                if(res.ok) {
-                    globalTeamsData = await res.json();
-                }
-            } catch (e) { console.error("Error cargando equipos", e); }
-        }
-        fetchGlobalTeams();
+        const templates = {
+            noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
+            calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{"totalEtapas":1, "etapas":[]}', winner: null },
+            equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
+            glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
+            trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' },
+            ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0 }
+        };
 
-        async function loadTable(table) {
-            currentTable = table;
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ring-2', 'ring-emerald-500', 'bg-slate-700'));
-            document.getElementById(`btn-${table}`).classList.add('ring-2', 'ring-emerald-500', 'bg-slate-700');
-            
-            const content = document.getElementById('content-area');
-            content.innerHTML = '<div class="flex justify-center p-20"><i class="fas fa-circle-notch fa-spin text-4xl text-emerald-500"></i></div>';
+        // Cargar equipos para los desplegables de trending
+        async function fetchGlobalTeams() {
+            try {
+                const res = await fetch('/api/teams');
+                if(res.ok) globalTeamsData = await res.json();
+            } catch (e) { console.error("Error cargando equipos", e); }
+        }
+        fetchGlobalTeams();
 
-            let endpoint = table;
-            if(table === 'noticias') endpoint = 'news';
-            if(table === 'equipos') endpoint = 'teams';
-            if(table === 'calendario') endpoint = 'calendar';
-            if(table === 'glosario') endpoint = 'glossary';
-            if(table === 'ranking') endpoint = 'ranking';
+        async function loadTable(table) {
+            currentTable = table;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ring-2', 'ring-emerald-500', 'bg-slate-700'));
+            document.getElementById(`btn-${table}`).classList.add('ring-2', 'ring-emerald-500', 'bg-slate-700');
+            
+            const content = document.getElementById('content-area');
+            content.innerHTML = '<div class="flex justify-center p-20"><i class="fas fa-circle-notch fa-spin text-4xl text-emerald-500"></i></div>';
 
-            try {
-                const res = await fetch(`/api/${endpoint}`);
-                currentData = await res.json();
-                renderUI(currentData);
-            } catch (e) { content.innerHTML = `<div class="text-red-400 text-center">Error: ${e.message}</div>`; }
-        }
+            let endpoint = table;
+            if(table === 'noticias') endpoint = 'news';
+            if(table === 'equipos') endpoint = 'teams';
+            if(table === 'calendario') endpoint = 'calendar';
+            if(table === 'glosario') endpoint = 'glossary';
+            if(table === 'ranking') endpoint = 'ranking';
 
-        function renderUI(data) {
-            const container = document.getElementById('content-area');
-            
-            let extraBtn = '';
-            if (currentTable === 'trending') {
-                extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 mr-3 shadow-lg transition-transform active:scale-95"><i class="fas fa-brain"></i> AUTO-GENERAR (IA)</button>`;
-            }
+            try {
+                const res = await fetch(`/api/${endpoint}`);
+                currentData = await res.json();
+                renderUI(currentData);
+            } catch (e) { content.innerHTML = `<div class="text-red-400 text-center">Error: ${e.message}</div>`; }
+        }
 
-            let headerHtml = `
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-3xl font-bold text-white capitalize flex items-center gap-3"><span class="w-2 h-8 bg-emerald-500 rounded-full"></span>${currentTable}</h2>
-                    <div class="flex items-center">
-                        ${extraBtn}
-                        <button onclick="openCreateModal()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform active:scale-95"><i class="fas fa-plus-circle"></i> AÑADIR NUEVO</button>
-                    </div>
-                </div>`;
+        function renderUI(data) {
+            const container = document.getElementById('content-area');
+            
+            let extraBtn = '';
+            if (currentTable === 'trending') {
+                extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 mr-3 shadow-lg transition-transform active:scale-95"><i class="fas fa-brain"></i> AUTO-GENERAR (IA)</button>`;
+            }
 
-            if (!data || data.length === 0) { 
-                container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10 bg-slate-900/50 rounded-xl border border-slate-800">No hay datos en esta categoría. Puedes añadirlos a mano o usar el auto-generador.</div>'; 
-                return; 
-            }
+            let headerHtml = `
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-white capitalize flex items-center gap-3"><span class="w-2 h-8 bg-emerald-500 rounded-full"></span>${currentTable}</h2>
+                    <div class="flex items-center">
+                        ${extraBtn}
+                        <button onclick="openCreateModal()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform active:scale-95"><i class="fas fa-plus-circle"></i> AÑADIR NUEVO</button>
+                    </div>
+                </div>`;
 
-            const keys = Object.keys(data[0]);
-            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight'];
-            const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
+            if (!data || data.length === 0) { 
+                container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10 bg-slate-900/50 rounded-xl border border-slate-800">No hay datos en esta categoría. Puedes añadirlos a mano o usar el auto-generador.</div>'; 
+                return; 
+            }
 
-            let tableHtml = `<div class="overflow-hidden rounded-xl border border-slate-700 shadow-2xl"><table class="w-full text-left text-sm text-slate-300">
-                <thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr>
-                    ${displayCols.map(c => `<th class="p-4">${c}</th>`).join('')}
-                    <th class="p-4 text-right">ACCIONES</th>
-                </tr></thead>
-                <tbody class="divide-y divide-slate-700 bg-slate-900/40">`;
+            const keys = Object.keys(data[0]);
+            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight'];
+            const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
 
-            let renderData = data;
-            if (currentTable === 'ranking') {
-                renderData = [...data].sort((a, b) => b.points - a.points);
-            }
+            let tableHtml = `<div class="overflow-hidden rounded-xl border border-slate-700 shadow-2xl"><table class="w-full text-left text-sm text-slate-300">
+                <thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr>
+                    ${displayCols.map(c => `<th class="p-4">${c}</th>`).join('')}
+                    <th class="p-4 text-right">ACCIONES</th>
+                </tr></thead>
+                <tbody class="divide-y divide-slate-700 bg-slate-900/40">`;
 
-            renderData.forEach(row => {
-                tableHtml += `<tr class="hover:bg-slate-800/60 transition group">`;
-                displayCols.forEach(col => {
-                    let val = row[col];
-                    if (col === 'isHero') val = val == 1 ? '<span class="text-yellow-400">★ SÍ</span>' : '<span class="text-slate-600">No</span>';
-                    else if (col === 'tipo' && currentTable === 'trending') val = val === 'ciclista' ? '<span class="text-emerald-400 font-bold">🚴‍♂️ CICLISTA</span>' : '<span class="text-cyan-400 font-bold"># TOPIC</span>';
-                    else if (col === 'points' && currentTable === 'ranking') val = `<span class="text-amber-400 font-bold text-base">${val} PTS</span>`;
-                    else if (typeof val === 'string' && val.startsWith('assets/')) val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md">`;
-                    else if (typeof val === 'string' && val.length > 40) val = val.substring(0, 40) + '...';
-                    
-                    tableHtml += `<td class="p-4 font-medium">${val || '-'}</td>`;
-                });
-                tableHtml += `<td class="p-4 text-right flex justify-end gap-2">
-                    <button onclick='openEditModal(${row.id})' class="bg-blue-500/10 text-blue-400 p-2 rounded hover:bg-blue-500 hover:text-white"><i class="fas fa-pen"></i></button>
-                    <button onclick='deleteItem(${row.id})' class="bg-red-500/10 text-red-400 p-2 rounded hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button>
-                </td></tr>`;
-            });
-            container.innerHTML = headerHtml + tableHtml + `</tbody></table></div>`;
-        }
+            let renderData = data;
+            if (currentTable === 'ranking') renderData = [...data].sort((a, b) => b.points - a.points);
 
-        async function autoGenerateTrending() {
-            if(!confirm("Esto analizará tus últimas noticias y extraerá automáticamente carreras y términos técnicos para guardarlos como Trending Topics. ¿Deseas continuar?")) return;
-            
-            try {
-                const [newsRes, teamsRes, calRes, glosRes] = await Promise.all([
-                    fetch('/api/news').then(r => r.ok ? r.json() : []),
-                    fetch('/api/teams').then(r => r.ok ? r.json() : []),
-                    fetch('/api/calendar').then(r => r.ok ? r.json() : []),
-                    fetch('/api/glossary').then(r => r.ok ? r.json() : [])
-                ]);
+            renderData.forEach(row => {
+                tableHtml += `<tr class="hover:bg-slate-800/60 transition group">`;
+                displayCols.forEach(col => {
+                    let val = row[col];
+                    if (col === 'isHero') val = val == 1 ? '<span class="text-yellow-400">★ SÍ</span>' : '<span class="text-slate-600">No</span>';
+                    else if (col === 'tipo' && currentTable === 'trending') val = val === 'ciclista' ? '<span class="text-emerald-400 font-bold">🚴‍♂️ CICLISTA</span>' : '<span class="text-cyan-400 font-bold"># TOPIC</span>';
+                    else if (col === 'points' && currentTable === 'ranking') val = `<span class="text-amber-400 font-bold text-base">${val} PTS</span>`;
+                    else if (typeof val === 'string' && val.startsWith('assets/')) val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md border border-slate-700">`;
+                    else if (typeof val === 'string' && val.length > 40) val = val.substring(0, 40) + '...';
+                    
+                    tableHtml += `<td class="p-4 font-medium">${val || '-'}</td>`;
+                });
+                tableHtml += `<td class="p-4 text-right flex justify-end gap-2">
+                    <button onclick='openEditModal(${row.id})' class="bg-blue-500/10 text-blue-400 p-2 rounded hover:bg-blue-500 hover:text-white transition"><i class="fas fa-pen"></i></button>
+                    <button onclick='deleteItem(${row.id})' class="bg-red-500/10 text-red-400 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
+                </td></tr>`;
+            });
+            container.innerHTML = headerHtml + tableHtml + `</tbody></table></div>`;
+        }
 
-                const newTrends = [];
-                const recentText = newsRes.slice(0, 5).map(n => (n.title + " " + (n.excerpt||"") + " " + (n.content||"")).toLowerCase()).join(' ');
+        async function autoGenerateTrending() {
+            if(!confirm("Esto analizará tus últimas noticias y extraerá automáticamente carreras y términos técnicos para guardarlos como Trending Topics. ¿Deseas continuar?")) return;
+            
+            try {
+                const [newsRes, teamsRes, calRes, glosRes] = await Promise.all([
+                    fetch('/api/news').then(r => r.ok ? r.json() : []),
+                    fetch('/api/teams').then(r => r.ok ? r.json() : []),
+                    fetch('/api/calendar').then(r => r.ok ? r.json() : []),
+                    fetch('/api/glossary').then(r => r.ok ? r.json() : [])
+                ]);
 
-                let potentialTopics = [];
-                calRes.forEach(r => {
-                    if (recentText.includes(r.name.toLowerCase())) {
-                        potentialTopics.push({ 
-                            text: '#' + r.name.replace(/\s+/g, ''), 
-                            link: `calendario.html?race=${encodeURIComponent(r.name)}`,
-                            count: recentText.split(r.name.toLowerCase()).length - 1 
-                        });
-                    }
-                });
+                const newTrends = [];
+                const recentText = newsRes.slice(0, 5).map(n => (n.title + " " + (n.excerpt||"") + " " + (n.content||"")).toLowerCase()).join(' ');
 
-                glosRes.forEach(g => {
-                    if (recentText.includes(g.term.toLowerCase())) {
-                        potentialTopics.push({ 
-                            text: '#' + g.term.replace(/\s+/g, ''), 
-                            link: `glosario.html?term=${encodeURIComponent(g.term)}`,
-                            count: recentText.split(g.term.toLowerCase()).length - 1 
-                        });
-                    }
-                });
+                let potentialTopics = [];
+                calRes.forEach(r => {
+                    if (recentText.includes(r.name.toLowerCase())) {
+                        potentialTopics.push({ 
+                            text: '#' + r.name.replace(/\s+/g, ''), 
+                            link: `calendario.html?race=${encodeURIComponent(r.name)}`,
+                            count: recentText.split(r.name.toLowerCase()).length - 1 
+                        });
+                    }
+                });
 
-                potentialTopics.sort((a, b) => b.count - a.count);
-                const topTopics = potentialTopics.slice(0, 4);
+                glosRes.forEach(g => {
+                    if (recentText.includes(g.term.toLowerCase())) {
+                        potentialTopics.push({ 
+                            text: '#' + g.term.replace(/\s+/g, ''), 
+                            link: `glosario.html?term=${encodeURIComponent(g.term)}`,
+                            count: recentText.split(g.term.toLowerCase()).length - 1 
+                        });
+                    }
+                });
 
-                topTopics.forEach(t => {
-                    newTrends.push({ tipo: 'topic', title: t.text, subtitle: t.link, value: '' });
-                });
+                potentialTopics.sort((a, b) => b.count - a.count);
+                const topTopics = potentialTopics.slice(0, 4);
 
-                const allProRiders = [];
-                teamsRes.forEach(team => {
-                    let rList = [];
-                    try { rList = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; } catch(e){}
-                    rList.forEach(r => allProRiders.push({ name: r.name, team: team.name }));
-                });
+                topTopics.forEach(t => {
+                    newTrends.push({ tipo: 'topic', title: t.text, subtitle: t.link, value: '' });
+                });
 
-                let addedRiders = 0;
-                allProRiders.forEach(pro => {
-                    if (recentText.includes(pro.name.toLowerCase()) && addedRiders < 2) { 
-                        newTrends.push({ tipo: 'ciclista', title: pro.name, subtitle: pro.team, value: '+HOT' });
-                        addedRiders++;
-                    }
-                });
+                const allProRiders = [];
+                teamsRes.forEach(team => {
+                    let rList = [];
+                    try { rList = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; } catch(e){}
+                    if(Array.isArray(rList)) rList.forEach(r => allProRiders.push({ name: r.name, team: team.name }));
+                });
 
-                if(newTrends.length === 0) {
-                    alert("⚠️ No se encontraron carreras ni términos del glosario en las últimas noticias.");
-                    return;
-                }
+                let addedRiders = 0;
+                allProRiders.forEach(pro => {
+                    if (recentText.includes(pro.name.toLowerCase()) && addedRiders < 2) { 
+                        newTrends.push({ tipo: 'ciclista', title: pro.name, subtitle: pro.team, value: '+HOT' });
+                        addedRiders++;
+                    }
+                });
 
-                const authHeader = 'Basic ' + btoa('admin:velo2026');
-                let addedCount = 0;
-                
-                for (const trend of newTrends) {
-                    const exists = currentData.find(d => d.title === trend.title);
-                    if (!exists) {
-                        await fetch(`/api/admin/create/trending`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
-                            body: JSON.stringify(trend)
-                        });
-                        addedCount++;
-                    }
-                }
+                if(newTrends.length === 0) {
+                    alert("⚠️ No se encontraron carreras ni términos del glosario en las últimas noticias.");
+                    return;
+                }
 
-                if (addedCount > 0) {
-                    alert(`✅ Proceso completado: Se han inyectado ${addedCount} nuevas tendencias basadas en el contexto de tus noticias.`);
-                } else {
-                    alert("ℹ️ Todo está al día. No se detectaron tendencias nuevas que no estuvieran ya en la tabla.");
-                }
-                
-                loadTable('trending');
+                const authHeader = 'Basic ' + btoa('admin:velo2026');
+                let addedCount = 0;
+                
+                for (const trend of newTrends) {
+                    const exists = currentData.find(d => d.title === trend.title);
+                    if (!exists) {
+                        await fetch(`/api/admin/create/trending`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+                            body: JSON.stringify(trend)
+                        });
+                        addedCount++;
+                    }
+                }
 
-            } catch (e) {
-                alert("❌ Error generando tendencias: " + e.message);
-            }
-        }
+                if (addedCount > 0) {
+                    alert(`✅ Proceso completado: Se han inyectado ${addedCount} nuevas tendencias basadas en el contexto de tus noticias.`);
+                } else {
+                    alert("ℹ️ Todo está al día. No se detectaron tendencias nuevas que no estuvieran ya en la tabla.");
+                }
+                
+                loadTable('trending');
 
-        function openCreateModal() {
-            isEditing = false; editId = null;
-            document.getElementById('modal-title').innerHTML = '<span class="text-emerald-400 text-2xl mr-2">+</span> Añadir Nuevo';
-            buildForm(templates[currentTable] || {});
-            document.getElementById('modal').classList.remove('hidden');
-        }
+            } catch (e) {
+                alert("❌ Error generando tendencias: " + e.message);
+            }
+        }
 
-        function openEditModal(id) {
-            isEditing = true; editId = id;
-            const item = currentData.find(d => d.id === id);
-            document.getElementById('modal-title').innerHTML = '<span class="text-blue-400 text-2xl mr-2">✎</span> Editar Elemento';
-            buildForm(item);
-            document.getElementById('modal').classList.remove('hidden');
-        }
+        function openCreateModal() {
+            isEditing = false; editId = null;
+            document.getElementById('modal-title').innerHTML = '<span class="text-emerald-400 text-2xl mr-2">+</span> Añadir Nuevo';
+            buildForm(templates[currentTable] || {});
+            document.getElementById('modal').classList.remove('hidden');
+        }
 
-        function buildForm(data) {
-            const form = document.getElementById('dynamicForm');
-            form.innerHTML = '';
-            
-            // --- INICIO LÓGICA ESPECIAL PARA TRENDING ---
-            let isTrendingRider = currentTable === 'trending' && (data.tipo === 'ciclista' || !data.tipo);
-            
-            for (const [key, value] of Object.entries(data)) {
-                if (key === 'id') continue;
-                
-                const wrapper = document.createElement('div');
-                wrapper.id = `wrapper-${key}`; // ID para ocultar/mostrar
-                const label = document.createElement('label');
-                label.className = "block text-xs uppercase text-emerald-500 font-bold mb-2 tracking-widest";
-                label.innerText = key;
-                
-                let input;
-                
-                if (key === 'tag') {
-                    input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-3";
-                    ['GENERAL', 'RACE REPORT', 'TECH LAB', 'AERO LAB', 'DATA ANALYSIS', 'PREVIA'].forEach(opt => {
-                        const el = document.createElement('option');
-                        el.value = opt; el.innerText = opt;
-                        if (value === opt) el.selected = true;
-                        input.appendChild(el);
-                    });
-                } else if (key === 'tipo') {
-                    input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-3";
-                    ['ciclista', 'topic'].forEach(opt => {
-                        const el = document.createElement('option');
-                        el.value = opt; el.innerText = opt.toUpperCase();
-                        if (value === opt) el.selected = true;
-                        input.appendChild(el);
-                    });
-                    // Event listener para cambiar el formulario dinámicamente
-                    input.addEventListener('change', (e) => {
-                        if (currentTable === 'trending') {
-                            isTrendingRider = e.target.value === 'ciclista';
-                            rebuildTrendingFields(data);
-                        }
-                    });
+        function openEditModal(id) {
+            isEditing = true; editId = id;
+            const item = currentData.find(d => d.id === id);
+            document.getElementById('modal-title').innerHTML = '<span class="text-blue-400 text-2xl mr-2">✎</span> Editar Elemento';
+            buildForm(item);
+            document.getElementById('modal').classList.remove('hidden');
+        }
 
-                } else if (key === 'isHero') {
-                    input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-3";
-                    const optNo = document.createElement('option'); optNo.value = "0"; optNo.innerText = "No (Noticia Normal)"; if (value == 0) optNo.selected = true;
-                    const optYes = document.createElement('option'); optYes.value = "1"; optYes.innerText = "⭐ SÍ (Portada / Hero)"; if (value == 1) optYes.selected = true;
-                    input.appendChild(optNo); input.appendChild(optYes);
-                } else if (['content', 'riders', 'details', 'definition', 'def', 'insight'].includes(key)) {
-                    input = document.createElement('textarea');
-                    input.rows = key === 'insight' ? 3 : 8; 
-                    input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm";
-                    input.value = (typeof value === 'object' && value !== null) ? JSON.stringify(value, null, 4) : value;
-                } else if (key === 'dateISO' || key === 'endDateISO') {
-                    input = document.createElement('input');
-                    input.type = "date";
-                    input.className = "input-dark w-full rounded-lg p-3";
-                    input.value = (value && typeof value === 'string') ? value.split('T')[0] : value || '';
-                } else if (key === 'points') {
-                    input = document.createElement('input');
-                    input.type = "number"; 
-                    input.className = "input-dark w-full rounded-lg p-3 font-mono font-bold text-amber-400";
-                    input.value = value || 0;
-                } 
-                // --- LÓGICA DE MENÚS DESPLEGABLES PARA EQUIPOS Y CICLISTAS ---
-                else if (currentTable === 'trending' && key === 'subtitle' && isTrendingRider) {
-                    label.innerText = 'EQUIPO DEL CICLISTA';
-                    input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-3 font-bold text-cyan-400";
-                    input.id = 'select-trending-team';
-                    
-                    const defaultOpt = document.createElement('option');
-                    defaultOpt.value = ""; defaultOpt.innerText = "Selecciona un equipo...";
-                    input.appendChild(defaultOpt);
+        function buildForm(data) {
+            const form = document.getElementById('dynamicForm');
+            form.innerHTML = '';
+            
+            let isTrendingRider = currentTable === 'trending' && (data.tipo === 'ciclista' || !data.tipo);
+            
+            for (const [key, value] of Object.entries(data)) {
+                if (key === 'id') continue;
+                
+                const wrapper = document.createElement('div');
+                wrapper.id = `wrapper-${key}`;
+                const label = document.createElement('label');
+                label.className = "block text-xs uppercase text-emerald-500 font-bold mb-2 tracking-widest";
+                label.innerText = key;
+                
+                let input;
 
-                    globalTeamsData.forEach(team => {
-                        const opt = document.createElement('option');
-                        opt.value = team.name; opt.innerText = team.name;
-                        if (value === team.name) opt.selected = true;
-                        input.appendChild(opt);
-                    });
+                // --- 1. CONSTRUCTOR DE ETAPAS (CALENDARIO) - LÓGICA DE CARGA BLINDADA ---
+                if (currentTable === 'calendario' && key === 'details') {
+                    label.innerText = 'GESTOR DE ETAPAS (SELECCIONAR ETAPA)';
+                    
+                    let parsedData = null;
+                    
+                    try {
+                        if (typeof value === 'string') {
+                            parsedData = JSON.parse(value);
+                            // Control de doble stringify (SQLite clásico)
+                            if (typeof parsedData === 'string') {
+                                parsedData = JSON.parse(parsedData);
+                            }
+                        } else if (typeof value === 'object') {
+                            parsedData = value;
+                        }
+                    } catch(e) { 
+                        console.warn("No se pudo parsear JSON de details. Creando estructura limpia."); 
+                    }
 
-                    // Al cambiar el equipo, actualizamos la lista de ciclistas
-                    input.addEventListener('change', (e) => {
-                        populateRidersDropdown(e.target.value);
-                    });
+                    // Reset seguro
+                    tempDetails = { totalEtapas: 1, etapas: [] };
 
-                } else if (currentTable === 'trending' && key === 'title' && isTrendingRider) {
-                    label.innerText = 'NOMBRE DEL CICLISTA';
-                    input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-3 font-bold text-white";
-                    input.id = 'select-trending-rider';
-                    
-                    const opt = document.createElement('option');
-                    opt.value = value || ""; opt.innerText = value || "Selecciona equipo primero...";
-                    input.appendChild(opt);
-                } 
-                else {
-                    input = document.createElement('input');
-                    input.type = "text";
-                    input.className = "input-dark w-full rounded-lg p-3";
-                    input.value = value || '';
-                    if(currentTable === 'trending' && key === 'value') {
-                        input.placeholder = "Ej: +HOT, -DOWN, +5 PTS";
-                    }
-                }
-                
-                input.name = key;
-                wrapper.appendChild(label);
-                wrapper.appendChild(input);
-                form.appendChild(wrapper);
-            }
+                    if (parsedData) {
+                        if (Array.isArray(parsedData)) {
+                            // Si es un array puro [ {etapa1}, {etapa2} ]
+                            tempDetails.etapas = parsedData;
+                            tempDetails.totalEtapas = parsedData.length;
+                        } else if (typeof parsedData === 'object') {
+                            // Si es un objeto { etapas: [...] }
+                            if (Array.isArray(parsedData.etapas)) {
+                                tempDetails.etapas = parsedData.etapas;
+                                tempDetails.totalEtapas = parsedData.totalEtapas || parsedData.etapas.length;
+                            } 
+                            // Si es solo un numero viejo { etapas: 21 }
+                            else if (typeof parsedData.etapas === 'number') {
+                                tempDetails.totalEtapas = parsedData.etapas;
+                                for(let i=0; i<parsedData.etapas; i++) tempDetails.etapas.push({ name: `Etapa ${i+1}`, type: 'Llana', km: '', desnivel: '', profile: '' });
+                            }
+                        }
+                    }
 
-            // Si abrimos la edición de un ciclista, rellenamos el segundo select con su equipo actual
-            if (isTrendingRider && data.subtitle && data.title) {
-                setTimeout(() => populateRidersDropdown(data.subtitle, data.title), 50);
-            }
-        }
+                    currentStageIndex = 0; 
 
-        // Función auxiliar para repintar el formulario si cambian de "ciclista" a "topic"
-        function rebuildTrendingFields(data) {
-            const isEditingMem = isEditing;
-            const editIdMem = editId;
-            
-            const form = document.getElementById('dynamicForm');
-            const currentDataObj = {};
-            new FormData(form).forEach((value, key) => currentDataObj[key] = value);
-            
-            buildForm(currentDataObj);
-            
-            isEditing = isEditingMem;
-            editId = editIdMem;
-        }
+                    input = document.createElement('div');
+                    input.className = "bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner";
+                    input.id = "stage-builder-container";
+                    
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(input);
+                    form.appendChild(wrapper);
+                    renderStageBuilder(input);
+                    continue; 
+                } 
+                // --- 2. CONSTRUCTOR DE CICLISTAS (EQUIPOS) - LÓGICA DE CARGA BLINDADA ---
+                else if (currentTable === 'equipos' && key === 'riders') {
+                    label.innerText = 'PLANTILLA DE CICLISTAS';
+                    
+                    tempRiders = [];
+                    try {
+                        let rData = value;
+                        if (typeof rData === 'string') {
+                            rData = JSON.parse(rData);
+                            if (typeof rData === 'string') rData = JSON.parse(rData);
+                        }
+                        if (Array.isArray(rData)) {
+                            tempRiders = rData;
+                        }
+                    } catch(e) {}
 
-        // Función que rellena el segundo select con los ciclistas del equipo seleccionado
-        function populateRidersDropdown(teamName, selectedRider = null) {
-            const riderSelect = document.getElementById('select-trending-rider');
-            if (!riderSelect) return;
-            
-            riderSelect.innerHTML = '';
-            const team = globalTeamsData.find(t => t.name === teamName);
-            
-            if (team && team.riders) {
-                let riders = [];
-                try { riders = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; } catch(e){}
-                
-                riders.sort((a,b) => a.name.localeCompare(b.name)).forEach(r => {
-                    const opt = document.createElement('option');
-                    opt.value = r.name; opt.innerText = r.name;
-                    if (r.name === selectedRider) opt.selected = true;
-                    riderSelect.appendChild(opt);
-                });
-            } else {
-                const opt = document.createElement('option');
-                opt.value = ""; opt.innerText = "Sin ciclistas...";
-                riderSelect.appendChild(opt);
-            }
-        }
+                    input = document.createElement('div');
+                    input.className = "bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner";
+                    input.id = "rider-builder-container";
+                    
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(input);
+                    form.appendChild(wrapper);
+                    renderRiderBuilder(input);
+                    continue; 
+                }
+                // --- 3. CAMPOS DE TEXTO ESTÁNDAR ---
+                else if (['content', 'definition', 'def', 'insight'].includes(key)) {
+                    input = document.createElement('textarea');
+                    input.rows = 6; 
+                    input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm";
+                    input.value = value || '';
+                } else if (key === 'tag' || key === 'status' || key === 'isHero') {
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3";
+                    let opts = [];
+                    if(key==='tag') opts = ['GENERAL', 'RACE REPORT', 'TECH LAB', 'AERO LAB', 'DATA ANALYSIS', 'PREVIA'];
+                    if(key==='status') opts = ['Upcoming', 'Live', 'Finished'];
+                    if(key==='isHero') {
+                        const op1 = document.createElement('option'); op1.value="0"; op1.innerText="No"; if(value==0) op1.selected=true;
+                        const op2 = document.createElement('option'); op2.value="1"; op2.innerText="SÍ (Hero)"; if(value==1) op2.selected=true;
+                        input.appendChild(op1); input.appendChild(op2);
+                    } else {
+                        opts.forEach(o => {
+                            const el = document.createElement('option'); el.value=o; el.innerText=o; if(value===o) el.selected=true;
+                            input.appendChild(el);
+                        });
+                    }
+                } 
+                // --- LÓGICA DE MENÚS DESPLEGABLES PARA TRENDING ---
+                else if (currentTable === 'trending' && key === 'subtitle' && isTrendingRider) {
+                    label.innerText = 'EQUIPO DEL CICLISTA';
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3 font-bold text-cyan-400";
+                    input.id = 'select-trending-team';
+                    
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = ""; defaultOpt.innerText = "Selecciona un equipo...";
+                    input.appendChild(defaultOpt);
 
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+                    globalTeamsData.forEach(team => {
+                        const opt = document.createElement('option');
+                        opt.value = team.name; opt.innerText = team.name;
+                        if (value === team.name) opt.selected = true;
+                        input.appendChild(opt);
+                    });
 
-        async function saveData() {
-            const form = document.getElementById('dynamicForm');
-            const formData = new FormData(form);
-            const dataObj = {};
-            for (let [key, value] of formData.entries()) {
-                if ((key === 'riders' || key === 'details') && typeof value === 'string') {
-                    try { JSON.parse(value); } catch (e) {}
-                }
-                if (key === 'points') {
-                    value = parseInt(value) || 0;
-                }
-                dataObj[key] = value;
-            }
+                    input.addEventListener('change', (e) => { populateRidersDropdown(e.target.value); });
+                } else if (currentTable === 'trending' && key === 'title' && isTrendingRider) {
+                    label.innerText = 'NOMBRE DEL CICLISTA';
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3 font-bold text-white";
+                    input.id = 'select-trending-rider';
+                    
+                    const opt = document.createElement('option');
+                    opt.value = value || ""; opt.innerText = value || "Selecciona equipo primero...";
+                    input.appendChild(opt);
+                } else if (key === 'tipo') {
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3";
+                    ['ciclista', 'topic'].forEach(opt => {
+                        const el = document.createElement('option');
+                        el.value = opt; el.innerText = opt.toUpperCase();
+                        if (value === opt) el.selected = true;
+                        input.appendChild(el);
+                    });
+                    input.addEventListener('change', (e) => {
+                        if (currentTable === 'trending') rebuildTrendingFields(data);
+                    });
+                }
+                else {
+                    input = document.createElement('input');
+                    input.type = (key === 'dateISO' || key === 'endDateISO') ? 'date' : 'text';
+                    input.className = "input-dark w-full rounded-lg p-3";
+                    input.value = value || '';
+                }
+                
+                input.name = key;
+                wrapper.appendChild(label);
+                wrapper.appendChild(input);
+                form.appendChild(wrapper);
+            }
 
-            const authHeader = 'Basic ' + btoa('admin:velo2026');
-            let url = isEditing ? `/api/admin/${currentTable}/${editId}` : `/api/admin/create/${currentTable}`;
-            let method = isEditing ? 'PUT' : 'POST';
+            if (isTrendingRider && data.subtitle && data.title) {
+                setTimeout(() => populateRidersDropdown(data.subtitle, data.title), 50);
+            }
+        }
 
-            try {
-                const res = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
-                    body: JSON.stringify(dataObj)
-                });
-                if (res.ok) {
-                    closeModal(); loadTable(currentTable); alert("✅ ¡Guardado con éxito!");
-                } else {
-                    const err = await res.json(); alert("❌ Error: " + JSON.stringify(err));
-                }
-            } catch (e) { alert("Error de red: " + e.message); }
-        }
+        // Función auxiliar Trending
+        function rebuildTrendingFields(data) {
+            const isEditingMem = isEditing;
+            const editIdMem = editId;
+            const form = document.getElementById('dynamicForm');
+            const currentDataObj = {};
+            new FormData(form).forEach((value, key) => currentDataObj[key] = value);
+            buildForm(currentDataObj);
+            isEditing = isEditingMem;
+            editId = editIdMem;
+        }
 
-        async function deleteItem(id) {
-            if(!confirm("⚠️ ¿Estás seguro de borrar esto?")) return;
-            const authHeader = 'Basic ' + btoa('admin:velo2026');
-            try {
-                await fetch(`/api/admin/${currentTable}/${id}`, { method: 'DELETE', headers: { 'Authorization': authHeader } });
-                loadTable(currentTable);
-            } catch(e) { alert("Error borrando"); }
-        }
+        // Función auxiliar Trending Riders
+        function populateRidersDropdown(teamName, selectedRider = null) {
+            const riderSelect = document.getElementById('select-trending-rider');
+            if (!riderSelect) return;
+            riderSelect.innerHTML = '';
+            const team = globalTeamsData.find(t => t.name === teamName);
+            
+            if (team && team.riders) {
+                let riders = [];
+                try { 
+                    riders = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; 
+                    if(typeof riders === 'string') riders = JSON.parse(riders);
+                } catch(e){}
+                
+                if(Array.isArray(riders)) {
+                    riders.sort((a,b) => a.name.localeCompare(b.name)).forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r.name; opt.innerText = r.name;
+                        if (r.name === selectedRider) opt.selected = true;
+                        riderSelect.appendChild(opt);
+                    });
+                }
+            }
+            if(riderSelect.options.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = ""; opt.innerText = "Sin ciclistas...";
+                riderSelect.appendChild(opt);
+            }
+        }
 
-        function logout() { window.location.href = "https://logout:logout@" + window.location.host; }
-    </script>
+        // --- RENDERIZADOR VISUAL DE ETAPAS ---
+        function renderStageBuilder(container) {
+            if (!tempDetails.etapas || tempDetails.etapas.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-slate-400 mb-4">No hay etapas definidas para esta carrera.</p>
+                        <button type="button" onclick="generateStagesStructure()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3 rounded-xl font-bold shadow-lg transition transform active:scale-95">
+                            <i class="fas fa-magic mr-2"></i> CREAR ESTRUCTURA
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            if (currentStageIndex >= tempDetails.etapas.length) currentStageIndex = 0;
+            const stage = tempDetails.etapas[currentStageIndex] || {};
+
+            container.innerHTML = `
+                <div class="flex items-center gap-3 mb-6 bg-yellow-500/10 p-4 rounded-xl border border-yellow-500/30">
+                    <div class="flex-1">
+                        <label class="block text-[10px] text-yellow-500 uppercase font-black mb-1 tracking-widest">SELECCIONA ETAPA A EDITAR</label>
+                        <select class="w-full bg-black border border-yellow-500 text-yellow-400 font-bold rounded-lg p-3 text-lg focus:ring-2 focus:ring-yellow-500 outline-none" onchange="changeStageSelection(this.value)">
+                            ${tempDetails.etapas.map((s, i) => `<option value="${i}" ${i == currentStageIndex ? 'selected' : ''}>📍 ETAPA ${i+1}: ${s.name || 'Sin nombre'}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="flex items-end h-full pt-5">
+                        <button type="button" onclick="addStage()" class="bg-slate-700 hover:bg-white hover:text-black text-white p-3 rounded-lg mr-2 transition" title="Añadir nueva etapa al final"><i class="fas fa-plus"></i></button>
+                        <button type="button" onclick="removeStage(${currentStageIndex})" class="bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white p-3 rounded-lg transition" title="Borrar etapa actual"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Nombre de la Etapa</label>
+                        <input type="text" value="${stage.name || ''}" placeholder="Ej: Turín - Milán" class="input-dark w-full rounded p-3 text-sm font-bold text-white" oninput="updateStageField('name', this.value)">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Tipo de Perfil</label>
+                        <select class="input-dark w-full rounded p-3 text-sm font-bold text-cyan-400" onchange="updateStageField('type', this.value)">
+                            <option value="Llana" ${stage.type === 'Llana' ? 'selected' : ''}>Llana</option>
+                            <option value="Montaña" ${stage.type === 'Montaña' ? 'selected' : ''}>Montaña</option>
+                            <option value="Media Montaña" ${stage.type === 'Media Montaña' ? 'selected' : ''}>Media Montaña</option>
+                            <option value="CRI" ${stage.type === 'CRI' ? 'selected' : ''}>Crono Individual (CRI)</option>
+                            <option value="CRE" ${stage.type === 'CRE' ? 'selected' : ''}>Crono Equipos (CRE)</option>
+                            <option value="Clásica" ${stage.type === 'Clásica' ? 'selected' : ''}>Clásica</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Distancia (km)</label>
+                            <input type="text" value="${stage.km || ''}" placeholder="Ej: 180.5" class="input-dark w-full rounded p-3 text-sm" oninput="updateStageField('km', this.value)">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Desnivel (m)</label>
+                            <input type="text" value="${stage.desnivel || ''}" placeholder="Ej: 3200" class="input-dark w-full rounded p-3 text-sm" oninput="updateStageField('desnivel', this.value)">
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Perfil (URL Imagen)</label>
+                        <input type="text" value="${stage.profile || ''}" placeholder="assets/profiles/..." class="input-dark w-full rounded p-3 text-sm font-mono text-purple-400" oninput="updateStageField('profile', this.value)">
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- FUNCIONES INTERNAS DEL CONSTRUCTOR DE ETAPAS ---
+        function generateStagesStructure() {
+            let num = prompt("¿Cuántas etapas tiene esta carrera?", "1");
+            if(num) {
+                num = parseInt(num);
+                tempDetails.etapas = [];
+                for(let i=0; i<num; i++) tempDetails.etapas.push({ name: `Etapa ${i+1}`, type: 'Llana', km: '', desnivel: '', profile: '' });
+                tempDetails.totalEtapas = num;
+                currentStageIndex = 0;
+                renderStageBuilder(document.getElementById('stage-builder-container'));
+            }
+        }
+
+        function changeStageSelection(index) {
+            currentStageIndex = parseInt(index);
+            renderStageBuilder(document.getElementById('stage-builder-container'));
+        }
+
+        function updateStageField(field, value) {
+            if(!tempDetails.etapas[currentStageIndex]) return;
+            tempDetails.etapas[currentStageIndex][field] = value;
+            if(field === 'name') {
+                const select = document.querySelector('#stage-builder-container select');
+                if(select) select.options[select.selectedIndex].text = `📍 ETAPA ${currentStageIndex+1}: ${value}`;
+            }
+        }
+
+        function addStage() {
+            const nextNum = tempDetails.etapas.length + 1;
+            tempDetails.etapas.push({ name: `Etapa ${nextNum}`, type: 'Llana', km: '', desnivel: '', profile: '' });
+            currentStageIndex = tempDetails.etapas.length - 1; // Ir a la nueva
+            renderStageBuilder(document.getElementById('stage-builder-container'));
+        }
+
+        function removeStage(index) {
+            if(!confirm("¿Borrar esta etapa?")) return;
+            tempDetails.etapas.splice(index, 1);
+            if (currentStageIndex >= tempDetails.etapas.length) currentStageIndex = Math.max(0, tempDetails.etapas.length - 1);
+            renderStageBuilder(document.getElementById('stage-builder-container'));
+        }
+
+        // --- RENDERIZADOR DE CICLISTAS ---
+        function renderRiderBuilder(container) {
+            let html = `
+                <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+                    <span class="text-sm text-slate-300 font-bold">Ciclistas: ${tempRiders.length}</span>
+                    <button type="button" onclick="addRider()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-lg">+ Añadir</button>
+                </div>
+                <div id="riders-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
+            `;
+            tempRiders.forEach((rider, index) => {
+                html += `
+                    <div class="flex items-center gap-2 bg-slate-800 p-2 rounded-lg border border-slate-700">
+                        <span class="text-xs font-mono text-slate-500 w-4">${index+1}</span>
+                        <input type="text" value="${rider.name || ''}" class="bg-transparent text-white text-sm font-bold flex-1 outline-none" oninput="updateRiderField(${index}, this.value)">
+                        <button type="button" onclick="removeRider(${index})" class="text-slate-500 hover:text-red-400"><i class="fas fa-times"></i></button>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            if(container) container.innerHTML = html;
+        }
+
+        function updateRiderField(index, value) { tempRiders[index] = { name: value }; }
+        function addRider() {
+            tempRiders.unshift({ name: "" }); 
+            renderRiderBuilder(document.getElementById('rider-builder-container'));
+        }
+        function removeRider(index) {
+            tempRiders.splice(index, 1);
+            renderRiderBuilder(document.getElementById('rider-builder-container'));
+        }
+
+        // --- GUARDADO GENERAL ---
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        async function saveData() {
+            const form = document.getElementById('dynamicForm');
+            const formData = new FormData(form);
+            const dataObj = {};
+            
+            // Recoger campos estándar
+            for (let [key, value] of formData.entries()) {
+                if (key === 'points') value = parseInt(value) || 0;
+                dataObj[key] = value;
+            }
+
+            // Inyectar datos de los constructores visuales antes de enviar
+            if (currentTable === 'calendario') {
+                tempDetails.totalEtapas = tempDetails.etapas.length;
+                dataObj['details'] = JSON.stringify(tempDetails);
+            }
+            if (currentTable === 'equipos') {
+                const cleanRiders = tempRiders.filter(r => r.name && r.name.trim() !== '');
+                dataObj['riders'] = JSON.stringify(cleanRiders);
+            }
+
+            const authHeader = 'Basic ' + btoa('admin:velo2026');
+            let url = isEditing ? `/api/admin/${currentTable}/${editId}` : `/api/admin/create/${currentTable}`;
+            let method = isEditing ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+                    body: JSON.stringify(dataObj)
+                });
+                if (res.ok) { 
+                    closeModal(); 
+                    loadTable(currentTable); 
+                    // Refrescar equipos si editamos la tabla equipos
+                    if (currentTable === 'equipos') fetchGlobalTeams();
+                    alert("✅ Guardado con éxito"); 
+                }
+                else { const err = await res.json(); alert("❌ Error: " + JSON.stringify(err)); }
+            } catch (e) { alert("Error de red: " + e.message); }
+        }
+
+        async function deleteItem(id) {
+            if(!confirm("⚠️ ¿Estás seguro de borrar esto?")) return;
+            const authHeader = 'Basic ' + btoa('admin:velo2026');
+            try {
+                await fetch(`/api/admin/${currentTable}/${id}`, { method: 'DELETE', headers: { 'Authorization': authHeader } });
+                loadTable(currentTable);
+            } catch(e) { alert("Error borrando"); }
+        }
+
+        function logout() { window.location.href = "https://logout:logout@" + window.location.host; }
+    </script>
 </body>
 </html>
