@@ -15,8 +15,6 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         .input-dark { background-color: #0f172a; border: 1px solid #334155; color: #f1f5f9; transition: all 0.3s; }
         .input-dark:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
-        
-        .json-builder-item { background-color: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; gap: 0.5rem; align-items: center; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-6">
@@ -70,15 +68,10 @@
         let isEditing = false;
         let editId = null;
 
-        // Variables globales para los constructores
-        let tempDetails = { totalEtapas: 1, etapas: [] }; 
-        let currentStageIndex = 0; 
-        let tempRiders = []; 
-
         const templates = {
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
-            calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{"totalEtapas":1, "etapas":[]}', winner: null },
-            equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
+            calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{\n    "totalEtapas": 1,\n    "etapas": [\n        {\n            "name": "Etapa 1",\n            "km": "150",\n            "type": "Llana",\n            "desnivel": "1200",\n            "profile": "assets/profiles/..."\n        }\n    ]\n}', winner: null },
+            equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[\n    {\n        "name": "Tadej Pogacar",\n        "role": "Líder"\n    }\n]' },
             glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
             trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' },
             ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0 }
@@ -292,86 +285,30 @@
                 
                 let input;
 
-                // --- 1. CONSTRUCTOR DE ETAPAS (CALENDARIO) ---
-                if (currentTable === 'calendario' && key === 'details') {
-                    label.innerText = 'GESTOR DE ETAPAS (SELECCIONAR ETAPA)';
-                    
-                    let parsedData = null;
-                    try {
-                        if (typeof value === 'string') {
-                            parsedData = JSON.parse(value);
-                            if (typeof parsedData === 'string') parsedData = JSON.parse(parsedData);
-                        } else if (typeof value === 'object') {
-                            parsedData = value;
-                        }
-                    } catch(e) {}
-
-                    tempDetails = { totalEtapas: 1, etapas: [] };
-
-                    if (parsedData) {
-                        if (Array.isArray(parsedData)) {
-                            tempDetails.etapas = parsedData;
-                            tempDetails.totalEtapas = parsedData.length;
-                        } else if (typeof parsedData === 'object') {
-                            if (Array.isArray(parsedData.etapas)) {
-                                tempDetails.etapas = parsedData.etapas;
-                                tempDetails.totalEtapas = parsedData.totalEtapas || parsedData.etapas.length;
-                            } else if (typeof parsedData.etapas === 'number') {
-                                tempDetails.totalEtapas = parsedData.etapas;
-                                for(let i=0; i<parsedData.etapas; i++) tempDetails.etapas.push({ name: `Etapa ${i+1}`, type: 'Llana', km: '', desnivel: '', profile: '' });
-                            }
-                        }
-                    }
-
-                    if (!Array.isArray(tempDetails.etapas)) tempDetails.etapas = [];
-                    if (tempDetails.totalEtapas < tempDetails.etapas.length) tempDetails.totalEtapas = tempDetails.etapas.length;
-                    if (tempDetails.totalEtapas === 0) tempDetails.totalEtapas = 1;
-
-                    currentStageIndex = 0; 
-
-                    input = document.createElement('div');
-                    input.className = "bg-slate-900 p-4 md:p-6 rounded-xl border border-slate-700 shadow-inner";
-                    input.id = "stage-builder-container";
-                    
-                    wrapper.appendChild(label);
-                    wrapper.appendChild(input);
-                    form.appendChild(wrapper);
-                    renderStageBuilder(input);
-                    continue; 
-                } 
-                // --- 2. CONSTRUCTOR DE CICLISTAS (EQUIPOS) ---
-                else if (currentTable === 'equipos' && key === 'riders') {
-                    label.innerText = 'PLANTILLA DE CICLISTAS';
-                    
-                    tempRiders = [];
-                    try {
-                        let rData = value;
-                        if (typeof rData === 'string') {
-                            rData = JSON.parse(rData);
-                            if (typeof rData === 'string') rData = JSON.parse(rData);
-                        }
-                        if (Array.isArray(rData)) {
-                            tempRiders = rData;
-                        }
-                    } catch(e) {}
-
-                    input = document.createElement('div');
-                    input.className = "bg-slate-900 p-4 md:p-6 rounded-xl border border-slate-700 shadow-inner";
-                    input.id = "rider-builder-container";
-                    
-                    wrapper.appendChild(label);
-                    wrapper.appendChild(input);
-                    form.appendChild(wrapper);
-                    renderRiderBuilder(input);
-                    continue; 
-                }
-                // --- 3. CAMPOS ESTÁNDAR ---
-                else if (['content', 'definition', 'def', 'insight'].includes(key)) {
+                // --- TEXTAREAS AMPLIAS PARA RAW JSON (DETAILS, RIDERS, CONTENT) ---
+                if (['content', 'riders', 'details', 'definition', 'def', 'insight'].includes(key)) {
                     input = document.createElement('textarea');
-                    input.rows = 6; 
-                    input.className = "input-dark w-full rounded-lg p-2 md:p-3 font-mono text-xs md:text-sm";
-                    input.value = value || '';
-                } else if (key === 'tag' || key === 'status' || key === 'isHero') {
+                    // Hacemos el recuadro mucho más grande para ver todo el JSON de carreras/equipos
+                    input.rows = key === 'insight' ? 3 : (key === 'details' || key === 'riders' || key === 'content' ? 15 : 8); 
+                    input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm leading-relaxed";
+                    
+                    // Asegurarnos de que el objeto se muestre bonito como texto estructurado
+                    if (typeof value === 'object' && value !== null) {
+                        input.value = JSON.stringify(value, null, 4);
+                    } else if (typeof value === 'string') {
+                        // Intentar formatear strings que en realidad son JSON aplastado
+                        try {
+                            const parsed = JSON.parse(value);
+                            input.value = JSON.stringify(parsed, null, 4);
+                        } catch(e) {
+                            input.value = value;
+                        }
+                    } else {
+                        input.value = value || '';
+                    }
+                } 
+                // --- CAMPOS NORMALES Y DESPLEGABLES ---
+                else if (key === 'tag' || key === 'status' || key === 'isHero') {
                     input = document.createElement('select');
                     input.className = "input-dark w-full rounded-lg p-2 md:p-3 text-sm md:text-base";
                     let opts = [];
@@ -487,147 +424,6 @@
             }
         }
 
-        // --- RENDERIZADOR VISUAL DE ETAPAS ---
-        function renderStageBuilder(container) {
-            if (tempDetails.etapas.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-8">
-                        <p class="text-slate-400 mb-4 text-sm">No hay etapas definidas.</p>
-                        <button type="button" onclick="generateStagesStructure()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold shadow-lg transition transform active:scale-95 text-xs md:text-sm">
-                            <i class="fas fa-magic mr-2"></i> GENERAR ESTRUCTURA
-                        </button>
-                    </div>`;
-                return;
-            }
-
-            if (currentStageIndex >= tempDetails.etapas.length) currentStageIndex = 0;
-            const stage = tempDetails.etapas[currentStageIndex];
-
-            container.innerHTML = `
-                <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 mb-6 bg-yellow-500/10 p-3 md:p-4 rounded-xl border border-yellow-500/30">
-                    <div class="flex-1">
-                        <label class="block text-[10px] text-yellow-500 uppercase font-black mb-1 tracking-widest">SELECCIONA ETAPA A EDITAR</label>
-                        <select class="w-full bg-black border border-yellow-500 text-yellow-400 font-bold rounded-lg p-2 md:p-3 text-sm md:text-lg focus:ring-2 focus:ring-yellow-500 outline-none" onchange="changeStageSelection(this.value)">
-                            ${tempDetails.etapas.map((s, i) => `<option value="${i}" ${i == currentStageIndex ? 'selected' : ''}>📍 ETAPA ${i+1}: ${s.name || 'Sin nombre'}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="flex items-center gap-2 mt-2 md:mt-0 md:pt-5">
-                        <button type="button" onclick="addStage()" class="flex-1 md:flex-none bg-slate-700 hover:bg-white hover:text-black text-white p-2 md:p-3 rounded-lg transition text-xs md:text-sm" title="Añadir nueva etapa al final"><i class="fas fa-plus"></i></button>
-                        <button type="button" onclick="removeStage(${currentStageIndex})" class="flex-1 md:flex-none bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white p-2 md:p-3 rounded-lg transition text-xs md:text-sm" title="Borrar etapa actual"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 animate-fade-in">
-                    <div class="md:col-span-2">
-                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Nombre de la Etapa</label>
-                        <input type="text" value="${stage.name || ''}" placeholder="Ej: Turín - Milán" class="input-dark w-full rounded p-2 md:p-3 text-xs md:text-sm font-bold text-white" oninput="updateStageField('name', this.value)">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Tipo de Perfil</label>
-                        <select class="input-dark w-full rounded p-2 md:p-3 text-xs md:text-sm font-bold text-cyan-400" onchange="updateStageField('type', this.value)">
-                            <option value="Llana" ${stage.type === 'Llana' ? 'selected' : ''}>Llana</option>
-                            <option value="Montaña" ${stage.type === 'Montaña' ? 'selected' : ''}>Montaña</option>
-                            <option value="Media Montaña" ${stage.type === 'Media Montaña' ? 'selected' : ''}>Media Montaña</option>
-                            <option value="CRI" ${stage.type === 'CRI' ? 'selected' : ''}>Crono Individual (CRI)</option>
-                            <option value="CRE" ${stage.type === 'CRE' ? 'selected' : ''}>Crono Equipos (CRE)</option>
-                            <option value="Clásica" ${stage.type === 'Clásica' ? 'selected' : ''}>Clásica</option>
-                        </select>
-                    </div>
-                    <div class="flex gap-2 md:gap-4">
-                        <div class="flex-1">
-                            <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Distancia (km)</label>
-                            <input type="text" value="${stage.km || ''}" placeholder="Ej: 180.5" class="input-dark w-full rounded p-2 md:p-3 text-xs md:text-sm" oninput="updateStageField('km', this.value)">
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Desnivel (m)</label>
-                            <input type="text" value="${stage.desnivel || ''}" placeholder="Ej: 3200" class="input-dark w-full rounded p-2 md:p-3 text-xs md:text-sm" oninput="updateStageField('desnivel', this.value)">
-                        </div>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-[10px] text-slate-500 uppercase font-bold mb-1">Perfil (URL Imagen)</label>
-                        <input type="text" value="${stage.profile || ''}" placeholder="assets/profiles/..." class="input-dark w-full rounded p-2 md:p-3 text-xs md:text-sm font-mono text-purple-400" oninput="updateStageField('profile', this.value)">
-                    </div>
-                </div>
-            `;
-        }
-
-        function generateStagesStructure() {
-            let num = prompt("¿Cuántas etapas tiene esta carrera?", "1");
-            if(num) {
-                num = parseInt(num);
-                tempDetails.etapas = [];
-                for(let i=0; i<num; i++) tempDetails.etapas.push({ name: `Etapa ${i+1}`, type: 'Llana', km: '', desnivel: '', profile: '' });
-                tempDetails.totalEtapas = num;
-                currentStageIndex = 0;
-                renderStageBuilder(document.getElementById('stage-builder-container'));
-            }
-        }
-
-        function changeStageSelection(index) {
-            currentStageIndex = parseInt(index);
-            renderStageBuilder(document.getElementById('stage-builder-container'));
-        }
-
-        function updateStageField(field, value) {
-            if(!tempDetails.etapas[currentStageIndex]) return;
-            tempDetails.etapas[currentStageIndex][field] = value;
-            if(field === 'name') {
-                const select = document.querySelector('#stage-builder-container select');
-                if(select) select.options[select.selectedIndex].text = `📍 ETAPA ${currentStageIndex+1}: ${value}`;
-            }
-        }
-
-        function addStage() {
-            const nextNum = tempDetails.etapas.length + 1;
-            tempDetails.etapas.push({ name: `Etapa ${nextNum}`, type: 'Llana', km: '', desnivel: '', profile: '' });
-            currentStageIndex = tempDetails.etapas.length - 1; 
-            renderStageBuilder(document.getElementById('stage-builder-container'));
-        }
-
-        function removeStage(index) {
-            if(!confirm("¿Borrar esta etapa?")) return;
-            tempDetails.etapas.splice(index, 1);
-            if (currentStageIndex >= tempDetails.etapas.length) currentStageIndex = Math.max(0, tempDetails.etapas.length - 1);
-            renderStageBuilder(document.getElementById('stage-builder-container'));
-        }
-
-        // --- RENDERIZADOR DE CICLISTAS ---
-        function renderRiderBuilder(container) {
-            let html = `
-                <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
-                    <span class="text-xs md:text-sm text-slate-300 font-bold">Ciclistas: ${tempRiders.length}</span>
-                    <button type="button" onclick="addRider()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-2 md:px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-lg">+ Añadir</button>
-                </div>
-                <div id="riders-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto custom-scrollbar pr-1 md:pr-2">
-            `;
-            tempRiders.forEach((rider, index) => {
-                html += `
-                    <div class="flex items-center gap-2 bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span class="text-[10px] md:text-xs font-mono text-slate-500 w-4">${index+1}</span>
-                        <input type="text" value="${rider.name || ''}" class="bg-transparent text-white text-xs md:text-sm font-bold flex-1 outline-none w-full" oninput="updateRiderField(${index}, this.value)">
-                        <button type="button" onclick="removeRider(${index})" class="text-slate-500 hover:text-red-400 px-2"><i class="fas fa-times"></i></button>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-            if(container) container.innerHTML = html;
-        }
-
-        function updateRiderField(index, value) { tempRiders[index] = { name: value }; }
-        function addRider() {
-            tempRiders.push({ name: "" }); // Añadir al final en la vista móvil es más lógico
-            renderRiderBuilder(document.getElementById('rider-builder-container'));
-            // Hacer scroll hacia abajo al añadir
-            setTimeout(() => {
-                const list = document.getElementById('riders-list');
-                if(list) list.scrollTop = list.scrollHeight;
-            }, 50);
-        }
-        function removeRider(index) {
-            tempRiders.splice(index, 1);
-            renderRiderBuilder(document.getElementById('rider-builder-container'));
-        }
-
         // --- GUARDADO GENERAL ---
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
@@ -637,17 +433,10 @@
             const dataObj = {};
             
             for (let [key, value] of formData.entries()) {
-                if (key === 'points') value = parseInt(value) || 0;
+                if (key === 'points') {
+                    value = parseInt(value) || 0;
+                }
                 dataObj[key] = value;
-            }
-
-            if (currentTable === 'calendario') {
-                tempDetails.totalEtapas = tempDetails.etapas.length;
-                dataObj['details'] = JSON.stringify(tempDetails);
-            }
-            if (currentTable === 'equipos') {
-                const cleanRiders = tempRiders.filter(r => r.name && r.name.trim() !== '');
-                dataObj['riders'] = JSON.stringify(cleanRiders);
             }
 
             const authHeader = 'Basic ' + btoa('admin:velo2026');
