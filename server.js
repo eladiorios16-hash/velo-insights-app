@@ -4,15 +4,20 @@ const cors = require('cors');
 const path = require('path');
 const db = require('./db');
 
+// --- 1. CONFIGURACIÓN IA (VELO COPILOT) ---
+const GEMINI_API_KEY = "AIzaSyCrSBfWeCsaJhcchjrJTzuxhdWTkyY1mwI"; // <-- PEGA AQUÍ TU CLAVE DE GOOGLE AI STUDIO
+const { GoogleGenAI } = require('@google/genai');
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
 const app = express();
 
-console.log("Fact: Servidor Velo-Insights Iniciado (Version Final Blindada)");
+console.log("Fact: Servidor Velo-Insights Iniciado (Con IA Integrada)");
 
-// 1. CONFIGURACIÓN
+// 2. CONFIGURACIÓN EXPRESS
 app.use(cors());
 app.use(express.json());
 
-// 2. SEGURIDAD (Basic Auth)
+// 3. SEGURIDAD (Basic Auth)
 const authMiddleware = (req, res, next) => {
     const auth = { login: 'admin', password: 'velo2026' }; 
     const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
@@ -25,77 +30,114 @@ const authMiddleware = (req, res, next) => {
     res.status(401).send('⛔ ACCESO DENEGADO');
 };
 
-// 3. ZONA ADMIN
+// 4. ZONA ADMIN
 app.get('/admin', authMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// --- 4. API MAESTRA DE ADMINISTRACIÓN ---
+// --- 5. RUTA EXCLUSIVA: VELO COPILOT (INTELIGENCIA ARTIFICIAL) ---
+app.post('/api/admin/copilot', authMiddleware, async (req, res) => {
+    const { prompt, type } = req.body;
 
-// A) BORRAR
-app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
-    const { table, id } = req.params;
-    const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
-    
-    if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "TU_API_KEY_AQUI") {
+        return res.status(500).json({ error: "API Key de IA no configurada en el servidor." });
+    }
 
     try {
-        await db.query(`DELETE FROM ${table} WHERE id = ?`, [id]);
-        res.json({ success: true, msg: `Elemento ${id} borrado de ${table}` });
-    } catch (e) {
-        res.status(500).json({ error: e.message });
+        let systemInstruction = "";
+
+        // Instrucciones secretas para que la IA escriba como tú
+        if (type === 'article') {
+            systemInstruction = `
+            Eres el Editor Jefe de 'Velo Insights', una revista digital de ciclismo muy técnica, centrada en datos (W/kg, CdA, Crr), telemetría y táctica.
+            Escribe un artículo completo en formato HTML basado en el prompt del usuario.
+            REGLAS ESTRICTAS DE FORMATO:
+            1. No incluyas etiquetas <html>, <head> o <body>. Solo el contenido puro.
+            2. El primer párrafo DEBE empezar con esta clase para la letra gigante: <p class="drop-cap-pink intro-text"> (o drop-cap si prefieres color cian).
+            3. Usa <h3> para los subtítulos, con este formato: <h3 class="text-cyan-400 border-l-4 border-cyan-400 pl-3 mt-12">TITULO</h3> (puedes cambiar cyan por violet, pink o red según el tema).
+            4. Resalta nombres de corredores importantes con clases de Tailwind, ej: <strong class="text-white">Pogacar</strong> o <span class="text-pink-400 font-bold">Evenepoel</span>.
+            5. Si mencionas datos clave de potencia, mételos en una caja de Telemetry Insight con este código exacto:
+               <div class="my-10 p-6 md:p-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-950/60 to-[#050505] border border-cyan-500/30">
+               <p class="text-[10px] font-black uppercase text-cyan-400 tracking-widest mb-4">Telemetry Insight</p>
+               <p class="text-zinc-300">TEXTO CON DATOS, resaltando vatios en <strong class="text-cyan-400 bg-cyan-950/50 px-2 py-1 rounded">XX W/kg</strong></p>
+               </div>
+            `;
+        } else if (type === 'telemetry') {
+            systemInstruction = `
+            Genera únicamente el código HTML de una caja 'Telemetry Insight' basada en los datos proporcionados.
+            Usa colores cian para sprints, rojo para general, violeta para montaña o rosa para aerodinámica.
+            FORMATO ESTRICTO:
+            <div class="my-10 p-6 md:p-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-[COLOR]-950/60 to-[#050505] border border-[COLOR]-500/30">
+            <p class="text-[10px] font-black uppercase text-[COLOR]-400 tracking-widest mb-4">Telemetry Insight // [TIPO DE DATO]</p>
+            <p class="text-zinc-300">[TU ANÁLISIS DEL DATO AQUÍ]</p>
+            </div>
+            `;
+        }
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash', // El modelo más rápido para texto
+            contents: prompt,
+            config: {
+                systemInstruction: systemInstruction,
+                temperature: 0.7 // Un poco de creatividad, pero manteniendo el rigor técnico
+            }
+        });
+
+        // Limpiar la respuesta por si la IA añade markdown de bloque de código (```html ... ```)
+        let cleanText = response.text;
+        cleanText = cleanText.replace(/^```html\n?/gm, '').replace(/^```\n?/gm, '').replace(/```$/gm, '');
+
+        res.json({ result: cleanText });
+
+    } catch (error) {
+        console.error("Error en Copilot IA:", error);
+        res.status(500).json({ error: "Fallo en la comunicación con el cerebro IA." });
     }
 });
 
-// B) EDITAR
+
+// --- 6. API MAESTRA DE ADMINISTRACIÓN ---
+
+app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
+    const { table, id } = req.params;
+    const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
+    if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
+    try {
+        await db.query(`DELETE FROM ${table} WHERE id = ?`, [id]);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     const { table, id } = req.params;
     let data = req.body; 
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
-
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
-    // Parches
-    if (table === 'glosario' && data.def !== undefined) {
-        data.definition = data.def; 
-        delete data.def;            
-    }
-    if (data.isHero === '') {
-        data.isHero = 0;
-    }
+    if (table === 'glosario' && data.def !== undefined) { data.definition = data.def; delete data.def; }
+    if (data.isHero === '') data.isHero = 0;
 
     const keys = Object.keys(data);
     const values = Object.values(data);
-    
-    if (keys.length === 0) return res.status(400).json({error: "No hay datos para actualizar"});
+    if (keys.length === 0) return res.status(400).json({error: "No hay datos"});
 
     const setClause = keys.map(key => `\`${key}\` = ?`).join(', ');
     const sql = `UPDATE ${table} SET ${setClause} WHERE id = ?`;
 
     try {
         await db.query(sql, [...values, id]);
-        res.json({ success: true, msg: `Elemento ${id} actualizado en ${table}` });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: e.message });
-    }
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// C) CREAR (Ahora incluye 'ranking')
 app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
     const { table } = req.params;
     let data = req.body;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'trending', 'ranking'];
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
 
-    // Parches
-    if (table === 'glosario' && data.def !== undefined) {
-        data.definition = data.def;
-        delete data.def;
-    }
-    if (data.isHero === '') {
-        data.isHero = 0;
-    }
+    if (table === 'glosario' && data.def !== undefined) { data.definition = data.def; delete data.def; }
+    if (data.isHero === '') data.isHero = 0;
 
     const keys = Object.keys(data);
     const values = Object.values(data);
@@ -104,14 +146,13 @@ app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
     try {
         const columns = keys.map(key => `\`${key}\``).join(', ');
         const sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
-        
         await db.query(sql, values);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 
-// --- 5. APIs PÚBLICAS ---
+// --- 7. APIs PÚBLICAS ---
 
 app.get('/api/news', async (req, res) => {
     try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
@@ -152,7 +193,6 @@ app.get('/api/trending', async (req, res) => {
     } catch(e){ res.status(500).json([]); }
 });
 
-// NUEVA API: RANKING
 app.get('/api/ranking', async (req, res) => {
     try { 
         const [rows] = await db.query("SELECT * FROM ranking ORDER BY points DESC");
@@ -160,54 +200,23 @@ app.get('/api/ranking', async (req, res) => {
     } catch(e){ res.status(500).json([]); }
 });
 
-// --- 6. ACTUALIZACIÓN AUTOMÁTICA DE BASE DE DATOS ---
+// --- 8. ACTUALIZACIÓN AUTOMÁTICA DE BASE DE DATOS ---
 async function upgradeDatabase() {
-    // 1. Parche Glosario
+    try { await db.query("ALTER TABLE glosario ADD COLUMN insight TEXT NULL"); } catch (e) {}
     try {
-        await db.query("ALTER TABLE glosario ADD COLUMN insight TEXT NULL");
-        console.log("✅ Base de datos actualizada: Columna 'insight' creada con éxito.");
-    } catch (error) {
-        if (error.code === 'ER_DUP_FIELDNAME' || error.message.includes('Duplicate column')) {
-            console.log("⚡ La columna 'insight' ya existe en la base de datos. Todo OK.");
-        } else {
-            console.error("⚠️ Aviso al actualizar DB (insight):", error.message);
-        }
-    }
-    
-    // 2. Creación tabla Trending
+        await db.query(`CREATE TABLE IF NOT EXISTS trending (
+            id INT AUTO_INCREMENT PRIMARY KEY, tipo VARCHAR(50) NOT NULL, title VARCHAR(255) NOT NULL, subtitle VARCHAR(255), value VARCHAR(50)
+        )`);
+    } catch (e) {}
     try {
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS trending (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                tipo VARCHAR(50) NOT NULL,
-                title VARCHAR(255) NOT NULL,
-                subtitle VARCHAR(255),
-                value VARCHAR(50)
-            )
-        `);
-        console.log("✅ Base de datos actualizada: Tabla 'trending' operativa.");
-    } catch (error) { 
-        console.error("⚠️ Aviso DB (trending):", error.message); 
-    }
-
-    // 3. Creación tabla Ranking (NUEVO)
-    try {
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS ranking (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                team VARCHAR(255),
-                points INT DEFAULT 0
-            )
-        `);
-        console.log("✅ Base de datos actualizada: Tabla 'ranking' operativa.");
-    } catch (error) { 
-        console.error("⚠️ Aviso DB (ranking):", error.message); 
-    }
+        await db.query(`CREATE TABLE IF NOT EXISTS ranking (
+            id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, team VARCHAR(255), points INT DEFAULT 0
+        )`);
+    } catch (e) {}
 }
 upgradeDatabase();
 
-// --- 7. SERVIDOR ---
+// --- 9. SERVIDOR ---
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
