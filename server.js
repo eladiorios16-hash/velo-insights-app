@@ -39,7 +39,7 @@ app.get('/admin', authMiddleware, (req, res) => {
 app.post('/api/admin/copilot', authMiddleware, async (req, res) => {
     const { prompt, type } = req.body;
 
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === "TU_API_KEY_AQUI") {
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "AIzaSyCrSBfWeCsaJhcchjrJTzuxhdWTkyY1mwI") {
         return res.status(500).json({ error: "API Key de IA no configurada en el servidor." });
     }
 
