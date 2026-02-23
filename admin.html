@@ -10,53 +10,60 @@
         body { background-color: #0f172a; color: #cbd5e1; font-family: 'Inter', sans-serif; }
         .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .modal-glass { background: #1e293b; border: 1px solid #475569; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        
+        /* Mejoras en el Scroll para el menú móvil */
+        ::-webkit-scrollbar { width: 8px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
         .input-dark { background-color: #0f172a; border: 1px solid #334155; color: #f1f5f9; transition: all 0.3s; }
         .input-dark:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-6">
+<body class="min-h-screen p-4 md:p-6 flex flex-col">
 
-    <header class="flex justify-between items-center mb-8 px-2 md:px-4">
+    <header class="flex justify-between items-center mb-8 px-2">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-black text-xl">V</div>
+            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-black text-xl shadow-lg shadow-emerald-500/20">V</div>
             <h1 class="text-xl md:text-2xl font-bold text-white tracking-tight">VELO <span class="text-emerald-400">ADMIN</span></h1>
         </div>
-        <button onclick="logout()" class="text-slate-400 hover:text-red-400 transition text-xs md:text-sm font-semibold flex items-center gap-2">
+        <button onclick="logout()" class="text-slate-400 hover:text-red-400 transition text-sm font-semibold flex items-center gap-2">
             <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Cerrar Sesión</span>
         </button>
     </header>
 
-    <nav class="flex flex-wrap gap-2 md:gap-4 mb-8 border-b border-slate-700 pb-6 px-2">
-        <button onclick="loadTable('noticias')" id="btn-noticias" class="nav-btn px-4 md:px-6 py-2 md:py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 md:gap-3 border border-slate-700 text-sm md:text-base font-medium"><i class="fas fa-newspaper text-emerald-400"></i> Noticias</button>
-        <button onclick="loadTable('calendario')" id="btn-calendario" class="nav-btn px-4 md:px-6 py-2 md:py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 md:gap-3 border border-slate-700 text-sm md:text-base font-medium"><i class="fas fa-calendar-alt text-blue-400"></i> Calendario</button>
-        <button onclick="loadTable('equipos')" id="btn-equipos" class="nav-btn px-4 md:px-6 py-2 md:py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 md:gap-3 border border-slate-700 text-sm md:text-base font-medium"><i class="fas fa-users text-yellow-400"></i> Equipos</button>
-        <button onclick="loadTable('glosario')" id="btn-glosario" class="nav-btn px-4 md:px-6 py-2 md:py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 md:gap-3 border border-slate-700 text-sm md:text-base font-medium"><i class="fas fa-book text-purple-400"></i> Glosario</button>
-        <button onclick="loadTable('trending')" id="btn-trending" class="nav-btn px-4 md:px-6 py-2 md:py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 md:gap-3 border border-slate-700 text-sm md:text-base font-medium"><i class="fas fa-fire text-orange-400"></i> Trending</button>
-        <button onclick="loadTable('ranking')" id="btn-ranking" class="nav-btn px-4 md:px-6 py-2 md:py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 md:gap-3 border border-slate-700 text-sm md:text-base font-medium"><i class="fas fa-trophy text-amber-400"></i> Ranking</button>
+    <nav class="flex overflow-x-auto gap-3 mb-8 border-b border-slate-700 pb-4 px-2 custom-scrollbar items-center">
+        <button onclick="loadTable('noticias')" id="btn-noticias" class="nav-btn shrink-0 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 border border-slate-700 text-sm font-medium"><i class="fas fa-newspaper text-emerald-400"></i> Noticias</button>
+        <button onclick="loadTable('calendario')" id="btn-calendario" class="nav-btn shrink-0 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 border border-slate-700 text-sm font-medium"><i class="fas fa-calendar-alt text-blue-400"></i> Calendario</button>
+        <button onclick="loadTable('equipos')" id="btn-equipos" class="nav-btn shrink-0 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 border border-slate-700 text-sm font-medium"><i class="fas fa-users text-yellow-400"></i> Equipos</button>
+        <button onclick="loadTable('glosario')" id="btn-glosario" class="nav-btn shrink-0 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 border border-slate-700 text-sm font-medium"><i class="fas fa-book text-purple-400"></i> Glosario</button>
+        <button onclick="loadTable('trending')" id="btn-trending" class="nav-btn shrink-0 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 border border-slate-700 text-sm font-medium"><i class="fas fa-fire text-orange-400"></i> Trending</button>
+        <button onclick="loadTable('ranking')" id="btn-ranking" class="nav-btn shrink-0 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-2 border border-slate-700 text-sm font-medium"><i class="fas fa-trophy text-amber-400"></i> Ranking</button>
+        
+        <div class="h-8 w-px bg-slate-700 mx-2 shrink-0"></div>
+        <button onclick="openCopilot()" id="btn-copilot" class="nav-btn shrink-0 px-5 py-2.5 bg-indigo-950/40 hover:bg-indigo-900 text-indigo-300 rounded-xl transition flex items-center gap-2 border border-indigo-500/30 text-sm font-bold shadow-[0_0_15px_rgba(99,102,241,0.15)]"><i class="fas fa-robot text-indigo-400"></i> Copilot IA</button>
     </nav>
 
-    <main id="content-area" class="glass rounded-2xl p-4 md:p-8 min-h-[60vh] overflow-x-auto">
+    <main id="content-area" class="glass rounded-2xl p-4 md:p-8 flex-1 overflow-x-auto relative">
         <div class="flex flex-col items-center justify-center h-64 text-slate-500">
             <i class="fas fa-database text-4xl mb-4 opacity-50"></i>
-            <p class="text-center">Selecciona una categoría arriba para gestionar la base de datos.</p>
+            <p>Selecciona una categoría arriba para gestionar la base de datos.</p>
         </div>
     </main>
 
-    <div id="modal" class="fixed inset-0 bg-black/95 hidden flex justify-center items-center z-[100] p-2 md:p-4 backdrop-blur-sm transition-opacity">
-        <div class="modal-glass w-full max-w-4xl h-full md:h-auto md:max-h-[95vh] rounded-xl md:rounded-2xl flex flex-col shadow-2xl relative">
-            <div class="p-4 md:p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-xl md:rounded-t-2xl shrink-0">
-                <h2 id="modal-title" class="text-lg md:text-xl font-bold text-white flex items-center gap-3">✏️ Editar Elemento</h2>
+    <div id="modal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-center z-50 p-4 backdrop-blur-sm transition-opacity">
+        <div class="modal-glass w-full max-w-4xl max-h-[90vh] rounded-2xl flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-2xl">
+                <h2 id="modal-title" class="text-xl font-bold text-white flex items-center gap-3">✏️ Editar Elemento</h2>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-700"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-4 md:p-8 overflow-y-auto flex-1 custom-scrollbar bg-[#0f172a]">
-                <form id="dynamicForm" class="grid grid-cols-1 gap-4 md:gap-6"></form>
+            <div class="p-8 overflow-y-auto flex-1 custom-scrollbar">
+                <form id="dynamicForm" class="grid grid-cols-1 gap-6"></form>
             </div>
-            <div class="p-4 md:p-6 border-t border-slate-700 bg-slate-800/50 rounded-b-xl md:rounded-b-2xl flex justify-end gap-3 md:gap-4 shrink-0">
-                <button onclick="closeModal()" class="px-4 md:px-6 py-2 text-sm md:text-base text-slate-300 hover:text-white font-medium">Cancelar</button>
-                <button onclick="saveData()" class="px-6 md:px-8 py-2 text-sm md:text-base bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg shadow-lg flex items-center gap-2"><i class="fas fa-save"></i> Guardar</button>
+            <div class="p-6 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex justify-end gap-4">
+                <button onclick="closeModal()" class="px-6 py-2 text-slate-300 hover:text-white font-medium">Cancelar</button>
+                <button onclick="saveData()" class="px-8 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg shadow-lg flex items-center gap-2"><i class="fas fa-save"></i> Guardar</button>
             </div>
         </div>
     </div>
@@ -64,14 +71,14 @@
     <script>
         let currentTable = '';
         let currentData = [];
-        let globalTeamsData = []; 
+        let globalTeamsData = []; // Guardamos los equipos aquí para el desplegable
         let isEditing = false;
         let editId = null;
 
         const templates = {
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
-            calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{\n    "totalEtapas": 1,\n    "etapas": [\n        {\n            "name": "Etapa 1",\n            "km": "150",\n            "type": "Llana",\n            "desnivel": "1200",\n            "profile": "assets/profiles/..."\n        }\n    ]\n}', winner: null },
-            equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[\n    {\n        "name": "Tadej Pogacar",\n        "role": "Líder"\n    }\n]' },
+            calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
+            equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
             glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
             trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' },
             ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0 }
@@ -80,15 +87,19 @@
         async function fetchGlobalTeams() {
             try {
                 const res = await fetch('/api/teams');
-                if(res.ok) globalTeamsData = await res.json();
+                if(res.ok) {
+                    globalTeamsData = await res.json();
+                }
             } catch (e) { console.error("Error cargando equipos", e); }
         }
         fetchGlobalTeams();
 
         async function loadTable(table) {
             currentTable = table;
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ring-2', 'ring-emerald-500', 'bg-slate-700'));
-            document.getElementById(`btn-${table}`).classList.add('ring-2', 'ring-emerald-500', 'bg-slate-700');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ring-2', 'ring-emerald-500', 'ring-indigo-500', 'bg-slate-700', 'bg-indigo-900'));
+            
+            const activeBtn = document.getElementById(`btn-${table}`);
+            if(activeBtn) activeBtn.classList.add('ring-2', 'ring-emerald-500', 'bg-slate-700');
             
             const content = document.getElementById('content-area');
             content.innerHTML = '<div class="flex justify-center p-20"><i class="fas fa-circle-notch fa-spin text-4xl text-emerald-500"></i></div>';
@@ -107,20 +118,133 @@
             } catch (e) { content.innerHTML = `<div class="text-red-400 text-center">Error: ${e.message}</div>`; }
         }
 
+        // --- SISTEMA VELO COPILOT (IA) ---
+        function openCopilot() {
+            currentTable = 'copilot';
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ring-2', 'ring-emerald-500', 'ring-indigo-500', 'bg-slate-700', 'bg-indigo-900'));
+            const btn = document.getElementById('btn-copilot');
+            if(btn) btn.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-900');
+
+            const container = document.getElementById('content-area');
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto w-full animate-fade-in pb-10">
+                    <div class="mb-8">
+                        <h2 class="text-3xl md:text-4xl font-black text-white flex items-center gap-3 uppercase italic tracking-tighter">
+                            <span class="w-3 h-8 bg-indigo-500 rounded-sm transform skew-x-[-15deg]"></span> 
+                            Velo Copilot <span class="bg-indigo-500/20 text-indigo-400 text-xs px-2 py-1 rounded not-italic tracking-widest ml-2 border border-indigo-500/30">AI ENGINE</span>
+                        </h2>
+                        <p class="text-slate-400 mt-2 text-sm">El motor de Inteligencia Artificial conectado a la redacción de Velo Insights.</p>
+                    </div>
+                    
+                    <div class="bg-slate-800/40 border border-slate-700 rounded-2xl p-6 shadow-2xl backdrop-blur-sm mb-8">
+                        <div class="grid grid-cols-1 gap-6">
+                            <div>
+                                <label class="block text-[10px] uppercase text-indigo-400 font-bold mb-2 tracking-widest"><i class="fas fa-layer-group mr-1"></i> TIPO DE GENERACIÓN</label>
+                                <select id="ai-type" class="input-dark w-full rounded-lg p-3 font-bold text-white text-sm">
+                                    <option value="article">📝 Artículo Completo (Estructura HTML Velo)</option>
+                                    <option value="telemetry">⚡ Solo Caja Neón (Telemetry Insight)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] uppercase text-indigo-400 font-bold mb-2 tracking-widest"><i class="fas fa-terminal mr-1"></i> INSTRUCCIONES (PROMPT)</label>
+                                <textarea id="ai-prompt" rows="5" class="input-dark w-full rounded-lg p-4 text-sm leading-relaxed" placeholder="Ej: Redacta un análisis técnico sobre la victoria de Pogacar en Strade Bianche 2026. Menciona que atacó a 81km de meta empujando 6.5 W/kg en el sector de Sante Marie..."></textarea>
+                            </div>
+
+                            <button onclick="generateAI()" id="btn-generate-ai" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-4 rounded-xl font-bold flex justify-center items-center gap-3 shadow-[0_0_20px_rgba(79,70,229,0.4)] transition-all active:scale-95 w-full uppercase tracking-widest text-sm">
+                                <i class="fas fa-bolt"></i> INICIAR SECUENCIA DE REDACCIÓN
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="ai-result-container" class="hidden animate-fade-in">
+                        <div class="flex justify-between items-end mb-2 px-1">
+                            <label class="block text-[10px] uppercase text-emerald-400 font-bold tracking-widest"><i class="fas fa-code mr-1"></i> RESULTADO HTML (LISTO PARA PEGAR)</label>
+                            <span class="text-xs text-slate-500 font-mono" id="ai-status">Completado</span>
+                        </div>
+                        <div class="relative group">
+                            <textarea id="ai-result" rows="15" class="input-dark w-full rounded-2xl p-5 font-mono text-sm leading-relaxed border-emerald-500/30 bg-[#090f1a] focus:border-emerald-500"></textarea>
+                            <button onclick="copyAIResult()" class="absolute top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-emerald-500 hover:text-black transition shadow-lg flex items-center gap-2 font-bold text-xs uppercase tracking-widest">
+                                <i class="fas fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function generateAI() {
+            const prompt = document.getElementById('ai-prompt').value;
+            const type = document.getElementById('ai-type').value;
+            const btn = document.getElementById('btn-generate-ai');
+            const resultContainer = document.getElementById('ai-result-container');
+            const resultArea = document.getElementById('ai-result');
+
+            if(!prompt.trim()) { alert("Por favor, dale instrucciones al Copilot."); return; }
+
+            // Estado de carga
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> PROCESANDO DATOS IA...';
+            btn.disabled = true;
+            btn.classList.replace('bg-indigo-600', 'bg-slate-700');
+            btn.classList.add('cursor-not-allowed', 'opacity-80');
+            resultContainer.classList.add('hidden');
+
+            try {
+                const authHeader = 'Basic ' + btoa('admin:velo2026');
+                const res = await fetch('/api/admin/copilot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+                    body: JSON.stringify({ prompt, type })
+                });
+
+                if(res.ok) {
+                    const data = await res.json();
+                    resultArea.value = data.result;
+                    resultContainer.classList.remove('hidden');
+                    
+                    // Hacer scroll hacia el resultado
+                    setTimeout(() => {
+                        resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                } else {
+                    const err = await res.json();
+                    alert("Error IA: " + (err.error || "Asegúrate de haber puesto tu API Key en server.js"));
+                }
+            } catch(e) {
+                alert("Error de conexión con el servidor IA: " + e.message);
+            }
+
+            // Restaurar botón
+            btn.innerHTML = '<i class="fas fa-bolt"></i> INICIAR SECUENCIA DE REDACCIÓN';
+            btn.disabled = false;
+            btn.classList.replace('bg-slate-700', 'bg-indigo-600');
+            btn.classList.remove('cursor-not-allowed', 'opacity-80');
+        }
+
+        function copyAIResult() {
+            const resultArea = document.getElementById('ai-result');
+            resultArea.select();
+            document.execCommand('copy');
+            // Deseleccionar para que no se quede todo azul
+            window.getSelection().removeAllRanges();
+            alert("✅ ¡HTML copiado al portapapeles! Listo para pegarse en una noticia.");
+        }
+
+
         function renderUI(data) {
             const container = document.getElementById('content-area');
             
             let extraBtn = '';
             if (currentTable === 'trending') {
-                extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-3 md:px-4 py-2 rounded-xl font-bold flex items-center gap-2 mr-0 md:mr-3 shadow-lg transition-transform active:scale-95 text-xs md:text-sm"><i class="fas fa-brain"></i> <span class="hidden md:inline">AUTO-GENERAR (IA)</span><span class="md:hidden">IA</span></button>`;
+                extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 mr-3 shadow-lg transition-transform active:scale-95 text-sm"><i class="fas fa-brain"></i> AUTO-GENERAR (IA)</button>`;
             }
 
             let headerHtml = `
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 md:gap-0">
-                    <h2 class="text-2xl md:text-3xl font-bold text-white capitalize flex items-center gap-3"><span class="w-2 h-8 bg-emerald-500 rounded-full"></span>${currentTable}</h2>
-                    <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-white capitalize flex items-center gap-3"><span class="w-2 h-8 bg-emerald-500 rounded-full"></span>${currentTable}</h2>
+                    <div class="flex items-center">
                         ${extraBtn}
-                        <button onclick="openCreateModal()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-4 md:px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform active:scale-95 text-xs md:text-sm"><i class="fas fa-plus-circle"></i> AÑADIR NUEVO</button>
+                        <button onclick="openCreateModal()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform active:scale-95 text-sm"><i class="fas fa-plus-circle"></i> AÑADIR NUEVO</button>
                     </div>
                 </div>`;
 
@@ -133,15 +257,17 @@
             const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight'];
             const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
 
-            let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl"><table class="w-full text-left text-sm text-slate-300 whitespace-nowrap min-w-[600px]">
+            let tableHtml = `<div class="overflow-hidden rounded-xl border border-slate-700 shadow-2xl"><table class="w-full text-left text-sm text-slate-300">
                 <thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr>
-                    ${displayCols.map(c => `<th class="p-3 md:p-4">${c}</th>`).join('')}
-                    <th class="p-3 md:p-4 text-right">ACCIONES</th>
+                    ${displayCols.map(c => `<th class="p-4">${c}</th>`).join('')}
+                    <th class="p-4 text-right">ACCIONES</th>
                 </tr></thead>
                 <tbody class="divide-y divide-slate-700 bg-slate-900/40">`;
 
             let renderData = data;
-            if (currentTable === 'ranking') renderData = [...data].sort((a, b) => b.points - a.points);
+            if (currentTable === 'ranking') {
+                renderData = [...data].sort((a, b) => b.points - a.points);
+            }
 
             renderData.forEach(row => {
                 tableHtml += `<tr class="hover:bg-slate-800/60 transition group">`;
@@ -153,9 +279,9 @@
                     else if (typeof val === 'string' && val.startsWith('assets/')) val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md border border-slate-700">`;
                     else if (typeof val === 'string' && val.length > 40) val = val.substring(0, 40) + '...';
                     
-                    tableHtml += `<td class="p-3 md:p-4 font-medium">${val || '-'}</td>`;
+                    tableHtml += `<td class="p-4 font-medium">${val || '-'}</td>`;
                 });
-                tableHtml += `<td class="p-3 md:p-4 text-right flex justify-end gap-2">
+                tableHtml += `<td class="p-4 text-right flex justify-end gap-2">
                     <button onclick='openEditModal(${row.id})' class="bg-blue-500/10 text-blue-400 p-2 rounded hover:bg-blue-500 hover:text-white transition"><i class="fas fa-pen"></i></button>
                     <button onclick='deleteItem(${row.id})' class="bg-red-500/10 text-red-400 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
                 </td></tr>`;
@@ -285,18 +411,14 @@
                 
                 let input;
 
-                // --- TEXTAREAS AMPLIAS PARA RAW JSON (DETAILS, RIDERS, CONTENT) ---
                 if (['content', 'riders', 'details', 'definition', 'def', 'insight'].includes(key)) {
                     input = document.createElement('textarea');
-                    // Hacemos el recuadro mucho más grande para ver todo el JSON de carreras/equipos
                     input.rows = key === 'insight' ? 3 : (key === 'details' || key === 'riders' || key === 'content' ? 15 : 8); 
                     input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm leading-relaxed";
                     
-                    // Asegurarnos de que el objeto se muestre bonito como texto estructurado
                     if (typeof value === 'object' && value !== null) {
                         input.value = JSON.stringify(value, null, 4);
                     } else if (typeof value === 'string') {
-                        // Intentar formatear strings que en realidad son JSON aplastado
                         try {
                             const parsed = JSON.parse(value);
                             input.value = JSON.stringify(parsed, null, 4);
@@ -307,10 +429,9 @@
                         input.value = value || '';
                     }
                 } 
-                // --- CAMPOS NORMALES Y DESPLEGABLES ---
                 else if (key === 'tag' || key === 'status' || key === 'isHero') {
                     input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-2 md:p-3 text-sm md:text-base";
+                    input.className = "input-dark w-full rounded-lg p-3 text-sm";
                     let opts = [];
                     if(key==='tag') opts = ['GENERAL', 'RACE REPORT', 'TECH LAB', 'AERO LAB', 'DATA ANALYSIS', 'PREVIA'];
                     if(key==='status') opts = ['Upcoming', 'Live', 'Finished'];
@@ -325,11 +446,10 @@
                         });
                     }
                 } 
-                // --- LÓGICA DE MENÚS DESPLEGABLES PARA TRENDING ---
                 else if (currentTable === 'trending' && key === 'subtitle' && isTrendingRider) {
                     label.innerText = 'EQUIPO DEL CICLISTA';
                     input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-2 md:p-3 font-bold text-cyan-400 text-sm md:text-base";
+                    input.className = "input-dark w-full rounded-lg p-3 font-bold text-cyan-400 text-sm";
                     input.id = 'select-trending-team';
                     
                     const defaultOpt = document.createElement('option');
@@ -347,7 +467,7 @@
                 } else if (currentTable === 'trending' && key === 'title' && isTrendingRider) {
                     label.innerText = 'NOMBRE DEL CICLISTA';
                     input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-2 md:p-3 font-bold text-white text-sm md:text-base";
+                    input.className = "input-dark w-full rounded-lg p-3 font-bold text-white text-sm";
                     input.id = 'select-trending-rider';
                     
                     const opt = document.createElement('option');
@@ -355,7 +475,7 @@
                     input.appendChild(opt);
                 } else if (key === 'tipo') {
                     input = document.createElement('select');
-                    input.className = "input-dark w-full rounded-lg p-2 md:p-3 text-sm md:text-base";
+                    input.className = "input-dark w-full rounded-lg p-3 text-sm";
                     ['ciclista', 'topic'].forEach(opt => {
                         const el = document.createElement('option');
                         el.value = opt; el.innerText = opt.toUpperCase();
@@ -369,7 +489,7 @@
                 else {
                     input = document.createElement('input');
                     input.type = (key === 'dateISO' || key === 'endDateISO') ? 'date' : 'text';
-                    input.className = "input-dark w-full rounded-lg p-2 md:p-3 text-sm md:text-base";
+                    input.className = "input-dark w-full rounded-lg p-3 text-sm";
                     input.value = value || '';
                 }
                 
@@ -424,7 +544,6 @@
             }
         }
 
-        // --- GUARDADO GENERAL ---
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
         async function saveData() {
