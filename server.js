@@ -86,7 +86,8 @@ if (type === 'article') {
             contents: prompt,
             config: {
                 systemInstruction: systemInstruction,
-                temperature: 0.7,
+                temperature: 0.2,
+                tools: [{ googleSearch: {} }],
                 // He relajado un poco el filtro a BLOCK_ONLY_HIGH en lugar de BLOCK_NONE 
                 // para evitar que Google rechace la petición por permisos de cuenta gratuita.
                 safetySettings: [
