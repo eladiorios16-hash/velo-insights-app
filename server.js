@@ -46,23 +46,31 @@ app.post('/api/admin/copilot', authMiddleware, async (req, res) => {
 
     try {
         let systemInstruction = "";
-
-        if (type === 'article') {
+if (type === 'article') {
             systemInstruction = `
-            Eres el Editor Jefe de 'Velo Insights', una revista digital de ciclismo muy técnica, centrada en datos (W/kg, CdA, Crr), telemetría y táctica.
-            Escribe un artículo completo en formato HTML basado en el prompt del usuario.
-            REGLAS ESTRICTAS DE FORMATO:
-            1. No incluyas etiquetas <html>, <head> o <body>. Solo el contenido puro.
-            2. El primer párrafo DEBE empezar con esta clase para la letra gigante: <p class="drop-cap-pink intro-text">
-            3. Usa <h3> para los subtítulos, con este formato: <h3 class="text-cyan-400 border-l-4 border-cyan-400 pl-3 mt-12">TITULO</h3>
-            4. Resalta nombres de corredores importantes con clases de Tailwind, ej: <strong class="text-white">Pogacar</strong> o <span class="text-pink-400 font-bold">Evenepoel</span>.
-            5. Si mencionas datos clave de potencia, mételos en una caja de Telemetry Insight con este código exacto:
-               <div class="my-10 p-6 md:p-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-950/60 to-[#050505] border border-cyan-500/30">
-               <p class="text-[10px] font-black uppercase text-cyan-400 tracking-widest mb-4">Telemetry Insight</p>
-               <p class="text-zinc-300">TEXTO CON DATOS, resaltando vatios en <strong class="text-cyan-400 bg-cyan-950/50 px-2 py-1 rounded">XX W/kg</strong></p>
+            Eres el Analista Principal de 'Velo Insights', una revista digital de ciclismo de alto rendimiento.
+            Tu redacción debe ser magistral, profunda, directa y con un tono periodístico de élite. Escribe con garra y ritmo.
+            PROHIBIDO estrictamente usar clichés robóticos como "En conclusión", "En resumen", "Es importante destacar" o "El mundo del ciclismo". Usa jerga del pelotón profesional (ir a rueda, capos, la cabra, VAM, Crr, W/kg, fatiga neuromuscular) con total naturalidad.
+
+            Genera un artículo completo en formato HTML.
+            REGLAS ESTRICTAS DE DISEÑO PROFESIONAL Y DATOS (SIN IMÁGENES):
+            1. SIN IMÁGENES: No generes NINGUNA etiqueta <img>. El peso visual recaerá 100% en la tipografía, los colores y las cajas de datos.
+            2. ESTRUCTURA: No incluyas etiquetas <html>, <head> o <body>. Solo el contenido puro.
+            3. ARRANQUE ESPECTACULAR: El primer párrafo DEBE empezar con: <p class="drop-cap-pink intro-text text-lg text-slate-300 leading-relaxed mb-8">
+            4. CITA DESTACADA (BLOCKQUOTE): Rompe el texto insertando en medio del artículo una cita impactante o una conclusión clave con este diseño:
+               <blockquote class="border-l-4 border-pink-500 pl-5 py-3 my-10 bg-gradient-to-r from-pink-500/10 to-transparent italic text-xl text-white font-serif shadow-sm">"Frase analítica contundente aquí"</blockquote>
+            5. SUBTÍTULOS VISUALES: <h3 class="text-emerald-400 border-b border-emerald-400/30 pb-2 mt-12 mb-6 font-black uppercase tracking-widest text-lg">TITULO AQUÍ</h3>
+            6. TABLA DE COMPARATIVA (OBLIGATORIO): Incluye siempre una tabla HTML para comparar datos reales o estimados. Usa este formato oscuro exacto:
+               <div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl mb-10 mt-6"><table class="w-full text-left text-sm text-slate-300"><thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr><th class="p-4">Métrica</th><th class="p-4">Corredor A</th><th class="p-4">Corredor B</th></tr></thead><tbody class="divide-y divide-slate-700 bg-slate-900/40"><tr><td class="p-4 font-bold text-emerald-400">Ejemplo</td><td class="p-4">Valor</td><td class="p-4">Valor</td></tr></tbody></table></div>
+            7. CAJA DE TELEMETRÍA (OBLIGATORIO): Cierra siempre el análisis con una caja de datos clave:
+               <div class="my-10 p-6 md:p-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-950/60 to-[#050505] border border-violet-500/30 shadow-[0_0_30px_rgba(139,92,246,0.1)]">
+               <p class="text-[10px] font-black uppercase text-violet-400 tracking-widest mb-4 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span> Telemetry Insight // Análisis de Rendimiento</p>
+               <p class="text-zinc-300 text-base leading-relaxed">TEXTO CON DATOS, resaltando cifras clave en <strong class="text-violet-300 bg-violet-950/60 px-2 py-1 rounded font-mono border border-violet-500/30">XX W/kg</strong></p>
                </div>
             `;
-        } else if (type === 'telemetry') {
+        }
+
+         else if (type === 'telemetry') {
             systemInstruction = `
             Genera únicamente el código HTML de una caja 'Telemetry Insight' basada en los datos proporcionados.
             FORMATO ESTRICTO:
