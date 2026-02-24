@@ -362,15 +362,28 @@
                 document.getElementById('rcr-category').innerText = liveRace.category || 'WT';
                 
                 try {
-                    const details = typeof liveRace.details === 'string' ? JSON.parse(liveRace.details) : liveRace.details;
-                    if (details && details.etapas && details.etapas.length > 0) {
-                        const etapa1 = details.etapas[0];
+                    let details = liveRace;
+                    if (liveRace.details && typeof liveRace.details === 'string' && liveRace.details.trim().startsWith('{')) {
+                        details = JSON.parse(liveRace.details);
+                    }
+
+                    // 1. Rellenar Telemetría (AHORA LEE 'stages' y 'gain' DE TU JSON)
+                    if (details.stages && details.stages.length > 0) {
+                        const etapa1 = details.stages[0];
                         document.getElementById('rcr-km').innerText = (etapa1.km || '---') + ' km';
-                        document.getElementById('rcr-elevation').innerText = (etapa1.desnivel || '---') + ' m+';
+                        document.getElementById('rcr-elevation').innerText = (etapa1.gain || '---') + ' m+';
                         document.getElementById('rcr-type').innerText = etapa1.type || '---';
                     }
+
+                    // 2. Rellenar Tactical Board (Derecha)
+                    if (details.tactical) {
+                        const tacticalContainer = document.querySelector('#race-control-room .prose');
+                        if (tacticalContainer) {
+                            tacticalContainer.innerHTML = `<div class="text-slate-300 text-sm md:text-base leading-relaxed">${details.tactical}</div>`;
+                        }
+                    }
                 } catch(e) {
-                    console.log("Detalles técnicos de la carrera no disponibles.");
+                    console.log("Detalles técnicos de la carrera no disponibles.", e);
                 }
             }
         }
