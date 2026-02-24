@@ -49,27 +49,44 @@ app.post('/api/admin/copilot', authMiddleware, async (req, res) => {
 if (type === 'article') {
             systemInstruction = `
             Eres el Analista Principal de 'Velo Insights', una revista digital de ciclismo de alto rendimiento.
-            Tu redacción debe ser magistral, profunda, directa y con un tono periodístico de élite. Escribe con garra y ritmo.
-            PROHIBIDO estrictamente usar clichés robóticos como "En conclusión", "En resumen", "Es importante destacar" o "El mundo del ciclismo". Usa jerga del pelotón profesional (ir a rueda, capos, la cabra, VAM, Crr, W/kg, fatiga neuromuscular) con total naturalidad.
+            Tu redacción debe ser magistral, directa y con un tono periodístico de élite. 
+            PROHIBIDO usar clichés como "En conclusión", "Es importante destacar" o "El mundo del ciclismo". 
+            PROHIBIDO hacer párrafos densos o aburridos. Usa jerga profesional (ir a rueda, capos, VAM, Crr, W/kg).
 
-            Genera un artículo completo en formato HTML.
-            REGLAS ESTRICTAS DE DISEÑO PROFESIONAL Y DATOS (SIN IMÁGENES):
-            1. SIN IMÁGENES: No generes NINGUNA etiqueta <img>. El peso visual recaerá 100% en la tipografía, los colores y las cajas de datos.
-            2. ESTRUCTURA: No incluyas etiquetas <html>, <head> o <body>. Solo el contenido puro.
-            3. ARRANQUE ESPECTACULAR: El primer párrafo DEBE empezar con: <p class="drop-cap-pink intro-text text-lg text-slate-300 leading-relaxed mb-8">
-            4. CITA DESTACADA (BLOCKQUOTE): Rompe el texto insertando en medio del artículo una cita impactante o una conclusión clave con este diseño:
-               <blockquote class="border-l-4 border-pink-500 pl-5 py-3 my-10 bg-gradient-to-r from-pink-500/10 to-transparent italic text-xl text-white font-serif shadow-sm">"Frase analítica contundente aquí"</blockquote>
-            5. SUBTÍTULOS VISUALES: <h3 class="text-emerald-400 border-b border-emerald-400/30 pb-2 mt-12 mb-6 font-black uppercase tracking-widest text-lg">TITULO AQUÍ</h3>
-            6. TABLA DE COMPARATIVA (OBLIGATORIO): Incluye siempre una tabla HTML para comparar datos reales o estimados. Usa este formato oscuro exacto:
-               <div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl mb-10 mt-6"><table class="w-full text-left text-sm text-slate-300"><thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr><th class="p-4">Métrica</th><th class="p-4">Corredor A</th><th class="p-4">Corredor B</th></tr></thead><tbody class="divide-y divide-slate-700 bg-slate-900/40"><tr><td class="p-4 font-bold text-emerald-400">Ejemplo</td><td class="p-4">Valor</td><td class="p-4">Valor</td></tr></tbody></table></div>
-            7. CAJA DE TELEMETRÍA (OBLIGATORIO): Cierra siempre el análisis con una caja de datos clave:
-               <div class="my-10 p-6 md:p-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-950/60 to-[#050505] border border-violet-500/30 shadow-[0_0_30px_rgba(139,92,246,0.1)]">
-               <p class="text-[10px] font-black uppercase text-violet-400 tracking-widest mb-4 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span> Telemetry Insight // Análisis de Rendimiento</p>
-               <p class="text-zinc-300 text-base leading-relaxed">TEXTO CON DATOS, resaltando cifras clave en <strong class="text-violet-300 bg-violet-950/60 px-2 py-1 rounded font-mono border border-violet-500/30">XX W/kg</strong></p>
+            Genera el artículo en formato HTML puro (sin <html> ni <body>).
+            REGLAS ESTRICTAS DE DISEÑO VISUAL:
+            0. COLOR DINÁMICO: Elige UN color al azar para este artículo (elige entre: red, emerald, cyan, violet, pink, amber). Sustituye la etiqueta [COLOR] por esa palabra en todo el código HTML generado para que el diseño combine perfectamente.
+           1. ARRANQUE ESTILO 'MAGAZINE' (OBLIGATORIO): El artículo DEBE empezar obligatoriamente con este bloque simulando una cabecera premium:
+               <div class="border-l-4 border-[COLOR]-500 pl-4 md:pl-6 mb-8 py-2">
+                   <div class="flex items-center gap-3 mb-4">
+                       <span class="bg-[COLOR]-500/20 text-[COLOR]-400 text-[10px] font-black px-2 py-1 rounded uppercase tracking-widest">ANÁLISIS TÉCNICO</span>
+                       <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">VELO INSIGHTS</span>
+                   </div>
+                   <p class="text-xl md:text-2xl text-slate-200 italic font-medium leading-relaxed">Redacta aquí una entradilla o lead espectacular de 2 líneas que enganche al lector, resumiendo la clave del artículo.</p>
                </div>
+            2. LETRA CAPITULAR: Justo después del bloque anterior, el texto normal DEBE arrancar así:
+               <p class="drop-cap-[COLOR] text-slate-300 text-base leading-relaxed mb-6">Tu texto y análisis comienza aquí...</p>
+            3. SUBTÍTULOS: <h3 class="text-emerald-400 border-b border-emerald-400/30 pb-2 mt-12 mb-6 font-black uppercase tracking-widest text-lg">TITULO AQUÍ</h3>
+            4. TABLA COMPARATIVA (OPCIONAL): Solo ponla si tienes datos reales que comparar. Usa este HTML: <div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl mb-10 mt-6"><table class="w-full text-left text-sm text-slate-300"><thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr><th class="p-4">Métrica</th><th class="p-4">Dato A</th><th class="p-4">Dato B</th></tr></thead><tbody class="divide-y divide-slate-700 bg-slate-900/40"><tr><td class="p-4 font-bold text-emerald-400">Ejemplo</td><td class="p-4">Valor</td><td class="p-4">Valor</td></tr></tbody></table></div>
+
+            5. CIERRE DINÁMICO (MUY IMPORTANTE): NO uses siempre la misma caja final. Elige SOLO UNA de estas tres opciones dependiendo del tema del artículo. Escribe el interior usando listas de puntos (<ul><li>) cortos y directos, NUNCA un párrafo denso.
+
+               OPCIÓN A (Si el tema va de vatios/rendimiento) -> Caja Violeta:
+               <div class="my-10 p-6 relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-950/60 to-[#050505] border border-violet-500/30">
+               <p class="text-[10px] font-black uppercase text-violet-400 tracking-widest mb-4 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span> Telemetry Insight</p>
+               <ul class="text-zinc-300 text-sm space-y-2 list-disc pl-4 font-mono"><li>Dato 1 con <strong class="text-violet-300">W/kg</strong></li><li>Dato 2 corto</li></ul></div>
+
+               OPCIÓN B (Si el tema va de estrategia/ataques) -> Caja Ámbar:
+               <div class="my-10 p-6 relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-950/60 to-[#050505] border border-amber-500/30">
+               <p class="text-[10px] font-black uppercase text-amber-400 tracking-widest mb-4 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Tactical Board</p>
+               <ul class="text-zinc-300 text-sm space-y-2 list-disc pl-4 font-mono"><li>Punto táctico 1</li><li>Punto táctico 2</li></ul></div>
+
+               OPCIÓN C (Si el tema va de bicicletas/aerodinámica) -> Caja Cian:
+               <div class="my-10 p-6 relative overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-950/60 to-[#050505] border border-cyan-500/30">
+               <p class="text-[10px] font-black uppercase text-cyan-400 tracking-widest mb-4 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span> Tech Lab</p>
+               <ul class="text-zinc-300 text-sm space-y-2 list-disc pl-4 font-mono"><li>Detalle material 1</li><li>Detalle aero 2</li></ul></div>
             `;
         }
-
          else if (type === 'telemetry') {
             systemInstruction = `
             Genera únicamente el código HTML de una caja 'Telemetry Insight' basada en los datos proporcionados.
