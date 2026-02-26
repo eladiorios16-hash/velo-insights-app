@@ -254,8 +254,7 @@
     </main>
 
     <script src="layout.js?v=7.1"></script>
-
-    <script>
+<script>
         // LA GRAN BASE DE DATOS DE GRUPOS PROFESIONALES
         const groupsetsDB = {
             shi_compact_11: { name: "11v Compact", platos: [50, 34], pinones: [11, 12, 13, 14, 15, 17, 19, 21, 24, 27, 30, 34] },
@@ -276,11 +275,10 @@
         const rpmStatus = document.getElementById('rpm-status');
 
         // Función para inyectar los botones de "Cassette Rápido"
-        function renderQuickSelects(setupId) {
+        function renderQuickSelects(setupId, skipAutoSelect = false) {
             const presetVal = document.getElementById(`preset-${setupId}`).value;
             const container = document.getElementById(`quick-selects-${setupId}`);
             
-            // Colores según el lado A o B
             const colorClass = setupId === 'a' ? 'cyan' : 'violet';
             const bgClass = `bg-${colorClass}-900/30`;
             const textClass = `text-${colorClass}-400`;
@@ -289,18 +287,18 @@
 
             if (presetVal === 'custom') {
                 container.classList.add('hidden');
+                // IMPORTANTE: Si es manual, no sobreescribimos los números, dejamos los que el usuario haya tecleado
+                if(!skipAutoSelect) calculateTelemetry(); 
                 return;
             }
 
             const data = groupsetsDB[presetVal];
             container.classList.remove('hidden');
 
-            // Crear botones de Plato
             const platosHTML = data.platos.map(p => 
                 `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 rounded-lg border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-xs font-black font-mono shadow-sm">${p}T</button>`
             ).join('');
 
-            // Crear botones de Piñón
             const pinonesHTML = data.pinones.map(p => 
                 `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-[10px] font-bold font-mono transition-colors shadow-sm">${p}</button>`
             ).join('');
@@ -316,24 +314,70 @@
                 </div>
             `;
 
-            // Al elegir un grupo nuevo, cargamos su plato mayor y el piñón intermedio automáticamente
-            document.getElementById(`plato-${setupId}`).value = data.platos[0];
-            document.getElementById(`pinon-${setupId}`).value = data.pinones[Math.floor(data.pinones.length / 2)];
-            calculateTelemetry();
+            // Si cambiamos de grupo en el menú (y no estamos cargando la memoria), forzamos los valores por defecto del grupo
+            if (!skipAutoSelect) {
+                document.getElementById(`plato-${setupId}`).value = data.platos[0];
+                document.getElementById(`pinon-${setupId}`).value = data.pinones[Math.floor(data.pinones.length / 2)];
+                calculateTelemetry();
+            }
         }
 
-        // Función que se dispara al pulsar un botón de plato o piñón
         window.setGear = function(setupId, type, value) {
             document.getElementById(`${type}-${setupId}`).value = value;
             calculateTelemetry();
         };
+
+        // MEMORIA: Guardar en el navegador
+        function saveConfigToMemory() {
+            const config = {
+                rpm: rpmSlider.value,
+                a: { 
+                    wheel: document.getElementById('wheel-a').value, 
+                    preset: document.getElementById('preset-a').value, 
+                    plato: document.getElementById('plato-a').value, 
+                    pinon: document.getElementById('pinon-a').value 
+                },
+                b: { 
+                    wheel: document.getElementById('wheel-b').value, 
+                    preset: document.getElementById('preset-b').value, 
+                    plato: document.getElementById('plato-b').value, 
+                    pinon: document.getElementById('pinon-b').value 
+                }
+            };
+            localStorage.setItem('velo_calc_memory', JSON.stringify(config));
+        }
+
+        // MEMORIA: Cargar desde el navegador
+        function loadConfigFromMemory() {
+            const saved = localStorage.getItem('velo_calc_memory');
+            if (saved) {
+                const config = JSON.parse(saved);
+                
+                rpmSlider.value = config.rpm || 90;
+                
+                document.getElementById('wheel-a').value = config.a.wheel;
+                document.getElementById('preset-a').value = config.a.preset;
+                renderQuickSelects('a', true); // Genera botones sin borrar los números guardados
+                document.getElementById('plato-a').value = config.a.plato;
+                document.getElementById('pinon-a').value = config.a.pinon;
+
+                document.getElementById('wheel-b').value = config.b.wheel;
+                document.getElementById('preset-b').value = config.b.preset;
+                renderQuickSelects('b', true);
+                document.getElementById('plato-b').value = config.b.plato;
+                document.getElementById('pinon-b').value = config.b.pinon;
+            } else {
+                // Si es la primera vez que entra a la web, carga esto por defecto
+                renderQuickSelects('a');
+                renderQuickSelects('b');
+            }
+        }
 
         // CÁLCULO FÍSICO Y ACTUALIZACIÓN UI
         function calculateTelemetry() {
             const rpm = parseInt(rpmSlider.value) || 90;
             rpmDisplay.innerText = rpm;
 
-            // Actualizar Salpicadero de Cadencia
             rpmDisplay.className = "text-6xl md:text-8xl font-black italic tracking-tighter neon-text leading-none transition-colors duration-300 ";
             rpmStatus.className = "inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border transition-colors duration-300 ";
 
@@ -355,7 +399,6 @@
                 rpmStatus.innerText = "MOLINILLO (Alta FRQ)";
             }
 
-            // FUNCIÓN INTERNA PARA CALCULAR CADA LADO
             const calcSide = (id) => {
                 const plato = Math.max(1, parseInt(document.getElementById(`plato-${id}`).value) || 1);
                 const pinon = Math.max(1, parseInt(document.getElementById(`pinon-${id}`).value) || 1);
@@ -372,6 +415,9 @@
 
             calcSide('a');
             calcSide('b');
+
+            // Guardar automáticamente cada vez que se calcula algo nuevo
+            saveConfigToMemory();
         }
 
         // LISTENERS DE EVENTOS
@@ -383,14 +429,14 @@
             document.getElementById(`pinon-${id}`).addEventListener('input', calculateTelemetry);
             
             document.getElementById(`preset-${id}`).addEventListener('change', () => {
-                renderQuickSelects(id);
+                renderQuickSelects(id, false); // False = Forzamos a que ponga los números por defecto de ese grupo
             });
         });
 
-        // INICIALIZACIÓN AL CARGAR
+        // INICIALIZACIÓN AL CARGAR LA PÁGINA
         document.addEventListener('DOMContentLoaded', () => {
-            renderQuickSelects('a');
-            renderQuickSelects('b');
+            loadConfigFromMemory(); // Carga todo lo guardado de sesiones anteriores
+            calculateTelemetry();   // Fuerza un cálculo inicial
         });
     </script>
 </body>
