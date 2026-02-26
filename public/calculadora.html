@@ -84,7 +84,7 @@
             </div>
         </section>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
             
             <section class="glass-panel rounded-3xl p-6 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-cyan-500 transition-colors duration-300">
                 <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
@@ -117,39 +117,45 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Auto-Cargar Grupo</label>
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
                             <select id="preset-a" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-cyan-400 font-bold focus:border-cyan-500 focus:outline-none transition-colors">
-                                <option value="custom">⚙️ Custom / Manual</option>
-                                <option value="shi_compact_11" selected>Shi. 105/Ult 11v (50/34 - 11/34)</option>
-                                <option value="shi_semi_12">Shi. Ultegra/DA 12v (52/36 - 11/30)</option>
-                                <option value="shi_pro_12">Shi. Pro 12v (54/40 - 11/30)</option>
-                                <option value="sram_red_12">SRAM AXS 12v (48/35 - 10/33)</option>
-                                <option value="campy_12">Campagnolo 12v (50/34 - 11/32)</option>
-                                <option value="grx_1x">Shi. GRX 1x11 (40T - 11/42)</option>
-                                <option value="sram_xplr">SRAM XPLR 1x12 (40T - 10/44)</option>
-                                <option value="campy_ekar">Campy Ekar 13v (38T - 9/42)</option>
-                                <option value="shi_xt_1x12">Shimano XT 1x12 (32T - 10/51)</option>
-                                <option value="sram_eagle">SRAM Eagle 1x12 (32T - 10/52)</option>
-                                <option value="shi_mtb_2x">Shimano MTB 2x11 (36/26 - 11/42)</option>
+                                <option value="custom">⚙️ Custom / Crear Perfil</option>
+                                <optgroup label="Carretera Estándar">
+                                    <option value="shi_compact_11" selected>Shi. 105/Ult 11v (50/34 - 11/34)</option>
+                                    <option value="shi_semi_12">Shi. Ultegra/DA 12v (52/36 - 11/30)</option>
+                                    <option value="shi_pro_12">Shi. Pro 12v (54/40 - 11/30)</option>
+                                    <option value="sram_red_12">SRAM AXS 12v (48/35 - 10/33)</option>
+                                    <option value="campy_12">Campagnolo 12v (50/34 - 11/32)</option>
+                                </optgroup>
+                                <optgroup label="Gravel / CX">
+                                    <option value="grx_1x">Shi. GRX 1x11 (40T - 11/42)</option>
+                                    <option value="sram_xplr">SRAM XPLR 1x12 (40T - 10/44)</option>
+                                    <option value="campy_ekar">Campy Ekar 13v (38T - 9/42)</option>
+                                </optgroup>
+                                <optgroup label="MTB">
+                                    <option value="shi_xt_1x12">Shimano XT 1x12 (32T - 10/51)</option>
+                                    <option value="sram_eagle">SRAM Eagle 1x12 (32T - 10/52)</option>
+                                    <option value="shi_mtb_2x">Shimano MTB 2x11 (36/26 - 11/42)</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
 
-                    <div id="quick-selects-a" class="p-3 bg-black/40 rounded-xl border border-zinc-800/80 hidden"></div>
+                    <div id="quick-selects-a" class="p-3 bg-black/40 rounded-xl border border-zinc-800/80 hidden transition-all"></div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-4 mt-4">
                         <div>
                             <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Plato Elegido</label>
                             <div class="relative">
                                 <i class="fas fa-cog absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
-                                <input type="number" id="plato-a" value="50" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center">
+                                <input type="number" id="plato-a" value="50" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center shadow-inner">
                             </div>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Piñón Elegido</label>
                             <div class="relative">
                                 <i class="fas fa-bullseye absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
-                                <input type="number" id="pinon-a" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center">
+                                <input type="number" id="pinon-a" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center shadow-inner">
                             </div>
                         </div>
                     </div>
@@ -180,7 +186,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 divide-x divide-zinc-800 bg-zinc-900 border border-zinc-800 rounded-lg py-3 relative z-10 text-center items-center">
+                    <div class="grid grid-cols-2 divide-x divide-zinc-800 bg-zinc-900 border border-zinc-800 rounded-lg py-3 relative z-10 text-center items-center shadow-inner">
                         <div class="px-2">
                             <span id="power-label-a" class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia (Llano 0%)</span>
                             <span id="power-a" class="text-lg md:text-xl font-black font-mono text-white">0 W</span>
@@ -239,39 +245,45 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Auto-Cargar Grupo</label>
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
                             <select id="preset-b" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-violet-400 font-bold focus:border-violet-500 focus:outline-none transition-colors">
-                                <option value="custom">⚙️ Custom / Manual</option>
-                                <option value="shi_compact_11">Shi. 105/Ult 11v (50/34 - 11/34)</option>
-                                <option value="shi_semi_12" selected>Shi. Ultegra/DA 12v (52/36 - 11/30)</option>
-                                <option value="shi_pro_12">Shi. Pro 12v (54/40 - 11/30)</option>
-                                <option value="sram_red_12">SRAM AXS 12v (48/35 - 10/33)</option>
-                                <option value="campy_12">Campagnolo 12v (50/34 - 11/32)</option>
-                                <option value="grx_1x">Shi. GRX 1x11 (40T - 11/42)</option>
-                                <option value="sram_xplr">SRAM XPLR 1x12 (40T - 10/44)</option>
-                                <option value="campy_ekar">Campy Ekar 13v (38T - 9/42)</option>
-                                <option value="shi_xt_1x12">Shimano XT 1x12 (32T - 10/51)</option>
-                                <option value="sram_eagle">SRAM Eagle 1x12 (32T - 10/52)</option>
-                                <option value="shi_mtb_2x">Shimano MTB 2x11 (36/26 - 11/42)</option>
+                                <option value="custom">⚙️ Custom / Crear Perfil</option>
+                                <optgroup label="Carretera Estándar">
+                                    <option value="shi_compact_11">Shi. 105/Ult 11v (50/34 - 11/34)</option>
+                                    <option value="shi_semi_12" selected>Shi. Ultegra/DA 12v (52/36 - 11/30)</option>
+                                    <option value="shi_pro_12">Shi. Pro 12v (54/40 - 11/30)</option>
+                                    <option value="sram_red_12">SRAM AXS 12v (48/35 - 10/33)</option>
+                                    <option value="campy_12">Campagnolo 12v (50/34 - 11/32)</option>
+                                </optgroup>
+                                <optgroup label="Gravel / CX">
+                                    <option value="grx_1x">Shi. GRX 1x11 (40T - 11/42)</option>
+                                    <option value="sram_xplr">SRAM XPLR 1x12 (40T - 10/44)</option>
+                                    <option value="campy_ekar">Campy Ekar 13v (38T - 9/42)</option>
+                                </optgroup>
+                                <optgroup label="MTB">
+                                    <option value="shi_xt_1x12">Shimano XT 1x12 (32T - 10/51)</option>
+                                    <option value="sram_eagle">SRAM Eagle 1x12 (32T - 10/52)</option>
+                                    <option value="shi_mtb_2x">Shimano MTB 2x11 (36/26 - 11/42)</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
 
-                    <div id="quick-selects-b" class="p-3 bg-black/40 rounded-xl border border-zinc-800/80 hidden"></div>
+                    <div id="quick-selects-b" class="p-3 bg-black/40 rounded-xl border border-zinc-800/80 hidden transition-all"></div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-4 mt-4">
                         <div>
                             <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Plato Elegido</label>
                             <div class="relative">
                                 <i class="fas fa-cog absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
-                                <input type="number" id="plato-b" value="52" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center">
+                                <input type="number" id="plato-b" value="52" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center shadow-inner">
                             </div>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Piñón Elegido</label>
                             <div class="relative">
                                 <i class="fas fa-bullseye absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
-                                <input type="number" id="pinon-b" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center">
+                                <input type="number" id="pinon-b" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center shadow-inner">
                             </div>
                         </div>
                     </div>
@@ -303,7 +315,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 divide-x divide-zinc-800 bg-zinc-900 border border-zinc-800 rounded-lg py-3 relative z-10 text-center items-center">
+                    <div class="grid grid-cols-2 divide-x divide-zinc-800 bg-zinc-900 border border-zinc-800 rounded-lg py-3 relative z-10 text-center items-center shadow-inner">
                         <div class="px-2">
                             <span id="power-label-b" class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia (Llano 0%)</span>
                             <span id="power-b" class="text-lg md:text-xl font-black font-mono text-white">0 W</span>
@@ -367,7 +379,6 @@
             shi_mtb_2x: { name: "MTB 2x11", platos: [36, 26], pinones: [11, 13, 15, 17, 19, 21, 24, 28, 32, 37, 42] }
         };
 
-        // Memoria volátil para los grupos custom
         window.customMemoryA = { platos: "50, 34", pinones: "11, 12, 13, 14, 15, 17, 19, 21, 24, 28" };
         window.customMemoryB = { platos: "52, 36", pinones: "11, 12, 13, 14, 15, 17, 19, 21, 24, 28" };
 
@@ -376,7 +387,37 @@
         const rpmStatus = document.getElementById('rpm-status');
         const weightInput = document.getElementById('system-weight');
 
-        // Renderizado del Constructor o del Grupo
+        // INYECTAR PERFILES GUARDADOS EN LOS DESPLEGABLES
+        function updateSelectOptions(setupId) {
+            const select = document.getElementById(`preset-${setupId}`);
+            const savedVal = select.value; 
+
+            // Limpiamos perfiles antiguos para no duplicar
+            const oldGroup = select.querySelector('optgroup[label="⭐ Mis Bicicletas (Guardadas)"]');
+            if(oldGroup) oldGroup.remove();
+
+            const savedProfiles = JSON.parse(localStorage.getItem('velo_user_profiles')) || {};
+            if(Object.keys(savedProfiles).length > 0) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = "⭐ Mis Bicicletas (Guardadas)";
+                
+                for(const key in savedProfiles) {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.innerText = savedProfiles[key].name;
+                    optgroup.appendChild(opt);
+                    
+                    // Añadir a la Base de Datos general de la sesión para que el calculador funcione
+                    groupsetsDB[key] = savedProfiles[key];
+                }
+                select.insertBefore(optgroup, select.children[1]);
+            }
+            
+            if(select.querySelector(`option[value="${savedVal}"]`)) {
+                select.value = savedVal;
+            }
+        }
+
         function renderQuickSelects(setupId, skipAutoSelect = false) {
             const presetVal = document.getElementById(`preset-${setupId}`).value;
             const container = document.getElementById(`quick-selects-${setupId}`);
@@ -394,13 +435,24 @@
                 
                 container.innerHTML = `
                     <div class="mb-2 grid grid-cols-1 gap-2 border-b border-zinc-800 pb-3">
-                        <div>
-                            <label class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mis Platos (Ej: 50, 34)</label>
-                            <input type="text" id="custom-platos-${setupId}" value="${mem.platos}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mis Platos</label>
+                                <input type="text" id="custom-platos-${setupId}" value="${mem.platos}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors" placeholder="Ej: 50, 34">
+                            </div>
+                            <div>
+                                <label class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mi Cassette</label>
+                                <input type="text" id="custom-pinones-${setupId}" value="${mem.pinones}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors" placeholder="Ej: 11, 13, 15...">
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mi Cassette (Ej: 11, 13, 15...)</label>
-                            <input type="text" id="custom-pinones-${setupId}" value="${mem.pinones}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors">
+                        <div class="flex items-end gap-2 mt-1">
+                            <div class="flex-1">
+                                <label class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Guardar Perfil</label>
+                                <input type="text" id="profile-name-${setupId}" placeholder="Ej: Trek Emonda" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white focus:border-${colorClass}-500 outline-none transition-colors">
+                            </div>
+                            <button onclick="saveCustomProfile('${setupId}')" class="bg-${colorClass}-600 hover:bg-${colorClass}-500 text-black font-bold text-[10px] px-3 py-1.5 rounded-lg uppercase tracking-widest transition-colors h-[30px] flex items-center shadow-lg shadow-${colorClass}-500/20 shrink-0">
+                                <i class="fas fa-save mr-1"></i> Guardar
+                            </button>
                         </div>
                     </div>
                     <div id="custom-buttons-container-${setupId}" class="mt-2"></div>
@@ -409,8 +461,8 @@
                 return;
             }
 
-            // MODO PRESET STANDARD
             const data = groupsetsDB[presetVal];
+            
             const platosHTML = data.platos.map(p => 
                 `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 rounded-lg border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-xs font-black font-mono shadow-sm">${p}T</button>`
             ).join('');
@@ -419,10 +471,14 @@
                 `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-[10px] font-bold font-mono transition-colors shadow-sm">${p}</button>`
             ).join('');
 
+            // Si es un perfil guardado por el usuario, mostramos el botón de borrar
+            const deleteBtn = data.isUser ? `<button onclick="deleteUserProfile('${presetVal}', '${setupId}')" class="text-red-500/50 hover:text-red-400 p-2 rounded-lg hover:bg-red-950/30 transition-colors" title="Borrar perfil"><i class="fas fa-trash"></i></button>` : '';
+
             container.innerHTML = `
                 <div class="mb-3 flex items-center gap-3">
                     <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest w-14">Platos:</span>
-                    <div class="flex gap-2">${platosHTML}</div>
+                    <div class="flex gap-2 flex-1">${platosHTML}</div>
+                    ${deleteBtn}
                 </div>
                 <div class="flex items-start gap-3">
                     <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-1.5 w-14">Cassette:</span>
@@ -437,19 +493,16 @@
             }
         }
 
-        // MOTOR DEL CONSTRUCTOR CUSTOM
+        // CONSTRUCTOR EN TIEMPO REAL
         window.buildCustomButtons = function(setupId, skipAutoSelect = false) {
             const platosStr = document.getElementById(`custom-platos-${setupId}`).value;
             const pinonesStr = document.getElementById(`custom-pinones-${setupId}`).value;
 
-            // Extraemos los números y los ordenamos (piñones)
             const platosArr = platosStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0);
             const pinonesArr = pinonesStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0).sort((a,b)=>a-b);
 
-            // Guardamos en la base de datos temporal para detectar cruce de cadena luego
             groupsetsDB[`custom_${setupId}`] = { platos: platosArr, pinones: pinonesArr };
             
-            // Actualizar variables globales para guardar en memoria
             if(setupId === 'a') window.customMemoryA = { platos: platosStr, pinones: pinonesStr };
             if(setupId === 'b') window.customMemoryB = { platos: platosStr, pinones: pinonesStr };
 
@@ -471,11 +524,11 @@
             if(targetDiv) {
                 targetDiv.innerHTML = `
                     <div class="mb-3 flex items-center gap-3">
-                        <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest w-14">Platos:</span>
+                        <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest w-14 shrink-0">Platos:</span>
                         <div class="flex gap-2 flex-wrap">${platosHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
                     </div>
                     <div class="flex items-start gap-3">
-                        <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-1.5 w-14">Cassette:</span>
+                        <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-1.5 w-14 shrink-0">Cassette:</span>
                         <div class="flex flex-wrap gap-1.5 flex-1">${pinonesHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
                     </div>
                 `;
@@ -484,12 +537,69 @@
             if (!skipAutoSelect) calculateTelemetry(); 
         };
 
+        // GUARDAR PERFIL PERSONALIZADO EN LOCALSTORAGE
+        window.saveCustomProfile = function(setupId) {
+            const nameInput = document.getElementById(`profile-name-${setupId}`);
+            const name = nameInput.value.trim();
+            
+            if(!name) {
+                alert("Por favor, ponle un nombre a tu bicicleta para guardarla.");
+                return;
+            }
+
+            const platosStr = document.getElementById(`custom-platos-${setupId}`).value;
+            const pinonesStr = document.getElementById(`custom-pinones-${setupId}`).value;
+
+            const platosArr = platosStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0);
+            const pinonesArr = pinonesStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0).sort((a,b)=>a-b);
+
+            if(platosArr.length === 0 || pinonesArr.length === 0) {
+                alert("Debes introducir al menos un plato y un piñón válidos separados por comas.");
+                return;
+            }
+
+            const profileId = 'user_bike_' + Date.now(); 
+            
+            const newProfile = {
+                name: name,
+                platos: platosArr,
+                pinones: pinonesArr,
+                isUser: true
+            };
+
+            const savedProfiles = JSON.parse(localStorage.getItem('velo_user_profiles')) || {};
+            savedProfiles[profileId] = newProfile;
+            localStorage.setItem('velo_user_profiles', JSON.stringify(savedProfiles));
+
+            updateSelectOptions('a');
+            updateSelectOptions('b');
+
+            document.getElementById(`preset-${setupId}`).value = profileId;
+            renderQuickSelects(setupId, false);
+        };
+
+        // BORRAR PERFIL PERSONALIZADO
+        window.deleteUserProfile = function(profileId, setupId) {
+            if(!confirm("¿Borrar esta bicicleta de tu garaje virtual?")) return;
+
+            const savedProfiles = JSON.parse(localStorage.getItem('velo_user_profiles')) || {};
+            delete savedProfiles[profileId];
+            localStorage.setItem('velo_user_profiles', JSON.stringify(savedProfiles));
+
+            delete groupsetsDB[profileId];
+
+            updateSelectOptions('a');
+            updateSelectOptions('b');
+
+            document.getElementById(`preset-${setupId}`).value = 'custom';
+            renderQuickSelects(setupId, false);
+        };
+
         window.setGear = function(setupId, type, value) {
             document.getElementById(`${type}-${setupId}`).value = value;
             calculateTelemetry();
         };
 
-        // SISTEMA DE GUARDADO
         function saveConfigToMemory() {
             const config = {
                 rpm: rpmSlider.value,
@@ -515,6 +625,9 @@
         }
 
         function loadConfigFromMemory() {
+            updateSelectOptions('a');
+            updateSelectOptions('b');
+
             const saved = localStorage.getItem('velo_calc_memory');
             if (saved) {
                 const config = JSON.parse(saved);
@@ -542,23 +655,21 @@
             }
         }
 
-        // INTELIGENCIA: ALERTA DE CADENA CRUZADA
         function checkCrossChain(setupId, plato, pinon, preset) {
             let isCrossed = false;
             const data = preset === 'custom' ? groupsetsDB[`custom_${setupId}`] : groupsetsDB[preset];
             
             if (data && data.platos.length > 1 && data.pinones.length > 1) {
-                const isBigRing = plato === data.platos[0]; // Asumimos el índice 0 es el plato grande
+                const isBigRing = plato === data.platos[0]; 
                 const isSmallRing = plato === data.platos[data.platos.length - 1]; 
                 
                 const sortedCogs = [...data.pinones].sort((a,b) => a - b);
                 const cogIndex = sortedCogs.indexOf(pinon);
                 
                 if (cogIndex !== -1) {
-                    if (isBigRing && cogIndex >= sortedCogs.length - 2) isCrossed = true; // 2 piñones más grandes
-                    if (isSmallRing && cogIndex <= 1) isCrossed = true; // 2 piñones más pequeños
+                    if (isBigRing && cogIndex >= sortedCogs.length - 2) isCrossed = true; 
+                    if (isSmallRing && cogIndex <= 1) isCrossed = true; 
                 } else {
-                    // Si el usuario manipuló manualmente la caja fuera de los botones
                     if (isBigRing && pinon >= sortedCogs[sortedCogs.length - 2]) isCrossed = true;
                     if (isSmallRing && pinon <= sortedCogs[1]) isCrossed = true;
                 }
