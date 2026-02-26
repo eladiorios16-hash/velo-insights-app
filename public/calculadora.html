@@ -56,7 +56,7 @@
                 <span id="rpm-status" class="inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border border-cyan-500/30 text-cyan-400 bg-cyan-950/30 transition-colors duration-300">ZONA ÓPTIMA</span>
             </div>
 
-            <div class="max-w-2xl mx-auto relative z-10 mb-8">
+            <div class="max-w-2xl mx-auto relative z-10 mb-10">
                 <input type="range" min="40" max="130" value="90" class="slider-cyan" id="rpm-slider">
                 <div class="flex justify-between text-[10px] font-bold text-zinc-600 uppercase mt-4 tracking-widest">
                     <span>40 Atrancado</span>
@@ -64,12 +64,22 @@
                 </div>
             </div>
 
-            <div class="max-w-xl mx-auto border border-zinc-800 rounded-2xl p-4 bg-black/40 relative z-10">
-                <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Inclinación de la Vía</label>
-                <div class="grid grid-cols-3 gap-3">
-                    <button onclick="setGradient(0, 'Llano 0%')" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">0% (Llano)</button>
-                    <button onclick="setGradient(8, 'Puerto 8%')" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">8% (Puerto)</button>
-                    <button onclick="setGradient(12, 'Muro 12%')" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">12% (Muro)</button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto relative z-10">
+                <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40">
+                    <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Inclinación de la Vía</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setGradient(0, 'Llano 0%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">0% (Llano)</button>
+                        <button onclick="setGradient(8, 'Puerto 8%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">8% (Puerto)</button>
+                        <button onclick="setGradient(12, 'Muro 12%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">12% (Muro)</button>
+                    </div>
+                </div>
+
+                <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center items-center">
+                    <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Peso Total (Ciclista + Bici)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="number" id="system-weight" value="85" min="40" max="150" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>150)this.value=150;" class="w-20 bg-zinc-900 border border-zinc-700 rounded-xl px-2 py-2 text-xl text-white font-black font-mono text-center focus:border-cyan-500 focus:outline-none transition-colors shadow-inner">
+                        <span class="text-xs font-black text-zinc-500 tracking-widest">KG</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -170,12 +180,22 @@
                         </div>
                     </div>
 
-                    <div class="text-center bg-zinc-900 border border-zinc-800 rounded-lg py-2 mb-4">
-                        <span id="power-label-a" class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia Requerida (Llano 0%)</span>
-                        <span id="power-a" class="text-lg font-black font-mono text-white">0 W</span>
+                    <div class="grid grid-cols-2 divide-x divide-zinc-800 bg-zinc-900 border border-zinc-800 rounded-lg py-3 relative z-10 text-center items-center">
+                        <div class="px-2">
+                            <span id="power-label-a" class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia (Llano 0%)</span>
+                            <span id="power-a" class="text-lg md:text-xl font-black font-mono text-white">0 W</span>
+                        </div>
+                        <div class="px-2">
+                            <span class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Relación W/Kg</span>
+                            <span id="wkg-a" class="text-lg md:text-xl font-black font-mono text-cyan-400">0.0</span>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div id="crosschain-warning-a" class="hidden mt-3 p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse">
+                        <i class="fas fa-exclamation-triangle mr-1"></i> Cadena Cruzada: Pierdes ~5W por fricción
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mt-4 border-t border-zinc-800/50 pt-4">
                         <div>
                             <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Avance/Pedalada</span>
                             <span id="dev-a" class="text-lg font-mono font-bold text-zinc-300">0.00m</span>
@@ -283,12 +303,22 @@
                         </div>
                     </div>
 
-                    <div class="text-center bg-zinc-900 border border-zinc-800 rounded-lg py-2 mb-4 relative z-10">
-                        <span id="power-label-b" class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia Requerida (Llano 0%)</span>
-                        <span id="power-b" class="text-lg font-black font-mono text-white">0 W</span>
+                    <div class="grid grid-cols-2 divide-x divide-zinc-800 bg-zinc-900 border border-zinc-800 rounded-lg py-3 relative z-10 text-center items-center">
+                        <div class="px-2">
+                            <span id="power-label-b" class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia (Llano 0%)</span>
+                            <span id="power-b" class="text-lg md:text-xl font-black font-mono text-white">0 W</span>
+                        </div>
+                        <div class="px-2">
+                            <span class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Relación W/Kg</span>
+                            <span id="wkg-b" class="text-lg md:text-xl font-black font-mono text-violet-400">0.0</span>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 relative z-10">
+                    <div id="crosschain-warning-b" class="hidden mt-3 p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse relative z-10">
+                        <i class="fas fa-exclamation-triangle mr-1"></i> Cadena Cruzada: Pierdes ~5W por fricción
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 relative z-10 mt-4 border-t border-zinc-800/50 pt-4">
                         <div>
                             <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Avance/Pedalada</span>
                             <span id="dev-b" class="text-lg font-mono font-bold text-zinc-300">0.00m</span>
@@ -314,12 +344,11 @@
             currentGradient = percent;
             gradientLabel = labelText;
             
-            // Actualizar UI de botones
             const buttons = document.querySelectorAll('.gradient-btn');
             buttons.forEach(btn => btn.classList.remove('border-cyan-500/50', 'text-white'));
             
             const activeButton = [...buttons].find(btn => btn.innerText.includes(`${percent}%`));
-            activeButton.classList.add('border-cyan-500/50', 'text-white');
+            if(activeButton) activeButton.classList.add('border-cyan-500/50', 'text-white');
             
             calculateTelemetry();
         }
@@ -341,6 +370,7 @@
         const rpmSlider = document.getElementById('rpm-slider');
         const rpmDisplay = document.getElementById('rpm-display');
         const rpmStatus = document.getElementById('rpm-status');
+        const weightInput = document.getElementById('system-weight');
 
         function renderQuickSelects(setupId, skipAutoSelect = false) {
             const presetVal = document.getElementById(`preset-${setupId}`).value;
@@ -392,10 +422,94 @@
             calculateTelemetry();
         };
 
+        function saveConfigToMemory() {
+            const config = {
+                rpm: rpmSlider.value,
+                weight: weightInput.value,
+                a: { 
+                    wheel: document.getElementById('wheel-a').value, 
+                    preset: document.getElementById('preset-a').value, 
+                    plato: document.getElementById('plato-a').value, 
+                    pinon: document.getElementById('pinon-a').value 
+                },
+                b: { 
+                    wheel: document.getElementById('wheel-b').value, 
+                    preset: document.getElementById('preset-b').value, 
+                    plato: document.getElementById('plato-b').value, 
+                    pinon: document.getElementById('pinon-b').value 
+                }
+            };
+            localStorage.setItem('velo_calc_memory', JSON.stringify(config));
+        }
+
+        function loadConfigFromMemory() {
+            const saved = localStorage.getItem('velo_calc_memory');
+            if (saved) {
+                const config = JSON.parse(saved);
+                
+                rpmSlider.value = config.rpm || 90;
+                weightInput.value = config.weight || 85;
+                
+                document.getElementById('wheel-a').value = config.a.wheel;
+                document.getElementById('preset-a').value = config.a.preset;
+                renderQuickSelects('a', true);
+                document.getElementById('plato-a').value = config.a.plato;
+                document.getElementById('pinon-a').value = config.a.pinon;
+
+                document.getElementById('wheel-b').value = config.b.wheel;
+                document.getElementById('preset-b').value = config.b.preset;
+                renderQuickSelects('b', true);
+                document.getElementById('plato-b').value = config.b.plato;
+                document.getElementById('pinon-b').value = config.b.pinon;
+            } else {
+                renderQuickSelects('a');
+                renderQuickSelects('b');
+            }
+        }
+
+        // Lógica para detectar si la cadena está cruzada
+        function checkCrossChain(setupId, plato, pinon, preset) {
+            let isCrossed = false;
+            
+            if (preset === 'custom') {
+                // Heurística general para manual
+                if (plato >= 48 && pinon >= 28) isCrossed = true; // Plato grande y piñones grandes
+                if (plato <= 38 && pinon <= 13) isCrossed = true; // Plato pequeño y piñones pequeños
+            } else {
+                const data = groupsetsDB[preset];
+                // Si es monoplato (longitud 1), NUNCA hay cadena cruzada real
+                if (data.platos.length > 1) {
+                    const isBigRing = plato === data.platos[0]; // Índice 0 suele ser el grande
+                    const isSmallRing = plato === data.platos[data.platos.length - 1]; 
+                    
+                    const sortedCogs = [...data.pinones].sort((a,b) => a - b);
+                    const cogIndex = sortedCogs.indexOf(pinon);
+                    
+                    // Si encontramos el piñón en el array...
+                    if (cogIndex !== -1) {
+                        if (isBigRing && cogIndex >= sortedCogs.length - 2) isCrossed = true; // 2 piñones más grandes
+                        if (isSmallRing && cogIndex <= 1) isCrossed = true; // 2 piñones más pequeños
+                    } else {
+                        // Si el usuario manipuló manualmente la caja estando en un preset
+                        if (isBigRing && pinon >= sortedCogs[sortedCogs.length - 2]) isCrossed = true;
+                        if (isSmallRing && pinon <= sortedCogs[1]) isCrossed = true;
+                    }
+                }
+            }
+
+            const warningEl = document.getElementById(`crosschain-warning-${setupId}`);
+            if (isCrossed) {
+                warningEl.classList.remove('hidden');
+            } else {
+                warningEl.classList.add('hidden');
+            }
+        }
+
         function calculateTelemetry() {
             const rpm = parseInt(rpmSlider.value) || 90;
-            rpmDisplay.innerText = rpm;
+            const currentWeight = parseInt(weightInput.value) || 85; 
 
+            rpmDisplay.innerText = rpm;
             rpmDisplay.className = "text-6xl md:text-8xl font-black italic tracking-tighter neon-text leading-none transition-colors duration-300 ";
             rpmStatus.className = "inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border transition-colors duration-300 ";
 
@@ -421,9 +535,13 @@
                 const plato = Math.max(1, parseInt(document.getElementById(`plato-${id}`).value) || 1);
                 const pinon = Math.max(1, parseInt(document.getElementById(`pinon-${id}`).value) || 1);
                 const circ = parseInt(document.getElementById(`wheel-${id}`).value) / 1000; 
+                const preset = document.getElementById(`preset-${id}`).value;
+
+                // Comprobar cruce de cadena
+                checkCrossChain(id, plato, pinon, preset);
 
                 const ratio = plato / pinon;
-                const dev = ratio * circ; // Metros de avance
+                const dev = ratio * circ; 
                 
                 const speed = (dev * rpm * 60) / 1000; 
                 const speed60 = (dev * 60 * 60) / 1000;
@@ -438,32 +556,40 @@
                 document.getElementById(`speed-${id}-90`).innerText = speed90.toFixed(1);
                 document.getElementById(`speed-${id}-110`).innerText = speed110.toFixed(1);
 
-                // ESTIMACIÓN DE POTENCIA CORREGIDA
-                // Usando fórmula física estándar para ciclismo
-                const weight = 85; // Peso total ciclista + bici en Kg
-                const CdA = 0.32; // Coeficiente aerodinámico más realista (posición aero en carretera)
-                const Crr = 0.004; // Resistencia de rodadura asfalto liso
+                // ESTIMACIÓN DE POTENCIA 
+                const CdA = 0.32; 
+                const Crr = 0.004; 
                 const g = 9.81;
-                const v = speed / 3.6; // Metros por segundo
+                const v = speed / 3.6; 
 
                 const slopeIncline = currentGradient / 100;
-                const powerSlope = weight * g * slopeIncline * v; // Vatios para la gravedad
-                const powerWind = 0.5 * 1.225 * CdA * (v * v * v); // Vatios para el aire
-                const powerRolling = weight * g * Crr * v; // Vatios para rozamiento del suelo
+                const powerSlope = currentWeight * g * slopeIncline * v; 
+                const powerWind = 0.5 * 1.225 * CdA * (v * v * v); 
+                const powerRolling = currentWeight * g * Crr * v; 
 
-                // Suma total dividida entre pérdida mecánica de la transmisión (3%)
                 const totalPower = Math.max(0, (powerSlope + powerWind + powerRolling) / 0.97);
+                const wkg = totalPower / currentWeight;
 
-                // Actualizamos la etiqueta de texto dinámicamente y el número de Vatios
-                document.getElementById(`power-label-${id}`).innerText = `Potencia Requerida (${gradientLabel})`;
+                document.getElementById(`power-label-${id}`).innerText = `Potencia (${gradientLabel})`;
                 document.getElementById(`power-${id}`).innerText = `${Math.round(totalPower)} W`;
+                document.getElementById(`wkg-${id}`).innerText = wkg.toFixed(1);
+                
+                const wkgEl = document.getElementById(`wkg-${id}`);
+                wkgEl.className = "text-lg md:text-xl font-black font-mono ";
+                if(wkg < 3) wkgEl.classList.add("text-zinc-400");
+                else if(wkg < 4.5) wkgEl.classList.add("text-emerald-400");
+                else if(wkg < 6) wkgEl.classList.add("text-amber-400");
+                else wkgEl.classList.add("text-red-500", "animate-pulse"); 
             };
 
             calcSide('a');
             calcSide('b');
+
+            saveConfigToMemory();
         }
 
         rpmSlider.addEventListener('input', calculateTelemetry);
+        weightInput.addEventListener('input', calculateTelemetry);
         
         ['a', 'b'].forEach(id => {
             document.getElementById(`wheel-${id}`).addEventListener('change', calculateTelemetry);
@@ -476,9 +602,8 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderQuickSelects('a');
-            renderQuickSelects('b');
-            setGradient(0, 'Llano 0%'); // Iniciar en llano por defecto
+            loadConfigFromMemory(); 
+            setGradient(0, 'Llano 0%'); // Forzar visual de botones al inicio
         });
     </script>
 </body>
