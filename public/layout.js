@@ -1,12 +1,12 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v6.9 (Dot Grid + Interactive Zoom Lightbox + HUD Mobile Menu) */
+/* VELO INSIGHTS - LAYOUT ENGINE v7.1 (Calculadora + Tech Lab separados) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
     renderNavbar();       
     renderMenuModal(); 
-    renderFooter();       
+    renderFooter();        
     injectSearchModal();  
-    injectLightbox();     // Motor de visor de imágenes interactivo
+    injectLightbox();     
     initScrollReveal();   
     handleIncomingLinks();
     initNavbarScrollBehavior();
@@ -78,7 +78,6 @@ function injectGlobalStyles() {
         .menu-hidden { transform: translateY(-20px); opacity: 0; pointer-events: none; }
         .menu-visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
 
-        /* Efecto cascada de los enlaces */
         .nav-item {
             opacity: 0;
             transform: translateX(-20px);
@@ -86,7 +85,6 @@ function injectGlobalStyles() {
         }
         #main-menu.menu-visible .nav-item { opacity: 1; transform: translateX(0); }
         
-        /* Retardos para que entren uno tras otro */
         .nav-item:nth-child(1) { transition-delay: 0.05s; }
         .nav-item:nth-child(2) { transition-delay: 0.10s; }
         .nav-item:nth-child(3) { transition-delay: 0.15s; }
@@ -94,6 +92,7 @@ function injectGlobalStyles() {
         .nav-item:nth-child(5) { transition-delay: 0.25s; }
         .nav-item:nth-child(6) { transition-delay: 0.30s; }
         .nav-item:nth-child(7) { transition-delay: 0.35s; }
+        .nav-item:nth-child(8) { transition-delay: 0.40s; }
 
         #main-nav { 
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
@@ -136,13 +135,14 @@ function renderNavbar() {
                 </svg>
             </button>
             
-            <div class="hidden md:flex gap-8 items-center nav-capsule">
+            <div class="hidden md:flex gap-6 items-center nav-capsule">
                 <a href="index.html" class="nav-link ${isActive('home')}">Home</a>
                 <a href="noticias.html" class="nav-link ${isActive('noticias')}">Journal</a>
                 <a href="calendario.html" class="nav-link ${isActive('calendario')}">Calendario</a>
                 <a href="equipos.html" class="nav-link ${isActive('equipos')}">Equipos</a>
                 <a href="glosario.html" class="nav-link ${isActive('glosario')}">Glosario</a>
-                <a href="calculadora.html" class="nav-link ${isActive('calculadora')}">Tech Lab</a>
+                <a href="labs.html" class="nav-link ${isActive('labs')}">Tech Lab</a>
+                <a href="calculadora.html" class="nav-link ${isActive('calculadora')} text-cyan-500">Calculadora</a>
             </div>
 
             <div class="hidden md:flex items-center">
@@ -203,7 +203,8 @@ function renderMenuModal() {
         teams: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`,
         calendar: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
         glossary: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
-        lab: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`,
+        lab: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+        calc: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`,
         search: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`
     };
 
@@ -263,13 +264,22 @@ function renderMenuModal() {
                 <span class="text-[10px] font-mono text-zinc-700 group-hover:text-cyan-500/50 transition-colors">05</span>
             </a>
 
-            <a href="calculadora.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
+            <a href="labs.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
                 <div class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
                 <div class="flex items-center gap-4">
                     <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.lab}</span>
                     <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Tech Lab</span>
                 </div>
                 <span class="text-[10px] font-mono text-zinc-700 group-hover:text-cyan-500/50 transition-colors">06</span>
+            </a>
+
+            <a href="calculadora.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
+                <div class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
+                <div class="flex items-center gap-4">
+                    <span class="text-cyan-500 transition-colors">${icons.calc}</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-cyan-400 transition-colors drop-shadow-lg">Calculadora</span>
+                </div>
+                <span class="text-[10px] font-mono text-zinc-700 transition-colors">07</span>
             </a>
         </div>
         
@@ -360,8 +370,8 @@ async function performSearch(term) {
     const lowerTerm = term.toLowerCase();
 
     const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                     ? 'http://localhost:3000' 
-                     : '';
+                      ? 'http://localhost:3000' 
+                      : '';
 
     try {
         const [resNews, resGlossary, resCalendar] = await Promise.all([
