@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculadora de Desarrollo | Velo Insights</title>
+    <title>Calculadora de Desarrollo Avanzada | Velo Insights</title>
     <meta name="theme-color" content="#050505">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -26,6 +26,18 @@
         
         .btn-gear { transition: all 0.2s; }
         .btn-gear:active { transform: scale(0.9); }
+
+        /* Efecto de Shimmer para la transmisión central */
+        .shimmer-effect {
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
     </style>
 </head>
 
@@ -56,14 +68,33 @@
                 <span id="rpm-status" class="inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border border-cyan-500/30 text-cyan-400 bg-cyan-950/30 transition-colors duration-300">ZONA ÓPTIMA</span>
             </div>
 
-            <div class="max-w-2xl mx-auto relative z-10">
+            <div class="max-w-2xl mx-auto relative z-10 mb-8">
                 <input type="range" min="40" max="130" value="90" class="slider-cyan" id="rpm-slider">
                 <div class="flex justify-between text-[10px] font-bold text-zinc-600 uppercase mt-4 tracking-widest">
                     <span>40 Atrancado</span>
                     <span>130 Molinillo</span>
                 </div>
             </div>
+
+            <div class="max-w-xl mx-auto border border-zinc-800 rounded-2xl p-4 bg-black/40">
+                <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Inclinación de la Vía</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="setGradient(0)" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">0% (Llano)</button>
+                    <button onclick="setGradient(8)" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">8% (Puerto)</button>
+                    <button onclick="setGradient(12)" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">12% (Muro)</button>
+                </div>
+            </div>
         </section>
+
+        <div class="glass-panel rounded-3xl p-6 relative overflow-hidden shadow-2xl max-w-2xl mx-auto w-full flex flex-col items-center">
+            <div class="absolute inset-0 shimmer-effect opacity-30 pointer-events-none"></div>
+            <p class="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-4">Diferencia de Transmisión Visual</p>
+            <div class="relative w-48 h-48 flex items-center justify-center">
+                <div class="absolute w-40 h-40 rounded-full border-8 border-cyan-500 opacity-80 shimmer-effect"></div>
+                <div class="absolute w-32 h-32 rounded-full border-8 border-violet-500 opacity-90 shimmer-effect"></div>
+                <div class="relative text-white font-black text-xs uppercase tracking-widest">VeloInsights</div>
+            </div>
+        </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
             
@@ -138,7 +169,7 @@
 
                 <div class="bg-black/50 rounded-2xl p-5 border border-zinc-800/50 mt-auto">
                     <p class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
-                    <div class="flex justify-between items-end mb-6">
+                    <div class="flex justify-between items-end mb-4">
                         <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
                         <div class="flex items-baseline gap-1">
                             <span id="speed-a" class="text-5xl font-black italic text-white leading-none">0.0</span>
@@ -146,7 +177,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2 mb-6 text-center border-y border-zinc-800/50 py-3">
+                    <div class="grid grid-cols-3 gap-2 mb-4 text-center border-y border-zinc-800/50 py-3">
                         <div>
                             <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Atrancado (60)</span>
                             <span id="speed-a-60" class="text-sm font-bold font-mono text-red-400">0.0</span>
@@ -159,6 +190,11 @@
                             <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Molinillo (110)</span>
                             <span id="speed-a-110" class="text-sm font-bold font-mono text-cyan-400">0.0</span>
                         </div>
+                    </div>
+
+                    <div class="text-center bg-zinc-900 border border-zinc-800 rounded-lg py-2 mb-4">
+                        <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia Requerida (est. en llano)</span>
+                        <span id="power-a" class="text-lg font-black font-mono text-white">0 W</span>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -246,7 +282,7 @@
                 <div class="bg-black/50 rounded-2xl p-5 border border-zinc-800/50 mt-auto relative overflow-hidden">
                     <div class="absolute inset-0 bg-violet-500/5 opacity-0 hover:opacity-100 transition-opacity"></div>
                     <p class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
-                    <div class="flex justify-between items-end mb-6 relative z-10">
+                    <div class="flex justify-between items-end mb-4 relative z-10">
                         <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
                         <div class="flex items-baseline gap-1">
                             <span id="speed-b" class="text-5xl font-black italic text-white leading-none">0.0</span>
@@ -254,7 +290,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2 mb-6 text-center border-y border-zinc-800/50 py-3 relative z-10">
+                    <div class="grid grid-cols-3 gap-2 mb-4 text-center border-y border-zinc-800/50 py-3 relative z-10">
                         <div>
                             <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Atrancado (60)</span>
                             <span id="speed-b-60" class="text-sm font-bold font-mono text-red-400">0.0</span>
@@ -267,6 +303,11 @@
                             <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Molinillo (110)</span>
                             <span id="speed-b-110" class="text-sm font-bold font-mono text-cyan-400">0.0</span>
                         </div>
+                    </div>
+
+                    <div class="text-center bg-zinc-900 border border-zinc-800 rounded-lg py-2 mb-4 relative z-10">
+                        <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia Requerida (est. en llano)</span>
+                        <span id="power-b" class="text-lg font-black font-mono text-white">0 W</span>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 relative z-10">
@@ -288,6 +329,25 @@
     <script src="layout.js?v=7.1"></script>
 
     <script>
+        // Transmisión Visual (Shimmer Animation)
+        const shimmerElements = document.querySelectorAll('.shimmer-effect');
+        let currentGradient = 0; // 0 = Llano, 8 = Puerto, 12 = Muro
+
+        // Función para establecer la pendiente y recalcular
+        function setGradient(percent) {
+            currentGradient = percent;
+            
+            // Actualizar UI de botones
+            const buttons = document.querySelectorAll('.gradient-btn');
+            buttons.forEach(btn => btn.classList.remove('border-cyan-500/50', 'text-white'));
+            
+            const activeButton = [...buttons].find(btn => btn.innerText.includes(`${percent}%`));
+            activeButton.classList.add('border-cyan-500/50', 'text-white');
+            
+            calculateTelemetry();
+        }
+
+        // Base de Datos de Transmisión
         const groupsetsDB = {
             shi_compact_11: { name: "11v Compact", platos: [50, 34], pinones: [11, 12, 13, 14, 15, 17, 19, 21, 24, 27, 30, 34] },
             shi_semi_12: { name: "12v Semi-Compact", platos: [52, 36], pinones: [11, 12, 13, 14, 15, 16, 17, 19, 21, 24, 27, 30] },
@@ -356,49 +416,6 @@
             calculateTelemetry();
         };
 
-        function saveConfigToMemory() {
-            const config = {
-                rpm: rpmSlider.value,
-                a: { 
-                    wheel: document.getElementById('wheel-a').value, 
-                    preset: document.getElementById('preset-a').value, 
-                    plato: document.getElementById('plato-a').value, 
-                    pinon: document.getElementById('pinon-a').value 
-                },
-                b: { 
-                    wheel: document.getElementById('wheel-b').value, 
-                    preset: document.getElementById('preset-b').value, 
-                    plato: document.getElementById('plato-b').value, 
-                    pinon: document.getElementById('pinon-b').value 
-                }
-            };
-            localStorage.setItem('velo_calc_memory', JSON.stringify(config));
-        }
-
-        function loadConfigFromMemory() {
-            const saved = localStorage.getItem('velo_calc_memory');
-            if (saved) {
-                const config = JSON.parse(saved);
-                
-                rpmSlider.value = config.rpm || 90;
-                
-                document.getElementById('wheel-a').value = config.a.wheel;
-                document.getElementById('preset-a').value = config.a.preset;
-                renderQuickSelects('a', true);
-                document.getElementById('plato-a').value = config.a.plato;
-                document.getElementById('pinon-a').value = config.a.pinon;
-
-                document.getElementById('wheel-b').value = config.b.wheel;
-                document.getElementById('preset-b').value = config.b.preset;
-                renderQuickSelects('b', true);
-                document.getElementById('plato-b').value = config.b.plato;
-                document.getElementById('pinon-b').value = config.b.pinon;
-            } else {
-                renderQuickSelects('a');
-                renderQuickSelects('b');
-            }
-        }
-
         function calculateTelemetry() {
             const rpm = parseInt(rpmSlider.value) || 90;
             rpmDisplay.innerText = rpm;
@@ -448,12 +465,44 @@
                 document.getElementById(`speed-${id}-60`).innerText = speed60.toFixed(1);
                 document.getElementById(`speed-${id}-90`).innerText = speed90.toFixed(1);
                 document.getElementById(`speed-${id}-110`).innerText = speed110.toFixed(1);
+
+                // ESTIMACIÓN DE POTENCIA (Aerodinámica y Pendiente)
+                // Usando fórmula de potencia en bicicleta llanos/pendiente
+                const weight = 85; // Peso total ciclista + bici
+                const CdA = 0.35; // Coeficiente aerodinámico estándar para ciclista agarrado
+                const Crr = 0.005; // Resistencia a la rodadura estándar
+                const g = 9.81;
+                const v = speed / 3.6; // Velocidad en m/s
+
+                const slopeIncline = currentGradient / 100;
+                const powerSlope = weight * g * slopeIncline * v;
+                const powerWind = 0.5 * 1.225 * v * v * v * CdA;
+                const powerRolling = weight * g * Crr * v;
+
+                const totalPower = Math.max(0, powerSlope + powerWind + powerRolling);
+
+                document.getElementById(`power-${id}`).innerText = `${Math.round(totalPower)} W`;
             };
 
             calcSide('a');
             calcSide('b');
 
-            saveConfigToMemory();
+            // Actualizar Visualización Central de Transmisión (Shimmer Effect)
+            const ratioA = Math.max(1, parseInt(document.getElementById('plato-a').value) || 1);
+            const ratioB = Math.max(1, parseInt(document.getElementById('plato-b').value) || 1);
+
+            // Redimensionar platos visuales para reflejar diferencia
+            const visualRatio = Math.max(1, ratioA / ratioB);
+            const sizeA = visualRatio * 160;
+            const sizeB = (ratioB / ratioA) * sizeA;
+
+            const plateA = document.querySelector('.absolute.w-40.h-40');
+            const plateB = document.querySelector('.absolute.w-32.h-32');
+            
+            plateA.style.width = `${sizeA}px`;
+            plateA.style.height = `${sizeA}px`;
+            plateB.style.width = `${sizeB}px`;
+            plateB.style.height = `${sizeB}px`;
         }
 
         // LISTENERS DE EVENTOS
@@ -471,8 +520,9 @@
 
         // INICIALIZACIÓN
         document.addEventListener('DOMContentLoaded', () => {
-            loadConfigFromMemory(); 
-            calculateTelemetry();   
+            renderQuickSelects('a');
+            renderQuickSelects('b');
+            setGradient(0); // Iniciar en llano
         });
     </script>
 </body>
