@@ -26,18 +26,6 @@
         
         .btn-gear { transition: all 0.2s; }
         .btn-gear:active { transform: scale(0.9); }
-
-        /* Efecto de Shimmer para la transmisión central */
-        .shimmer-effect {
-            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
-            background-size: 200% 100%;
-            animation: shimmer 2.5s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
     </style>
 </head>
 
@@ -76,25 +64,15 @@
                 </div>
             </div>
 
-            <div class="max-w-xl mx-auto border border-zinc-800 rounded-2xl p-4 bg-black/40">
+            <div class="max-w-xl mx-auto border border-zinc-800 rounded-2xl p-4 bg-black/40 relative z-10">
                 <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Inclinación de la Vía</label>
                 <div class="grid grid-cols-3 gap-3">
-                    <button onclick="setGradient(0)" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">0% (Llano)</button>
-                    <button onclick="setGradient(8)" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">8% (Puerto)</button>
-                    <button onclick="setGradient(12)" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">12% (Muro)</button>
+                    <button onclick="setGradient(0, 'Llano 0%')" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">0% (Llano)</button>
+                    <button onclick="setGradient(8, 'Puerto 8%')" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">8% (Puerto)</button>
+                    <button onclick="setGradient(12, 'Muro 12%')" class="gradient-btn px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">12% (Muro)</button>
                 </div>
             </div>
         </section>
-
-        <div class="glass-panel rounded-3xl p-6 relative overflow-hidden shadow-2xl max-w-2xl mx-auto w-full flex flex-col items-center">
-            <div class="absolute inset-0 shimmer-effect opacity-30 pointer-events-none"></div>
-            <p class="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-4">Diferencia de Transmisión Visual</p>
-            <div class="relative w-48 h-48 flex items-center justify-center">
-                <div class="absolute w-40 h-40 rounded-full border-8 border-cyan-500 opacity-80 shimmer-effect"></div>
-                <div class="absolute w-32 h-32 rounded-full border-8 border-violet-500 opacity-90 shimmer-effect"></div>
-                <div class="relative text-white font-black text-xs uppercase tracking-widest">VeloInsights</div>
-            </div>
-        </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
             
@@ -193,7 +171,7 @@
                     </div>
 
                     <div class="text-center bg-zinc-900 border border-zinc-800 rounded-lg py-2 mb-4">
-                        <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia Requerida (est. en llano)</span>
+                        <span id="power-label-a" class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia Requerida (Llano 0%)</span>
                         <span id="power-a" class="text-lg font-black font-mono text-white">0 W</span>
                     </div>
 
@@ -306,7 +284,7 @@
                     </div>
 
                     <div class="text-center bg-zinc-900 border border-zinc-800 rounded-lg py-2 mb-4 relative z-10">
-                        <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia Requerida (est. en llano)</span>
+                        <span id="power-label-b" class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia Requerida (Llano 0%)</span>
                         <span id="power-b" class="text-lg font-black font-mono text-white">0 W</span>
                     </div>
 
@@ -329,13 +307,12 @@
     <script src="layout.js?v=7.1"></script>
 
     <script>
-        // Transmisión Visual (Shimmer Animation)
-        const shimmerElements = document.querySelectorAll('.shimmer-effect');
-        let currentGradient = 0; // 0 = Llano, 8 = Puerto, 12 = Muro
+        let currentGradient = 0;
+        let gradientLabel = "Llano 0%";
 
-        // Función para establecer la pendiente y recalcular
-        function setGradient(percent) {
+        function setGradient(percent, labelText) {
             currentGradient = percent;
+            gradientLabel = labelText;
             
             // Actualizar UI de botones
             const buttons = document.querySelectorAll('.gradient-btn');
@@ -347,7 +324,6 @@
             calculateTelemetry();
         }
 
-        // Base de Datos de Transmisión
         const groupsetsDB = {
             shi_compact_11: { name: "11v Compact", platos: [50, 34], pinones: [11, 12, 13, 14, 15, 17, 19, 21, 24, 27, 30, 34] },
             shi_semi_12: { name: "12v Semi-Compact", platos: [52, 36], pinones: [11, 12, 13, 14, 15, 16, 17, 19, 21, 24, 27, 30] },
@@ -449,15 +425,11 @@
                 const ratio = plato / pinon;
                 const dev = ratio * circ; // Metros de avance
                 
-                // Cálculo de velocidad para el slider principal
                 const speed = (dev * rpm * 60) / 1000; 
-                
-                // Cálculo de matriz de velocidades estáticas (60, 90, 110 RPM)
                 const speed60 = (dev * 60 * 60) / 1000;
                 const speed90 = (dev * 90 * 60) / 1000;
                 const speed110 = (dev * 110 * 60) / 1000;
 
-                // Actualizar interfaz
                 document.getElementById(`ratio-${id}`).innerText = ratio.toFixed(2);
                 document.getElementById(`dev-${id}`).innerText = dev.toFixed(2) + 'm';
                 document.getElementById(`speed-${id}`).innerText = speed.toFixed(1);
@@ -466,46 +438,31 @@
                 document.getElementById(`speed-${id}-90`).innerText = speed90.toFixed(1);
                 document.getElementById(`speed-${id}-110`).innerText = speed110.toFixed(1);
 
-                // ESTIMACIÓN DE POTENCIA (Aerodinámica y Pendiente)
-                // Usando fórmula de potencia en bicicleta llanos/pendiente
-                const weight = 85; // Peso total ciclista + bici
-                const CdA = 0.35; // Coeficiente aerodinámico estándar para ciclista agarrado
-                const Crr = 0.005; // Resistencia a la rodadura estándar
+                // ESTIMACIÓN DE POTENCIA CORREGIDA
+                // Usando fórmula física estándar para ciclismo
+                const weight = 85; // Peso total ciclista + bici en Kg
+                const CdA = 0.32; // Coeficiente aerodinámico más realista (posición aero en carretera)
+                const Crr = 0.004; // Resistencia de rodadura asfalto liso
                 const g = 9.81;
-                const v = speed / 3.6; // Velocidad en m/s
+                const v = speed / 3.6; // Metros por segundo
 
                 const slopeIncline = currentGradient / 100;
-                const powerSlope = weight * g * slopeIncline * v;
-                const powerWind = 0.5 * 1.225 * v * v * v * CdA;
-                const powerRolling = weight * g * Crr * v;
+                const powerSlope = weight * g * slopeIncline * v; // Vatios para la gravedad
+                const powerWind = 0.5 * 1.225 * CdA * (v * v * v); // Vatios para el aire
+                const powerRolling = weight * g * Crr * v; // Vatios para rozamiento del suelo
 
-                const totalPower = Math.max(0, powerSlope + powerWind + powerRolling);
+                // Suma total dividida entre pérdida mecánica de la transmisión (3%)
+                const totalPower = Math.max(0, (powerSlope + powerWind + powerRolling) / 0.97);
 
+                // Actualizamos la etiqueta de texto dinámicamente y el número de Vatios
+                document.getElementById(`power-label-${id}`).innerText = `Potencia Requerida (${gradientLabel})`;
                 document.getElementById(`power-${id}`).innerText = `${Math.round(totalPower)} W`;
             };
 
             calcSide('a');
             calcSide('b');
-
-            // Actualizar Visualización Central de Transmisión (Shimmer Effect)
-            const ratioA = Math.max(1, parseInt(document.getElementById('plato-a').value) || 1);
-            const ratioB = Math.max(1, parseInt(document.getElementById('plato-b').value) || 1);
-
-            // Redimensionar platos visuales para reflejar diferencia
-            const visualRatio = Math.max(1, ratioA / ratioB);
-            const sizeA = visualRatio * 160;
-            const sizeB = (ratioB / ratioA) * sizeA;
-
-            const plateA = document.querySelector('.absolute.w-40.h-40');
-            const plateB = document.querySelector('.absolute.w-32.h-32');
-            
-            plateA.style.width = `${sizeA}px`;
-            plateA.style.height = `${sizeA}px`;
-            plateB.style.width = `${sizeB}px`;
-            plateB.style.height = `${sizeB}px`;
         }
 
-        // LISTENERS DE EVENTOS
         rpmSlider.addEventListener('input', calculateTelemetry);
         
         ['a', 'b'].forEach(id => {
@@ -518,11 +475,10 @@
             });
         });
 
-        // INICIALIZACIÓN
         document.addEventListener('DOMContentLoaded', () => {
             renderQuickSelects('a');
             renderQuickSelects('b');
-            setGradient(0); // Iniciar en llano
+            setGradient(0, 'Llano 0%'); // Iniciar en llano por defecto
         });
     </script>
 </body>
