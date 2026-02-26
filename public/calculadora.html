@@ -138,21 +138,37 @@
 
                 <div class="bg-black/50 rounded-2xl p-5 border border-zinc-800/50 mt-auto">
                     <p class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
-                    <div class="flex justify-between items-end mb-4">
+                    <div class="flex justify-between items-end mb-6">
                         <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
                         <div class="flex items-baseline gap-1">
                             <span id="speed-a" class="text-5xl font-black italic text-white leading-none">0.0</span>
                             <span class="text-xs font-bold text-zinc-500">km/h</span>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-800/50">
+
+                    <div class="grid grid-cols-3 gap-2 mb-6 text-center border-y border-zinc-800/50 py-3">
+                        <div>
+                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Atrancado (60)</span>
+                            <span id="speed-a-60" class="text-sm font-bold font-mono text-red-400">0.0</span>
+                        </div>
+                        <div class="border-x border-zinc-800/50">
+                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Crucero (90)</span>
+                            <span id="speed-a-90" class="text-sm font-bold font-mono text-emerald-400">0.0</span>
+                        </div>
+                        <div>
+                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Molinillo (110)</span>
+                            <span id="speed-a-110" class="text-sm font-bold font-mono text-cyan-400">0.0</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Avance/Pedalada</span>
-                            <span id="dev-a" class="text-lg font-mono font-bold text-emerald-400">0.00m</span>
+                            <span id="dev-a" class="text-lg font-mono font-bold text-zinc-300">0.00m</span>
                         </div>
                         <div class="text-right">
                             <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Ratio (Vueltas)</span>
-                            <span id="ratio-a" class="text-lg font-mono font-bold text-amber-400">0.00</span>
+                            <span id="ratio-a" class="text-lg font-mono font-bold text-zinc-300">0.00</span>
                         </div>
                     </div>
                 </div>
@@ -230,21 +246,37 @@
                 <div class="bg-black/50 rounded-2xl p-5 border border-zinc-800/50 mt-auto relative overflow-hidden">
                     <div class="absolute inset-0 bg-violet-500/5 opacity-0 hover:opacity-100 transition-opacity"></div>
                     <p class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
-                    <div class="flex justify-between items-end mb-4 relative z-10">
+                    <div class="flex justify-between items-end mb-6 relative z-10">
                         <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
                         <div class="flex items-baseline gap-1">
                             <span id="speed-b" class="text-5xl font-black italic text-white leading-none">0.0</span>
                             <span class="text-xs font-bold text-zinc-500">km/h</span>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-800/50 relative z-10">
+
+                    <div class="grid grid-cols-3 gap-2 mb-6 text-center border-y border-zinc-800/50 py-3 relative z-10">
+                        <div>
+                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Atrancado (60)</span>
+                            <span id="speed-b-60" class="text-sm font-bold font-mono text-red-400">0.0</span>
+                        </div>
+                        <div class="border-x border-zinc-800/50">
+                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Crucero (90)</span>
+                            <span id="speed-b-90" class="text-sm font-bold font-mono text-emerald-400">0.0</span>
+                        </div>
+                        <div>
+                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Molinillo (110)</span>
+                            <span id="speed-b-110" class="text-sm font-bold font-mono text-cyan-400">0.0</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 relative z-10">
                         <div>
                             <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Avance/Pedalada</span>
-                            <span id="dev-b" class="text-lg font-mono font-bold text-emerald-400">0.00m</span>
+                            <span id="dev-b" class="text-lg font-mono font-bold text-zinc-300">0.00m</span>
                         </div>
                         <div class="text-right">
                             <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Ratio (Vueltas)</span>
-                            <span id="ratio-b" class="text-lg font-mono font-bold text-amber-400">0.00</span>
+                            <span id="ratio-b" class="text-lg font-mono font-bold text-zinc-300">0.00</span>
                         </div>
                     </div>
                 </div>
@@ -254,8 +286,8 @@
     </main>
 
     <script src="layout.js?v=7.1"></script>
-<script>
-        // LA GRAN BASE DE DATOS DE GRUPOS PROFESIONALES
+
+    <script>
         const groupsetsDB = {
             shi_compact_11: { name: "11v Compact", platos: [50, 34], pinones: [11, 12, 13, 14, 15, 17, 19, 21, 24, 27, 30, 34] },
             shi_semi_12: { name: "12v Semi-Compact", platos: [52, 36], pinones: [11, 12, 13, 14, 15, 16, 17, 19, 21, 24, 27, 30] },
@@ -274,7 +306,6 @@
         const rpmDisplay = document.getElementById('rpm-display');
         const rpmStatus = document.getElementById('rpm-status');
 
-        // Función para inyectar los botones de "Cassette Rápido"
         function renderQuickSelects(setupId, skipAutoSelect = false) {
             const presetVal = document.getElementById(`preset-${setupId}`).value;
             const container = document.getElementById(`quick-selects-${setupId}`);
@@ -287,7 +318,6 @@
 
             if (presetVal === 'custom') {
                 container.classList.add('hidden');
-                // IMPORTANTE: Si es manual, no sobreescribimos los números, dejamos los que el usuario haya tecleado
                 if(!skipAutoSelect) calculateTelemetry(); 
                 return;
             }
@@ -314,7 +344,6 @@
                 </div>
             `;
 
-            // Si cambiamos de grupo en el menú (y no estamos cargando la memoria), forzamos los valores por defecto del grupo
             if (!skipAutoSelect) {
                 document.getElementById(`plato-${setupId}`).value = data.platos[0];
                 document.getElementById(`pinon-${setupId}`).value = data.pinones[Math.floor(data.pinones.length / 2)];
@@ -327,7 +356,6 @@
             calculateTelemetry();
         };
 
-        // MEMORIA: Guardar en el navegador
         function saveConfigToMemory() {
             const config = {
                 rpm: rpmSlider.value,
@@ -347,7 +375,6 @@
             localStorage.setItem('velo_calc_memory', JSON.stringify(config));
         }
 
-        // MEMORIA: Cargar desde el navegador
         function loadConfigFromMemory() {
             const saved = localStorage.getItem('velo_calc_memory');
             if (saved) {
@@ -357,7 +384,7 @@
                 
                 document.getElementById('wheel-a').value = config.a.wheel;
                 document.getElementById('preset-a').value = config.a.preset;
-                renderQuickSelects('a', true); // Genera botones sin borrar los números guardados
+                renderQuickSelects('a', true);
                 document.getElementById('plato-a').value = config.a.plato;
                 document.getElementById('pinon-a').value = config.a.pinon;
 
@@ -367,13 +394,11 @@
                 document.getElementById('plato-b').value = config.b.plato;
                 document.getElementById('pinon-b').value = config.b.pinon;
             } else {
-                // Si es la primera vez que entra a la web, carga esto por defecto
                 renderQuickSelects('a');
                 renderQuickSelects('b');
             }
         }
 
-        // CÁLCULO FÍSICO Y ACTUALIZACIÓN UI
         function calculateTelemetry() {
             const rpm = parseInt(rpmSlider.value) || 90;
             rpmDisplay.innerText = rpm;
@@ -406,17 +431,28 @@
 
                 const ratio = plato / pinon;
                 const dev = ratio * circ; // Metros de avance
-                const speed = (dev * rpm * 60) / 1000; // km/h
+                
+                // Cálculo de velocidad para el slider principal
+                const speed = (dev * rpm * 60) / 1000; 
+                
+                // Cálculo de matriz de velocidades estáticas (60, 90, 110 RPM)
+                const speed60 = (dev * 60 * 60) / 1000;
+                const speed90 = (dev * 90 * 60) / 1000;
+                const speed110 = (dev * 110 * 60) / 1000;
 
+                // Actualizar interfaz
                 document.getElementById(`ratio-${id}`).innerText = ratio.toFixed(2);
                 document.getElementById(`dev-${id}`).innerText = dev.toFixed(2) + 'm';
                 document.getElementById(`speed-${id}`).innerText = speed.toFixed(1);
+                
+                document.getElementById(`speed-${id}-60`).innerText = speed60.toFixed(1);
+                document.getElementById(`speed-${id}-90`).innerText = speed90.toFixed(1);
+                document.getElementById(`speed-${id}-110`).innerText = speed110.toFixed(1);
             };
 
             calcSide('a');
             calcSide('b');
 
-            // Guardar automáticamente cada vez que se calcula algo nuevo
             saveConfigToMemory();
         }
 
@@ -429,14 +465,14 @@
             document.getElementById(`pinon-${id}`).addEventListener('input', calculateTelemetry);
             
             document.getElementById(`preset-${id}`).addEventListener('change', () => {
-                renderQuickSelects(id, false); // False = Forzamos a que ponga los números por defecto de ese grupo
+                renderQuickSelects(id, false); 
             });
         });
 
-        // INICIALIZACIÓN AL CARGAR LA PÁGINA
+        // INICIALIZACIÓN
         document.addEventListener('DOMContentLoaded', () => {
-            loadConfigFromMemory(); // Carga todo lo guardado de sesiones anteriores
-            calculateTelemetry();   // Fuerza un cálculo inicial
+            loadConfigFromMemory(); 
+            calculateTelemetry();   
         });
     </script>
 </body>
