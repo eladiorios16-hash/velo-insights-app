@@ -119,7 +119,7 @@
                         <div>
                             <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Auto-Cargar Grupo</label>
                             <select id="preset-a" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-cyan-400 font-bold focus:border-cyan-500 focus:outline-none transition-colors">
-                                <option value="custom">⚙️ Manual (Sin Ayuda)</option>
+                                <option value="custom">⚙️ Custom / Manual</option>
                                 <option value="shi_compact_11" selected>Shi. 105/Ult 11v (50/34 - 11/34)</option>
                                 <option value="shi_semi_12">Shi. Ultegra/DA 12v (52/36 - 11/30)</option>
                                 <option value="shi_pro_12">Shi. Pro 12v (54/40 - 11/30)</option>
@@ -241,7 +241,7 @@
                         <div>
                             <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Auto-Cargar Grupo</label>
                             <select id="preset-b" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-violet-400 font-bold focus:border-violet-500 focus:outline-none transition-colors">
-                                <option value="custom">⚙️ Manual (Sin Ayuda)</option>
+                                <option value="custom">⚙️ Custom / Manual</option>
                                 <option value="shi_compact_11">Shi. 105/Ult 11v (50/34 - 11/34)</option>
                                 <option value="shi_semi_12" selected>Shi. Ultegra/DA 12v (52/36 - 11/30)</option>
                                 <option value="shi_pro_12">Shi. Pro 12v (54/40 - 11/30)</option>
@@ -367,11 +367,16 @@
             shi_mtb_2x: { name: "MTB 2x11", platos: [36, 26], pinones: [11, 13, 15, 17, 19, 21, 24, 28, 32, 37, 42] }
         };
 
+        // Memoria volátil para los grupos custom
+        window.customMemoryA = { platos: "50, 34", pinones: "11, 12, 13, 14, 15, 17, 19, 21, 24, 28" };
+        window.customMemoryB = { platos: "52, 36", pinones: "11, 12, 13, 14, 15, 17, 19, 21, 24, 28" };
+
         const rpmSlider = document.getElementById('rpm-slider');
         const rpmDisplay = document.getElementById('rpm-display');
         const rpmStatus = document.getElementById('rpm-status');
         const weightInput = document.getElementById('system-weight');
 
+        // Renderizado del Constructor o del Grupo
         function renderQuickSelects(setupId, skipAutoSelect = false) {
             const presetVal = document.getElementById(`preset-${setupId}`).value;
             const container = document.getElementById(`quick-selects-${setupId}`);
@@ -382,15 +387,30 @@
             const borderClass = `border-${colorClass}-500/30`;
             const hoverClass = `hover:bg-${colorClass}-500 hover:text-black`;
 
+            container.classList.remove('hidden');
+
             if (presetVal === 'custom') {
-                container.classList.add('hidden');
-                if(!skipAutoSelect) calculateTelemetry(); 
+                const mem = setupId === 'a' ? window.customMemoryA : window.customMemoryB;
+                
+                container.innerHTML = `
+                    <div class="mb-2 grid grid-cols-1 gap-2 border-b border-zinc-800 pb-3">
+                        <div>
+                            <label class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mis Platos (Ej: 50, 34)</label>
+                            <input type="text" id="custom-platos-${setupId}" value="${mem.platos}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mi Cassette (Ej: 11, 13, 15...)</label>
+                            <input type="text" id="custom-pinones-${setupId}" value="${mem.pinones}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors">
+                        </div>
+                    </div>
+                    <div id="custom-buttons-container-${setupId}" class="mt-2"></div>
+                `;
+                buildCustomButtons(setupId, skipAutoSelect);
                 return;
             }
 
+            // MODO PRESET STANDARD
             const data = groupsetsDB[presetVal];
-            container.classList.remove('hidden');
-
             const platosHTML = data.platos.map(p => 
                 `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 rounded-lg border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-xs font-black font-mono shadow-sm">${p}T</button>`
             ).join('');
@@ -417,11 +437,59 @@
             }
         }
 
+        // MOTOR DEL CONSTRUCTOR CUSTOM
+        window.buildCustomButtons = function(setupId, skipAutoSelect = false) {
+            const platosStr = document.getElementById(`custom-platos-${setupId}`).value;
+            const pinonesStr = document.getElementById(`custom-pinones-${setupId}`).value;
+
+            // Extraemos los números y los ordenamos (piñones)
+            const platosArr = platosStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0);
+            const pinonesArr = pinonesStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0).sort((a,b)=>a-b);
+
+            // Guardamos en la base de datos temporal para detectar cruce de cadena luego
+            groupsetsDB[`custom_${setupId}`] = { platos: platosArr, pinones: pinonesArr };
+            
+            // Actualizar variables globales para guardar en memoria
+            if(setupId === 'a') window.customMemoryA = { platos: platosStr, pinones: pinonesStr };
+            if(setupId === 'b') window.customMemoryB = { platos: platosStr, pinones: pinonesStr };
+
+            const colorClass = setupId === 'a' ? 'cyan' : 'violet';
+            const bgClass = `bg-${colorClass}-900/30`;
+            const textClass = `text-${colorClass}-400`;
+            const borderClass = `border-${colorClass}-500/30`;
+            const hoverClass = `hover:bg-${colorClass}-500 hover:text-black`;
+
+            const platosHTML = platosArr.map(p => 
+                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 rounded-lg border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-xs font-black font-mono shadow-sm">${p}T</button>`
+            ).join('');
+
+            const pinonesHTML = pinonesArr.map(p => 
+                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-[10px] font-bold font-mono transition-colors shadow-sm">${p}</button>`
+            ).join('');
+
+            const targetDiv = document.getElementById(`custom-buttons-container-${setupId}`);
+            if(targetDiv) {
+                targetDiv.innerHTML = `
+                    <div class="mb-3 flex items-center gap-3">
+                        <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest w-14">Platos:</span>
+                        <div class="flex gap-2 flex-wrap">${platosHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-1.5 w-14">Cassette:</span>
+                        <div class="flex flex-wrap gap-1.5 flex-1">${pinonesHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
+                    </div>
+                `;
+            }
+
+            if (!skipAutoSelect) calculateTelemetry(); 
+        };
+
         window.setGear = function(setupId, type, value) {
             document.getElementById(`${type}-${setupId}`).value = value;
             calculateTelemetry();
         };
 
+        // SISTEMA DE GUARDADO
         function saveConfigToMemory() {
             const config = {
                 rpm: rpmSlider.value,
@@ -430,13 +498,17 @@
                     wheel: document.getElementById('wheel-a').value, 
                     preset: document.getElementById('preset-a').value, 
                     plato: document.getElementById('plato-a').value, 
-                    pinon: document.getElementById('pinon-a').value 
+                    pinon: document.getElementById('pinon-a').value,
+                    customP: window.customMemoryA.platos,
+                    customC: window.customMemoryA.pinones
                 },
                 b: { 
                     wheel: document.getElementById('wheel-b').value, 
                     preset: document.getElementById('preset-b').value, 
                     plato: document.getElementById('plato-b').value, 
-                    pinon: document.getElementById('pinon-b').value 
+                    pinon: document.getElementById('pinon-b').value,
+                    customP: window.customMemoryB.platos,
+                    customC: window.customMemoryB.pinones
                 }
             };
             localStorage.setItem('velo_calc_memory', JSON.stringify(config));
@@ -450,6 +522,9 @@
                 rpmSlider.value = config.rpm || 90;
                 weightInput.value = config.weight || 85;
                 
+                window.customMemoryA = { platos: config.a.customP || "50, 34", pinones: config.a.customC || "11, 12, 13, 14, 15, 17, 19, 21, 24, 28" };
+                window.customMemoryB = { platos: config.b.customP || "52, 36", pinones: config.b.customC || "11, 12, 13, 14, 15, 17, 19, 21, 24, 28" };
+
                 document.getElementById('wheel-a').value = config.a.wheel;
                 document.getElementById('preset-a').value = config.a.preset;
                 renderQuickSelects('a', true);
@@ -467,42 +542,31 @@
             }
         }
 
-        // Lógica para detectar si la cadena está cruzada
+        // INTELIGENCIA: ALERTA DE CADENA CRUZADA
         function checkCrossChain(setupId, plato, pinon, preset) {
             let isCrossed = false;
+            const data = preset === 'custom' ? groupsetsDB[`custom_${setupId}`] : groupsetsDB[preset];
             
-            if (preset === 'custom') {
-                // Heurística general para manual
-                if (plato >= 48 && pinon >= 28) isCrossed = true; // Plato grande y piñones grandes
-                if (plato <= 38 && pinon <= 13) isCrossed = true; // Plato pequeño y piñones pequeños
-            } else {
-                const data = groupsetsDB[preset];
-                // Si es monoplato (longitud 1), NUNCA hay cadena cruzada real
-                if (data.platos.length > 1) {
-                    const isBigRing = plato === data.platos[0]; // Índice 0 suele ser el grande
-                    const isSmallRing = plato === data.platos[data.platos.length - 1]; 
-                    
-                    const sortedCogs = [...data.pinones].sort((a,b) => a - b);
-                    const cogIndex = sortedCogs.indexOf(pinon);
-                    
-                    // Si encontramos el piñón en el array...
-                    if (cogIndex !== -1) {
-                        if (isBigRing && cogIndex >= sortedCogs.length - 2) isCrossed = true; // 2 piñones más grandes
-                        if (isSmallRing && cogIndex <= 1) isCrossed = true; // 2 piñones más pequeños
-                    } else {
-                        // Si el usuario manipuló manualmente la caja estando en un preset
-                        if (isBigRing && pinon >= sortedCogs[sortedCogs.length - 2]) isCrossed = true;
-                        if (isSmallRing && pinon <= sortedCogs[1]) isCrossed = true;
-                    }
+            if (data && data.platos.length > 1 && data.pinones.length > 1) {
+                const isBigRing = plato === data.platos[0]; // Asumimos el índice 0 es el plato grande
+                const isSmallRing = plato === data.platos[data.platos.length - 1]; 
+                
+                const sortedCogs = [...data.pinones].sort((a,b) => a - b);
+                const cogIndex = sortedCogs.indexOf(pinon);
+                
+                if (cogIndex !== -1) {
+                    if (isBigRing && cogIndex >= sortedCogs.length - 2) isCrossed = true; // 2 piñones más grandes
+                    if (isSmallRing && cogIndex <= 1) isCrossed = true; // 2 piñones más pequeños
+                } else {
+                    // Si el usuario manipuló manualmente la caja fuera de los botones
+                    if (isBigRing && pinon >= sortedCogs[sortedCogs.length - 2]) isCrossed = true;
+                    if (isSmallRing && pinon <= sortedCogs[1]) isCrossed = true;
                 }
             }
 
             const warningEl = document.getElementById(`crosschain-warning-${setupId}`);
-            if (isCrossed) {
-                warningEl.classList.remove('hidden');
-            } else {
-                warningEl.classList.add('hidden');
-            }
+            if (isCrossed) warningEl.classList.remove('hidden');
+            else warningEl.classList.add('hidden');
         }
 
         function calculateTelemetry() {
@@ -537,7 +601,6 @@
                 const circ = parseInt(document.getElementById(`wheel-${id}`).value) / 1000; 
                 const preset = document.getElementById(`preset-${id}`).value;
 
-                // Comprobar cruce de cadena
                 checkCrossChain(id, plato, pinon, preset);
 
                 const ratio = plato / pinon;
@@ -556,7 +619,6 @@
                 document.getElementById(`speed-${id}-90`).innerText = speed90.toFixed(1);
                 document.getElementById(`speed-${id}-110`).innerText = speed110.toFixed(1);
 
-                // ESTIMACIÓN DE POTENCIA 
                 const CdA = 0.32; 
                 const Crr = 0.004; 
                 const g = 9.81;
@@ -603,7 +665,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadConfigFromMemory(); 
-            setGradient(0, 'Llano 0%'); // Forzar visual de botones al inicio
+            setGradient(0, 'Llano 0%'); 
         });
     </script>
 </body>
