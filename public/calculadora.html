@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TECH LAB | Calculadora de Desarrollo - Velo Insights</title>
+    <meta name="theme-color" content="#050505">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        
+        /* Slider estilo Velo Insights */
+        input[type=range].slider-cyan { -webkit-appearance: none; background: #27272a; height: 6px; border-radius: 3px; width: 100%; }
+        input[type=range].slider-cyan::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #06b6d4; cursor: pointer; border: 3px solid #083344; box-shadow: 0 0 15px rgba(6, 182, 212, 0.5); margin-top: -9px; transition: transform 0.1s; }
+        input[type=range].slider-cyan::-webkit-slider-thumb:active { transform: scale(1.1); }
+        
+        /* Inputs numéricos personalizados */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        .glass-panel { background: linear-gradient(180deg, rgba(24, 24, 27, 0.8) 0%, rgba(9, 9, 11, 0.95) 100%); border: 1px solid rgba(63, 63, 70, 0.5); backdrop-filter: blur(10px); }
+        .neon-text { text-shadow: 0 0 20px currentColor; }
+    </style>
+</head>
+
+<body class="bg-[#050505] antialiased text-slate-300 selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen flex flex-col">
+
+    <header class="pt-12 pb-8 px-4 text-center border-b border-zinc-800/50 bg-black/50 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <a href="index.html" class="text-[10px] font-black uppercase text-zinc-500 hover:text-cyan-400 transition-colors tracking-widest flex items-center gap-2">
+                <i class="fas fa-chevron-left"></i> Volver
+            </a>
+            <div class="text-center">
+                <p class="text-cyan-500 font-bold tracking-[0.2em] text-[9px] uppercase mb-1">VELO INSIGHTS // TECH LAB</p>
+                <h1 class="text-2xl md:text-3xl font-black text-white italic uppercase tracking-tighter">Calculadora de <span class="text-zinc-500">Desarrollo</span></h1>
+            </div>
+            <div class="w-16"></div> </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 md:px-6 py-8 md:py-12 space-y-8">
+
+        <section class="glass-panel rounded-3xl p-6 md:p-10 relative overflow-hidden shadow-2xl">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="text-center mb-8">
+                <p class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span> Cadencia Objetivo
+                </p>
+                <div class="flex items-end justify-center gap-2">
+                    <span id="rpm-display" class="text-6xl md:text-8xl font-black italic tracking-tighter text-cyan-400 neon-text leading-none transition-colors duration-300">90</span>
+                    <span class="text-lg md:text-xl font-bold text-zinc-500 mb-2 md:mb-4">RPM</span>
+                </div>
+                <span id="rpm-status" class="inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border border-cyan-500/30 text-cyan-400 bg-cyan-950/30 transition-colors duration-300">ZONA ÓPTIMA</span>
+            </div>
+
+            <div class="max-w-2xl mx-auto relative z-10">
+                <input type="range" min="40" max="130" value="90" class="slider-cyan" id="rpm-slider">
+                <div class="flex justify-between text-[10px] font-bold text-zinc-600 uppercase mt-4 tracking-widest">
+                    <span>40 Atrancado</span>
+                    <span>130 Molinillo</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            
+            <section class="glass-panel rounded-3xl p-6 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-cyan-500 transition-colors duration-300">
+                <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
+                    <h2 class="text-lg font-black text-white italic uppercase tracking-widest">Setup Actual</h2>
+                    <span class="text-[10px] font-bold text-zinc-500 bg-zinc-900 px-2 py-1 rounded">OPCIÓN A</span>
+                </div>
+
+                <div class="space-y-5 mb-8 flex-1">
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Tamaño de Rueda y Neumático</label>
+                        <select id="wheel-a" class="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white font-mono focus:border-cyan-500 focus:outline-none transition-colors">
+                            <option value="2105">Carretera: 700 x 25c</option>
+                            <option value="2136" selected>Carretera: 700 x 28c</option>
+                            <option value="2146">Carretera/Gravel: 700 x 30c</option>
+                            <option value="2155">Gravel: 700 x 32c</option>
+                            <option value="2181">Gravel: 700 x 35c</option>
+                            <option value="2224">Gravel: 700 x 40c</option>
+                            <option value="2298">MTB: 29" x 2.20"</option>
+                            <option value="2326">MTB: 29" x 2.40"</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Plato (Dientes)</label>
+                            <div class="relative">
+                                <i class="fas fa-cog absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
+                                <input type="number" id="plato-a" value="50" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-lg text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Piñón (Dientes)</label>
+                            <div class="relative">
+                                <i class="fas fa-bullseye absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
+                                <input type="number" id="pinon-a" value="15" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-lg text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-black/50 rounded-2xl p-5 border border-zinc-800/50">
+                    <p class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
+                    
+                    <div class="flex justify-between items-end mb-4">
+                        <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
+                        <div class="flex items-baseline gap-1">
+                            <span id="speed-a" class="text-4xl font-black italic text-white leading-none">0.0</span>
+                            <span class="text-xs font-bold text-zinc-500">km/h</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-800/50">
+                        <div>
+                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Avance/Pedalada</span>
+                            <span id="dev-a" class="text-lg font-mono font-bold text-emerald-400">0.00m</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Ratio (Plato/Piñón)</span>
+                            <span id="ratio-a" class="text-lg font-mono font-bold text-amber-400">0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="glass-panel rounded-3xl p-6 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-violet-500 transition-colors duration-300">
+                <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
+                    <h2 class="text-lg font-black text-white italic uppercase tracking-widest">Nuevo Setup</h2>
+                    <span class="text-[10px] font-bold text-zinc-500 bg-zinc-900 px-2 py-1 rounded">OPCIÓN B</span>
+                </div>
+
+                <div class="space-y-5 mb-8 flex-1">
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Tamaño de Rueda y Neumático</label>
+                        <select id="wheel-b" class="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white font-mono focus:border-violet-500 focus:outline-none transition-colors">
+                            <option value="2105">Carretera: 700 x 25c</option>
+                            <option value="2136" selected>Carretera: 700 x 28c</option>
+                            <option value="2146">Carretera/Gravel: 700 x 30c</option>
+                            <option value="2155">Gravel: 700 x 32c</option>
+                            <option value="2181">Gravel: 700 x 35c</option>
+                            <option value="2224">Gravel: 700 x 40c</option>
+                            <option value="2298">MTB: 29" x 2.20"</option>
+                            <option value="2326">MTB: 29" x 2.40"</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Plato (Dientes)</label>
+                            <div class="relative">
+                                <i class="fas fa-cog absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
+                                <input type="number" id="plato-b" value="52" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-lg text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Piñón (Dientes)</label>
+                            <div class="relative">
+                                <i class="fas fa-bullseye absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
+                                <input type="number" id="pinon-b" value="15" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-lg text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-black/50 rounded-2xl p-5 border border-zinc-800/50 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-violet-500/5 opacity-0 hover:opacity-100 transition-opacity"></div>
+                    <p class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
+                    
+                    <div class="flex justify-between items-end mb-4 relative z-10">
+                        <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
+                        <div class="flex items-baseline gap-1">
+                            <span id="speed-b" class="text-4xl font-black italic text-white leading-none">0.0</span>
+                            <span class="text-xs font-bold text-zinc-500">km/h</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-800/50 relative z-10">
+                        <div>
+                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Avance/Pedalada</span>
+                            <span id="dev-b" class="text-lg font-mono font-bold text-emerald-400">0.00m</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Ratio (Plato/Piñón)</span>
+                            <span id="ratio-b" class="text-lg font-mono font-bold text-amber-400">0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        // Referencias a elementos
+        const rpmSlider = document.getElementById('rpm-slider');
+        const rpmDisplay = document.getElementById('rpm-display');
+        const rpmStatus = document.getElementById('rpm-status');
+
+        // Inputs Setup A
+        const wheelA = document.getElementById('wheel-a');
+        const platoA = document.getElementById('plato-a');
+        const pinonA = document.getElementById('pinon-a');
+        
+        // Inputs Setup B
+        const wheelB = document.getElementById('wheel-b');
+        const platoB = document.getElementById('plato-b');
+        const pinonB = document.getElementById('pinon-b');
+
+        // Función principal de cálculo
+        function calculateTelemetry() {
+            const rpm = parseInt(rpmSlider.value);
+            rpmDisplay.innerText = rpm;
+
+            // Lógica de colores y estados de la cadencia
+            rpmDisplay.className = "text-6xl md:text-8xl font-black italic tracking-tighter neon-text leading-none transition-colors duration-300 ";
+            rpmStatus.className = "inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border transition-colors duration-300 ";
+
+            if (rpm < 70) {
+                rpmDisplay.classList.add("text-red-500");
+                rpmStatus.classList.add("text-red-400", "border-red-500/30", "bg-red-950/30");
+                rpmStatus.innerText = "ATRANCADO (Mucha Fuerza)";
+            } else if (rpm <= 85) {
+                rpmDisplay.classList.add("text-amber-500");
+                rpmStatus.classList.add("text-amber-400", "border-amber-500/30", "bg-amber-950/30");
+                rpmStatus.innerText = "ZONA DE POTENCIA";
+            } else if (rpm <= 105) {
+                rpmDisplay.classList.add("text-emerald-500");
+                rpmStatus.classList.add("text-emerald-400", "border-emerald-500/30", "bg-emerald-950/30");
+                rpmStatus.innerText = "ZONA ÓPTIMA / ÁGIL";
+            } else {
+                rpmDisplay.classList.add("text-cyan-500");
+                rpmStatus.classList.add("text-cyan-400", "border-cyan-500/30", "bg-cyan-950/30");
+                rpmStatus.innerText = "MOLINILLO (Alta frecuencia)";
+            }
+
+            // --- CÁLCULO SETUP A ---
+            const pA = parseInt(platoA.value) || 1;
+            const cA = parseInt(pinonA.value) || 1;
+            const circA = parseInt(wheelA.value) / 1000; // de mm a metros
+
+            const ratio_A = pA / cA;
+            const dev_A = ratio_A * circA; // Metros por pedalada
+            const speed_A = (dev_A * rpm * 60) / 1000; // km/h
+
+            document.getElementById('ratio-a').innerText = ratio_A.toFixed(2);
+            document.getElementById('dev-a').innerText = dev_A.toFixed(2) + 'm';
+            document.getElementById('speed-a').innerText = speed_A.toFixed(1);
+
+            // --- CÁLCULO SETUP B ---
+            const pB = parseInt(platoB.value) || 1;
+            const cB = parseInt(pinonB.value) || 1;
+            const circB = parseInt(wheelB.value) / 1000; // de mm a metros
+
+            const ratio_B = pB / cB;
+            const dev_B = ratio_B * circB; // Metros por pedalada
+            const speed_B = (dev_B * rpm * 60) / 1000; // km/h
+
+            document.getElementById('ratio-b').innerText = ratio_B.toFixed(2);
+            document.getElementById('dev-b').innerText = dev_B.toFixed(2) + 'm';
+            document.getElementById('speed-b').innerText = speed_B.toFixed(1);
+        }
+
+        // Escuchadores de eventos para recalcular al instante
+        const inputs = [rpmSlider, wheelA, platoA, pinonA, wheelB, platoB, pinonB];
+        inputs.forEach(input => {
+            input.addEventListener('input', calculateTelemetry);
+            input.addEventListener('change', calculateTelemetry);
+        });
+
+        // Cálculo inicial al cargar la página
+        document.addEventListener('DOMContentLoaded', calculateTelemetry);
+
+    </script>
+</body>
+</html>
