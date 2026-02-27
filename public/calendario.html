@@ -3,10 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>VELO INSIGHTS | Calendario Ciclismo WorldTour 2026</title>
+    <meta name="description" content="Calendario interactivo del ciclismo profesional WorldTour. Consulta fechas, perfiles, altimetrías y etapas de las Grandes Vueltas y Monumentos.">
+    <meta name="keywords" content="calendario ciclismo, fechas WorldTour, etapas Tour de Francia, perfiles Giro Italia, monumentos ciclismo, altimetria etapas, carreras UCI">
+    <meta name="author" content="Velo Insights">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://veloinsights.es/calendario.html">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://veloinsights.es/calendario.html">
+    <meta property="og:title" content="Calendario Ciclismo WorldTour | Velo Insights">
+    <meta property="og:description" content="Fechas, etapas y perfiles de todas las carreras del calendario WorldTour. Añádelas a tu Google Calendar.">
+    <meta property="og:image" content="https://veloinsights.es/assets/default-news.jpg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://veloinsights.es/calendario.html">
+    <meta name="twitter:title" content="Calendario Ciclismo WorldTour | Velo Insights">
+    <meta name="twitter:description" content="Fechas, etapas y perfiles de todas las carreras del calendario WorldTour. Añádelas a tu Google Calendar.">
+    <meta name="twitter:image" content="https://veloinsights.es/assets/default-news.jpg">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
-    
-    <title>VELO INSIGHTS | Calendario 2026</title>
-    
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#050505">
     <meta name="mobile-web-app-capable" content="yes">
@@ -287,7 +303,6 @@
                     </div>
                 ` : '';
 
-                // AQUI HE CAMBIADO bg-zinc-900/40 POR bg-[#09090b]
                 return `
                 <div id="card-${i}" class="race-card bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden mb-4">
                     <div class="p-5 flex items-center justify-between cursor-pointer" onclick="toggleDetails(${i})">
@@ -436,16 +451,13 @@
             const btnAccept = document.getElementById('btn-accept-cookies');
             const btnReject = document.getElementById('btn-reject-cookies');
 
-            // Comprobar si ya tomó una decisión antes
             if (!localStorage.getItem('velo_cookies_consent')) {
-                // Si no hay registro, mostramos el banner con una pequeña animación
                 banner.classList.remove('hidden');
                 setTimeout(() => {
                     banner.classList.remove('translate-y-full');
                 }, 100);
             }
 
-            // Función para guardar y ocultar
             const hideBanner = (decision) => {
                 localStorage.setItem('velo_cookies_consent', decision);
                 banner.classList.add('translate-y-full');
