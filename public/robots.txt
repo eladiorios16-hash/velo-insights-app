@@ -14,4 +14,4 @@ Disallow: /api/
 Disallow: /server.js
 
 # Mapa del sitio para indexación rápida
-Sitemap: https://www.tudominio.com/sitemap.xml
+Sitemap: https://www.veloinsights.es/sitemap.xml
