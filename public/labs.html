@@ -4,10 +4,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>VELO INSIGHTS | Performance Lab & Simulador W/kg</title>
+    <meta name="description" content="Simulador telemétrico en tiempo real. Ajusta tus parámetros (peso y potencia) para descubrir tu nivel W/kg respecto al pelotón WorldTour en subidas míticas.">
+    <meta name="keywords" content="simulador ciclismo, calcular w/kg, potencia ciclismo, FTP, Alpe d'Huez tiempo, Angliru vatios, comparar con Pogacar, rendimiento ciclista">
+    <meta name="author" content="Velo Insights">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://veloinsights.es/labs.html">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://veloinsights.es/labs.html">
+    <meta property="og:title" content="VELO INSIGHTS | Performance Lab">
+    <meta property="og:description" content="¿Podrías aguantar a rueda de Pogačar? Usa nuestro simulador de Vatios/Kg y compárate con los pros en puertos míticos.">
+    <meta property="og:image" content="https://veloinsights.es/assets/default-news.jpg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://veloinsights.es/labs.html">
+    <meta name="twitter:title" content="VELO INSIGHTS | Performance Lab">
+    <meta name="twitter:description" content="¿Podrías aguantar a rueda de Pogačar? Usa nuestro simulador de Vatios/Kg y compárate con los pros en puertos míticos.">
+    <meta name="twitter:image" content="https://veloinsights.es/assets/default-news.jpg">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
-    
-    <title>VELO INSIGHTS | Performance Lab</title>
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -277,7 +293,7 @@
 
         let radarChart = null, climbChart = null;
         let climbDebounceTimer;
-        let radarDebounceTimer; // <-- Nuevo timer para el retraso del gráfico Radar
+        let radarDebounceTimer;
 
         // Sync inputs and sliders
         function syncInputs(slider, numBox) {
@@ -376,10 +392,8 @@
             localStorage.setItem('velo_weight', weightSlider.value);
             localStorage.setItem('velo_watts', wattsSlider.value);
 
-            // Muestra mensaje de "Calculando..." temporalmente
             analysisContent.innerHTML = `<p class="text-[10px] text-zinc-500 text-center animate-pulse tracking-widest uppercase">Actualizando telemetría...</p>`;
             
-            // Retraso de medio segundo antes de renderizar la gráfica (DEBOUNCE)
             clearTimeout(radarDebounceTimer);
             radarDebounceTimer = setTimeout(() => {
                 renderRadar();
@@ -400,7 +414,6 @@
             const rival = PRO_STATS[rivalSelect.value];
             const wkg = parseFloat(wkgDisplay.innerText);
             
-            // Fórmula para escalar la gráfica del usuario (max 100 pts si llega a 6.6 w/kg)
             const userScore = wkg > 0 ? Math.min(98, (wkg / 6.6) * 100) : 0;
             const userData = userScore > 0 ? [userScore, userScore*0.7, userScore*0.8, userScore*0.9, userScore*0.75] : [10, 10, 10, 10, 10];
 
@@ -442,7 +455,6 @@
             else if(gap < 90) message = `Nivel espectacular. Podrías aguantarle un buen rato.`;
             else message = `¿Eres tú, Tadej? Porque le darías pelea a ${rival.name}.`;
 
-            // Actualiza el texto con animación de entrada
             analysisContent.innerHTML = `
                 <div class="animate-fade-in">
                     <div class="flex justify-between items-end mb-3">
@@ -569,16 +581,13 @@
             const btnAccept = document.getElementById('btn-accept-cookies');
             const btnReject = document.getElementById('btn-reject-cookies');
 
-            // Comprobar si ya tomó una decisión antes
             if (!localStorage.getItem('velo_cookies_consent')) {
-                // Si no hay registro, mostramos el banner con una pequeña animación
                 banner.classList.remove('hidden');
                 setTimeout(() => {
                     banner.classList.remove('translate-y-full');
                 }, 100);
             }
 
-            // Función para guardar y ocultar
             const hideBanner = (decision) => {
                 localStorage.setItem('velo_cookies_consent', decision);
                 banner.classList.add('translate-y-full');
