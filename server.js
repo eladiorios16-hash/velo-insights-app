@@ -244,10 +244,10 @@ upgradeDatabase();
 // A. Servimos la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// B. RUTA SITEMAP PARA GOOGLE SEO (VERSIÓN BLINDADA Y ORDENADA)
+// B. RUTA SITEMAP PARA GOOGLE SEO (VERSIÓN CORREGIDA Y BLINDADA)
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
+        const baseUrl = 'https://veloinsights.es'; 
 
         res.set('Content-Type', 'application/xml');
 
@@ -274,42 +274,34 @@ app.get('/sitemap.xml', async (req, res) => {
             xml += `  </url>\n`;
         });
 
-        // 2. Noticias
+        // 2. Noticias (Con la sintaxis correcta de tu BD)
         try {
-            const noticias = await new Promise((resolve) => {
-                db.query("SELECT id FROM noticias ORDER BY id DESC", [], (err, rows) => {
-                    if (err) resolve([]); 
-                    else resolve(rows || []);
+            const [noticias] = await db.query("SELECT id FROM noticias ORDER BY id DESC");
+            if (noticias && noticias.length > 0) {
+                noticias.forEach(news => {
+                    xml += `  <url>\n`;
+                    xml += `    <loc>${baseUrl}/noticias.html?article=${news.id}</loc>\n`;
+                    xml += `    <changefreq>weekly</changefreq>\n`;
+                    xml += `    <priority>0.9</priority>\n`;
+                    xml += `  </url>\n`;
                 });
-            });
+            }
+        } catch (e) { console.log("Sitemap: Omitiendo noticias", e.message); }
 
-            noticias.forEach(news => {
-                xml += `  <url>\n`;
-                xml += `    <loc>${baseUrl}/noticias.html?article=${news.id}</loc>\n`;
-                xml += `    <changefreq>weekly</changefreq>\n`;
-                xml += `    <priority>0.9</priority>\n`;
-                xml += `  </url>\n`;
-            });
-        } catch (e) { console.log("Sitemap: Omitiendo noticias"); }
-
-        // 3. Glosario 
+        // 3. Glosario (Con la sintaxis correcta de tu BD)
         try {
-            const glosario = await new Promise((resolve) => {
-                db.query("SELECT term FROM glosario", [], (err, rows) => {
-                    if (err) resolve([]);
-                    else resolve(rows || []);
+            const [glosario] = await db.query("SELECT term FROM glosario");
+            if (glosario && glosario.length > 0) {
+                glosario.forEach(item => {
+                    xml += `  <url>\n`;
+                    let safeTerm = encodeURIComponent(item.term).replace(/&/g, '&amp;').replace(/'/g, '&apos;').replace(/"/g, '&quot;');
+                    xml += `    <loc>${baseUrl}/glosario.html?term=${safeTerm}</loc>\n`;
+                    xml += `    <changefreq>monthly</changefreq>\n`;
+                    xml += `    <priority>0.6</priority>\n`;
+                    xml += `  </url>\n`;
                 });
-            });
-
-            glosario.forEach(item => {
-                xml += `  <url>\n`;
-                let safeTerm = encodeURIComponent(item.term).replace(/&/g, '&amp;').replace(/'/g, '&apos;').replace(/"/g, '&quot;');
-                xml += `    <loc>${baseUrl}/glosario.html?term=${safeTerm}</loc>\n`;
-                xml += `    <changefreq>monthly</changefreq>\n`;
-                xml += `    <priority>0.6</priority>\n`;
-                xml += `  </url>\n`;
-            });
-        } catch(e) { console.log("Sitemap: Omitiendo glosario"); }
+            }
+        } catch(e) { console.log("Sitemap: Omitiendo glosario", e.message); }
 
         xml += `</urlset>`;
         
