@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v7.2 (Calculadora + Tech Lab + Analytics) */
+/* VELO INSIGHTS - LAYOUT ENGINE v7.2 (VERSIÓN COMPLETA + ANALYTICS) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initScrollReveal();   
     handleIncomingLinks();
     initNavbarScrollBehavior();
-    initAnalytics(); // Iniciar telemetría
+    initAnalytics(); // Inyecta la telemetría de Google
 });
 
 function injectGlobalStyles() {
@@ -142,7 +142,7 @@ function renderNavbar() {
                 <a href="equipos.html" class="nav-link ${isActive('equipos')}">Equipos</a>
                 <a href="glosario.html" class="nav-link ${isActive('glosario')}">Glosario</a>
                 <a href="labs.html" class="nav-link ${isActive('labs')}">Tech Lab</a>
-                <a href="calculadora.html" class="nav-link ${isActive('calculadora')} text-cyan-400">Calculadora</a>
+                <a href="calculadora.html" class="nav-link ${isActive('calculadora')} text-cyan-500">Calculadora</a>
             </div>
 
             <div class="hidden md:flex items-center">
@@ -195,76 +195,75 @@ function initNavbarScrollBehavior() {
 function renderMenuModal() {
     const menu = document.createElement('div');
     menu.id = "main-menu";
-    menu.className = "menu-hidden fixed inset-0 w-full h-[100dvh] bg-[#050505]/95 backdrop-blur-2xl z-[90] flex flex-col pt-28 px-4 pb-10 md:hidden overflow-y-auto";
+    menu.className = "menu-hidden fixed inset-0 w-full h-[100dvh] bg-[#08151b]/60 backdrop-blur-2xl z-[90] flex flex-col pt-28 px-4 pb-10 md:hidden overflow-y-auto";
     
     const icons = {
-        home: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 01-1 1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
-        news: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>`,
-        teams: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`,
-        calendar: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
-        glossary: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
-        lab: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
-        calc: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`,
-        search: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`
+        home: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 01-1 1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
+        news: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>`,
+        teams: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`,
+        calendar: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
+        glossary: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
+        lab: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+        calc: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`,
+        search: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`
     };
 
     menu.innerHTML = `
-        <div class="flex flex-col gap-3 relative z-10 w-full max-w-sm mx-auto">
-            
+        <div class="flex flex-col gap-3 relative z-10 w-full max-sm mx-auto">
             <button onclick="toggleMenu(); toggleSearch()" class="nav-item group relative flex items-center justify-between w-full p-4 mb-4 rounded-xl bg-zinc-900/60 border border-zinc-700/50 hover:border-cyan-500/80 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)] overflow-hidden">
                 <div class="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
                 <div class="flex items-center gap-3">
                     <span class="text-cyan-500">${icons.search}</span>
-                    <span class="text-xs font-bold uppercase tracking-widest text-zinc-300 group-hover:text-white transition-colors">Búsqueda rápida...</span>
+                    <span class="text-xs font-bold uppercase tracking-widest text-zinc-300 group-hover:text-white transition-colors">Inicializar Búsqueda...</span>
                 </div>
             </button>
 
-            <a href="index.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 transition-all">
+            <a href="index.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
                 <div class="flex items-center gap-4">
                     <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.home}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Inicio</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Inicio</span>
                 </div>
             </a>
 
-            <a href="noticias.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 transition-all">
+            <a href="noticias.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
                 <div class="flex items-center gap-4">
                     <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.news}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Journal</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Journal</span>
                 </div>
             </a>
 
-            <a href="calendario.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 transition-all">
+            <a href="calendario.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
                 <div class="flex items-center gap-4">
                     <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.calendar}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Calendario</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Calendario</span>
                 </div>
             </a>
 
-            <a href="equipos.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 transition-all">
+            <a href="equipos.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
                  <div class="flex items-center gap-4">
                      <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.teams}</span>
-                     <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Equipos</span>
+                     <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Equipos</span>
                  </div>
             </a>
 
-            <a href="glosario.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 transition-all">
+            <a href="glosario.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
                 <div class="flex items-center gap-4">
                     <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.glossary}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Glosario</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Glosario</span>
                 </div>
             </a>
 
-            <a href="labs.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 transition-all">
+            <a href="labs.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
                 <div class="flex items-center gap-4">
                     <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.lab}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Tech Lab</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Tech Lab</span>
                 </div>
             </a>
 
-            <a href="calculadora.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 border-l-4 border-l-cyan-500 transition-all">
+            <a href="calculadora.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
                 <div class="flex items-center gap-4">
-                    <span class="text-cyan-400">${icons.calc}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-cyan-400">Calculadora</span>
+                    <span class="text-cyan-500 transition-colors">${icons.calc}</span>
+                    <span class="text-xl font-black italic uppercase tracking-wider text-cyan-400 transition-colors drop-shadow-lg">Calculadora</span>
                 </div>
             </a>
         </div>
@@ -277,11 +276,9 @@ window.toggleMenu = function() {
     if (menu.classList.contains('menu-hidden')) {
         menu.classList.remove('menu-hidden');
         menu.classList.add('menu-visible');
-        document.body.style.overflow = 'hidden';
     } else {
         menu.classList.remove('menu-visible');
         menu.classList.add('menu-hidden');
-        document.body.style.overflow = '';
     }
 };
 
@@ -338,12 +335,13 @@ async function performSearch(term) {
     
     let results = [];
     const lowerTerm = term.toLowerCase();
+    const API_BASE = ''; // Ajustar si es necesario
 
     try {
         const [resNews, resGlossary, resCalendar] = await Promise.all([
-            fetch(`/api/news`).catch(() => null),
-            fetch(`/api/glossary`).catch(() => null),
-            fetch(`/api/calendar`).catch(() => null)
+            fetch(`${API_BASE}/api/news`).catch(() => null),
+            fetch(`${API_BASE}/api/glossary`).catch(() => null),
+            fetch(`${API_BASE}/api/calendar`).catch(() => null)
         ]);
 
         let n = resNews && resNews.ok ? await resNews.json() : [];
@@ -377,54 +375,182 @@ async function performSearch(term) {
     `).join('');
 }
 
-function renderFooter() {
-    const footer = document.createElement('footer');
-    footer.className = "py-10 md:py-20 border-t border-zinc-900 bg-black/80 backdrop-blur-md px-6 text-center mt-20 relative z-10"; 
-    footer.innerHTML = `
-        <div class="max-w-7xl mx-auto mb-10 grid grid-cols-1 md:grid-cols-3 gap-10 text-left">
-            <div>
-                <p class="text-white font-black italic text-xl uppercase mb-4">VELO<span class="text-cyan-500">INSIGHTS</span></p>
-                <p class="text-zinc-500 text-xs leading-relaxed">Plataforma de análisis técnico y telemetría para el ciclismo WorldTour. Datos reales para aficionados exigentes.</p>
-            </div>
-            <div class="flex flex-col gap-2">
-                <p class="text-zinc-300 font-black uppercase text-[10px] tracking-widest mb-2">Legal</p>
-                <a href="privacidad.html" class="text-zinc-500 hover:text-cyan-400 text-xs transition-colors">Privacidad y Cookies</a>
-                <a href="privacidad.html#condiciones" class="text-zinc-500 hover:text-cyan-400 text-xs transition-colors">Condiciones de Uso</a>
-            </div>
-            <div class="flex flex-col gap-2">
-                <p class="text-zinc-300 font-black uppercase text-[10px] tracking-widest mb-2">Tech Lab</p>
-                <a href="calculadora.html" class="text-zinc-500 hover:text-cyan-400 text-xs transition-colors">Calculadora de Desarrollo</a>
-                <a href="labs.html" class="text-zinc-500 hover:text-cyan-400 text-xs transition-colors">Simulador Pro vs Amateur</a>
-            </div>
-        </div>
-        <p class="text-zinc-700 text-[9px] font-black uppercase tracking-widest leading-loose">© 2026 VELO INSIGHTS • PERFORMANCE LAB<br><span class="opacity-30 tracking-[0.3em]">DATA DRIVEN CYCLING</span></p>
-    `;
-    document.body.appendChild(footer);
-}
+function handleIncomingLinks() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const raceName = urlParams.get('race');
+    const searchTerm = urlParams.get('term'); 
 
-function initAnalytics() {
-    const GA_MEASUREMENT_ID = 'G-83B44ZKJ2B'; 
-    if (localStorage.getItem('velo_cookies_consent') !== 'rejected') {
-        const gaScript = document.createElement('script');
-        gaScript.async = true;
-        gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-        document.head.appendChild(gaScript);
-
-        const inlineScript = document.createElement('script');
-        inlineScript.innerHTML = `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}', { 'anonymize_ip': true });
-        `;
-        document.head.appendChild(inlineScript);
-        console.log("📊 Telemetría activada.");
+    if (raceName && window.location.pathname.includes('calendario.html')) {
+        setTimeout(() => {
+            const items = document.querySelectorAll('h3');
+            items.forEach(h3 => {
+                if (h3.innerText.toUpperCase().includes(raceName.toUpperCase())) {
+                    h3.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const card = h3.closest('.race-card');
+                    if(card) {
+                        card.classList.add('highlight-race'); 
+                        const btn = card.querySelector('button');
+                        if(btn) btn.click();
+                    }
+                }
+            });
+        }, 800);
+    }
+    
+    if (searchTerm && window.location.pathname.includes('glosario.html')) {
+        let attempts = 0;
+        const checkInterval = setInterval(() => {
+            const input = document.getElementById('term-search');
+            const gridHasItems = document.getElementById('dictionary-grid')?.children.length > 0;
+            if (input && gridHasItems) {
+                input.value = decodeURIComponent(searchTerm);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                const header = document.querySelector('header');
+                if(header) header.scrollIntoView({ behavior: 'smooth' });
+                clearInterval(checkInterval);
+            }
+            attempts++;
+            if (attempts > 20) clearInterval(checkInterval);
+        }, 100);
     }
 }
 
-// Re-usar tus funciones de Lightbox y ScrollReveal sin cambios (están perfectas)
-function injectLightbox() { /* ... tu código ... */ }
-window.openLightbox = function(src) { /* ... tu código ... */ }
-window.closeLightbox = function() { /* ... tu código ... */ }
-function initScrollReveal() { /* ... tu código ... */ }
-function handleIncomingLinks() { /* ... tu código ... */ }
+function renderFooter() {
+    const footer = document.createElement('footer');
+    footer.className = "py-10 md:py-20 border-t border-zinc-900 bg-black/80 backdrop-blur-md px-6 text-center mt-20 relative z-10"; 
+    footer.innerHTML = `<p class="text-zinc-700 text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-loose">© 2026 VELO INSIGHTS • PERFORMANCE LAB<br><span class="opacity-30 tracking-[0.3em] md:tracking-[0.5em]">DATA DRIVEN CYCLING</span></p>`;
+    document.body.appendChild(footer);
+}
+
+function initScrollReveal() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = "1";
+                entry.target.style.transform = "translateY(0)";
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(20px)";
+        el.style.transition = "all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)";
+        observer.observe(el);
+    });
+}
+
+// --- SISTEMA DE VISOR DE IMÁGENES (LIGHTBOX COMPLETO) ---
+let lbScale = 1; let lbPointX = 0; let lbPointY = 0; let lbStartX = 0; let lbStartY = 0;
+let lbIsDragging = false; let lbInitialPinchDistance = null; let lbInitialScale = 1; let lbLastTap = 0;
+
+function injectLightbox() {
+    if(document.getElementById('vi-lightbox')) return;
+    const lightbox = document.createElement('div');
+    lightbox.id = 'vi-lightbox';
+    lightbox.className = 'fixed inset-0 z-[500] bg-[#050505]/98 backdrop-blur-2xl hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300';
+    lightbox.innerHTML = `
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 p-3 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full backdrop-blur-md transition-all z-[510] border border-white/10">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+        <div id="vi-lightbox-wrapper" class="relative w-full h-full flex items-center justify-center overflow-hidden touch-none cursor-grab active:cursor-grabbing">
+            <img id="vi-lightbox-img" src="" class="max-w-[95%] max-h-[90%] object-contain shadow-2xl rounded-xl bg-white origin-center" alt="Vista ampliada">
+        </div>
+        <div class="absolute bottom-10 text-cyan-400 text-[10px] font-mono uppercase tracking-widest pointer-events-none text-center bg-cyan-900/20 border border-cyan-500/30 px-4 py-2 rounded-full backdrop-blur-md">Pellizca para Zoom • Doble toque</div>
+    `;
+    document.body.appendChild(lightbox);
+
+    const wrapper = document.getElementById('vi-lightbox-wrapper');
+    const img = document.getElementById('vi-lightbox-img');
+    const setTransform = () => { img.style.transform = `translate(${lbPointX}px, ${lbPointY}px) scale(${lbScale})`; };
+
+    wrapper.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            lbIsDragging = false;
+            lbInitialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            lbInitialScale = lbScale;
+        } else if (e.touches.length === 1) {
+            lbIsDragging = true;
+            lbStartX = e.touches[0].clientX - lbPointX;
+            lbStartY = e.touches[0].clientY - lbPointY;
+        }
+    }, { passive: false });
+
+    wrapper.addEventListener('touchmove', (e) => {
+        e.preventDefault(); 
+        if (e.touches.length === 2) {
+            const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            lbScale = Math.min(Math.max(1, lbInitialScale * (currentDistance / lbInitialPinchDistance)), 4);
+            setTransform();
+        } else if (e.touches.length === 1 && lbIsDragging && lbScale > 1) {
+            lbPointX = e.touches[0].clientX - lbStartX;
+            lbPointY = e.touches[0].clientY - lbStartY;
+            setTransform();
+        }
+    }, { passive: false });
+
+    wrapper.addEventListener('touchend', (e) => {
+        lbIsDragging = false;
+        if (e.touches.length < 2) lbInitialPinchDistance = null;
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lbLastTap;
+        if (tapLength < 300 && tapLength > 0 && e.touches.length === 0) {
+            img.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            if (lbScale > 1) { lbScale = 1; lbPointX = 0; lbPointY = 0; }
+            else { lbScale = 2.5; lbPointX = 0; lbPointY = 0; }
+            setTransform();
+            setTimeout(() => img.style.transition = 'none', 300);
+        }
+        lbLastTap = currentTime;
+    });
+
+    wrapper.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const xs = (e.clientX - lbPointX) / lbScale;
+        const ys = (e.clientY - lbPointY) / lbScale;
+        (e.deltaY < 0) ? (lbScale *= 1.1) : (lbScale /= 1.1);
+        lbScale = Math.min(Math.max(1, lbScale), 4);
+        lbPointX = e.clientX - xs * lbScale;
+        lbPointY = e.clientY - ys * lbScale;
+        if(lbScale === 1) { lbPointX = 0; lbPointY = 0; }
+        setTransform();
+    }, { passive: false });
+    
+    wrapper.addEventListener('mousedown', (e) => {
+        if(lbScale > 1) { lbIsDragging = true; lbStartX = e.clientX - lbPointX; lbStartY = e.clientY - lbPointY; }
+    });
+    wrapper.addEventListener('mousemove', (e) => { if(!lbIsDragging) return; lbPointX = e.clientX - lbStartX; lbPointY = e.clientY - lbStartY; setTransform(); });
+    wrapper.addEventListener('mouseup', () => lbIsDragging = false);
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !lightbox.classList.contains('hidden')) closeLightbox(); });
+}
+
+window.openLightbox = function(src) {
+    const lb = document.getElementById('vi-lightbox');
+    const img = document.getElementById('vi-lightbox-img');
+    lbScale = 1; lbPointX = 0; lbPointY = 0;
+    img.style.transition = 'none'; img.style.transform = 'translate(0px, 0px) scale(1)';
+    img.src = src;
+    lb.classList.remove('hidden'); lb.classList.add('flex');
+    document.body.style.overflow = 'hidden'; 
+    setTimeout(() => { lb.classList.remove('opacity-0'); lb.classList.add('opacity-100'); }, 10);
+};
+
+window.closeLightbox = function() {
+    const lb = document.getElementById('vi-lightbox');
+    lb.classList.remove('opacity-100'); lb.classList.add('opacity-0');
+    setTimeout(() => { lb.classList.add('hidden'); lb.classList.remove('flex'); document.body.style.overflow = ''; }, 300);
+};
+
+// --- TELEMETRÍA GOOGLE ANALYTICS ---
+function initAnalytics() {
+    const GA_ID = 'G-83B44ZKJ2B'; 
+    if (localStorage.getItem('velo_cookies_consent') !== 'rejected') {
+        const s = document.createElement('script');
+        s.async = true; s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+        document.head.appendChild(s);
+        const ins = document.createElement('script');
+        ins.innerHTML = `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '${GA_ID}', {'anonymize_ip': true});`;
+        document.head.appendChild(ins);
+        console.log("📊 Telemetría activa.");
+    }
+}
