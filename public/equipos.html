@@ -3,10 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Equipos y Plantillas Ciclismo WorldTour 2026 | Velo Insights</title>
+    <meta name="description" content="Base de datos completa con las plantillas de todos los equipos ciclistas WorldTour. Compara estadísticas (H2H), especialidades y rendimiento de los corredores.">
+    <meta name="keywords" content="equipos ciclistas, plantillas WorldTour, ciclistas profesionales, estadísticas ciclismo, comparar ciclistas, UAE Team Emirates, Visma Lease a Bike, maillots ciclismo">
+    <meta name="author" content="Velo Insights">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://veloinsights.es/equipos.html">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://veloinsights.es/equipos.html">
+    <meta property="og:title" content="Equipos y Plantillas WorldTour | Velo Insights">
+    <meta property="og:description" content="Explora todas las plantillas del WorldTour. Usa nuestro comparador H2H para enfrentar las estadísticas de los mejores ciclistas del mundo.">
+    <meta property="og:image" content="https://veloinsights.es/assets/default-news.jpg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://veloinsights.es/equipos.html">
+    <meta name="twitter:title" content="Equipos y Plantillas WorldTour | Velo Insights">
+    <meta name="twitter:description" content="Explora todas las plantillas del WorldTour. Usa nuestro comparador H2H para enfrentar las estadísticas de los mejores ciclistas del mundo.">
+    <meta name="twitter:image" content="https://veloinsights.es/assets/default-news.jpg">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
-    
-    <title>VELO INSIGHTS | Equipos WorldTour 2026</title>
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -658,7 +674,6 @@
                 const heartColor = isFavorite ? 'text-yellow-500' : 'text-zinc-700 hover:text-zinc-500';
                 const hl = (key) => key === currentSortCriteria ? 'text-yellow-400 font-black scale-110 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'text-zinc-200';
 
-                // AQUI: HEMOS ELIMINADO EL ONMOUSEENTER PARA QUE SOLO SE ACTUALICE AL HACER CLIC
                 return `
                 <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between p-3"
                      onclick="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')">
@@ -693,7 +708,7 @@
                         <span class="text-[8px] block text-zinc-600 font-bold tracking-widest mt-0.5">OVR</span>
                     </div>
                 </div>
-            `}).join('');
+                `}).join('');
 
             if (!refreshOnly) {
                 modal.classList.remove('hidden-modal');
@@ -814,7 +829,7 @@
             
             if(!r1 || !r2) return;
 
-            // Actualizar Gráfica (limpia)
+            // Actualizar Gráfica
             compareRadarInstance.data.datasets[0].label = r1.name;
             compareRadarInstance.data.datasets[0].data = [r1.stats.mnt, r1.stats.spr, r1.stats.tt, r1.stats.lla, r1.stats.res, r1.stats.rec];
             
@@ -879,16 +894,13 @@
             const btnAccept = document.getElementById('btn-accept-cookies');
             const btnReject = document.getElementById('btn-reject-cookies');
 
-            // Comprobar si ya tomó una decisión antes
             if (!localStorage.getItem('velo_cookies_consent')) {
-                // Si no hay registro, mostramos el banner con una pequeña animación
                 banner.classList.remove('hidden');
                 setTimeout(() => {
                     banner.classList.remove('translate-y-full');
                 }, 100);
             }
 
-            // Función para guardar y ocultar
             const hideBanner = (decision) => {
                 localStorage.setItem('velo_cookies_consent', decision);
                 banner.classList.add('translate-y-full');
