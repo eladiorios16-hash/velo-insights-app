@@ -2,16 +2,23 @@
 # ROBOTS.TXT // VELO INSIGHTS
 # ==========================================
 
-# Reglas generales para todos los buscadores (Google, Bing, etc.)
+# Reglas generales para todos los rastreadores (Googlebot, Bingbot, etc.)
 User-agent: *
 
-# Permitir rastrear toda la web pública
+# Permitir rastreo de todo el contenido de valor (Artículos, Calendario, Glosario)
 Allow: /
 
-# BLOQUEO DE SEGURIDAD: Prohibir acceso al panel de control y base de datos
+# 🛑 BLOQUEOS DE SEGURIDAD: Panel de control y backend
 Disallow: /admin.html
 Disallow: /api/
 Disallow: /server.js
+Disallow: /package.json
+Disallow: /package-lock.json
 
-# Mapa del sitio para indexación rápida
-Sitemap: https://www.veloinsights.es/sitemap.xml
+# 🛑 BLOQUEOS DE CONTENIDO DUPLICADO (Optimización SEO)
+# Evita que Google indexe miles de URLs parametrizadas de la Calculadora
+Disallow: /calculadora.html?share=*
+Disallow: /*?share=*
+
+# 🗺️ MAPA DEL SITIO OFICIAL
+Sitemap: https://veloinsights.es/sitemap.xml
