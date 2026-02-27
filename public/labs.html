@@ -542,5 +542,54 @@
         
         window.onload = init;
     </script>
+
+    <div id="cookie-banner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-8 md:bottom-8 md:w-[400px] bg-zinc-900/95 backdrop-blur-md border border-zinc-700 shadow-2xl rounded-2xl p-6 z-[999] transform transition-transform duration-500 translate-y-full">
+        <div class="flex items-center gap-3 mb-3">
+            <i class="fas fa-shield-alt text-cyan-500 text-xl"></i>
+            <h3 class="text-white font-black uppercase tracking-widest text-sm">Privacidad y Telemetría</h3>
+        </div>
+        <p class="text-zinc-400 text-xs leading-relaxed mb-5 font-mono">
+            En Velo Insights utilizamos cookies propias y de terceros para medir el rendimiento de la web (telemetría) y ofrecerte la mejor experiencia. 
+            <a href="privacidad.html" class="text-cyan-400 hover:text-cyan-300 underline decoration-cyan-500/30">Leer política completa</a>.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button id="btn-accept-cookies" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-widest py-2.5 rounded-xl transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                Aceptar Todas
+            </button>
+            <button id="btn-reject-cookies" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold uppercase tracking-widest py-2.5 rounded-xl border border-zinc-700 transition-colors">
+                Solo Esenciales
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Lógica del Banner de Cookies
+        document.addEventListener('DOMContentLoaded', () => {
+            const banner = document.getElementById('cookie-banner');
+            const btnAccept = document.getElementById('btn-accept-cookies');
+            const btnReject = document.getElementById('btn-reject-cookies');
+
+            // Comprobar si ya tomó una decisión antes
+            if (!localStorage.getItem('velo_cookies_consent')) {
+                // Si no hay registro, mostramos el banner con una pequeña animación
+                banner.classList.remove('hidden');
+                setTimeout(() => {
+                    banner.classList.remove('translate-y-full');
+                }, 100);
+            }
+
+            // Función para guardar y ocultar
+            const hideBanner = (decision) => {
+                localStorage.setItem('velo_cookies_consent', decision);
+                banner.classList.add('translate-y-full');
+                setTimeout(() => {
+                    banner.classList.add('hidden');
+                }, 500);
+            };
+
+            if(btnAccept) btnAccept.addEventListener('click', () => hideBanner('accepted'));
+            if(btnReject) btnReject.addEventListener('click', () => hideBanner('rejected'));
+        });
+    </script>
 </body>
 </html>
