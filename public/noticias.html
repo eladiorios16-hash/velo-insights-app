@@ -4,14 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <title>VELO INSIGHTS | Journal</title>
-    <meta name="description" content="Archivo profundo de análisis técnico de ciclismo WorldTour. Datos, vatios y tecnología.">
-    <meta name="theme-color" content="#050505">
+    <title>VELO INSIGHTS | Journal & Análisis Técnico</title>
+    <meta name="description" content="Archivo profundo de análisis técnico de ciclismo WorldTour. Datos, vatios, tácticas y tecnología del pelotón profesional.">
+    <meta name="keywords" content="noticias ciclismo, análisis WorldTour, vatios, tácticas ciclismo, tecnología bicicletas, Tadej Pogacar, Jonas Vingegaard">
+    <meta name="author" content="Velo Insights">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://veloinsights.es/noticias.html">
     
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://veloinsights.es/noticias.html">
     <meta property="og:title" content="VELO INSIGHTS | Technical Journal">
     <meta property="og:description" content="No cubrimos rumores, cubrimos vatios. Análisis profundo del pelotón profesional.">
-    
+    <meta property="og:image" content="https://veloinsights.es/assets/default-news.jpg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://veloinsights.es/noticias.html">
+    <meta name="twitter:title" content="VELO INSIGHTS | Technical Journal">
+    <meta name="twitter:description" content="No cubrimos rumores, cubrimos vatios. Análisis profundo del pelotón profesional.">
+    <meta name="twitter:image" content="https://veloinsights.es/assets/default-news.jpg">
+    <meta name="theme-color" content="#050505">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -312,6 +323,10 @@
             if(!article) return;
 
             window.history.pushState({ articleId: id }, '', `?article=${id}`);
+            
+            // Actualizamos dinámicamente la etiqueta de título (SEO dinámico)
+            document.title = `${article.title} | Velo Insights Journal`;
+            
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
 
             let glossaryHTML = '';
@@ -414,6 +429,9 @@
             url.searchParams.delete('article');
             window.history.pushState({}, '', url);
             
+            // Restaurar título original
+            document.title = "VELO INSIGHTS | Journal & Análisis Técnico";
+            
             setTimeout(() => { modalContent.innerHTML = ''; }, 300);
         };
 
@@ -473,16 +491,13 @@
             const btnAccept = document.getElementById('btn-accept-cookies');
             const btnReject = document.getElementById('btn-reject-cookies');
 
-            // Comprobar si ya tomó una decisión antes
             if (!localStorage.getItem('velo_cookies_consent')) {
-                // Si no hay registro, mostramos el banner con una pequeña animación
                 banner.classList.remove('hidden');
                 setTimeout(() => {
                     banner.classList.remove('translate-y-full');
                 }, 100);
             }
 
-            // Función para guardar y ocultar
             const hideBanner = (decision) => {
                 localStorage.setItem('velo_cookies_consent', decision);
                 banner.classList.add('translate-y-full');
