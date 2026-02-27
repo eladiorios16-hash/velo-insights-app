@@ -5,7 +5,7 @@ const path = require('path');
 const db = require('./db');
 
 // --- 1. CONFIGURACIÓN IA (VELO COPILOT) ---
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // <-- PEGA AQUÍ TU CLAVE DE GOOGLE AI STUDIO
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
 const { GoogleGenAI } = require('@google/genai');
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
@@ -39,14 +39,13 @@ app.get('/admin', authMiddleware, (req, res) => {
 app.post('/api/admin/copilot', authMiddleware, async (req, res) => {
     const { prompt, type } = req.body;
 
-    // Usamos process.env para que lo lea de Railway de forma segura
     if (!process.env.GEMINI_API_KEY) {
         return res.status(500).json({ error: "API Key de IA no configurada en las variables de entorno de Railway." });
     }
 
     try {
         let systemInstruction = "";
-if (type === 'article') {
+        if (type === 'article') {
             systemInstruction = `
             Eres el Analista Principal de 'Velo Insights', una revista digital de ciclismo de alto rendimiento.
             Tu redacción debe ser magistral, directa y con un tono periodístico de élite. 
@@ -58,27 +57,27 @@ if (type === 'article') {
             0. COLOR DINÁMICO: Elige UN color al azar para este artículo (elige entre: red, emerald, cyan, violet, pink, amber). Sustituye la etiqueta [COLOR] por esa palabra en todo el código HTML generado para que el diseño combine perfectamente.
             
             1. ARRANQUE ESTILO 'MAGAZINE' (OBLIGATORIO): El artículo DEBE empezar obligatoriamente con este bloque simulando una cabecera premium:
-               <div class="border-l-4 border-[COLOR]-500 pl-4 md:pl-6 mb-8 py-2">
-                   <div class="flex items-center gap-3 mb-4">
-                       <span class="bg-[COLOR]-500/20 text-[COLOR]-400 text-[10px] font-black px-2 py-1 rounded uppercase tracking-widest">ANÁLISIS TÉCNICO</span>
-                       <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">VELO INSIGHTS</span>
-                   </div>
-                   <p class="text-xl md:text-2xl text-slate-200 italic font-medium leading-relaxed">Redacta aquí una entradilla o lead espectacular de 2 líneas que enganche al lector, resumiendo la clave del artículo.</p>
-               </div>
+                <div class="border-l-4 border-[COLOR]-500 pl-4 md:pl-6 mb-8 py-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="bg-[COLOR]-500/20 text-[COLOR]-400 text-[10px] font-black px-2 py-1 rounded uppercase tracking-widest">ANÁLISIS TÉCNICO</span>
+                        <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">VELO INSIGHTS</span>
+                    </div>
+                    <p class="text-xl md:text-2xl text-slate-200 italic font-medium leading-relaxed">Redacta aquí una entradilla o lead espectacular de 2 líneas que enganche al lector, resumiendo la clave del artículo.</p>
+                </div>
 
             2. LETRA CAPITULAR: Justo después del bloque anterior, el texto normal DEBE arrancar así:
-               <p class="drop-cap-[COLOR] text-slate-300 text-base leading-relaxed mb-6">Tu texto y análisis comienza aquí...</p>
+                <p class="drop-cap-[COLOR] text-slate-300 text-base leading-relaxed mb-6">Tu texto y análisis comienza aquí...</p>
 
             3. SUBTÍTULOS: <h3 class="text-[COLOR]-400 border-b border-[COLOR]-400/30 pb-2 mt-12 mb-6 font-black uppercase tracking-widest text-lg">TITULO AQUÍ</h3>
 
             4. CITAS ELEGANTES (OPCIONAL): Para romper el texto visualmente, inserta una cita o conclusión clave usando este formato:
-               <blockquote class="border-l-4 border-[COLOR]-500 pl-5 py-3 my-10 bg-gradient-to-r from-[COLOR]-500/10 to-transparent italic text-xl text-white font-serif shadow-sm">"Frase impactante o análisis aquí"</blockquote>
+                <blockquote class="border-l-4 border-[COLOR]-500 pl-5 py-3 my-10 bg-gradient-to-r from-[COLOR]-500/10 to-transparent italic text-xl text-white font-serif shadow-sm">"Frase impactante o análisis aquí"</blockquote>
 
             5. HIGHLIGHTS DE DATOS EN EL TEXTO (OBLIGATORIO): Cuando menciones datos técnicos clave (Vatios, W/kg, tiempos, CdA), NO crees cajas separadas. Resáltalos directamente DENTRO del párrafo usando esta etiqueta para que destaquen como marcadores digitales:
-               <strong class="text-[COLOR]-400 bg-[COLOR]-950/50 px-2 py-1 rounded font-mono border border-[COLOR]-500/30 text-sm mx-1">X.X W/kg</strong>
+                <strong class="text-[COLOR]-400 bg-[COLOR]-950/50 px-2 py-1 rounded font-mono border border-[COLOR]-500/30 text-sm mx-1">X.X W/kg</strong>
 
             6. TABLA COMPARATIVA (OPCIONAL): Solo ponla si tienes datos reales que comparar (tiempos de varios corredores, etc). Usa este HTML: 
-               <div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl mb-10 mt-6"><table class="w-full text-left text-sm text-slate-300"><thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr><th class="p-4">Métrica</th><th class="p-4">Dato A</th><th class="p-4">Dato B</th></tr></thead><tbody class="divide-y divide-slate-700 bg-slate-900/40"><tr><td class="p-4 font-bold text-[COLOR]-400">Ejemplo</td><td class="p-4">Valor</td><td class="p-4">Valor</td></tr></tbody></table></div>
+                <div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl mb-10 mt-6"><table class="w-full text-left text-sm text-slate-300"><thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr><th class="p-4">Métrica</th><th class="p-4">Dato A</th><th class="p-4">Dato B</th></tr></thead><tbody class="divide-y divide-slate-700 bg-slate-900/40"><tr><td class="p-4 font-bold text-[COLOR]-400">Ejemplo</td><td class="p-4">Valor</td><td class="p-4">Valor</td></tr></tbody></table></div>
             `;
         }
         else if (type === 'telemetry') {
@@ -100,8 +99,6 @@ if (type === 'article') {
                 systemInstruction: systemInstruction,
                 temperature: 0.2,
                 tools: [{ googleSearch: {} }],
-                // He relajado un poco el filtro a BLOCK_ONLY_HIGH en lugar de BLOCK_NONE 
-                // para evitar que Google rechace la petición por permisos de cuenta gratuita.
                 safetySettings: [
                     { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
                     { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
@@ -118,7 +115,6 @@ if (type === 'article') {
 
     } catch (error) {
         console.error("Error detallado de Google AI:", error);
-        // ✨ LA MAGIA: Ahora devolverá el mensaje exacto del error de Google
         res.status(500).json({ error: error.message || "Error desconocido al conectar con Gemini" });
     }
 });
@@ -243,8 +239,90 @@ async function upgradeDatabase() {
 }
 upgradeDatabase();
 
-// --- 9. SERVIDOR ---
+// --- 9. SERVIDOR Y SITEMAP ---
+
+// A. Servimos la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
+
+// B. RUTA SITEMAP PARA GOOGLE SEO (VERSIÓN BLINDADA Y ORDENADA)
+app.get('/sitemap.xml', async (req, res) => {
+    try {
+        const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
+
+        res.set('Content-Type', 'application/xml');
+
+        let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+        xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+        // 1. Páginas estáticas 
+        const staticPages = [
+            '/', 
+            '/noticias.html', 
+            '/calendario.html', 
+            '/equipos.html', 
+            '/labs.html', 
+            '/calculadora.html',
+            '/glosario.html',
+            '/privacidad.html'
+        ];
+        
+        staticPages.forEach(page => {
+            xml += `  <url>\n`;
+            xml += `    <loc>${baseUrl}${page}</loc>\n`;
+            xml += `    <changefreq>daily</changefreq>\n`;
+            xml += `    <priority>${page === '/' ? '1.0' : '0.8'}</priority>\n`;
+            xml += `  </url>\n`;
+        });
+
+        // 2. Noticias
+        try {
+            const noticias = await new Promise((resolve) => {
+                db.query("SELECT id FROM noticias ORDER BY id DESC", [], (err, rows) => {
+                    if (err) resolve([]); 
+                    else resolve(rows || []);
+                });
+            });
+
+            noticias.forEach(news => {
+                xml += `  <url>\n`;
+                xml += `    <loc>${baseUrl}/noticias.html?article=${news.id}</loc>\n`;
+                xml += `    <changefreq>weekly</changefreq>\n`;
+                xml += `    <priority>0.9</priority>\n`;
+                xml += `  </url>\n`;
+            });
+        } catch (e) { console.log("Sitemap: Omitiendo noticias"); }
+
+        // 3. Glosario 
+        try {
+            const glosario = await new Promise((resolve) => {
+                db.query("SELECT term FROM glosario", [], (err, rows) => {
+                    if (err) resolve([]);
+                    else resolve(rows || []);
+                });
+            });
+
+            glosario.forEach(item => {
+                xml += `  <url>\n`;
+                let safeTerm = encodeURIComponent(item.term).replace(/&/g, '&amp;').replace(/'/g, '&apos;').replace(/"/g, '&quot;');
+                xml += `    <loc>${baseUrl}/glosario.html?term=${safeTerm}</loc>\n`;
+                xml += `    <changefreq>monthly</changefreq>\n`;
+                xml += `    <priority>0.6</priority>\n`;
+                xml += `  </url>\n`;
+            });
+        } catch(e) { console.log("Sitemap: Omitiendo glosario"); }
+
+        xml += `</urlset>`;
+        
+        res.status(200).send(xml);
+
+    } catch (error) {
+        console.error('Error fatal generando sitemap:', error);
+        res.set('Content-Type', 'application/xml');
+        res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<url><loc>https://veloinsights.es/</loc></url>\n</urlset>`);
+    }
+});
+
+// C. CIERRE GLOBAL (Debe ir siempre al final)
 app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
 const PORT = process.env.PORT || 8080;
