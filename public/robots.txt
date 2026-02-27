@@ -1,0 +1,17 @@
+# ==========================================
+# ROBOTS.TXT // VELO INSIGHTS
+# ==========================================
+
+# Reglas generales para todos los buscadores (Google, Bing, etc.)
+User-agent: *
+
+# Permitir rastrear toda la web pública
+Allow: /
+
+# BLOQUEO DE SEGURIDAD: Prohibir acceso al panel de control y base de datos
+Disallow: /admin.html
+Disallow: /api/
+Disallow: /server.js
+
+# Mapa del sitio para indexación rápida
+Sitemap: https://www.tudominio.com/sitemap.xml
