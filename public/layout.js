@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v7.2 (VERSIÓN COMPLETA + ANALYTICS) */
+/* VELO INSIGHTS - LAYOUT ENGINE v7.3 (VERSIÓN INTEGRAL CON ANALYTICS G-5KBRZW06L3) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initScrollReveal();   
     handleIncomingLinks();
     initNavbarScrollBehavior();
-    initAnalytics(); // Inyecta la telemetría de Google
+    initAnalytics(); // Inicia el rastreo de Google Analytics
 });
 
 function injectGlobalStyles() {
@@ -71,7 +71,6 @@ function injectGlobalStyles() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 10px; }
         .search-modal-active { overflow: hidden; }
         
-        /* --- ANIMACIONES DEL MENÚ MÓVIL --- */
         #main-menu { 
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; 
             transform-origin: top center; 
@@ -93,6 +92,7 @@ function injectGlobalStyles() {
         .nav-item:nth-child(5) { transition-delay: 0.25s; }
         .nav-item:nth-child(6) { transition-delay: 0.30s; }
         .nav-item:nth-child(7) { transition-delay: 0.35s; }
+        .nav-item:nth-child(8) { transition-delay: 0.40s; }
 
         #main-nav { 
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
@@ -163,31 +163,25 @@ function initNavbarScrollBehavior() {
 
     window.addEventListener('scroll', () => {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        
         if (scrollTop > 10 && menu && menu.classList.contains('menu-visible')) {
             toggleMenu();
         }
-
         if (scrollTop > 20) {
             nav.classList.add('scrolled');
         } else {
             nav.classList.remove('scrolled');
         }
-
         if (scrollTop <= 0) {
             nav.classList.remove('nav-hidden');
             lastScrollTop = 0;
             return;
         }
-
         if (Math.abs(lastScrollTop - scrollTop) <= delta) return;
-
         if (scrollTop > lastScrollTop) {
             nav.classList.add('nav-hidden');
         } else {
             nav.classList.remove('nav-hidden');
         }
-        
         lastScrollTop = scrollTop;
     });
 }
@@ -209,7 +203,7 @@ function renderMenuModal() {
     };
 
     menu.innerHTML = `
-        <div class="flex flex-col gap-3 relative z-10 w-full max-sm mx-auto">
+        <div class="flex flex-col gap-3 relative z-10 w-full max-w-sm mx-auto">
             <button onclick="toggleMenu(); toggleSearch()" class="nav-item group relative flex items-center justify-between w-full p-4 mb-4 rounded-xl bg-zinc-900/60 border border-zinc-700/50 hover:border-cyan-500/80 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)] overflow-hidden">
                 <div class="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#22d3ee]"></div>
                 <div class="flex items-center gap-3">
@@ -217,58 +211,38 @@ function renderMenuModal() {
                     <span class="text-xs font-bold uppercase tracking-widest text-zinc-300 group-hover:text-white transition-colors">Inicializar Búsqueda...</span>
                 </div>
             </button>
-
-            <a href="index.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
-                <div class="flex items-center gap-4">
-                    <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.home}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Inicio</span>
-                </div>
+            <a href="index.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 transition-all">
+                <div class="flex items-center gap-4"><span class="text-zinc-500 group-hover:text-cyan-400">${icons.home}</span><span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Inicio</span></div>
             </a>
-
-            <a href="noticias.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
-                <div class="flex items-center gap-4">
-                    <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.news}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Journal</span>
-                </div>
+            <a href="noticias.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 transition-all">
+                <div class="flex items-center gap-4"><span class="text-zinc-500 group-hover:text-cyan-400">${icons.news}</span><span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Journal</span></div>
             </a>
-
-            <a href="calendario.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
-                <div class="flex items-center gap-4">
-                    <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.calendar}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Calendario</span>
-                </div>
+            <a href="equipos.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 transition-all">
+                 <div class="flex items-center gap-4"><span class="text-zinc-500 group-hover:text-cyan-400">${icons.teams}</span><span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Equipos</span></div>
             </a>
-
-            <a href="equipos.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
-                 <div class="flex items-center gap-4">
-                     <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.teams}</span>
-                     <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Equipos</span>
-                 </div>
+            <a href="calendario.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 transition-all">
+                <div class="flex items-center gap-4"><span class="text-zinc-500 group-hover:text-cyan-400">${icons.calendar}</span><span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Calendario</span></div>
             </a>
-
-            <a href="glosario.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
-                <div class="flex items-center gap-4">
-                    <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.glossary}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Glosario</span>
-                </div>
+            <a href="glosario.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 transition-all">
+                <div class="flex items-center gap-4"><span class="text-zinc-500 group-hover:text-cyan-400">${icons.glossary}</span><span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Glosario</span></div>
             </a>
-
-            <a href="labs.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
-                <div class="flex items-center gap-4">
-                    <span class="text-zinc-500 group-hover:text-cyan-400 transition-colors">${icons.lab}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors drop-shadow-lg">Tech Lab</span>
-                </div>
+            <a href="labs.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 transition-all">
+                <div class="flex items-center gap-4"><span class="text-zinc-500 group-hover:text-cyan-400">${icons.lab}</span><span class="text-xl font-black italic uppercase tracking-wider text-zinc-400 group-hover:text-white">Tech Lab</span></div>
             </a>
-
-            <a href="calculadora.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 hover:border-cyan-500/40 transition-all">
-                <div class="flex items-center gap-4">
-                    <span class="text-cyan-500 transition-colors">${icons.calc}</span>
-                    <span class="text-xl font-black italic uppercase tracking-wider text-cyan-400 transition-colors drop-shadow-lg">Calculadora</span>
-                </div>
+            <a href="calculadora.html" class="nav-item group relative flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:bg-zinc-800/60 transition-all">
+                <div class="flex items-center gap-4"><span class="text-cyan-500">${icons.calc}</span><span class="text-xl font-black italic uppercase tracking-wider text-cyan-400">Calculadora</span></div>
             </a>
         </div>
     `;
     document.body.appendChild(menu);
+
+    document.addEventListener('click', (e) => {
+        const isButton = e.target.closest('button[onclick="toggleMenu()"]');
+        const isMenu = e.target.closest('#main-menu');
+        if (!isButton && !isMenu && menu.classList.contains('menu-visible')) {
+            toggleMenu();
+        }
+    });
 }
 
 window.toggleMenu = function() {
@@ -287,29 +261,25 @@ function injectSearchModal() {
     const modal = document.createElement('div');
     modal.id = "search-modal";
     modal.className = "fixed inset-0 z-[300] bg-black/50 backdrop-blur-md hidden flex items-start justify-center pt-24 px-4 md:pt-32 md:px-6 transition-all duration-300";
-    
     modal.innerHTML = `
         <div class="w-full max-w-2xl bg-[#09090b]/90 border border-zinc-700/50 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl transform transition-all scale-95 opacity-0" id="search-container">
             <div class="flex items-center justify-between border-b border-zinc-800/80 p-4">
                 <svg class="w-5 h-5 text-cyan-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" id="search-input-global" placeholder="BUSCAR CARRERAS, NOTICIAS, TÉRMINOS..." 
-                       class="w-full bg-transparent px-4 text-sm md:text-base text-white outline-none font-bold tracking-wide placeholder-zinc-600 h-10">
-                <button onclick="toggleSearch()" class="text-zinc-500 hover:text-white p-2 rounded-full hover:bg-zinc-800 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <input type="text" id="search-input-global" placeholder="BUSCAR CARRERAS, NOTICIAS, TÉRMINOS..." class="w-full bg-transparent px-4 text-sm md:text-base text-white outline-none font-bold tracking-wide placeholder-zinc-600 h-10">
+                <button onclick="toggleSearch()" class="text-zinc-500 hover:text-white p-2 rounded-full hover:bg-zinc-800 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div id="search-results" class="max-h-[60vh] overflow-y-auto custom-scrollbar p-2 space-y-1"></div>
         </div>
     `;
     document.body.appendChild(modal);
     document.getElementById('search-input-global').addEventListener('input', (e) => performSearch(e.target.value));
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') toggleSearch(); });
 }
 
 function toggleSearch() {
     const modal = document.getElementById('search-modal');
     const container = document.getElementById('search-container');
     const isHidden = modal.classList.contains('hidden');
-    
     if (isHidden) {
         modal.classList.remove('hidden');
         document.body.classList.add('search-modal-active');
@@ -332,54 +302,47 @@ async function performSearch(term) {
     const container = document.getElementById('search-results');
     if (!term || term.length < 2) { container.innerHTML = ''; return; }
     container.innerHTML = `<p class="text-zinc-500 text-center py-8 uppercase text-[10px] font-black tracking-widest animate-pulse">Buscando en la Base de Datos...</p>`;
-    
-    let results = [];
     const lowerTerm = term.toLowerCase();
-    const API_BASE = ''; // Ajustar si es necesario
-
     try {
         const [resNews, resGlossary, resCalendar] = await Promise.all([
-            fetch(`${API_BASE}/api/news`).catch(() => null),
-            fetch(`${API_BASE}/api/glossary`).catch(() => null),
-            fetch(`${API_BASE}/api/calendar`).catch(() => null)
+            fetch(`/api/news`).catch(() => null),
+            fetch(`/api/glossary`).catch(() => null),
+            fetch(`/api/calendar`).catch(() => null)
         ]);
-
         let n = resNews && resNews.ok ? await resNews.json() : [];
         let g = resGlossary && resGlossary.ok ? await resGlossary.json() : [];
         let c = resCalendar && resCalendar.ok ? await resCalendar.json() : [];
-
-        results = [
+        const results = [
             ...n.filter(i => (i.title || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.title, type: 'NOTICIA', subtitle: x.date, link: `noticias.html?article=${x.id}` })),
-            ...g.filter(i => (i.term || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.term, type: 'GLOSARIO', subtitle: x.cat, link: `glosario.html?term=${encodeURIComponent(x.term)}` })),
+            ...g.filter(i => (i.term || '').toLowerCase().includes(lowerTerm) || (i.def || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.term, type: 'GLOSARIO', subtitle: x.cat, link: `glosario.html?term=${encodeURIComponent(x.term)}` })),
             ...c.filter(i => (i.name || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.name, type: 'CARRERA', subtitle: x.date, link: `calendario.html?race=${x.name}` }))
         ];
+        if (results.length === 0) {
+            container.innerHTML = `<p class="text-zinc-600 text-center py-8 uppercase text-[10px] font-black tracking-widest">Sin coincidencias</p>`;
+            return;
+        }
+        container.innerHTML = results.map(r => `
+            <a href="${r.link}" class="flex justify-between items-center p-3 hover:bg-zinc-800/50 rounded-xl group transition-colors border border-transparent hover:border-zinc-700">
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-cyan-400 transition-colors">
+                        ${r.type === 'NOTICIA' ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>' : 
+                          r.type === 'CARRERA' ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-8a2 2 0 012-2h14a2 2 0 012 2v8M3 13V6a2 2 0 012-2h14a2 2 0 012 2v7m-2 0h2m-2-4h2"/></svg>' : 
+                          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>'}
+                    </div>
+                    <div class="overflow-hidden">
+                        <h4 class="text-zinc-200 font-bold text-xs group-hover:text-cyan-400 truncate">${r.title}</h4>
+                        <p class="text-[9px] text-zinc-500 font-bold uppercase mt-0.5">${r.type} • ${r.subtitle}</p>
+                    </div>
+                </div>
+            </a>
+        `).join('');
     } catch (e) { console.error(e); }
-
-    if (results.length === 0) {
-        container.innerHTML = `<p class="text-zinc-600 text-center py-8 uppercase text-[10px] font-black tracking-widest">Sin coincidencias</p>`;
-        return;
-    }
-
-    container.innerHTML = results.map(r => `
-        <a href="${r.link}" class="flex justify-between items-center p-3 hover:bg-zinc-800/50 rounded-xl group transition-colors border border-transparent hover:border-zinc-700">
-            <div class="flex items-center gap-3 overflow-hidden">
-                <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-cyan-400 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </div>
-                <div>
-                    <h4 class="text-zinc-200 font-bold text-xs group-hover:text-cyan-400 truncate">${r.title}</h4>
-                    <p class="text-[9px] text-zinc-500 font-bold uppercase mt-0.5">${r.type} • ${r.subtitle}</p>
-                </div>
-            </div>
-        </a>
-    `).join('');
 }
 
 function handleIncomingLinks() {
     const urlParams = new URLSearchParams(window.location.search);
     const raceName = urlParams.get('race');
     const searchTerm = urlParams.get('term'); 
-
     if (raceName && window.location.pathname.includes('calendario.html')) {
         setTimeout(() => {
             const items = document.querySelectorAll('h3');
@@ -396,7 +359,6 @@ function handleIncomingLinks() {
             });
         }, 800);
     }
-    
     if (searchTerm && window.location.pathname.includes('glosario.html')) {
         let attempts = 0;
         const checkInterval = setInterval(() => {
@@ -431,7 +393,6 @@ function initScrollReveal() {
             }
         });
     }, { threshold: 0.1 });
-    
     document.querySelectorAll('.reveal-on-scroll').forEach(el => {
         el.style.opacity = "0";
         el.style.transform = "translateY(20px)";
@@ -521,7 +482,8 @@ function injectLightbox() {
     });
     wrapper.addEventListener('mousemove', (e) => { if(!lbIsDragging) return; lbPointX = e.clientX - lbStartX; lbPointY = e.clientY - lbStartY; setTransform(); });
     wrapper.addEventListener('mouseup', () => lbIsDragging = false);
-    document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !lightbox.classList.contains('hidden')) closeLightbox(); });
+    wrapper.addEventListener('mouseleave', () => lbIsDragging = false);
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !document.getElementById('vi-lightbox').classList.contains('hidden')) closeLightbox(); });
 }
 
 window.openLightbox = function(src) {
@@ -541,9 +503,9 @@ window.closeLightbox = function() {
     setTimeout(() => { lb.classList.add('hidden'); lb.classList.remove('flex'); document.body.style.overflow = ''; }, 300);
 };
 
-// --- TELEMETRÍA GOOGLE ANALYTICS ---
+// --- TELEMETRÍA GOOGLE ANALYTICS (G-5KBRZW06L3) ---
 function initAnalytics() {
-    const GA_ID = 'G-83B44ZKJ2B'; 
+    const GA_ID = 'G-5KBRZW06L3'; 
     if (localStorage.getItem('velo_cookies_consent') !== 'rejected') {
         const s = document.createElement('script');
         s.async = true; s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
@@ -551,6 +513,6 @@ function initAnalytics() {
         const ins = document.createElement('script');
         ins.innerHTML = `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '${GA_ID}', {'anonymize_ip': true});`;
         document.head.appendChild(ins);
-        console.log("📊 Telemetría activa.");
+        console.log("📊 Telemetría activa con G-5KBRZW06L3.");
     }
 }
