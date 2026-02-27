@@ -29,7 +29,7 @@
     </style>
 </head>
 
-<body class="bg-[#050505] antialiased text-slate-300 selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen flex flex-col">
+<body class="bg-[#050505] antialiased text-slate-300 selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen flex flex-col relative">
 
     <header class="relative pt-32 md:pt-44 pb-10 px-4 text-center">
         <div class="max-w-4xl mx-auto animate-fade-in-up">
@@ -42,7 +42,7 @@
 
     <main class="flex-1 max-w-7xl mx-auto w-full px-4 md:px-6 pb-12 space-y-8 animate-fade-in-up">
 
-        <section class="glass-panel rounded-3xl p-6 md:p-10 relative overflow-hidden shadow-2xl max-w-4xl mx-auto w-full">
+        <section class="glass-panel rounded-3xl p-6 md:p-10 relative overflow-hidden shadow-2xl max-w-5xl mx-auto w-full">
             <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
             
             <div class="text-center mb-8">
@@ -64,22 +64,30 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto relative z-10">
-                <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+                <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center">
                     <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Inclinación de la Vía</label>
                     <div class="grid grid-cols-3 gap-2">
-                        <button onclick="setGradient(0, 'Llano 0%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">0% (Llano)</button>
-                        <button onclick="setGradient(8, 'Puerto 8%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">8% (Puerto)</button>
-                        <button onclick="setGradient(12, 'Muro 12%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">12% (Muro)</button>
+                        <button onclick="setGradient(0, 'Llano 0%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">0%</button>
+                        <button onclick="setGradient(8, 'Puerto 8%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">8%</button>
+                        <button onclick="setGradient(12, 'Muro 12%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">12%</button>
                     </div>
                 </div>
 
                 <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center items-center">
-                    <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Peso Total (Ciclista + Bici)</label>
+                    <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Peso (Ciclista + Bici)</label>
                     <div class="flex items-center gap-3">
                         <input type="number" id="system-weight" value="85" min="40" max="150" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>150)this.value=150;" class="w-20 bg-zinc-900 border border-zinc-700 rounded-xl px-2 py-2 text-xl text-white font-black font-mono text-center focus:border-cyan-500 focus:outline-none transition-colors shadow-inner">
                         <span class="text-xs font-black text-zinc-500 tracking-widest">KG</span>
                     </div>
+                </div>
+
+                <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center items-center relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                    <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center z-10">Compartir Setup</label>
+                    <button onclick="copyShareLink()" class="relative z-10 flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-cyan-600 text-zinc-300 hover:text-black border border-zinc-700 hover:border-cyan-500 px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95">
+                        <i class="fas fa-link"></i> Copiar Enlace
+                    </button>
                 </div>
             </div>
         </section>
@@ -96,7 +104,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Rueda y Neumático</label>
-                            <select id="wheel-a" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-cyan-500 focus:outline-none transition-colors">
+                            <select id="wheel-a" onchange="toggleCustomWheel('a')" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-cyan-500 focus:outline-none transition-colors">
                                 <optgroup label="Carretera">
                                     <option value="2105">700 x 25c</option>
                                     <option value="2136" selected>700 x 28c</option>
@@ -114,7 +122,15 @@
                                     <option value="2326">29" x 2.40"</option>
                                     <option value="2195">27.5" x 2.20"</option>
                                 </optgroup>
+                                <optgroup label="Avanzado">
+                                    <option value="custom">📏 Rueda Custom (mm)</option>
+                                </optgroup>
                             </select>
+                            
+                            <div id="custom-wheel-container-a" class="hidden mt-2 relative">
+                                <input type="number" id="custom-wheel-a" value="2150" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-cyan-500 outline-none transition-colors" placeholder="Ej: 2150">
+                                <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-zinc-500">MM</span>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
@@ -224,7 +240,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Rueda y Neumático</label>
-                            <select id="wheel-b" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-violet-500 focus:outline-none transition-colors">
+                            <select id="wheel-b" onchange="toggleCustomWheel('b')" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-violet-500 focus:outline-none transition-colors">
                                 <optgroup label="Carretera">
                                     <option value="2105">700 x 25c</option>
                                     <option value="2136" selected>700 x 28c</option>
@@ -242,7 +258,15 @@
                                     <option value="2326">29" x 2.40"</option>
                                     <option value="2195">27.5" x 2.20"</option>
                                 </optgroup>
+                                <optgroup label="Avanzado">
+                                    <option value="custom">📏 Rueda Custom (mm)</option>
+                                </optgroup>
                             </select>
+
+                            <div id="custom-wheel-container-b" class="hidden mt-2 relative">
+                                <input type="number" id="custom-wheel-b" value="2150" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-violet-500 outline-none transition-colors" placeholder="Ej: 2150">
+                                <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-zinc-500">MM</span>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
@@ -346,6 +370,22 @@
         </div>
     </main>
 
+    <div id="delete-modal" class="fixed inset-0 z-[400] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-all opacity-0">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl transform scale-95 transition-all">
+            <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 mb-4 mx-auto border border-red-500/30">
+                <i class="fas fa-trash text-red-500 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-black text-white text-center uppercase italic tracking-widest mb-2">Confirmar Borrado</h3>
+            <p class="text-sm text-zinc-400 text-center mb-6">¿Estás seguro de que quieres eliminar <strong id="modal-bike-name" class="text-white"></strong> de tu garaje virtual?</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 font-bold uppercase tracking-widest text-[10px] hover:bg-zinc-800 transition-colors">Cancelar</button>
+                <button id="modal-confirm-btn" class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-black uppercase tracking-widest text-[10px] hover:bg-red-500 shadow-lg shadow-red-900/50 transition-colors">Borrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[500] flex flex-col gap-3 pointer-events-none"></div>
+
     <script src="layout.js?v=7.1"></script>
 
     <script>
@@ -387,12 +427,93 @@
         const rpmStatus = document.getElementById('rpm-status');
         const weightInput = document.getElementById('system-weight');
 
-        // INYECTAR PERFILES GUARDADOS EN LOS DESPLEGABLES
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const isError = type === 'error';
+            toast.className = `p-4 rounded-xl shadow-2xl transform transition-all duration-300 translate-y-10 opacity-0 flex items-center gap-3 backdrop-blur-md ${isError ? 'bg-red-950/90 border border-red-500/50 text-red-200' : 'bg-emerald-950/90 border border-emerald-500/50 text-emerald-200'}`;
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-trash' : 'fa-check-circle'} text-lg"></i><span class="font-bold text-[10px] uppercase tracking-widest">${message}</span>`;
+            
+            document.getElementById('toast-container').appendChild(toast);
+            
+            requestAnimationFrame(() => { toast.classList.remove('translate-y-10', 'opacity-0'); });
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        window.toggleCustomWheel = function(id) {
+            const select = document.getElementById(`wheel-${id}`);
+            const container = document.getElementById(`custom-wheel-container-${id}`);
+            if (select.value === 'custom') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+            calculateTelemetry();
+        }
+
+        // GENERADOR DE ENLACE COMPARTIDO
+        window.copyShareLink = function() {
+            const state = {
+                rpm: rpmSlider.value,
+                w: weightInput.value,
+                g: currentGradient,
+                wa: document.getElementById('wheel-a').value,
+                cwa: document.getElementById('custom-wheel-a').value,
+                pa: document.getElementById('preset-a').value,
+                pla: document.getElementById('plato-a').value,
+                pia: document.getElementById('pinon-a').value,
+                wb: document.getElementById('wheel-b').value,
+                cwb: document.getElementById('custom-wheel-b').value,
+                pb: document.getElementById('preset-b').value,
+                plb: document.getElementById('plato-b').value,
+                pib: document.getElementById('pinon-b').value
+            };
+            const params = new URLSearchParams();
+            for(let k in state) params.set(k, state[k]);
+            
+            const url = window.location.origin + window.location.pathname + '?share=1&' + params.toString();
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("Enlace mágico copiado", "success");
+            });
+        }
+
+        // CARGADOR DESDE ENLACE
+        function loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.has('share')) return false;
+
+            if (params.has('rpm')) rpmSlider.value = params.get('rpm');
+            if (params.has('w')) weightInput.value = params.get('w');
+            if (params.has('g')) {
+                let g = params.get('g');
+                setGradient(parseInt(g), g == '8' ? 'Puerto 8%' : g == '12' ? 'Muro 12%' : 'Llano 0%');
+            }
+
+            ['a', 'b'].forEach(id => {
+                if (params.has(`w${id}`)) {
+                    document.getElementById(`wheel-${id}`).value = params.get(`w${id}`);
+                    toggleCustomWheel(id);
+                }
+                if (params.has(`cw${id}`)) document.getElementById(`custom-wheel-${id}`).value = params.get(`cw${id}`);
+                
+                if (params.has(`p${id}`)) {
+                    document.getElementById(`preset-${id}`).value = params.get(`p${id}`);
+                    renderQuickSelects(id, true);
+                }
+                if (params.has(`pl${id}`)) document.getElementById(`plato-${id}`).value = params.get(`pl${id}`);
+                if (params.has(`pi${id}`)) document.getElementById(`pinon-${id}`).value = params.get(`pi${id}`);
+            });
+            
+            showToast("Setup cargado vía URL", "success");
+            return true;
+        }
+
         function updateSelectOptions(setupId) {
             const select = document.getElementById(`preset-${setupId}`);
             const savedVal = select.value; 
 
-            // Limpiamos perfiles antiguos para no duplicar
             const oldGroup = select.querySelector('optgroup[label="⭐ Mis Bicicletas (Guardadas)"]');
             if(oldGroup) oldGroup.remove();
 
@@ -406,16 +527,11 @@
                     opt.value = key;
                     opt.innerText = savedProfiles[key].name;
                     optgroup.appendChild(opt);
-                    
-                    // Añadir a la Base de Datos general de la sesión para que el calculador funcione
                     groupsetsDB[key] = savedProfiles[key];
                 }
                 select.insertBefore(optgroup, select.children[1]);
             }
-            
-            if(select.querySelector(`option[value="${savedVal}"]`)) {
-                select.value = savedVal;
-            }
+            if(select.querySelector(`option[value="${savedVal}"]`)) select.value = savedVal;
         }
 
         function renderQuickSelects(setupId, skipAutoSelect = false) {
@@ -432,7 +548,6 @@
 
             if (presetVal === 'custom') {
                 const mem = setupId === 'a' ? window.customMemoryA : window.customMemoryB;
-                
                 container.innerHTML = `
                     <div class="mb-2 grid grid-cols-1 gap-2 border-b border-zinc-800 pb-3">
                         <div class="grid grid-cols-2 gap-2">
@@ -462,7 +577,6 @@
             }
 
             const data = groupsetsDB[presetVal];
-            
             const platosHTML = data.platos.map(p => 
                 `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 rounded-lg border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-xs font-black font-mono shadow-sm">${p}T</button>`
             ).join('');
@@ -471,8 +585,7 @@
                 `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-[10px] font-bold font-mono transition-colors shadow-sm">${p}</button>`
             ).join('');
 
-            // Si es un perfil guardado por el usuario, mostramos el botón de borrar
-            const deleteBtn = data.isUser ? `<button onclick="deleteUserProfile('${presetVal}', '${setupId}')" class="text-red-500/50 hover:text-red-400 p-2 rounded-lg hover:bg-red-950/30 transition-colors" title="Borrar perfil"><i class="fas fa-trash"></i></button>` : '';
+            const deleteBtn = data.isUser ? `<button onclick="confirmDeleteProfile('${presetVal}', '${setupId}')" class="text-red-500/50 hover:text-red-400 p-2 rounded-lg hover:bg-red-950/30 transition-colors" title="Borrar perfil"><i class="fas fa-trash"></i></button>` : '';
 
             container.innerHTML = `
                 <div class="mb-3 flex items-center gap-3">
@@ -493,7 +606,6 @@
             }
         }
 
-        // CONSTRUCTOR EN TIEMPO REAL
         window.buildCustomButtons = function(setupId, skipAutoSelect = false) {
             const platosStr = document.getElementById(`custom-platos-${setupId}`).value;
             const pinonesStr = document.getElementById(`custom-pinones-${setupId}`).value;
@@ -537,15 +649,10 @@
             if (!skipAutoSelect) calculateTelemetry(); 
         };
 
-        // GUARDAR PERFIL PERSONALIZADO EN LOCALSTORAGE
         window.saveCustomProfile = function(setupId) {
             const nameInput = document.getElementById(`profile-name-${setupId}`);
             const name = nameInput.value.trim();
-            
-            if(!name) {
-                alert("Por favor, ponle un nombre a tu bicicleta para guardarla.");
-                return;
-            }
+            if(!name) { alert("Por favor, ponle un nombre a tu bicicleta."); return; }
 
             const platosStr = document.getElementById(`custom-platos-${setupId}`).value;
             const pinonesStr = document.getElementById(`custom-pinones-${setupId}`).value;
@@ -553,47 +660,58 @@
             const platosArr = platosStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0);
             const pinonesArr = pinonesStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0).sort((a,b)=>a-b);
 
-            if(platosArr.length === 0 || pinonesArr.length === 0) {
-                alert("Debes introducir al menos un plato y un piñón válidos separados por comas.");
-                return;
-            }
+            if(platosArr.length === 0 || pinonesArr.length === 0) return;
 
             const profileId = 'user_bike_' + Date.now(); 
-            
-            const newProfile = {
-                name: name,
-                platos: platosArr,
-                pinones: pinonesArr,
-                isUser: true
-            };
+            const newProfile = { name: name, platos: platosArr, pinones: pinonesArr, isUser: true };
 
             const savedProfiles = JSON.parse(localStorage.getItem('velo_user_profiles')) || {};
             savedProfiles[profileId] = newProfile;
             localStorage.setItem('velo_user_profiles', JSON.stringify(savedProfiles));
 
-            updateSelectOptions('a');
-            updateSelectOptions('b');
-
+            updateSelectOptions('a'); updateSelectOptions('b');
             document.getElementById(`preset-${setupId}`).value = profileId;
             renderQuickSelects(setupId, false);
+            
+            showToast(`Perfil "${name}" guardado`, 'success');
         };
 
-        // BORRAR PERFIL PERSONALIZADO
-        window.deleteUserProfile = function(profileId, setupId) {
-            if(!confirm("¿Borrar esta bicicleta de tu garaje virtual?")) return;
-
+        let profileToDelete = null; let setupIdToDelete = null;
+        window.confirmDeleteProfile = function(profileId, setupId) {
+            profileToDelete = profileId; setupIdToDelete = setupId;
             const savedProfiles = JSON.parse(localStorage.getItem('velo_user_profiles')) || {};
-            delete savedProfiles[profileId];
-            localStorage.setItem('velo_user_profiles', JSON.stringify(savedProfiles));
-
-            delete groupsetsDB[profileId];
-
-            updateSelectOptions('a');
-            updateSelectOptions('b');
-
-            document.getElementById(`preset-${setupId}`).value = 'custom';
-            renderQuickSelects(setupId, false);
+            document.getElementById('modal-bike-name').innerText = savedProfiles[profileId]?.name || 'Grupo';
+            
+            const modal = document.getElementById('delete-modal');
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+            });
         };
+
+        window.closeDeleteModal = function() {
+            const modal = document.getElementById('delete-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            profileToDelete = null; setupIdToDelete = null;
+        };
+
+        document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+            if(!profileToDelete) return;
+            const savedProfiles = JSON.parse(localStorage.getItem('velo_user_profiles')) || {};
+            const profileName = savedProfiles[profileToDelete]?.name || 'Grupo';
+            delete savedProfiles[profileToDelete];
+            localStorage.setItem('velo_user_profiles', JSON.stringify(savedProfiles));
+            delete groupsetsDB[profileToDelete];
+            updateSelectOptions('a'); updateSelectOptions('b');
+
+            document.getElementById(`preset-${setupIdToDelete}`).value = 'custom';
+            renderQuickSelects(setupIdToDelete, false);
+            closeDeleteModal();
+            showToast(`Eliminado: ${profileName}`, 'error'); 
+        });
 
         window.setGear = function(setupId, type, value) {
             document.getElementById(`${type}-${setupId}`).value = value;
@@ -602,56 +720,47 @@
 
         function saveConfigToMemory() {
             const config = {
-                rpm: rpmSlider.value,
-                weight: weightInput.value,
+                rpm: rpmSlider.value, weight: weightInput.value,
                 a: { 
-                    wheel: document.getElementById('wheel-a').value, 
-                    preset: document.getElementById('preset-a').value, 
-                    plato: document.getElementById('plato-a').value, 
-                    pinon: document.getElementById('pinon-a').value,
-                    customP: window.customMemoryA.platos,
-                    customC: window.customMemoryA.pinones
+                    wheel: document.getElementById('wheel-a').value, cwheel: document.getElementById('custom-wheel-a').value,
+                    preset: document.getElementById('preset-a').value, plato: document.getElementById('plato-a').value, pinon: document.getElementById('pinon-a').value,
+                    customP: window.customMemoryA.platos, customC: window.customMemoryA.pinones
                 },
                 b: { 
-                    wheel: document.getElementById('wheel-b').value, 
-                    preset: document.getElementById('preset-b').value, 
-                    plato: document.getElementById('plato-b').value, 
-                    pinon: document.getElementById('pinon-b').value,
-                    customP: window.customMemoryB.platos,
-                    customC: window.customMemoryB.pinones
+                    wheel: document.getElementById('wheel-b').value, cwheel: document.getElementById('custom-wheel-b').value,
+                    preset: document.getElementById('preset-b').value, plato: document.getElementById('plato-b').value, pinon: document.getElementById('pinon-b').value,
+                    customP: window.customMemoryB.platos, customC: window.customMemoryB.pinones
                 }
             };
             localStorage.setItem('velo_calc_memory', JSON.stringify(config));
         }
 
         function loadConfigFromMemory() {
-            updateSelectOptions('a');
-            updateSelectOptions('b');
-
+            updateSelectOptions('a'); updateSelectOptions('b');
             const saved = localStorage.getItem('velo_calc_memory');
             if (saved) {
                 const config = JSON.parse(saved);
-                
-                rpmSlider.value = config.rpm || 90;
-                weightInput.value = config.weight || 85;
-                
+                rpmSlider.value = config.rpm || 90; weightInput.value = config.weight || 85;
                 window.customMemoryA = { platos: config.a.customP || "50, 34", pinones: config.a.customC || "11, 12, 13, 14, 15, 17, 19, 21, 24, 28" };
                 window.customMemoryB = { platos: config.b.customP || "52, 36", pinones: config.b.customC || "11, 12, 13, 14, 15, 17, 19, 21, 24, 28" };
 
                 document.getElementById('wheel-a').value = config.a.wheel;
+                if(config.a.cwheel) document.getElementById('custom-wheel-a').value = config.a.cwheel;
+                toggleCustomWheel('a');
                 document.getElementById('preset-a').value = config.a.preset;
                 renderQuickSelects('a', true);
                 document.getElementById('plato-a').value = config.a.plato;
                 document.getElementById('pinon-a').value = config.a.pinon;
 
                 document.getElementById('wheel-b').value = config.b.wheel;
+                if(config.b.cwheel) document.getElementById('custom-wheel-b').value = config.b.cwheel;
+                toggleCustomWheel('b');
                 document.getElementById('preset-b').value = config.b.preset;
                 renderQuickSelects('b', true);
                 document.getElementById('plato-b').value = config.b.plato;
                 document.getElementById('pinon-b').value = config.b.pinon;
             } else {
-                renderQuickSelects('a');
-                renderQuickSelects('b');
+                renderQuickSelects('a'); renderQuickSelects('b');
             }
         }
 
@@ -662,7 +771,6 @@
             if (data && data.platos.length > 1 && data.pinones.length > 1) {
                 const isBigRing = plato === data.platos[0]; 
                 const isSmallRing = plato === data.platos[data.platos.length - 1]; 
-                
                 const sortedCogs = [...data.pinones].sort((a,b) => a - b);
                 const cogIndex = sortedCogs.indexOf(pinon);
                 
@@ -674,10 +782,8 @@
                     if (isSmallRing && pinon <= sortedCogs[1]) isCrossed = true;
                 }
             }
-
             const warningEl = document.getElementById(`crosschain-warning-${setupId}`);
-            if (isCrossed) warningEl.classList.remove('hidden');
-            else warningEl.classList.add('hidden');
+            if (isCrossed) warningEl.classList.remove('hidden'); else warningEl.classList.add('hidden');
         }
 
         function calculateTelemetry() {
@@ -689,27 +795,22 @@
             rpmStatus.className = "inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border transition-colors duration-300 ";
 
             if (rpm < 70) {
-                rpmDisplay.classList.add("text-red-500");
-                rpmStatus.classList.add("text-red-400", "border-red-500/30", "bg-red-950/30");
-                rpmStatus.innerText = "ATRANCADO (Fuerza)";
+                rpmDisplay.classList.add("text-red-500"); rpmStatus.classList.add("text-red-400", "border-red-500/30", "bg-red-950/30"); rpmStatus.innerText = "ATRANCADO (Fuerza)";
             } else if (rpm <= 85) {
-                rpmDisplay.classList.add("text-amber-500");
-                rpmStatus.classList.add("text-amber-400", "border-amber-500/30", "bg-amber-950/30");
-                rpmStatus.innerText = "ZONA DE POTENCIA";
+                rpmDisplay.classList.add("text-amber-500"); rpmStatus.classList.add("text-amber-400", "border-amber-500/30", "bg-amber-950/30"); rpmStatus.innerText = "ZONA DE POTENCIA";
             } else if (rpm <= 105) {
-                rpmDisplay.classList.add("text-emerald-500");
-                rpmStatus.classList.add("text-emerald-400", "border-emerald-500/30", "bg-emerald-950/30");
-                rpmStatus.innerText = "ZONA ÓPTIMA / ÁGIL";
+                rpmDisplay.classList.add("text-emerald-500"); rpmStatus.classList.add("text-emerald-400", "border-emerald-500/30", "bg-emerald-950/30"); rpmStatus.innerText = "ZONA ÓPTIMA / ÁGIL";
             } else {
-                rpmDisplay.classList.add("text-cyan-500");
-                rpmStatus.classList.add("text-cyan-400", "border-cyan-500/30", "bg-cyan-950/30");
-                rpmStatus.innerText = "MOLINILLO (Alta FRQ)";
+                rpmDisplay.classList.add("text-cyan-500"); rpmStatus.classList.add("text-cyan-400", "border-cyan-500/30", "bg-cyan-950/30"); rpmStatus.innerText = "MOLINILLO (Alta FRQ)";
             }
 
             const calcSide = (id) => {
                 const plato = Math.max(1, parseInt(document.getElementById(`plato-${id}`).value) || 1);
                 const pinon = Math.max(1, parseInt(document.getElementById(`pinon-${id}`).value) || 1);
-                const circ = parseInt(document.getElementById(`wheel-${id}`).value) / 1000; 
+                
+                let wheelVal = document.getElementById(`wheel-${id}`).value;
+                let circ = wheelVal === 'custom' ? (parseInt(document.getElementById(`custom-wheel-${id}`).value) || 2150) / 1000 : parseInt(wheelVal) / 1000;
+                
                 const preset = document.getElementById(`preset-${id}`).value;
 
                 checkCrossChain(id, plato, pinon, preset);
@@ -725,16 +826,11 @@
                 document.getElementById(`ratio-${id}`).innerText = ratio.toFixed(2);
                 document.getElementById(`dev-${id}`).innerText = dev.toFixed(2) + 'm';
                 document.getElementById(`speed-${id}`).innerText = speed.toFixed(1);
-                
                 document.getElementById(`speed-${id}-60`).innerText = speed60.toFixed(1);
                 document.getElementById(`speed-${id}-90`).innerText = speed90.toFixed(1);
                 document.getElementById(`speed-${id}-110`).innerText = speed110.toFixed(1);
 
-                const CdA = 0.32; 
-                const Crr = 0.004; 
-                const g = 9.81;
-                const v = speed / 3.6; 
-
+                const CdA = 0.32; const Crr = 0.004; const g = 9.81; const v = speed / 3.6; 
                 const slopeIncline = currentGradient / 100;
                 const powerSlope = currentWeight * g * slopeIncline * v; 
                 const powerWind = 0.5 * 1.225 * CdA * (v * v * v); 
@@ -755,9 +851,7 @@
                 else wkgEl.classList.add("text-red-500", "animate-pulse"); 
             };
 
-            calcSide('a');
-            calcSide('b');
-
+            calcSide('a'); calcSide('b');
             saveConfigToMemory();
         }
 
@@ -765,18 +859,19 @@
         weightInput.addEventListener('input', calculateTelemetry);
         
         ['a', 'b'].forEach(id => {
-            document.getElementById(`wheel-${id}`).addEventListener('change', calculateTelemetry);
+            document.getElementById(`custom-wheel-${id}`).addEventListener('input', calculateTelemetry);
             document.getElementById(`plato-${id}`).addEventListener('input', calculateTelemetry);
             document.getElementById(`pinon-${id}`).addEventListener('input', calculateTelemetry);
-            
-            document.getElementById(`preset-${id}`).addEventListener('change', () => {
-                renderQuickSelects(id, false); 
-            });
+            document.getElementById(`preset-${id}`).addEventListener('change', () => { renderQuickSelects(id, false); });
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadConfigFromMemory(); 
-            setGradient(0, 'Llano 0%'); 
+            if (!loadFromURL()) {
+                loadConfigFromMemory(); 
+                setGradient(0, 'Llano 0%'); 
+            } else {
+                calculateTelemetry();
+            }
         });
     </script>
 </body>
