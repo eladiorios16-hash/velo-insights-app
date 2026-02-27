@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v7.3 (VERSIÓN INTEGRAL CON ANALYTICS G-5KBRZW06L3) */
+/* VELO INSIGHTS - LAYOUT ENGINE v7.4 (VERSIÓN COMPLETA SIN RECORTES) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initScrollReveal();   
     handleIncomingLinks();
     initNavbarScrollBehavior();
-    initAnalytics(); // Inicia el rastreo de Google Analytics
+    initAnalytics(); // Google Analytics G-5KBRZW06L3
 });
 
 function injectGlobalStyles() {
@@ -85,6 +85,7 @@ function injectGlobalStyles() {
         }
         #main-menu.menu-visible .nav-item { opacity: 1; transform: translateX(0); }
         
+        /* Delays para la animación de entrada del menú móvil */
         .nav-item:nth-child(1) { transition-delay: 0.05s; }
         .nav-item:nth-child(2) { transition-delay: 0.10s; }
         .nav-item:nth-child(3) { transition-delay: 0.15s; }
@@ -105,6 +106,15 @@ function injectGlobalStyles() {
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             padding-top: 0.8rem; padding-bottom: 0.8rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .highlight-race {
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { border-color: rgba(34, 211, 238, 0.3); }
+            50% { border-color: rgba(34, 211, 238, 1); box-shadow: 0 0 20px rgba(34, 211, 238, 0.2); }
+            100% { border-color: rgba(34, 211, 238, 0.3); }
         }
     `;
     document.head.appendChild(style);
@@ -142,7 +152,7 @@ function renderNavbar() {
                 <a href="equipos.html" class="nav-link ${isActive('equipos')}">Equipos</a>
                 <a href="glosario.html" class="nav-link ${isActive('glosario')}">Glosario</a>
                 <a href="labs.html" class="nav-link ${isActive('labs')}">Tech Lab</a>
-                <a href="calculadora.html" class="nav-link ${isActive('calculadora')} text-cyan-500">Calculadora</a>
+                <a href="calculadora.html" class="nav-link ${isActive('calculadora')} text-cyan-400">Calculadora</a>
             </div>
 
             <div class="hidden md:flex items-center">
@@ -163,20 +173,27 @@ function initNavbarScrollBehavior() {
 
     window.addEventListener('scroll', () => {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // Cerrar menú móvil si se hace scroll
         if (scrollTop > 10 && menu && menu.classList.contains('menu-visible')) {
             toggleMenu();
         }
+        
+        // Efecto Scrolled
         if (scrollTop > 20) {
             nav.classList.add('scrolled');
         } else {
             nav.classList.remove('scrolled');
         }
+        
+        // Mostrar/Ocultar al subir/bajar
         if (scrollTop <= 0) {
             nav.classList.remove('nav-hidden');
             lastScrollTop = 0;
             return;
         }
         if (Math.abs(lastScrollTop - scrollTop) <= delta) return;
+        
         if (scrollTop > lastScrollTop) {
             nav.classList.add('nav-hidden');
         } else {
@@ -189,7 +206,7 @@ function initNavbarScrollBehavior() {
 function renderMenuModal() {
     const menu = document.createElement('div');
     menu.id = "main-menu";
-    menu.className = "menu-hidden fixed inset-0 w-full h-[100dvh] bg-[#08151b]/60 backdrop-blur-2xl z-[90] flex flex-col pt-28 px-4 pb-10 md:hidden overflow-y-auto";
+    menu.className = "menu-hidden fixed inset-0 w-full h-[100dvh] bg-[#050505]/95 backdrop-blur-2xl z-[90] flex flex-col pt-28 px-4 pb-10 md:hidden overflow-y-auto";
     
     const icons = {
         home: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 01-1 1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
@@ -236,6 +253,7 @@ function renderMenuModal() {
     `;
     document.body.appendChild(menu);
 
+    // Cerrar al hacer click fuera
     document.addEventListener('click', (e) => {
         const isButton = e.target.closest('button[onclick="toggleMenu()"]');
         const isMenu = e.target.closest('#main-menu');
@@ -265,15 +283,21 @@ function injectSearchModal() {
         <div class="w-full max-w-2xl bg-[#09090b]/90 border border-zinc-700/50 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl transform transition-all scale-95 opacity-0" id="search-container">
             <div class="flex items-center justify-between border-b border-zinc-800/80 p-4">
                 <svg class="w-5 h-5 text-cyan-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" id="search-input-global" placeholder="BUSCAR CARRERAS, NOTICIAS, TÉRMINOS..." class="w-full bg-transparent px-4 text-sm md:text-base text-white outline-none font-bold tracking-wide placeholder-zinc-600 h-10">
+                <input type="text" id="search-input-global" placeholder="BUSCAR CARRERAS, NOTICIAS, TÉRMINOS..." class="w-full bg-transparent px-4 text-sm md:text-base text-white outline-none font-bold tracking-wide placeholder-zinc-600 h-10 uppercase">
                 <button onclick="toggleSearch()" class="text-zinc-500 hover:text-white p-2 rounded-full hover:bg-zinc-800 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div id="search-results" class="max-h-[60vh] overflow-y-auto custom-scrollbar p-2 space-y-1"></div>
         </div>
     `;
     document.body.appendChild(modal);
+    
     document.getElementById('search-input-global').addEventListener('input', (e) => performSearch(e.target.value));
-    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') toggleSearch(); });
+    
+    document.addEventListener('keydown', (e) => {
+        if(e.key === 'Escape') {
+            if(!modal.classList.contains('hidden')) toggleSearch();
+        }
+    });
 }
 
 function toggleSearch() {
@@ -309,25 +333,27 @@ async function performSearch(term) {
             fetch(`/api/glossary`).catch(() => null),
             fetch(`/api/calendar`).catch(() => null)
         ]);
+        
         let n = resNews && resNews.ok ? await resNews.json() : [];
         let g = resGlossary && resGlossary.ok ? await resGlossary.json() : [];
         let c = resCalendar && resCalendar.ok ? await resCalendar.json() : [];
+        
         const results = [
             ...n.filter(i => (i.title || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.title, type: 'NOTICIA', subtitle: x.date, link: `noticias.html?article=${x.id}` })),
             ...g.filter(i => (i.term || '').toLowerCase().includes(lowerTerm) || (i.def || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.term, type: 'GLOSARIO', subtitle: x.cat, link: `glosario.html?term=${encodeURIComponent(x.term)}` })),
             ...c.filter(i => (i.name || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.name, type: 'CARRERA', subtitle: x.date, link: `calendario.html?race=${x.name}` }))
         ];
+        
         if (results.length === 0) {
             container.innerHTML = `<p class="text-zinc-600 text-center py-8 uppercase text-[10px] font-black tracking-widest">Sin coincidencias</p>`;
             return;
         }
+        
         container.innerHTML = results.map(r => `
             <a href="${r.link}" class="flex justify-between items-center p-3 hover:bg-zinc-800/50 rounded-xl group transition-colors border border-transparent hover:border-zinc-700">
                 <div class="flex items-center gap-3 overflow-hidden">
                     <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-cyan-400 transition-colors">
-                        ${r.type === 'NOTICIA' ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>' : 
-                          r.type === 'CARRERA' ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-8a2 2 0 012-2h14a2 2 0 012 2v8M3 13V6a2 2 0 012-2h14a2 2 0 012 2v7m-2 0h2m-2-4h2"/></svg>' : 
-                          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>'}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
                     <div class="overflow-hidden">
                         <h4 class="text-zinc-200 font-bold text-xs group-hover:text-cyan-400 truncate">${r.title}</h4>
@@ -343,6 +369,7 @@ function handleIncomingLinks() {
     const urlParams = new URLSearchParams(window.location.search);
     const raceName = urlParams.get('race');
     const searchTerm = urlParams.get('term'); 
+    
     if (raceName && window.location.pathname.includes('calendario.html')) {
         setTimeout(() => {
             const items = document.querySelectorAll('h3');
@@ -359,6 +386,7 @@ function handleIncomingLinks() {
             });
         }, 800);
     }
+    
     if (searchTerm && window.location.pathname.includes('glosario.html')) {
         let attempts = 0;
         const checkInterval = setInterval(() => {
@@ -393,6 +421,7 @@ function initScrollReveal() {
             }
         });
     }, { threshold: 0.1 });
+    
     document.querySelectorAll('.reveal-on-scroll').forEach(el => {
         el.style.opacity = "0";
         el.style.transform = "translateY(20px)";
@@ -401,7 +430,9 @@ function initScrollReveal() {
     });
 }
 
-// --- SISTEMA DE VISOR DE IMÁGENES (LIGHTBOX COMPLETO) ---
+/* ==========================================
+   SISTEMA DE VISOR DE IMÁGENES (LIGHTBOX COMPLETO)
+   ========================================== */
 let lbScale = 1; let lbPointX = 0; let lbPointY = 0; let lbStartX = 0; let lbStartY = 0;
 let lbIsDragging = false; let lbInitialPinchDistance = null; let lbInitialScale = 1; let lbLastTap = 0;
 
@@ -425,6 +456,7 @@ function injectLightbox() {
     const img = document.getElementById('vi-lightbox-img');
     const setTransform = () => { img.style.transform = `translate(${lbPointX}px, ${lbPointY}px) scale(${lbScale})`; };
 
+    // --- LÓGICA TÁCTIL (MOBILE) ---
     wrapper.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
             lbIsDragging = false;
@@ -453,6 +485,8 @@ function injectLightbox() {
     wrapper.addEventListener('touchend', (e) => {
         lbIsDragging = false;
         if (e.touches.length < 2) lbInitialPinchDistance = null;
+        
+        // Doble Toque para Zoom
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lbLastTap;
         if (tapLength < 300 && tapLength > 0 && e.touches.length === 0) {
@@ -465,6 +499,7 @@ function injectLightbox() {
         lbLastTap = currentTime;
     });
 
+    // --- LÓGICA DE RATÓN (PC) ---
     wrapper.addEventListener('wheel', (e) => {
         e.preventDefault();
         const xs = (e.clientX - lbPointX) / lbScale;
@@ -478,41 +513,71 @@ function injectLightbox() {
     }, { passive: false });
     
     wrapper.addEventListener('mousedown', (e) => {
-        if(lbScale > 1) { lbIsDragging = true; lbStartX = e.clientX - lbPointX; lbStartY = e.clientY - lbPointY; }
+        if(lbScale > 1) { 
+            lbIsDragging = true; 
+            lbStartX = e.clientX - lbPointX; 
+            lbStartY = e.clientY - lbPointY; 
+        }
     });
-    wrapper.addEventListener('mousemove', (e) => { if(!lbIsDragging) return; lbPointX = e.clientX - lbStartX; lbPointY = e.clientY - lbStartY; setTransform(); });
+    
+    wrapper.addEventListener('mousemove', (e) => { 
+        if(!lbIsDragging) return; 
+        lbPointX = e.clientX - lbStartX; 
+        lbPointY = e.clientY - lbStartY; 
+        setTransform(); 
+    });
+    
     wrapper.addEventListener('mouseup', () => lbIsDragging = false);
     wrapper.addEventListener('mouseleave', () => lbIsDragging = false);
-    document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !document.getElementById('vi-lightbox').classList.contains('hidden')) closeLightbox(); });
+    
+    document.addEventListener('keydown', (e) => { 
+        if(e.key === 'Escape' && !document.getElementById('vi-lightbox').classList.contains('hidden')) closeLightbox(); 
+    });
 }
 
 window.openLightbox = function(src) {
     const lb = document.getElementById('vi-lightbox');
     const img = document.getElementById('vi-lightbox-img');
     lbScale = 1; lbPointX = 0; lbPointY = 0;
-    img.style.transition = 'none'; img.style.transform = 'translate(0px, 0px) scale(1)';
+    img.style.transition = 'none'; 
+    img.style.transform = 'translate(0px, 0px) scale(1)';
     img.src = src;
-    lb.classList.remove('hidden'); lb.classList.add('flex');
+    lb.classList.remove('hidden'); 
+    lb.classList.add('flex');
     document.body.style.overflow = 'hidden'; 
     setTimeout(() => { lb.classList.remove('opacity-0'); lb.classList.add('opacity-100'); }, 10);
 };
 
 window.closeLightbox = function() {
     const lb = document.getElementById('vi-lightbox');
-    lb.classList.remove('opacity-100'); lb.classList.add('opacity-0');
-    setTimeout(() => { lb.classList.add('hidden'); lb.classList.remove('flex'); document.body.style.overflow = ''; }, 300);
+    lb.classList.remove('opacity-100'); 
+    lb.classList.add('opacity-0');
+    setTimeout(() => { 
+        lb.classList.add('hidden'); 
+        lb.classList.remove('flex'); 
+        document.body.style.overflow = ''; 
+    }, 300);
 };
 
-// --- TELEMETRÍA GOOGLE ANALYTICS (G-5KBRZW06L3) ---
+/* ==========================================
+   TELEMETRÍA GOOGLE ANALYTICS (G-5KBRZW06L3)
+   ========================================== */
 function initAnalytics() {
     const GA_ID = 'G-5KBRZW06L3'; 
     if (localStorage.getItem('velo_cookies_consent') !== 'rejected') {
         const s = document.createElement('script');
-        s.async = true; s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+        s.async = true; 
+        s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
         document.head.appendChild(s);
+        
         const ins = document.createElement('script');
-        ins.innerHTML = `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '${GA_ID}', {'anonymize_ip': true});`;
+        ins.innerHTML = `
+            window.dataLayer = window.dataLayer || []; 
+            function gtag(){dataLayer.push(arguments);} 
+            gtag('js', new Date()); 
+            gtag('config', '${GA_ID}', {'anonymize_ip': true});
+        `;
         document.head.appendChild(ins);
-        console.log("📊 Telemetría activa con G-5KBRZW06L3.");
+        console.log("📊 Telemetría activa: " + GA_ID);
     }
 }
