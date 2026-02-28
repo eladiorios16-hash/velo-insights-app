@@ -16,7 +16,10 @@ const app = express();
 console.log("Fact: Servidor Velo-Insights Iniciado (Seguridad Máxima)");
 
 // 2. CONFIGURACIÓN EXPRESS Y SEGURIDAD BÁSICA
-app.use(helmet()); // Protege contra ataques XSS y Clickjacking
+// Modificado para que no bloquee Tailwind ni scripts locales (CSP en false)
+app.use(helmet({
+    contentSecurityPolicy: false,
+}));
 app.use(cors());
 app.use(express.json());
 
