@@ -53,31 +53,25 @@ const apiAuthMiddleware = (req, res, next) => {
     const referer = req.headers.referer || req.headers.origin || '';
     const fetchSite = req.headers['sec-fetch-site'];
     
-    // Si la orden de guardar viene desde tu panel o es interna, te deja pasar sin preguntar
     if (referer.includes('/velo-lab-hq') || referer.includes('veloinsights.es') || fetchSite === 'same-origin') {
         return next();
     }
-    
-    // Si un bot intenta atacar la API directamente, lo bloquea (pero sin hacer bucles)
     res.status(403).json({ error: "⛔ Acceso denegado a la API." });
 };
 
-// 4. ZONA ADMIN (Usa el Guardia 1)
+// 4. ZONA ADMIN
 app.get('/velo-lab-hq', loginLimiter, htmlAuthMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// Aplicamos el Guardia 2 a TODAS las rutas de guardar/borrar datos
 app.use('/api/admin', apiAuthMiddleware);
 
 // --- 5. RUTA EXCLUSIVA: VELO COPILOT (INTELIGENCIA ARTIFICIAL) ---
 app.post('/api/admin/copilot', async (req, res) => {
     const { prompt, type } = req.body;
-
     if (!process.env.GEMINI_API_KEY) {
         return res.status(500).json({ error: "API Key de IA no configurada en las variables de entorno de Railway." });
     }
-
     try {
         let systemInstruction = "";
         if (type === 'article') {
@@ -142,12 +136,9 @@ app.post('/api/admin/copilot', async (req, res) => {
                 ]
             }
         });
-
         let cleanText = response.text;
         cleanText = cleanText.replace(/^```html\n?/gm, '').replace(/^```\n?/gm, '').replace(/```$/gm, '');
-
         res.json({ result: cleanText });
-
     } catch (error) {
         console.error("Error detallado de Google AI:", error);
         res.status(500).json({ error: error.message || "Error desconocido al conectar con Gemini" });
@@ -155,7 +146,6 @@ app.post('/api/admin/copilot', async (req, res) => {
 });
 
 // --- 6. API MAESTRA DE ADMINISTRACIÓN ---
-
 app.delete('/api/admin/:table/:id', async (req, res) => {
     const { table, id } = req.params;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
@@ -171,17 +161,13 @@ app.put('/api/admin/:table/:id', async (req, res) => {
     let data = req.body; 
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
-
     if (table === 'glosario' && data.def !== undefined) { data.definition = data.def; delete data.def; }
     if (data.isHero === '') data.isHero = 0;
-
     const keys = Object.keys(data);
     const values = Object.values(data);
     if (keys.length === 0) return res.status(400).json({error: "No hay datos"});
-
     const setClause = keys.map(key => `\`${key}\` = ?`).join(', ');
     const sql = `UPDATE ${table} SET ${setClause} WHERE id = ?`;
-
     try {
         await db.query(sql, [...values, id]);
         res.json({ success: true });
@@ -193,14 +179,11 @@ app.post('/api/admin/create/:table', async (req, res) => {
     let data = req.body;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'trending', 'ranking'];
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
-
     if (table === 'glosario' && data.def !== undefined) { data.definition = data.def; delete data.def; }
     if (data.isHero === '') data.isHero = 0;
-
     const keys = Object.keys(data);
     const values = Object.values(data);
     const placeholders = keys.map(() => '?').join(', ');
-    
     try {
         const columns = keys.map(key => `\`${key}\``).join(', ');
         const sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
@@ -209,13 +192,10 @@ app.post('/api/admin/create/:table', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-
 // --- 7. APIs PÚBLICAS ---
-
 app.get('/api/news', async (req, res) => {
     try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
 });
-
 app.get('/api/teams', async (req, res) => {
     try { 
         const [r] = await db.query("SELECT * FROM equipos"); 
@@ -223,7 +203,6 @@ app.get('/api/teams', async (req, res) => {
         res.json(data);
     } catch(e){ res.status(500).json([]); }
 });
-
 app.get('/api/calendar', async (req, res) => {
     try { 
         const [rows] = await db.query("SELECT * FROM calendario ORDER BY dateISO ASC");
@@ -235,7 +214,6 @@ app.get('/api/calendar', async (req, res) => {
         res.json(data);
     } catch(e){ res.status(500).json([]); }
 });
-
 app.get('/api/glossary', async (req, res) => {
     try { 
         const [rows] = await db.query("SELECT * FROM glosario ORDER BY term ASC");
@@ -243,14 +221,12 @@ app.get('/api/glossary', async (req, res) => {
         res.json(data);
     } catch(e){ res.status(500).json([]); }
 });
-
 app.get('/api/trending', async (req, res) => {
     try { 
         const [rows] = await db.query("SELECT * FROM trending ORDER BY id DESC");
         res.json(rows);
     } catch(e){ res.status(500).json([]); }
 });
-
 app.get('/api/ranking', async (req, res) => {
     try { 
         const [rows] = await db.query("SELECT * FROM ranking ORDER BY points DESC");
@@ -277,16 +253,13 @@ upgradeDatabase();
 // --- RUTAS SEO PARA REDES SOCIALES (OPEN GRAPH) ---
 app.get('/noticias.html', async (req, res, next) => {
     const articleId = req.query.article;
-    // Si entran a noticias.html sin ID, dejamos que cargue la página normal
     if (!articleId) return next(); 
 
     try {
-        // Usamos SELECT * para coger todo sin equivocarnos de nombre
         const [rows] = await db.query("SELECT * FROM noticias WHERE id = ?", [articleId]);
         if (rows.length === 0) return next();
 
         const noticia = rows[0];
-        
         const htmlPath = path.join(__dirname, 'public', 'noticias.html');
         let html = fs.readFileSync(htmlPath, 'utf8');
 
@@ -315,11 +288,9 @@ app.get('/noticias.html', async (req, res, next) => {
     <meta name="twitter:image" content="${imageUrl}" />
         `;
 
-        // INYECCIÓN BLINDADA: Busca el marcador y lo sustituye
         if (html.includes('')) {
             html = html.replace('', ogTags);
         } else {
-            // Si por lo que sea no encuentra el marcador, lo intenta poner tras el <head>
             html = html.replace('<head>', '<head>\n' + ogTags);
         }
         
@@ -339,9 +310,7 @@ app.get('/sitemap.xml', async (req, res) => {
         const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
 
         res.set('Content-Type', 'application/xml');
-
-        let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-        xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+        let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
         const staticPages = [
             '/', '/noticias.html', '/calendario.html', '/equipos.html', 
@@ -359,23 +328,12 @@ app.get('/sitemap.xml', async (req, res) => {
                     xml += `  <url>\n    <loc>${baseUrl}/noticias.html?article=${news.id}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
                 });
             }
-        } catch (e) { console.log("Sitemap: Omitiendo noticias", e.message); }
-
-        try {
-            const [glosario] = await db.query("SELECT term FROM glosario");
-            if (glosario && glosario.length > 0) {
-                glosario.forEach(item => {
-                    let safeTerm = encodeURIComponent(item.term).replace(/&/g, '&amp;').replace(/'/g, '&apos;').replace(/"/g, '&quot;');
-                    xml += `  <url>\n    <loc>${baseUrl}/glosario.html?term=${safeTerm}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
-                });
-            }
-        } catch(e) { console.log("Sitemap: Omitiendo glosario", e.message); }
+        } catch (e) {}
 
         xml += `</urlset>`;
         res.status(200).send(xml);
 
     } catch (error) {
-        console.error('Error fatal generando sitemap:', error);
         res.set('Content-Type', 'application/xml');
         res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<url><loc>https://veloinsights.es/</loc></url>\n</urlset>`);
     }
@@ -390,4 +348,3 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => { 
     console.log(`🚀 Servidor Velo Admin Universal listo en puerto ${PORT}`); 
 });
-// Forzando actualizacion de Railway 100%
