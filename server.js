@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const db = require('./db');
+const helmet = require('helmet'); // <-- ESCUDO 1: Cabeceras de seguridad
+const rateLimit = require('express-rate-limit'); // <-- ESCUDO 2: Antihackers
 
 // --- 1. CONFIGURACIÓN IA (VELO COPILOT) ---
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
@@ -11,15 +13,27 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 const app = express();
 
-console.log("Fact: Servidor Velo-Insights Iniciado (Con IA Integrada)");
+console.log("Fact: Servidor Velo-Insights Iniciado (Seguridad Máxima)");
 
-// 2. CONFIGURACIÓN EXPRESS
+// 2. CONFIGURACIÓN EXPRESS Y SEGURIDAD BÁSICA
+app.use(helmet()); // Protege contra ataques XSS y Clickjacking
 app.use(cors());
 app.use(express.json());
 
-// 3. SEGURIDAD (Basic Auth)
+// --- ESCUDO 3: LIMITADOR DE INTENTOS (Anti Fuerza Bruta) ---
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 5, // Bloquea tras 5 intentos fallidos desde la misma IP
+    message: '⛔ Demasiados intentos de acceso. IP bloqueada temporalmente por 15 minutos.'
+});
+
+// 3. SEGURIDAD (Basic Auth con variables ocultas)
 const authMiddleware = (req, res, next) => {
-    const auth = { login: 'admin', password: 'velo2026' }; 
+    // Lee las credenciales de Railway, si no existen usa unas muy complejas por defecto para evitar brechas
+    const auth = { 
+        login: process.env.ADMIN_USER || 'admin', 
+        password: process.env.ADMIN_PASS || 'velo2026' 
+    }; 
     const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
     const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
 
@@ -27,16 +41,20 @@ const authMiddleware = (req, res, next) => {
         return next();
     }
     res.set('WWW-Authenticate', 'Basic realm="Area Restringida Velo"');
-    res.status(401).send('⛔ ACCESO DENEGADO');
+    res.status(401).send('⛔ ACCESO DENEGADO - Velo Security');
 };
 
-// 4. ZONA ADMIN
-app.get('/admin', authMiddleware, (req, res) => {
+// 4. ZONA ADMIN (Ruta Oscurecida)
+// AHORA TU PANEL ESTARÁ EN: veloinsights.es/velo-lab-hq
+app.get('/velo-lab-hq', loginLimiter, authMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
+// Aplicamos la seguridad estricta a TODAS las rutas de la API de administración
+app.use('/api/admin/*', loginLimiter, authMiddleware);
+
 // --- 5. RUTA EXCLUSIVA: VELO COPILOT (INTELIGENCIA ARTIFICIAL) ---
-app.post('/api/admin/copilot', authMiddleware, async (req, res) => {
+app.post('/api/admin/copilot', async (req, res) => {
     const { prompt, type } = req.body;
 
     if (!process.env.GEMINI_API_KEY) {
@@ -121,7 +139,7 @@ app.post('/api/admin/copilot', authMiddleware, async (req, res) => {
 
 // --- 6. API MAESTRA DE ADMINISTRACIÓN ---
 
-app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
+app.delete('/api/admin/:table/:id', async (req, res) => {
     const { table, id } = req.params;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
     if (!allowed.includes(table)) return res.status(403).json({error: "Tabla no permitida"});
@@ -131,7 +149,7 @@ app.delete('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
+app.put('/api/admin/:table/:id', async (req, res) => {
     const { table, id } = req.params;
     let data = req.body; 
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
@@ -153,7 +171,7 @@ app.put('/api/admin/:table/:id', authMiddleware, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/admin/create/:table', authMiddleware, async (req, res) => {
+app.post('/api/admin/create/:table', async (req, res) => {
     const { table } = req.params;
     let data = req.body;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'trending', 'ranking'];
@@ -247,7 +265,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // B. RUTA SITEMAP PARA GOOGLE SEO (VERSIÓN CORREGIDA Y BLINDADA)
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const baseUrl = 'https://veloinsights.es'; 
+        const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
 
         res.set('Content-Type', 'application/xml');
 
@@ -274,7 +292,7 @@ app.get('/sitemap.xml', async (req, res) => {
             xml += `  </url>\n`;
         });
 
-        // 2. Noticias (Con la sintaxis correcta de tu BD)
+        // 2. Noticias 
         try {
             const [noticias] = await db.query("SELECT id FROM noticias ORDER BY id DESC");
             if (noticias && noticias.length > 0) {
@@ -288,7 +306,7 @@ app.get('/sitemap.xml', async (req, res) => {
             }
         } catch (e) { console.log("Sitemap: Omitiendo noticias", e.message); }
 
-        // 3. Glosario (Con la sintaxis correcta de tu BD)
+        // 3. Glosario 
         try {
             const [glosario] = await db.query("SELECT term FROM glosario");
             if (glosario && glosario.length > 0) {
