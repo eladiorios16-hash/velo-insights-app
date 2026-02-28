@@ -281,7 +281,7 @@ app.get('/noticias.html', async (req, res, next) => {
     if (!articleId) return next(); 
 
     try {
-        // ¡CORRECCIÓN! Usamos SELECT * para coger todo sin equivocarnos de nombre
+        // Usamos SELECT * para coger todo sin equivocarnos de nombre
         const [rows] = await db.query("SELECT * FROM noticias WHERE id = ?", [articleId]);
         if (rows.length === 0) return next();
 
@@ -290,38 +290,37 @@ app.get('/noticias.html', async (req, res, next) => {
         const htmlPath = path.join(__dirname, 'public', 'noticias.html');
         let html = fs.readFileSync(htmlPath, 'utf8');
 
-        const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
+        const defaultImage = '[https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop](https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop)';
         let imageUrl = noticia.image ? noticia.image : defaultImage;
         
         if (imageUrl && !imageUrl.startsWith('http')) {
-            imageUrl = 'https://veloinsights.es' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
+            imageUrl = '[https://veloinsights.es](https://veloinsights.es)' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
         }
 
         const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
-        // ¡CORRECCIÓN! Ahora usamos noticia.lead en vez de noticia.subtitle
         const cleanDesc = noticia.lead ? noticia.lead.replace(/"/g, '&quot;') : 'Análisis técnico y táctico de ciclismo.';
 
         const ogTags = `
     <title>${cleanTitle} | Velo Insights</title>
     <meta name="description" content="${cleanDesc}" />
-    
     <meta property="og:type" content="article" />
     <meta property="og:title" content="${cleanTitle}" />
     <meta property="og:description" content="${cleanDesc}" />
     <meta property="og:image" content="${imageUrl}" />
-    <meta property="og:url" content="https://veloinsights.es/noticias.html?article=${articleId}" />
+    <meta property="og:url" content="[https://veloinsights.es/noticias.html?article=$](https://veloinsights.es/noticias.html?article=$){articleId}" />
     <meta property="og:site_name" content="Velo Insights" />
-
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${cleanTitle}" />
     <meta name="twitter:description" content="${cleanDesc}" />
     <meta name="twitter:image" content="${imageUrl}" />
         `;
 
+        // INYECCIÓN BLINDADA: Busca el marcador y lo sustituye
         if (html.includes('')) {
             html = html.replace('', ogTags);
         } else {
-            html = html.replace('<head>', '<head>' + ogTags);
+            // Si por lo que sea no encuentra el marcador, lo intenta poner tras el <head>
+            html = html.replace('<head>', '<head>\n' + ogTags);
         }
         
         res.send(html);
@@ -331,6 +330,7 @@ app.get('/noticias.html', async (req, res, next) => {
         next();
     }
 });
+
 // A. Servimos la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
 
