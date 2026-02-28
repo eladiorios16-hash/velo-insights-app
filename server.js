@@ -280,7 +280,7 @@ app.get('/noticias.html', async (req, res, next) => {
     <meta property="og:title" content="${cleanTitle}" />
     <meta property="og:description" content="${cleanDesc}" />
     <meta property="og:image" content="${imageUrl}" />
-    <meta property="og:url" content="https://veloinsights.es/noticias.html?article=$ {articleId}" />
+    <meta property="og:url" content="https://veloinsights.es/noticias.html?article=${articleId}" />
     <meta property="og:site_name" content="Velo Insights" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${cleanTitle}" />
@@ -288,8 +288,8 @@ app.get('/noticias.html', async (req, res, next) => {
     <meta name="twitter:image" content="${imageUrl}" />
         `;
 
-        if (html.includes('')) {
-            html = html.replace('', ogTags);
+        if (html.includes('<!-- INYECTAR-SEO-AQUI -->')) {
+            html = html.replace('<!-- INYECTAR-SEO-AQUI -->', ogTags);
         } else {
             html = html.replace('<head>', '<head>\n' + ogTags);
         }
