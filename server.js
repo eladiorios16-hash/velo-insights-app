@@ -275,6 +275,60 @@ async function upgradeDatabase() {
 upgradeDatabase();
 
 // --- 9. SERVIDOR Y SITEMAP ---
+// --- RUTAS SEO PARA REDES SOCIALES (OPEN GRAPH) ---
+app.get('/noticias.html', async (req, res, next) => {
+    const articleId = req.query.article;
+    // Si entran a noticias.html sin ID, dejamos que cargue la página normal
+    if (!articleId) return next(); 
+
+    try {
+        // 1. Buscamos la noticia exacta en la base de datos
+        const [rows] = await db.query("SELECT title, subtitle, image FROM noticias WHERE id = ?", [articleId]);
+        if (rows.length === 0) return next();
+
+        const noticia = rows[0];
+        
+        // 2. Leemos tu archivo noticias.html original
+        const htmlPath = path.join(__dirname, 'public', 'noticias.html');
+        let html = fs.readFileSync(htmlPath, 'utf8');
+
+        // 3. Fabricamos las etiquetas para WhatsApp, Twitter y Google
+        // Si la noticia no tiene imagen, ponemos una foto chula por defecto de tu web
+        const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
+        const imageUrl = noticia.image ? noticia.image : defaultImage;
+        const cleanTitle = noticia.title.replace(/"/g, '&quot;');
+        const cleanDesc = noticia.subtitle ? noticia.subtitle.replace(/"/g, '&quot;') : 'Análisis técnico y táctico en Velo Insights.';
+
+        const ogTags = `
+    <title>${cleanTitle} | Velo Insights</title>
+    <meta name="description" content="${cleanDesc}" />
+    
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="${cleanTitle}" />
+    <meta property="og:description" content="${cleanDesc}" />
+    <meta property="og:image" content="${imageUrl}" />
+    <meta property="og:url" content="https://veloinsights.es/noticias.html?article=${articleId}" />
+    <meta property="og:site_name" content="Velo Insights" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${cleanTitle}" />
+    <meta name="twitter:description" content="${cleanDesc}" />
+    <meta name="twitter:image" content="${imageUrl}" />
+        `;
+
+        // 4. Inyectamos las etiquetas justo antes de cerrar el </head>
+        html = html.replace('</head>', ogTags + '\n</head>');
+
+        // 5. Enviamos el HTML ya modificado al navegador/WhatsApp
+        res.send(html);
+
+    } catch (error) {
+        console.error("Error inyectando Open Graph:", error);
+        next();
+    }
+});
+
+// A. Servimos la carpeta public (ESTA LÍNEA YA LA TIENES, DEBE QUEDAR DEBAJO DEL CÓDIGO NUEVO)
 
 app.use(express.static(path.join(__dirname, 'public')));
 
