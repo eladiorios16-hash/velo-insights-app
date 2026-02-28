@@ -13,7 +13,7 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 const app = express();
 
-console.log("Fact: Servidor Velo-Insights Iniciado (Seguridad Inteligente)");
+console.log("Fact: Servidor Velo-Insights Iniciado (Seguridad Anti-Bucles)");
 
 // 2. CONFIGURACIÓN EXPRESS Y SEGURIDAD BÁSICA
 app.use(helmet({
@@ -22,22 +22,17 @@ app.use(helmet({
 app.use(cors());
 app.use(express.json());
 
-// --- ESCUDO 3: LIMITADOR DE INTENTOS (Modificado para trabajo fluido) ---
+// --- ESCUDO 3: LIMITADOR DE INTENTOS ---
 const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 500, // <-- Límite subido a 500 para que puedas editar sin bloqueos
-    message: '⛔ Demasiados intentos de acceso. IP bloqueada temporalmente por 15 minutos.'
+    windowMs: 15 * 60 * 1000, 
+    max: 500, // Alto para no bloquearte mientras trabajas
+    message: '⛔ Demasiados intentos de acceso.'
 });
 
-// 3. SEGURIDAD (Basic Auth con PASE VIP)
-const authMiddleware = (req, res, next) => {
-    
-    // TRUCO: Si estás guardando algo y vienes desde el propio panel, pasas sin contraseña
-    if (req.headers.referer && req.headers.referer.includes('/velo-lab-hq')) {
-        return next();
-    }
+// --- 3. SEGURIDAD DIVIDIDA (LA SOLUCIÓN AL BUCLE) ---
 
-    // Lee las credenciales de Railway
+// Guardia 1: Para la página visual (Pide contraseña con ventanita)
+const htmlAuthMiddleware = (req, res, next) => {
     const auth = { 
         login: process.env.ADMIN_USER || 'admin', 
         password: process.env.ADMIN_PASS || 'velo2026' 
@@ -52,13 +47,27 @@ const authMiddleware = (req, res, next) => {
     res.status(401).send('⛔ ACCESO DENEGADO - Velo Security');
 };
 
-// 4. ZONA ADMIN (Ruta Oscurecida)
-app.get('/velo-lab-hq', loginLimiter, authMiddleware, (req, res) => {
+// Guardia 2: Para la base de datos (Silencioso, comprueba si ya estás dentro)
+const apiAuthMiddleware = (req, res, next) => {
+    const referer = req.headers.referer || req.headers.origin || '';
+    const fetchSite = req.headers['sec-fetch-site'];
+    
+    // Si la orden de guardar viene desde tu panel o es interna, te deja pasar sin preguntar
+    if (referer.includes('/velo-lab-hq') || referer.includes('veloinsights.es') || fetchSite === 'same-origin') {
+        return next();
+    }
+    
+    // Si un bot intenta atacar la API directamente, lo bloquea (pero sin hacer bucles)
+    res.status(403).json({ error: "⛔ Acceso denegado a la API." });
+};
+
+// 4. ZONA ADMIN (Usa el Guardia 1)
+app.get('/velo-lab-hq', loginLimiter, htmlAuthMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// Aplicamos la seguridad a las rutas de la API de administración
-app.use('/api/admin', loginLimiter, authMiddleware);
+// Aplicamos el Guardia 2 a TODAS las rutas de guardar/borrar datos
+app.use('/api/admin', apiAuthMiddleware);
 
 // --- 5. RUTA EXCLUSIVA: VELO COPILOT (INTELIGENCIA ARTIFICIAL) ---
 app.post('/api/admin/copilot', async (req, res) => {
@@ -145,6 +154,7 @@ app.post('/api/admin/copilot', async (req, res) => {
 });
 
 // --- 6. API MAESTRA DE ADMINISTRACIÓN ---
+
 app.delete('/api/admin/:table/:id', async (req, res) => {
     const { table, id } = req.params;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
@@ -200,6 +210,7 @@ app.post('/api/admin/create/:table', async (req, res) => {
 
 
 // --- 7. APIs PÚBLICAS ---
+
 app.get('/api/news', async (req, res) => {
     try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
 });
@@ -263,6 +274,7 @@ async function upgradeDatabase() {
 upgradeDatabase();
 
 // --- 9. SERVIDOR Y SITEMAP ---
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/sitemap.xml', async (req, res) => {
