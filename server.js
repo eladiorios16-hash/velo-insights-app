@@ -3,8 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const db = require('./db');
-const helmet = require('helmet'); // <-- ESCUDO 1: Cabeceras de seguridad
-const rateLimit = require('express-rate-limit'); // <-- ESCUDO 2: Antihackers
+const helmet = require('helmet'); 
+const rateLimit = require('express-rate-limit'); 
 
 // --- 1. CONFIGURACIÓN IA (VELO COPILOT) ---
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
@@ -13,26 +13,31 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 const app = express();
 
-console.log("Fact: Servidor Velo-Insights Iniciado (Seguridad Máxima)");
+console.log("Fact: Servidor Velo-Insights Iniciado (Seguridad Inteligente)");
 
 // 2. CONFIGURACIÓN EXPRESS Y SEGURIDAD BÁSICA
-// Modificado para que no bloquee Tailwind ni scripts locales (CSP en false)
 app.use(helmet({
     contentSecurityPolicy: false,
 }));
 app.use(cors());
 app.use(express.json());
 
-// --- ESCUDO 3: LIMITADOR DE INTENTOS (Anti Fuerza Bruta) ---
+// --- ESCUDO 3: LIMITADOR DE INTENTOS (Modificado para trabajo fluido) ---
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 5, // Bloquea tras 5 intentos fallidos desde la misma IP
+    max: 500, // <-- Límite subido a 500 para que puedas editar sin bloqueos
     message: '⛔ Demasiados intentos de acceso. IP bloqueada temporalmente por 15 minutos.'
 });
 
-// 3. SEGURIDAD (Basic Auth con variables ocultas)
+// 3. SEGURIDAD (Basic Auth con PASE VIP)
 const authMiddleware = (req, res, next) => {
-    // Lee las credenciales de Railway, si no existen usa unas muy complejas por defecto para evitar brechas
+    
+    // TRUCO: Si estás guardando algo y vienes desde el propio panel, pasas sin contraseña
+    if (req.headers.referer && req.headers.referer.includes('/velo-lab-hq')) {
+        return next();
+    }
+
+    // Lee las credenciales de Railway
     const auth = { 
         login: process.env.ADMIN_USER || 'admin', 
         password: process.env.ADMIN_PASS || 'velo2026' 
@@ -48,13 +53,11 @@ const authMiddleware = (req, res, next) => {
 };
 
 // 4. ZONA ADMIN (Ruta Oscurecida)
-// AHORA TU PANEL ESTARÁ EN: veloinsights.es/velo-lab-hq
 app.get('/velo-lab-hq', loginLimiter, authMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// Aplicamos la seguridad estricta a TODAS las rutas de la API de administración
-// CORRECCIÓN EXPRESS 5: Sin el /* al final
+// Aplicamos la seguridad a las rutas de la API de administración
 app.use('/api/admin', loginLimiter, authMiddleware);
 
 // --- 5. RUTA EXCLUSIVA: VELO COPILOT (INTELIGENCIA ARTIFICIAL) ---
@@ -142,7 +145,6 @@ app.post('/api/admin/copilot', async (req, res) => {
 });
 
 // --- 6. API MAESTRA DE ADMINISTRACIÓN ---
-
 app.delete('/api/admin/:table/:id', async (req, res) => {
     const { table, id } = req.params;
     const allowed = ['noticias', 'calendario', 'equipos', 'glosario', 'ranking', 'trending'];
@@ -198,7 +200,6 @@ app.post('/api/admin/create/:table', async (req, res) => {
 
 
 // --- 7. APIs PÚBLICAS ---
-
 app.get('/api/news', async (req, res) => {
     try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
 });
@@ -262,11 +263,8 @@ async function upgradeDatabase() {
 upgradeDatabase();
 
 // --- 9. SERVIDOR Y SITEMAP ---
-
-// A. Servimos la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// B. RUTA SITEMAP PARA GOOGLE SEO (VERSIÓN CORREGIDA Y BLINDADA)
 app.get('/sitemap.xml', async (req, res) => {
     try {
         const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
@@ -276,57 +274,35 @@ app.get('/sitemap.xml', async (req, res) => {
         let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
         xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
-        // 1. Páginas estáticas 
         const staticPages = [
-            '/', 
-            '/noticias.html', 
-            '/calendario.html', 
-            '/equipos.html', 
-            '/labs.html', 
-            '/calculadora.html',
-            '/glosario.html',
-            '/privacidad.html'
+            '/', '/noticias.html', '/calendario.html', '/equipos.html', 
+            '/labs.html', '/calculadora.html', '/glosario.html', '/privacidad.html'
         ];
         
         staticPages.forEach(page => {
-            xml += `  <url>\n`;
-            xml += `    <loc>${baseUrl}${page}</loc>\n`;
-            xml += `    <changefreq>daily</changefreq>\n`;
-            xml += `    <priority>${page === '/' ? '1.0' : '0.8'}</priority>\n`;
-            xml += `  </url>\n`;
+            xml += `  <url>\n    <loc>${baseUrl}${page}</loc>\n    <changefreq>daily</changefreq>\n    <priority>${page === '/' ? '1.0' : '0.8'}</priority>\n  </url>\n`;
         });
 
-        // 2. Noticias 
         try {
             const [noticias] = await db.query("SELECT id FROM noticias ORDER BY id DESC");
             if (noticias && noticias.length > 0) {
                 noticias.forEach(news => {
-                    xml += `  <url>\n`;
-                    xml += `    <loc>${baseUrl}/noticias.html?article=${news.id}</loc>\n`;
-                    xml += `    <changefreq>weekly</changefreq>\n`;
-                    xml += `    <priority>0.9</priority>\n`;
-                    xml += `  </url>\n`;
+                    xml += `  <url>\n    <loc>${baseUrl}/noticias.html?article=${news.id}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
                 });
             }
         } catch (e) { console.log("Sitemap: Omitiendo noticias", e.message); }
 
-        // 3. Glosario 
         try {
             const [glosario] = await db.query("SELECT term FROM glosario");
             if (glosario && glosario.length > 0) {
                 glosario.forEach(item => {
-                    xml += `  <url>\n`;
                     let safeTerm = encodeURIComponent(item.term).replace(/&/g, '&amp;').replace(/'/g, '&apos;').replace(/"/g, '&quot;');
-                    xml += `    <loc>${baseUrl}/glosario.html?term=${safeTerm}</loc>\n`;
-                    xml += `    <changefreq>monthly</changefreq>\n`;
-                    xml += `    <priority>0.6</priority>\n`;
-                    xml += `  </url>\n`;
+                    xml += `  <url>\n    <loc>${baseUrl}/glosario.html?term=${safeTerm}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
                 });
             }
         } catch(e) { console.log("Sitemap: Omitiendo glosario", e.message); }
 
         xml += `</urlset>`;
-        
         res.status(200).send(xml);
 
     } catch (error) {
