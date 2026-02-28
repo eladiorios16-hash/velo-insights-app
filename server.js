@@ -278,61 +278,54 @@ upgradeDatabase();
 // --- RUTAS SEO PARA REDES SOCIALES (OPEN GRAPH) ---
 app.get('/noticias.html', async (req, res, next) => {
     const articleId = req.query.article;
-    // Si entran a noticias.html sin ID, dejamos que cargue la página normal
     if (!articleId) return next(); 
 
     try {
-        // 1. Buscamos la noticia exacta en la base de datos
         const [rows] = await db.query("SELECT title, subtitle, image FROM noticias WHERE id = ?", [articleId]);
         if (rows.length === 0) return next();
 
         const noticia = rows[0];
-        
-        // 2. Leemos tu archivo noticias.html original
         const htmlPath = path.join(__dirname, 'public', 'noticias.html');
         let html = fs.readFileSync(htmlPath, 'utf8');
 
-        // 3. Fabricamos las etiquetas para WhatsApp, Twitter y Google
-        const defaultImage = '[https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop](https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop)';
+        const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
         let imageUrl = noticia.image ? noticia.image : defaultImage;
-        
-        // ¡Magia anti-WhatsApp! Si tu foto es "/fotos/pogacar.jpg", le ponemos tu dominio delante
         if (imageUrl && !imageUrl.startsWith('http')) {
-            imageUrl = '[https://veloinsights.es](https://veloinsights.es)' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
+            imageUrl = 'https://veloinsights.es' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
         }
 
         const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
-        const cleanDesc = noticia.subtitle ? noticia.subtitle.replace(/"/g, '&quot;') : 'Análisis técnico y táctico de ciclismo.';
+        const cleanDesc = noticia.subtitle ? noticia.subtitle.replace(/"/g, '&quot;') : 'Análisis técnico de ciclismo.';
 
+        // BLOQUE SEO DINÁMICO
         const ogTags = `
     <title>${cleanTitle} | Velo Insights</title>
     <meta name="description" content="${cleanDesc}" />
-    
     <meta property="og:type" content="article" />
     <meta property="og:title" content="${cleanTitle}" />
     <meta property="og:description" content="${cleanDesc}" />
     <meta property="og:image" content="${imageUrl}" />
-    <meta property="og:url" content="[https://veloinsights.es/noticias.html?article=$](https://veloinsights.es/noticias.html?article=$){articleId}" />
-    <meta property="og:site_name" content="Velo Insights" />
-
+    <meta property="og:url" content="https://veloinsights.es/noticias.html?article=${articleId}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${cleanTitle}" />
     <meta name="twitter:description" content="${cleanDesc}" />
-    <meta name="twitter:image" content="${imageUrl}" />
-        `;
+    <meta name="twitter:image" content="${imageUrl}" />`;
 
-        // 4. Inyectamos las etiquetas justo en la diana de arriba
-        html = html.replace('', ogTags);
-        
-        // 5. Enviamos el HTML ya modificado al navegador/WhatsApp
+        // INYECCIÓN BLINDADA: Busca el marcador y lo sustituye
+        if (html.includes('')) {
+            html = html.replace('', ogTags);
+        } else {
+            // Si por lo que sea no encuentra el marcador, lo intenta poner tras el <head>
+            html = html.replace('<head>', '<head>' + ogTags);
+        }
+
         res.send(html);
 
     } catch (error) {
-        console.error("Error inyectando Open Graph:", error);
+        console.error("Error inyectando SEO:", error);
         next();
     }
 });
-
 // A. Servimos la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
 
