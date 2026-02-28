@@ -321,8 +321,8 @@ app.get('/noticias.html', async (req, res, next) => {
     <meta name="twitter:image" content="${imageUrl}" />
         `;
 
-        // 4. Inyectamos las etiquetas justo antes de cerrar el </head>
-        html = html.replace('</head>', ogTags + '\n</head>');
+        // 4. Inyectamos las etiquetas justo en la diana de arriba
+        html = html.replace('', ogTags);
 
         // 5. Enviamos el HTML ya modificado al navegador/WhatsApp
         res.send(html);
