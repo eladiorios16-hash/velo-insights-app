@@ -11,7 +11,6 @@
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://veloinsights.es/noticias.html">
     
-  
     <meta name="theme-color" content="#050505">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
     <link rel="manifest" href="manifest.json">
@@ -84,42 +83,27 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 mb-20">
-        
         <div class="lg:hidden col-span-1 overflow-x-auto pb-4 custom-scrollbar flex gap-3 relative z-30 py-3 -mx-4 px-4 border-b border-zinc-800/50" id="mobile-filters"></div>
-
         <div class="col-span-1 lg:col-span-2 pt-4 lg:pt-0">
-            <div id="news-feed">
-                <div class="border-b border-zinc-900 pb-12">
-                    <div class="aspect-[21/9] w-full skeleton mb-8"></div>
-                    <div class="h-4 w-32 skeleton mb-4"></div>
-                    <div class="h-10 w-full skeleton mb-4"></div>
-                </div>
-            </div>
+            <div id="news-feed"></div>
             <div id="load-more-container" class="mt-12 text-center"></div>
         </div>
-        
         <aside class="hidden lg:block sticky top-32 h-fit reveal-on-scroll">
             <h4 class="text-[10px] font-black uppercase text-zinc-500 mb-6 tracking-widest border-l-2 border-cyan-500 pl-3">Filtrar por Tema</h4>
             <div class="flex flex-col gap-2" id="desktop-filters"></div>
         </aside>
-
     </main>
 
     <div id="article-modal" class="fixed inset-0 z-[200] bg-black/95 modal-hidden backdrop-blur-md overflow-y-auto modal-scroll" id="modal-scroll-container">
         <div class="min-h-screen w-full md:py-12 flex justify-center">
-            
             <button onclick="closeArticle()" class="fixed top-4 right-4 md:top-8 md:right-8 z-[210] p-3 bg-black/60 text-white rounded-full hover:bg-white hover:text-black transition-all backdrop-blur-md border border-white/20 shadow-2xl">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
-
-            <div class="w-full max-w-5xl bg-[#050505] md:border border-zinc-800 md:rounded-[2rem] overflow-hidden relative shadow-[0_0_50px_rgba(0,0,0,0.8)] pb-20 md:pb-10" id="modal-content">
-                </div>
-
+            <div class="w-full max-w-5xl bg-[#050505] md:border border-zinc-800 md:rounded-[2rem] overflow-hidden relative shadow-[0_0_50px_rgba(0,0,0,0.8)] pb-20 md:pb-10" id="modal-content"></div>
         </div>
     </div>
 
     <script src="layout.js?v=7.2"></script>
-    
     <script>
         let allNews = [];
         let allGlossary = []; 
@@ -153,7 +137,6 @@
                 if (resNews && resNews.ok) {
                     const data = await resNews.json();
                     if (data && data.length > 0) {
-                        // ORDENAMOS TODAS LAS NOTICIAS DE MÁS NUEVA A MÁS ANTIGUA
                         allNews = data.sort((a, b) => b.id - a.id); 
                         generateFilters(); renderFeed();
                         const articleId = new URLSearchParams(window.location.search).get('article');
@@ -161,7 +144,6 @@
                         return;
                     }
                 }
-                throw new Error("API vacía");
             } catch (error) {
                 feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest">No hay noticias publicadas.</p>`;
             }
@@ -257,124 +239,20 @@
             } else loadMoreContainer.innerHTML = '';
         }
 
-        // --- EL NUEVO ALGORITMO DE SUGERENCIAS "EXPLORACIÓN VS EXPLOTACIÓN" ---
-        function getSmartSuggestions(currentArticle) {
-            // Si solo hay una noticia en toda la base de datos, no hay nada que sugerir
-            if (allNews.length <= 1) return [];
-
-            const stopWords = ['para', 'como', 'pero', 'este', 'esta', 'sobre', 'entre', 'cuando', 'desde', 'hasta', 'tiene', 'también', 'puede', 'hacia', 'donde', 'porque', 'todo'];
-            const extractKeywords = (text) => {
-                if (!text) return [];
-                const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/[^\w\sáéíóúüñ]/gi, '').toLowerCase();
-                return cleanText.split(/\s+/).filter(w => w.length > 3 && !stopWords.includes(w));
-            };
-
-            const baseText = currentArticle.title + " " + (currentArticle.lead || "");
-            const currentKeywords = [...new Set(extractKeywords(baseText))];
-
-            // 1. Buscamos el MEJOR MATCH (Explotación)
-            let scoredArticles = allNews.filter(n => n.id != currentArticle.id).map(article => {
-                let score = 0;
-                if ((article.tag || '').toUpperCase() === (currentArticle.tag || '').toUpperCase()) score += 50; 
-                
-                const targetText = (article.title + " " + (article.lead || "") + " " + (article.content || "")).toLowerCase();
-                currentKeywords.forEach(kw => {
-                    if (article.title.toLowerCase().includes(kw)) score += 15;
-                    else if (targetText.includes(kw)) score += 2;
-                });
-                score += Math.random(); // Factor aleatorio para desempates
-                return { article, score };
-            });
-
-            scoredArticles.sort((a, b) => b.score - a.score);
-            let bestMatch = scoredArticles.length > 0 ? scoredArticles[0].article : null;
-
-            // 2. Buscamos la NOTICIA MÁS RECIENTE para romper la burbuja (Exploración)
-            // Recordamos que 'allNews' ya viene ordenada de más nueva a más antigua
-            let latestNews = allNews.find(n => n.id != currentArticle.id && (!bestMatch || n.id != bestMatch.id));
-
-            let suggestions = [];
-            
-            // Metemos la noticia similar primero (y le ponemos su "razón")
-            if (bestMatch) {
-                suggestions.push({ article: bestMatch, reason: '🔥 Relacionado' });
-            }
-            
-            // Metemos la noticia más nueva después
-            if (latestNews) {
-                suggestions.push({ article: latestNews, reason: '⚡ Lo Último' });
-            }
-
-            return suggestions;
-        }
-
         window.openArticle = (id) => {
             const article = allNews.find(n => n.id == id);
             if(!article) return;
 
             window.history.pushState({ articleId: id }, '', `?article=${id}`);
-            
-            // Actualizamos dinámicamente la etiqueta de título (SEO dinámico)
             document.title = `${article.title} | Velo Insights Journal`;
             
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
-
-            let glossaryHTML = '';
-            const fullText = (article.title + " " + (article.lead||"") + " " + (article.content||"")).toLowerCase();
-            const matchedGlossary = allGlossary.find(g => g && g.term && fullText.includes(g.term.toLowerCase()));
-            
-            if (matchedGlossary) {
-                glossaryHTML = `
-                <div class="my-12 p-6 md:p-8 bg-gradient-to-br from-violet-900/20 to-zinc-900 border border-violet-500/30 rounded-2xl border-l-4 border-l-violet-500 shadow-lg relative overflow-hidden">
-                    <svg class="absolute -right-6 -bottom-6 w-32 h-32 text-violet-500/10 pointer-events-none transform -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                    <h4 class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-3 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>Velo Dictionary</h4>
-                    <p class="text-xl md:text-2xl font-black italic text-white uppercase tracking-tight mb-2">${matchedGlossary.term}</p>
-                    <p class="text-sm md:text-base text-zinc-300 leading-relaxed">${matchedGlossary.def}</p>
-                    <div class="mt-4">
-                        <a href="glosario.html?term=${encodeURIComponent(matchedGlossary.term)}" class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-violet-400 hover:text-white transition-colors bg-violet-900/30 px-3 py-1.5 rounded-full">Ver en Glosario →</a>
-                    </div>
-                </div>`;
-            }
-
-            // Conseguimos las sugerencias con nuestro algoritmo "1+1"
-            const smartSuggestions = getSmartSuggestions(article);
-
-            let similarHTML = '';
-            if (smartSuggestions.length > 0) {
-                similarHTML = `
-                <div class="mt-12 pt-12 border-t border-zinc-900">
-                    <h3 class="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-8 border-l-2 border-cyan-500 pl-3">Lecturas Sugeridas</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        ${smartSuggestions.map(s => {
-                            const sugArticle = s.article;
-                            const sTagData = TAG_COLORS[(sugArticle.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
-                            const textColor = sTagData.text === 'text-white' ? 'text-white' : 'text-cyan-400';
-                            
-                            // Añadimos la razón de la sugerencia encima del título
-                            return `
-                            <div class="group cursor-pointer flex gap-4 items-center bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/50 hover:border-zinc-700 transition-colors" onclick="openArticle('${sugArticle.id}')">
-                                <div class="w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-zinc-900 relative">
-                                    <img src="${sugArticle.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
-                                </div>
-                                <div class="flex-1 flex flex-col justify-center">
-                                    <span class="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">${s.reason}</span>
-                                    <h4 class="text-sm font-bold text-zinc-200 group-hover:text-white leading-tight line-clamp-2">${sugArticle.title}</h4>
-                                </div>
-                            </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>`;
-            }
-
-            const safeTitle = article.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
             modalContent.innerHTML = `
                 <div class="h-[30vh] md:h-[50vh] w-full relative border-b border-zinc-900">
                     <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-90">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
                 </div>
-                
                 <div class="p-6 md:p-20 pt-8 md:pt-12">
                     <div class="max-w-3xl mx-auto">
                         <div class="mb-8 md:mb-12 border-b border-zinc-900 pb-8">
@@ -382,18 +260,10 @@
                             <h1 class="text-2xl md:text-4xl lg:text-5xl font-heading text-white italic uppercase leading-[1.05] tracking-tighter mb-4">${article.title}</h1>
                             <p class="text-zinc-400 font-mono text-[10px] md:text-xs uppercase tracking-widest">${article.date || 'HOY'} • VELO INSIGHTS</p>
                         </div>
-
                         ${article.lead ? `<p class="text-lg md:text-xl text-zinc-200 font-serif leading-relaxed mb-8 md:mb-16 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
-                        
                         <div class="prose-custom text-sm md:text-base">${article.content || '<p class="text-center text-zinc-600">No hay contenido disponible.</p>'}</div>
-                        
-                        ${glossaryHTML}
-                        ${similarHTML}
-
                         <div class="mt-12 md:mt-16 pt-8 md:pt-10 border-t border-zinc-900 text-center">
-                            <p class="text-[10px] text-zinc-600 uppercase font-black tracking-widest mb-4">Fin del Análisis</p>
-                            <button onclick="shareNative('${safeTitle}', '${article.id}')" class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-cyan-500 transition-all active:scale-95">
-                                <svg class="w-4 h-4 text-zinc-400 group-hover:text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                            <button onclick="shareNative('${article.title.replace(/'/g, "\\'")}', '${article.id}')" class="group inline-flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-cyan-500 transition-all active:scale-95">
                                 <span class="text-[10px] font-bold uppercase text-zinc-300 group-hover:text-white tracking-widest">Enviar Enlace</span>
                             </button>
                         </div>
@@ -404,9 +274,6 @@
             modal.classList.remove('modal-hidden');
             modal.classList.add('modal-visible');
             document.body.style.overflow = 'hidden';
-            
-            const scrollContainer = document.getElementById('modal-scroll-container');
-            if (scrollContainer) scrollContainer.scrollTop = 0;
             modal.scrollTop = 0; 
         };
 
@@ -414,91 +281,26 @@
             modal.classList.remove('modal-visible');
             modal.classList.add('modal-hidden');
             document.body.style.overflow = 'auto'; 
-            
             const url = new URL(window.location);
             url.searchParams.delete('article');
             window.history.pushState({}, '', url);
-            
-            // Restaurar título original
             document.title = "VELO INSIGHTS | Journal & Análisis Técnico";
-            
             setTimeout(() => { modalContent.innerHTML = ''; }, 300);
         };
 
         window.shareNative = async (articleTitle, articleId) => {
             const originUrl = window.location.origin + window.location.pathname + '?article=' + articleId;
-
-            let shareData = {
-                title: 'VELO INSIGHTS',
-                text: articleTitle,
-                url: originUrl
-            };
-
             if (navigator.share) {
-                try { await navigator.share(shareData); } catch (err) {}
+                try { await navigator.share({ title: 'VELO INSIGHTS', text: articleTitle, url: originUrl }); } catch (err) {}
             } else {
-                try {
-                    await navigator.clipboard.writeText(originUrl);
-                    alert("¡Enlace copiado al portapapeles!");
-                } catch (err) { alert('Copia la URL: ' + originUrl); }
+                navigator.clipboard.writeText(originUrl);
+                alert("¡Enlace copiado!");
             }
         };
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !modal.classList.contains('modal-hidden')) closeArticle();
-        });
-
-        window.addEventListener('popstate', (e) => {
-            if (e.state && e.state.articleId) { openArticle(e.state.articleId); } else { closeArticle(); }
-        });
-
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('modal-hidden')) closeArticle(); });
+        window.addEventListener('popstate', (e) => { if (e.state && e.state.articleId) { openArticle(e.state.articleId); } else { closeArticle(); } });
         document.addEventListener('DOMContentLoaded', fetchNews);
-    </script>
-
-    <div id="cookie-banner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-8 md:bottom-8 md:w-[400px] bg-zinc-900/95 backdrop-blur-md border border-zinc-700 shadow-2xl rounded-2xl p-6 z-[999] transform transition-transform duration-500 translate-y-full">
-        <div class="flex items-center gap-3 mb-3">
-            <i class="fas fa-shield-alt text-cyan-500 text-xl"></i>
-            <h3 class="text-white font-black uppercase tracking-widest text-sm">Privacidad y Telemetría</h3>
-        </div>
-        <p class="text-zinc-400 text-xs leading-relaxed mb-5 font-mono">
-            En Velo Insights utilizamos cookies propias y de terceros para medir el rendimiento de la web (telemetría) y ofrecerte la mejor experiencia. 
-            <a href="privacidad.html" class="text-cyan-400 hover:text-cyan-300 underline decoration-cyan-500/30">Leer política completa</a>.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-3">
-            <button id="btn-accept-cookies" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-widest py-2.5 rounded-xl transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                Aceptar Todas
-            </button>
-            <button id="btn-reject-cookies" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold uppercase tracking-widest py-2.5 rounded-xl border border-zinc-700 transition-colors">
-                Solo Esenciales
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // Lógica del Banner de Cookies
-        document.addEventListener('DOMContentLoaded', () => {
-            const banner = document.getElementById('cookie-banner');
-            const btnAccept = document.getElementById('btn-accept-cookies');
-            const btnReject = document.getElementById('btn-reject-cookies');
-
-            if (!localStorage.getItem('velo_cookies_consent')) {
-                banner.classList.remove('hidden');
-                setTimeout(() => {
-                    banner.classList.remove('translate-y-full');
-                }, 100);
-            }
-
-            const hideBanner = (decision) => {
-                localStorage.setItem('velo_cookies_consent', decision);
-                banner.classList.add('translate-y-full');
-                setTimeout(() => {
-                    banner.classList.add('hidden');
-                }, 500);
-            };
-
-            if(btnAccept) btnAccept.addEventListener('click', () => hideBanner('accepted'));
-            if(btnReject) btnReject.addEventListener('click', () => hideBanner('rejected'));
-        });
     </script>
 </body>
 </html>
