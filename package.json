@@ -1,4 +1,11 @@
 {
+  "name": "velo-insights-app",
+  "version": "1.0.0",
+  "description": "Servidor backend Velo Insights",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "@google/genai": "^1.42.0",
     "compression": "^1.8.1",
