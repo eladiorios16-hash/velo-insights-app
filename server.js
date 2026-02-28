@@ -14,7 +14,7 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 const app = express();
 
-console.log("Fact: Servidor Velo-Insights Iniciado (Seguridad Anti-Bucles)");
+console.log("Fact: Servidor Velo-Insights Iniciado (Seguridad y SEO Social Activos)");
 
 // 2. CONFIGURACIÓN EXPRESS Y SEGURIDAD BÁSICA
 app.use(helmet({
@@ -293,11 +293,16 @@ app.get('/noticias.html', async (req, res, next) => {
         let html = fs.readFileSync(htmlPath, 'utf8');
 
         // 3. Fabricamos las etiquetas para WhatsApp, Twitter y Google
-        // Si la noticia no tiene imagen, ponemos una foto chula por defecto de tu web
-        const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
-        const imageUrl = noticia.image ? noticia.image : defaultImage;
-        const cleanTitle = noticia.title.replace(/"/g, '&quot;');
-        const cleanDesc = noticia.subtitle ? noticia.subtitle.replace(/"/g, '&quot;') : 'Análisis técnico y táctico en Velo Insights.';
+        const defaultImage = '[https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop](https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop)';
+        let imageUrl = noticia.image ? noticia.image : defaultImage;
+        
+        // ¡Magia anti-WhatsApp! Si tu foto es "/fotos/pogacar.jpg", le ponemos tu dominio delante
+        if (imageUrl && !imageUrl.startsWith('http')) {
+            imageUrl = '[https://veloinsights.es](https://veloinsights.es)' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
+        }
+
+        const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
+        const cleanDesc = noticia.subtitle ? noticia.subtitle.replace(/"/g, '&quot;') : 'Análisis técnico y táctico de ciclismo.';
 
         const ogTags = `
     <title>${cleanTitle} | Velo Insights</title>
@@ -307,7 +312,7 @@ app.get('/noticias.html', async (req, res, next) => {
     <meta property="og:title" content="${cleanTitle}" />
     <meta property="og:description" content="${cleanDesc}" />
     <meta property="og:image" content="${imageUrl}" />
-    <meta property="og:url" content="https://veloinsights.es/noticias.html?article=${articleId}" />
+    <meta property="og:url" content="[https://veloinsights.es/noticias.html?article=$](https://veloinsights.es/noticias.html?article=$){articleId}" />
     <meta property="og:site_name" content="Velo Insights" />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -328,8 +333,7 @@ app.get('/noticias.html', async (req, res, next) => {
     }
 });
 
-// A. Servimos la carpeta public (ESTA LÍNEA YA LA TIENES, DEBE QUEDAR DEBAJO DEL CÓDIGO NUEVO)
-
+// A. Servimos la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/sitemap.xml', async (req, res) => {
