@@ -263,11 +263,11 @@ app.get('/noticias.html', async (req, res, next) => {
         const htmlPath = path.join(__dirname, 'public', 'noticias.html');
         let html = fs.readFileSync(htmlPath, 'utf8');
 
-        const defaultImage = '[https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop](https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop)';
+        const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
         let imageUrl = noticia.image ? noticia.image : defaultImage;
         
         if (imageUrl && !imageUrl.startsWith('http')) {
-            imageUrl = '[https://veloinsights.es](https://veloinsights.es)' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
+            imageUrl = 'https://veloinsights.es' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
         }
 
         const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
@@ -280,7 +280,7 @@ app.get('/noticias.html', async (req, res, next) => {
     <meta property="og:title" content="${cleanTitle}" />
     <meta property="og:description" content="${cleanDesc}" />
     <meta property="og:image" content="${imageUrl}" />
-    <meta property="og:url" content="[https://veloinsights.es/noticias.html?article=$](https://veloinsights.es/noticias.html?article=$){articleId}" />
+    <meta property="og:url" content="https://veloinsights.es/noticias.html?article=$ {articleId}" />
     <meta property="og:site_name" content="Velo Insights" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${cleanTitle}" />
@@ -307,7 +307,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
+        const baseUrl = 'https://veloinsights.es'; 
 
         res.set('Content-Type', 'application/xml');
         let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
