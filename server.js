@@ -337,7 +337,7 @@ app.get('/sitemap.xml', async (req, res) => {
 });
 
 // C. CIERRE GLOBAL (Debe ir siempre al final)
-app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
+app.get('/(.*)', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => { 
