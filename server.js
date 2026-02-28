@@ -323,7 +323,6 @@ app.get('/noticias.html', async (req, res, next) => {
 
         // 4. Inyectamos las etiquetas justo en la diana de arriba
         html = html.replace('', ogTags);
-
         // 5. Enviamos el HTML ya modificado al navegador/WhatsApp
         res.send(html);
 
