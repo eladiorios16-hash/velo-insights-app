@@ -54,7 +54,8 @@ app.get('/velo-lab-hq', loginLimiter, authMiddleware, (req, res) => {
 });
 
 // Aplicamos la seguridad estricta a TODAS las rutas de la API de administración
-app.use('/api/admin/*', loginLimiter, authMiddleware);
+// CORRECCIÓN EXPRESS 5: Sin el /* al final
+app.use('/api/admin', loginLimiter, authMiddleware);
 
 // --- 5. RUTA EXCLUSIVA: VELO COPILOT (INTELIGENCIA ARTIFICIAL) ---
 app.post('/api/admin/copilot', async (req, res) => {
