@@ -150,7 +150,6 @@
             } catch (e) { content.innerHTML = `<div class="text-red-400 text-center">Error: ${e.message}</div>`; }
         }
 
-        // --- SISTEMA DE BÚSQUEDA / FILTRO ---
         function filterTable() {
             const input = document.getElementById("searchInput");
             const filter = input.value.toLowerCase();
@@ -174,7 +173,6 @@
             }
         }
 
-        // --- SISTEMA VELO COPILOT (IA) ---
         function openCopilot() {
             currentTable = 'copilot';
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ring-2', 'ring-emerald-500', 'ring-indigo-500', 'bg-slate-700', 'bg-indigo-900'));
@@ -443,6 +441,7 @@
             document.getElementById('modal-title').innerHTML = '<span class="text-emerald-400 text-xl mr-2">+</span> Añadir Nuevo';
             buildForm(templates[currentTable] || {});
             document.getElementById('modal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden'); // Bloquea el scroll del fondo
         }
 
         function openEditModal(id) {
@@ -451,6 +450,7 @@
             document.getElementById('modal-title').innerHTML = '<span class="text-blue-400 text-xl mr-2">✎</span> Editar Elemento';
             buildForm(item);
             document.getElementById('modal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden'); // Bloquea el scroll del fondo
         }
 
         function buildForm(data) {
@@ -603,7 +603,10 @@
             }
         }
 
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+        function closeModal() { 
+            document.getElementById('modal').classList.add('hidden'); 
+            document.body.classList.remove('overflow-hidden'); // Desbloquea el scroll del fondo
+        }
 
         async function saveData() {
             const form = document.getElementById('dynamicForm');
