@@ -471,7 +471,6 @@
             calculateTelemetry();
         }
 
-        // GENERADOR DE ENLACE COMPARTIDO
         window.copyShareLink = function() {
             const state = {
                 rpm: rpmSlider.value,
@@ -497,7 +496,6 @@
             });
         }
 
-        // CARGADOR DESDE ENLACE
         function loadFromURL() {
             const params = new URLSearchParams(window.location.search);
             if (!params.has('share')) return false;
@@ -607,12 +605,18 @@
 
             container.innerHTML = `
                 <div class="mb-3 flex items-center gap-3">
-                    <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest w-14">Platos:</span>
+                    <div class="w-14 shrink-0">
+                        <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
+                        <span class="block text-[8px] font-mono text-${colorClass}-500/70 mt-0.5">${data.platos.length}x</span>
+                    </div>
                     <div class="flex gap-2 flex-1">${platosHTML}</div>
                     ${deleteBtn}
                 </div>
                 <div class="flex items-start gap-3">
-                    <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-1.5 w-14">Cassette:</span>
+                    <div class="w-14 shrink-0 mt-1.5">
+                        <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
+                        <span class="block text-[8px] font-mono text-${colorClass}-500/70 mt-0.5">${data.pinones.length}v</span>
+                    </div>
                     <div class="flex flex-wrap gap-1.5 flex-1">${pinonesHTML}</div>
                 </div>
             `;
@@ -654,11 +658,17 @@
             if(targetDiv) {
                 targetDiv.innerHTML = `
                     <div class="mb-3 flex items-center gap-3">
-                        <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest w-14 shrink-0">Platos:</span>
+                        <div class="w-14 shrink-0">
+                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
+                            <span class="block text-[8px] font-mono text-${colorClass}-500/70 mt-0.5">${platosArr.length}x</span>
+                        </div>
                         <div class="flex gap-2 flex-wrap">${platosHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
                     </div>
                     <div class="flex items-start gap-3">
-                        <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-1.5 w-14 shrink-0">Cassette:</span>
+                        <div class="w-14 shrink-0 mt-1.5">
+                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
+                            <span class="block text-[8px] font-mono text-${colorClass}-500/70 mt-0.5">${pinonesArr.length}v</span>
+                        </div>
                         <div class="flex flex-wrap gap-1.5 flex-1">${pinonesHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
                     </div>
                 `;
