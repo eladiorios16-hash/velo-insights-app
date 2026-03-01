@@ -52,6 +52,9 @@
 
         .btn-terrain { transition: all 0.2s ease; border: 1px solid rgba(168, 85, 247, 0.2); }
         .btn-terrain.active { border-color: #a855f7; background-color: rgba(168, 85, 247, 0.15); color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(168, 85, 247, 0.2); }
+        
+        .btn-terrain-sub { transition: all 0.2s ease; border: 1px solid rgba(168, 85, 247, 0.2); }
+        .btn-terrain-sub.active { border-color: #a855f7; background-color: rgba(168, 85, 247, 0.15); color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(168, 85, 247, 0.2); }
     </style>
 </head>
 
@@ -452,6 +455,12 @@
                         </div>
 
                         <div>
+                            <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Condición del Terreno</label>
+                            <div class="grid grid-cols-3 gap-2" id="tp-terrain-container">
+                                </div>
+                        </div>
+
+                        <div>
                             <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Sistema</label>
                             <div class="grid grid-cols-2 gap-2" id="tp-system-container">
                                 <button class="btn-terrain active py-3 px-2 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1">Tubeless / Tubular</button>
@@ -641,7 +650,7 @@
             if (params.has('rpm')) rpmSlider.value = params.get('rpm');
             if (params.has('w')) {
                 weightInput.value = params.get('w');
-                syncWeights(); // Sincroniza con TP Lab
+                syncWeights();
             }
             if (params.has('g')) {
                 let g = params.get('g');
@@ -737,29 +746,29 @@
             
             // Botones de Platos MAS GRANDES
             const platosHTML = data.platos.map(p => 
-                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-4 py-2.5 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-sm md:text-base font-black font-mono shadow-md">${p}T</button>`
+                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-5 py-3 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-lg font-black font-mono shadow-md">${p}T</button>`
             ).join('');
 
             // Botones de Piñones MAS GRANDES
             const pinonesHTML = data.pinones.map(p => 
-                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-xs md:text-sm font-bold font-mono transition-colors shadow-md">${p}</button>`
+                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-3.5 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-sm font-bold font-mono transition-colors shadow-md">${p}</button>`
             ).join('');
 
             const deleteBtn = data.isUser ? `<button onclick="confirmDeleteProfile('${presetVal}', '${setupId}')" class="text-red-500/50 hover:text-red-400 p-2 rounded-lg hover:bg-red-950/30 transition-colors" title="Borrar perfil"><i class="fas fa-trash"></i></button>` : '';
 
             container.innerHTML = `
-                <div class="mb-4 flex items-center gap-3">
-                    <div class="w-16 shrink-0">
-                        <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
-                        <span class="block text-[8px] font-mono text-${colorClass}-500/70 mt-0.5">${data.platos.length}x</span>
+                <div class="mb-5 flex items-center gap-4">
+                    <div class="w-20 shrink-0">
+                        <span class="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
+                        <span class="block text-sm font-black text-${colorClass}-500 mt-1">${data.platos.length}x</span>
                     </div>
-                    <div class="flex gap-2 flex-1">${platosHTML}</div>
+                    <div class="flex gap-2 flex-wrap flex-1">${platosHTML}</div>
                     ${deleteBtn}
                 </div>
-                <div class="flex items-start gap-3">
-                    <div class="w-16 shrink-0 mt-2">
-                        <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
-                        <span class="block text-[8px] font-mono text-${colorClass}-500/70 mt-0.5">${data.pinones.length}v</span>
+                <div class="flex items-start gap-4">
+                    <div class="w-20 shrink-0 mt-2">
+                        <span class="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
+                        <span class="block text-sm font-black text-${colorClass}-500 mt-1">${data.pinones.length}v</span>
                     </div>
                     <div class="flex flex-wrap gap-2 flex-1">${pinonesHTML}</div>
                 </div>
@@ -790,30 +799,28 @@
             const borderClass = `border-${colorClass}-500/30`;
             const hoverClass = `hover:bg-${colorClass}-500 hover:text-black`;
 
-            // Botones Custom Platos MAS GRANDES
             const platosHTML = platosArr.map(p => 
-                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-4 py-2.5 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-sm md:text-base font-black font-mono shadow-md">${p}T</button>`
+                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-5 py-3 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-lg font-black font-mono shadow-md">${p}T</button>`
             ).join('');
 
-            // Botones Custom Piñones MAS GRANDES
             const pinonesHTML = pinonesArr.map(p => 
-                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-xs md:text-sm font-bold font-mono transition-colors shadow-md">${p}</button>`
+                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-3.5 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-sm font-bold font-mono transition-colors shadow-md">${p}</button>`
             ).join('');
 
             const targetDiv = document.getElementById(`custom-buttons-container-${setupId}`);
             if(targetDiv) {
                 targetDiv.innerHTML = `
-                    <div class="mb-4 flex items-center gap-3">
-                        <div class="w-16 shrink-0">
-                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
-                            <span class="block text-[8px] font-mono text-${colorClass}-500/70 mt-0.5">${platosArr.length}x</span>
+                    <div class="mb-5 flex items-center gap-4">
+                        <div class="w-20 shrink-0">
+                            <span class="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
+                            <span class="block text-sm font-black text-${colorClass}-500 mt-1">${platosArr.length}x</span>
                         </div>
-                        <div class="flex gap-2 flex-wrap">${platosHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
+                        <div class="flex gap-2 flex-wrap flex-1">${platosHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
                     </div>
-                    <div class="flex items-start gap-3">
-                        <div class="w-16 shrink-0 mt-2">
-                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
-                            <span class="block text-[8px] font-mono text-${colorClass}-500/70 mt-0.5">${pinonesArr.length}v</span>
+                    <div class="flex items-start gap-4">
+                        <div class="w-20 shrink-0 mt-2">
+                            <span class="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
+                            <span class="block text-sm font-black text-${colorClass}-500 mt-1">${pinonesArr.length}v</span>
                         </div>
                         <div class="flex flex-wrap gap-2 flex-1">${pinonesHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
                     </div>
@@ -1048,15 +1055,59 @@
 
 
         // ==========================================
-        // LÓGICA TYRE PRESSURE LAB (NUEVO)
+        // LÓGICA TYRE PRESSURE LAB (MOTOR REESCRITO)
         // ==========================================
         
-        let tpDiscipline = 'road'; // road, gravel, mtb
-        let tpSystemFactor = 1.0;  // 1.0 = Tubeless, 1.1 = Cámara (Necesita más presión para evitar pellizcos)
+        // Diccionario de terrenos dependientes de la modalidad
+        const terrenos = {
+            road: [
+                { id: 'smooth', label: 'Asfalto Perfecto', mult: 1.0 },
+                { id: 'rough', label: 'Asfalto Roto', mult: 0.95 },
+                { id: 'cobbles', label: 'Adoquines', mult: 0.85 }
+            ],
+            gravel: [
+                { id: 'smooth', label: 'Pista Rápida', mult: 1.0 },
+                { id: 'rough', label: 'Grava Suelta', mult: 0.95 },
+                { id: 'cobbles', label: 'Técnico/Barro', mult: 0.90 }
+            ],
+            mtb: [
+                { id: 'smooth', label: 'XC Hardpack', mult: 1.0 },
+                { id: 'rough', label: 'Trail / Raíces', mult: 0.95 },
+                { id: 'cobbles', label: 'Enduro / Drop', mult: 0.90 }
+            ]
+        };
+
+        let tpDiscipline = 'road'; 
+        let tpTerrainFactor = 1.0; 
+        let tpSystemFactor = 1.0;  // 1.0 = Tubeless, 1.1 = Cámara
 
         const tpWeightSlider = document.getElementById('tp-weight');
         const tpWidthSlider = document.getElementById('tp-width');
         
+        function updateTerrainButtons(discipline) {
+            const container = document.getElementById('tp-terrain-container');
+            const opts = terrenos[discipline];
+            
+            container.innerHTML = opts.map((t, index) => `
+                <button class="btn-terrain-sub ${index === 0 ? 'active' : ''} py-3 px-2 rounded-xl text-[9px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="${t.mult}">
+                    ${t.label}
+                </button>
+            `).join('');
+
+            // Resetea el factor al primer botón al cambiar de modalidad
+            tpTerrainFactor = opts[0].mult;
+
+            // Añadir eventos a los nuevos botones
+            document.querySelectorAll('#tp-terrain-container .btn-terrain-sub').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('#tp-terrain-container .btn-terrain-sub').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    tpTerrainFactor = parseFloat(e.target.dataset.val);
+                    updateTyrePressure();
+                });
+            });
+        }
+
         function updateTyrePressure() {
             const w = parseInt(tpWeightSlider.value);
             const width = parseInt(tpWidthSlider.value);
@@ -1064,51 +1115,53 @@
             document.getElementById('tp-weight-val').innerText = w;
             document.getElementById('tp-width-val').innerText = width;
 
-            // FÓRMULA VELO INSIGHTS (Basada en regresiones de fricción)
-            // Calculamos un PSI base para una cubierta de 28mm en un sistema de 85kg
-            // 85kg -> ~85 PSI. Esta curva baja exponencialmente a medida que el neumático es más ancho.
-            let basePSI = 85 * (w / 85) * Math.pow((28 / width), 1.6);
+            // FÓRMULA VELO INSIGHTS (Mejorada para Road, Gravel y MTB)
+            // Basada en un estándar de 85kg y neumático de 28mm a 90 PSI
+            let basePSI = 90 * (w / 85) * Math.pow((28 / width), 1.6);
             
-            // Multiplicadores por Modalidad (Absorción de impactos vs Eficiencia de rodadura)
-            let disciplineMult = 1.0; // Carretera asfalto
-            if(tpDiscipline === 'gravel') disciplineMult = 0.8; // Gravel necesita disipar vibraciones medias
-            if(tpDiscipline === 'mtb') disciplineMult = 0.75; // MTB necesita máxima huella de tracción y absorción
+            // Multiplicadores por Modalidad (La carcasa y el volumen de aire cambian todo)
+            let disciplineMult = 1.0; 
+            if(tpDiscipline === 'gravel') disciplineMult = 0.85; 
+            if(tpDiscipline === 'mtb') disciplineMult = 0.75; 
 
-            let optimalPSI_rear = basePSI * disciplineMult * tpSystemFactor;
+            // Cálculo final sumando el terreno y si lleva cámara o tubeless
+            let optimalPSI_rear = basePSI * disciplineMult * tpTerrainFactor * tpSystemFactor;
             
-            // Limites lógicos de seguridad
-            optimalPSI_rear = Math.min(125, Math.max(15, optimalPSI_rear));
+            // Límites estrictos de seguridad para evitar reventones o destalonar
+            optimalPSI_rear = Math.min(120, Math.max(15, optimalPSI_rear));
             
-            // La rueda delantera siempre lleva menos carga (aprox 40% peso delante, 60% peso atrás)
+            // La rueda delantera lleva menos presión porque el peso recae un 60% atrás
             const optimalPSI_front = optimalPSI_rear * 0.94;
 
-            // Conversión a Bares
+            // Conversión matemática a Bares
             const barRear = (optimalPSI_rear / 14.5038).toFixed(2);
             const barFront = (optimalPSI_front / 14.5038).toFixed(2);
 
-            // Pintar Resultados
+            // Pintar Resultados en la interfaz
             document.getElementById('tp-rear-psi').innerText = Math.round(optimalPSI_rear);
             document.getElementById('tp-rear-bar').innerText = barRear;
             
             document.getElementById('tp-front-psi').innerText = Math.round(optimalPSI_front);
             document.getElementById('tp-front-bar').innerText = barFront;
 
-            // Guardar para la próxima visita
+            // Guardar para que la web lo recuerde al volver a entrar
             localStorage.setItem('velo_tp_width', width);
             localStorage.setItem('velo_tp_discipline', tpDiscipline);
             localStorage.setItem('velo_tp_system', tpSystemFactor);
         }
 
-        // Listeners para Botones
+        // Listeners para Botones de Modalidad
         document.querySelectorAll('#tp-discipline-container .btn-terrain').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('#tp-discipline-container .btn-terrain').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 tpDiscipline = e.target.dataset.val;
-                updateTyrePressure();
+                updateTerrainButtons(tpDiscipline); // Cambiamos los botones de terreno
+                updateTyrePressure(); // Recalculamos
             });
         });
 
+        // Listeners para Sistema (Tubeless vs Cámara)
         document.querySelectorAll('#tp-system-container .btn-terrain').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('#tp-system-container .btn-terrain').forEach(b => b.classList.remove('active'));
@@ -1118,8 +1171,9 @@
             });
         });
 
+        // Sincronizar el peso entre las dos calculadoras de la página
         tpWeightSlider.addEventListener('input', () => {
-            document.getElementById('system-weight').value = tpWeightSlider.value; // Sincroniza arriba
+            document.getElementById('system-weight').value = tpWeightSlider.value;
             calculateTelemetry(); 
             updateTyrePressure();
         });
@@ -1127,7 +1181,7 @@
         tpWidthSlider.addEventListener('input', updateTyrePressure);
 
         // ==========================================
-        // INIT GLOBAL
+        // INIT GLOBAL DE LA PÁGINA
         // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
             if (!loadFromURL()) {
@@ -1151,6 +1205,9 @@
                     if(b.dataset.val === tpDiscipline) b.classList.add('active');
                 });
             }
+            
+            // Dibujar los botones de terreno iniciales según la modalidad elegida
+            updateTerrainButtons(tpDiscipline);
             
             if(savedSystem) {
                 tpSystemFactor = parseFloat(savedSystem);
