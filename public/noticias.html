@@ -69,6 +69,10 @@
 </head>
 <body class="bg-[#050505] antialiased pb-20 overflow-x-hidden selection:bg-cyan-500/30">
 
+    <div id="reading-progress-container" class="fixed top-0 left-0 w-full h-1.5 z-[250] hidden bg-zinc-900">
+        <div id="reading-progress-bar" class="h-full bg-cyan-500 w-0 transition-all duration-150 shadow-[0_0_10px_rgba(34,211,238,0.8)]"></div>
+    </div>
+
     <header class="pt-28 md:pt-40 pb-8 md:pb-12 px-4 md:px-6 max-w-7xl mx-auto text-center md:text-left reveal-on-scroll">
         <h1 class="text-4xl md:text-5xl font-heading text-white italic uppercase tracking-tighter mb-4 drop-shadow-2xl">The Journal <span class="text-cyan-500">///</span></h1>
         <p class="text-zinc-500 max-w-lg font-medium text-xs md:text-base mx-auto md:mx-0 mb-8">Archivo profundo de análisis técnico. No cubrimos rumores, cubrimos vatios.</p>
@@ -94,7 +98,7 @@
         </aside>
     </main>
 
-    <div id="article-modal" class="fixed inset-0 z-[200] bg-black/95 modal-hidden backdrop-blur-md overflow-y-auto modal-scroll" id="modal-scroll-container">
+    <div id="article-modal" class="fixed inset-0 z-[200] bg-black/95 modal-hidden backdrop-blur-md overflow-y-auto modal-scroll">
         <div class="min-h-screen w-full md:py-12 flex justify-center">
             <button onclick="closeArticle()" class="fixed top-4 right-4 md:top-8 md:right-8 z-[210] p-3 bg-black/60 text-white rounded-full hover:bg-white hover:text-black transition-all backdrop-blur-md border border-white/20 shadow-2xl">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -115,6 +119,8 @@
         const modal = document.getElementById('article-modal');
         const modalContent = document.getElementById('modal-content');
         const searchInput = document.getElementById('news-search');
+        const progressBar = document.getElementById('reading-progress-bar');
+        const progressContainer = document.getElementById('reading-progress-container');
 
         const TAG_COLORS = {
             'TECH LAB': { mobile: 'bg-emerald-900/30 border-emerald-500/30 text-emerald-500', bg: 'bg-emerald-500', text: 'text-black', hover: 'hover:border-emerald-500' },
@@ -126,7 +132,40 @@
             'DEFAULT': { mobile: 'bg-zinc-800 border-zinc-700 text-white', bg: 'bg-zinc-700', text: 'text-white', hover: 'hover:border-zinc-500' }
         };
 
+        // Calcula el tiempo de lectura (aprox 220 palabras por minuto)
+        function getReadingTime(htmlContent) {
+            if (!htmlContent) return 1;
+            const text = htmlContent.replace(/<[^>]*>?/gm, ''); // Quita las etiquetas HTML
+            const words = text.trim().split(/\s+/).length;
+            const time = Math.ceil(words / 220); 
+            return time < 1 ? 1 : time;
+        }
+
+        // Muestra tarjetas "Fantasma" mientras carga la DB
+        function showSkeletons() {
+            feed.innerHTML = `
+                <div class="border-b border-zinc-900/80 pb-10 mb-10">
+                    <div class="w-full aspect-[4/3] md:aspect-[21/9] skeleton mb-5"></div>
+                    <div class="flex gap-2 mb-3"><div class="h-3 w-16 skeleton"></div><div class="h-3 w-20 skeleton"></div></div>
+                    <div class="h-10 w-3/4 skeleton mb-3"></div>
+                    <div class="h-4 w-full skeleton mb-2"></div>
+                    <div class="h-4 w-5/6 skeleton"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+                    ${[1, 2, 3, 4].map(() => `
+                        <div>
+                            <div class="aspect-[16/9] w-full skeleton mb-4 rounded-2xl"></div>
+                            <div class="h-3 w-24 skeleton mb-3"></div>
+                            <div class="h-6 w-full skeleton mb-2"></div>
+                            <div class="h-6 w-2/3 skeleton"></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
         async function fetchNews() {
+            showSkeletons(); // Activar el modo carga súper rápido
             try {
                 const [resNews, resGlos] = await Promise.all([
                     fetch('/api/news').catch(() => null),
@@ -144,8 +183,9 @@
                         return;
                     }
                 }
-            } catch (error) {
                 feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest">No hay noticias publicadas.</p>`;
+            } catch (error) {
+                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono text-xs uppercase tracking-widest">Error de conexión.</p>`;
             }
         }
 
@@ -198,6 +238,7 @@
             let html = '';
             if (hero) {
                 const heroTag = TAG_COLORS[(hero.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+                const readTime = getReadingTime(hero.content);
                 html += `
                     <article class="group cursor-pointer border-b border-zinc-900/80 pb-10 mb-10 transition-all fade-in-up" onclick="openArticle('${hero.id}')">
                         <div class="w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden rounded-2xl md:rounded-[2rem] mb-5 bg-zinc-900 relative shadow-xl">
@@ -205,7 +246,11 @@
                             <div class="absolute top-4 left-4"><span class="px-3.5 py-1.5 ${heroTag.bg} ${heroTag.text} text-[10px] md:text-xs font-black uppercase rounded shadow-2xl tracking-widest">${hero.tag || 'INFO'}</span></div>
                         </div>
                         <div class="px-2">
-                            <div class="flex items-center gap-2 mb-3"><span class="text-[11px] font-mono font-bold text-cyan-400 tracking-widest uppercase">${hero.date || 'HOY'}</span></div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-[11px] font-mono font-bold text-cyan-400 tracking-widest uppercase">${hero.date || 'HOY'}</span>
+                                <span class="w-1 h-1 bg-zinc-700 rounded-full"></span>
+                                <span class="text-[11px] font-mono font-bold text-zinc-500 tracking-widest uppercase flex items-center gap-1">⏱️ ${readTime} MIN LECTURA</span>
+                            </div>
                             <h2 class="text-2xl md:text-4xl font-black italic uppercase leading-[1.05] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter text-white drop-shadow-sm">${hero.title}</h2>
                             <p class="text-zinc-400 text-sm md:text-lg leading-relaxed line-clamp-2 md:line-clamp-3">${hero.lead || ''}</p>
                         </div>
@@ -217,6 +262,7 @@
                 html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">`;
                 html += rest.map((news, idx) => {
                     const tagClass = TAG_COLORS[(news.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+                    const readTime = getReadingTime(news.content);
                     return `
                         <article class="group cursor-pointer transition-all fade-in-up flex flex-col" style="animation-delay: ${(idx + 1) * 0.1}s" onclick="openArticle('${news.id}')">
                             <div class="aspect-[16/9] w-full overflow-hidden rounded-2xl mb-4 bg-zinc-900 relative shadow-lg">
@@ -224,7 +270,11 @@
                                 <div class="absolute bottom-3 left-3"><span class="px-2.5 py-1 ${tagClass.bg} ${tagClass.text} text-[8px] font-black uppercase rounded shadow-lg tracking-widest">${news.tag || 'INFO'}</span></div>
                             </div>
                             <div class="px-1">
-                                <div class="flex items-center gap-2 mb-2"><span class="text-[10px] font-mono font-bold text-zinc-500 tracking-widest uppercase">${news.date || 'HOY'}</span></div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-[10px] font-mono font-bold text-zinc-500 tracking-widest uppercase">${news.date || 'HOY'}</span>
+                                    <span class="w-1 h-1 bg-zinc-800 rounded-full"></span>
+                                    <span class="text-[10px] font-mono font-bold text-zinc-600 tracking-widest uppercase">⏱️ ${readTime} MIN</span>
+                                </div>
                                 <h3 class="text-xl font-black italic text-white uppercase leading-[1.05] group-hover:text-cyan-400 transition-colors tracking-tighter">${news.title}</h3>
                             </div>
                         </article>
@@ -239,6 +289,37 @@
             } else loadMoreContainer.innerHTML = '';
         }
 
+        function getRecommendations(currentArticle) {
+            let availableNews = allNews.filter(n => n.id != currentArticle.id);
+            let recommendations = [];
+
+            if (availableNews.length === 0) return recommendations;
+
+            // 1. Misma categoría
+            let relatedIndex = availableNews.findIndex(n => (n.tag || '').toUpperCase() === (currentArticle.tag || '').toUpperCase());
+            if (relatedIndex !== -1) {
+                recommendations.push(availableNews[relatedIndex]);
+                availableNews.splice(relatedIndex, 1);
+            }
+
+            // 2. Descubrimiento (Distinta categoría)
+            if (availableNews.length > 0) {
+                let differentIndex = availableNews.findIndex(n => (n.tag || '').toUpperCase() !== (currentArticle.tag || '').toUpperCase());
+                if (differentIndex !== -1) {
+                    recommendations.push(availableNews[differentIndex]);
+                } else {
+                    recommendations.push(availableNews[0]);
+                }
+            }
+
+            // Fallback
+            if (recommendations.length < 2 && availableNews.length > 0) {
+                 recommendations.push(availableNews[0]);
+            }
+
+            return recommendations;
+        }
+
         window.openArticle = (id) => {
             const article = allNews.find(n => n.id == id);
             if(!article) return;
@@ -247,6 +328,38 @@
             document.title = `${article.title} | Velo Insights Journal`;
             
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+            const readTime = getReadingTime(article.content);
+
+            const recommendedArticles = getRecommendations(article);
+            let recommendationHTML = '';
+            
+            if (recommendedArticles.length > 0) {
+                recommendationHTML = `
+                    <div class="mt-16 md:mt-24 pt-10 border-t border-zinc-900">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-6 border-l-2 border-cyan-500 pl-3">Continúa leyendo</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            ${recommendedArticles.map(rec => {
+                                const recTag = TAG_COLORS[(rec.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+                                const recTime = getReadingTime(rec.content);
+                                return `
+                                <div onclick="openArticle('${rec.id}')" class="group cursor-pointer bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/50 hover:border-cyan-500/50 rounded-2xl overflow-hidden transition-all flex flex-col h-full">
+                                    <div class="h-32 md:h-40 w-full overflow-hidden relative">
+                                        <img src="${rec.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500">
+                                        <div class="absolute bottom-2 left-2"><span class="px-2 py-0.5 ${recTag.bg} ${recTag.text} text-[8px] font-black uppercase rounded tracking-widest shadow-lg">${rec.tag || 'INFO'}</span></div>
+                                    </div>
+                                    <div class="p-4 flex-1 flex flex-col">
+                                        <h4 class="text-sm md:text-base font-black italic uppercase leading-tight text-zinc-300 group-hover:text-white transition-colors tracking-tighter mb-2">${rec.title}</h4>
+                                        <div class="mt-auto flex justify-between items-center">
+                                            <span class="text-[9px] font-mono text-zinc-600 uppercase">${rec.date || 'HOY'}</span>
+                                            <span class="text-[9px] font-mono text-zinc-600 uppercase">⏱️ ${recTime} MIN</span>
+                                        </div>
+                                    </div>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
 
             modalContent.innerHTML = `
                 <div class="h-[30vh] md:h-[50vh] w-full relative border-b border-zinc-900">
@@ -258,15 +371,26 @@
                         <div class="mb-8 md:mb-12 border-b border-zinc-900 pb-8">
                             <span class="px-3 py-1 md:px-4 md:py-1.5 ${tagData.bg} ${tagData.text} rounded text-[9px] md:text-[10px] font-black uppercase mb-4 md:mb-6 inline-block tracking-widest shadow-lg">${article.tag || 'INFO'}</span>
                             <h1 class="text-2xl md:text-4xl lg:text-5xl font-heading text-white italic uppercase leading-[1.05] tracking-tighter mb-4">${article.title}</h1>
-                            <p class="text-zinc-400 font-mono text-[10px] md:text-xs uppercase tracking-widest">${article.date || 'HOY'} • VELO INSIGHTS</p>
+                            <p class="text-zinc-400 font-mono text-[10px] md:text-xs uppercase tracking-widest flex items-center flex-wrap gap-2">
+                                <span>${article.date || 'HOY'}</span> 
+                                <span class="text-zinc-700">•</span> 
+                                <span>VELO INSIGHTS</span>
+                                <span class="text-zinc-700">•</span>
+                                <span class="text-cyan-400 font-bold">⏱️ ${readTime} MIN LECTURA</span>
+                            </p>
                         </div>
                         ${article.lead ? `<p class="text-lg md:text-xl text-zinc-200 font-serif leading-relaxed mb-8 md:mb-16 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
+                        
                         <div class="prose-custom text-sm md:text-base">${article.content || '<p class="text-center text-zinc-600">No hay contenido disponible.</p>'}</div>
+                        
                         <div class="mt-12 md:mt-16 pt-8 md:pt-10 border-t border-zinc-900 text-center">
                             <button onclick="shareNative('${article.title.replace(/'/g, "\\'")}', '${article.id}')" class="group inline-flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-cyan-500 transition-all active:scale-95">
-                                <span class="text-[10px] font-bold uppercase text-zinc-300 group-hover:text-white tracking-widest">Enviar Enlace</span>
+                                <span class="text-[10px] font-bold uppercase text-zinc-300 group-hover:text-white tracking-widest">Compartir Análisis</span>
+                                <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                             </button>
                         </div>
+
+                        ${recommendationHTML}
                     </div>
                 </div>
             `;
@@ -275,18 +399,40 @@
             modal.classList.add('modal-visible');
             document.body.style.overflow = 'hidden';
             modal.scrollTop = 0; 
+
+            // Activa la barra de progreso
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
         };
 
         window.closeArticle = () => {
             modal.classList.remove('modal-visible');
             modal.classList.add('modal-hidden');
             document.body.style.overflow = 'auto'; 
+            
+            // Oculta la barra de progreso
+            progressContainer.classList.add('hidden');
+            progressBar.style.width = '0%';
+
             const url = new URL(window.location);
             url.searchParams.delete('article');
             window.history.pushState({}, '', url);
             document.title = "VELO INSIGHTS | Journal & Análisis Técnico";
             setTimeout(() => { modalContent.innerHTML = ''; }, 300);
         };
+
+        // Lógica de la barra de progreso
+        modal.addEventListener('scroll', () => {
+            if (modal.classList.contains('modal-visible')) {
+                const scrollTop = modal.scrollTop;
+                const scrollHeight = modal.scrollHeight - modal.clientHeight;
+                let scrollPercentage = 0;
+                if (scrollHeight > 0) {
+                    scrollPercentage = (scrollTop / scrollHeight) * 100;
+                }
+                progressBar.style.width = Math.min(scrollPercentage, 100) + '%';
+            }
+        });
 
         window.shareNative = async (articleTitle, articleId) => {
             const originUrl = window.location.origin + window.location.pathname + '?article=' + articleId;
