@@ -4,23 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <title>Calculadora de Desarrollo y Cadencia Ciclista | Velo Insights</title>
-    <meta name="description" content="Calculadora avanzada de desarrollos para ciclismo. Simula platos, piñones, ratios, velocidad y potencia en llano o subida. Optimiza tu transmisión.">
-    <meta name="keywords" content="calculadora desarrollo ciclismo, ratio platos piñones, velocidad cadencia ciclismo, simular transmision bicicleta, w/kg, potencia ciclismo, Shimano, SRAM">
+    <title>Calculadora de Desarrollo y Presión Ciclista | Velo Insights</title>
+    <meta name="description" content="Calculadora avanzada para ciclismo. Simula platos, piñones, ratios, velocidad, potencia y calcula la presión perfecta de tus neumáticos.">
+    <meta name="keywords" content="calculadora desarrollo ciclismo, ratio platos piñones, velocidad cadencia ciclismo, presion neumaticos bicicleta, tubeless, w/kg, potencia ciclismo">
     <meta name="author" content="Velo Insights">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://veloinsights.es/calculadora.html">
     
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://veloinsights.es/calculadora.html">
-    <meta property="og:title" content="Calculadora de Desarrollo Ciclista | Velo Insights">
-    <meta property="og:description" content="Ajusta platos, piñones y cadencia para descubrir tu velocidad y potencia estimada. Optimiza la transmisión de tu bici.">
+    <meta property="og:title" content="Performance Lab | Velo Insights">
+    <meta property="og:description" content="Ajusta desarrollos, descubre tu velocidad estimada y calcula la presión óptima de tus neumáticos.">
     <meta property="og:image" content="https://veloinsights.es/assets/default-news.jpg">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://veloinsights.es/calculadora.html">
-    <meta name="twitter:title" content="Calculadora de Desarrollo Ciclista | Velo Insights">
-    <meta name="twitter:description" content="Ajusta platos, piñones y cadencia para descubrir tu velocidad y potencia estimada. Optimiza la transmisión de tu bici.">
+    <meta name="twitter:title" content="Performance Lab | Velo Insights">
+    <meta name="twitter:description" content="Ajusta desarrollos, descubre tu velocidad estimada y calcula la presión óptima de tus neumáticos.">
     <meta name="twitter:image" content="https://veloinsights.es/assets/default-news.jpg">
     <meta name="theme-color" content="#050505">
     
@@ -34,6 +34,11 @@
         input[type=range].slider-cyan { -webkit-appearance: none; background: #27272a; height: 6px; border-radius: 3px; width: 100%; }
         input[type=range].slider-cyan::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #06b6d4; cursor: pointer; border: 3px solid #083344; box-shadow: 0 0 15px rgba(6, 182, 212, 0.5); margin-top: -9px; transition: transform 0.1s; }
         input[type=range].slider-cyan::-webkit-slider-thumb:active { transform: scale(1.1); }
+
+        /* Slider para Presiones */
+        input[type=range].slider-purple { -webkit-appearance: none; background: #27272a; height: 6px; border-radius: 3px; width: 100%; }
+        input[type=range].slider-purple::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #a855f7; cursor: pointer; border: 3px solid #3b0764; box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); margin-top: -9px; transition: transform 0.1s; }
+        input[type=range].slider-purple::-webkit-slider-thumb:active { transform: scale(1.1); }
         
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -44,6 +49,9 @@
         
         .btn-gear { transition: all 0.2s; }
         .btn-gear:active { transform: scale(0.9); }
+
+        .btn-terrain { transition: all 0.2s ease; border: 1px solid rgba(168, 85, 247, 0.2); }
+        .btn-terrain.active { border-color: #a855f7; background-color: rgba(168, 85, 247, 0.15); color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(168, 85, 247, 0.2); }
     </style>
 </head>
 
@@ -52,340 +60,459 @@
     <header class="relative pt-32 md:pt-44 pb-10 px-4 text-center">
         <div class="max-w-4xl mx-auto animate-fade-in-up">
             <p class="text-cyan-500 font-bold tracking-[0.2em] text-[9px] uppercase mb-3">PERFORMANCE LAB</p>
-            <h1 class="text-4xl md:text-6xl font-heading text-white italic uppercase tracking-tighter leading-[0.9] drop-shadow-2xl">
-                Calculadora de <span class="text-zinc-700">Desarrollo</span>
+            <h1 class="text-4xl md:text-6xl font-heading text-white italic uppercase tracking-tighter leading-[0.9] drop-shadow-2xl mb-4">
+                Transmisión & <span class="text-purple-500">Presiones</span>
             </h1>
+            <p class="text-zinc-500 text-sm md:text-base max-w-2xl mx-auto">Calcula tus desarrollos óptimos y la presión exacta de tus neumáticos para maximizar la eficiencia.</p>
         </div>
     </header>
 
-    <main class="flex-1 max-w-7xl mx-auto w-full px-4 md:px-6 pb-12 space-y-8 animate-fade-in-up">
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 md:px-6 pb-20 space-y-12 animate-fade-in-up">
 
-        <section class="glass-panel rounded-3xl p-6 md:p-10 relative overflow-hidden shadow-2xl max-w-5xl mx-auto w-full">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
-            
-            <div class="text-center mb-8">
-                <p class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span> Cadencia Objetivo
-                </p>
-                <div class="flex items-end justify-center gap-2">
-                    <span id="rpm-display" class="text-6xl md:text-8xl font-black italic tracking-tighter text-cyan-400 neon-text leading-none transition-colors duration-300">90</span>
-                    <span class="text-lg md:text-xl font-bold text-zinc-500 mb-2 md:mb-4">RPM</span>
+        <div>
+            <div class="flex items-center gap-3 mb-6 px-2">
+                <div class="w-8 h-8 rounded-full bg-cyan-900/40 border border-cyan-500/30 flex items-center justify-center">
+                    <i class="fas fa-cogs text-cyan-400 text-sm"></i>
                 </div>
-                <span id="rpm-status" class="inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border border-cyan-500/30 text-cyan-400 bg-cyan-950/30 transition-colors duration-300">ZONA ÓPTIMA</span>
+                <h2 class="text-xl md:text-2xl font-black text-white italic uppercase tracking-widest">Gearing Lab</h2>
             </div>
 
-            <div class="max-w-2xl mx-auto relative z-10 mb-10">
-                <input type="range" min="40" max="130" value="90" class="slider-cyan" id="rpm-slider">
-                <div class="flex justify-between text-[10px] font-bold text-zinc-600 uppercase mt-4 tracking-widest">
-                    <span>40 Atrancado</span>
-                    <span>130 Molinillo</span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
-                <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center">
-                    <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Inclinación de la Vía</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button onclick="setGradient(0, 'Llano 0%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">0%</button>
-                        <button onclick="setGradient(8, 'Puerto 8%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">8%</button>
-                        <button onclick="setGradient(12, 'Muro 12%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">12%</button>
+            <section class="glass-panel rounded-3xl p-6 md:p-10 relative overflow-hidden shadow-2xl max-w-5xl mx-auto w-full">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="text-center mb-8">
+                    <p class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span> Cadencia Objetivo
+                    </p>
+                    <div class="flex items-end justify-center gap-2">
+                        <span id="rpm-display" class="text-6xl md:text-8xl font-black italic tracking-tighter text-cyan-400 neon-text leading-none transition-colors duration-300">90</span>
+                        <span class="text-lg md:text-xl font-bold text-zinc-500 mb-2 md:mb-4">RPM</span>
                     </div>
+                    <span id="rpm-status" class="inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border border-cyan-500/30 text-cyan-400 bg-cyan-950/30 transition-colors duration-300">ZONA ÓPTIMA</span>
                 </div>
 
-                <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center items-center">
-                    <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Peso (Ciclista + Bici)</label>
-                    <div class="flex items-center gap-3">
-                        <input type="number" id="system-weight" value="85" min="40" max="150" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>150)this.value=150;" class="w-20 bg-zinc-900 border border-zinc-700 rounded-xl px-2 py-2 text-xl text-white font-black font-mono text-center focus:border-cyan-500 focus:outline-none transition-colors shadow-inner">
-                        <span class="text-xs font-black text-zinc-500 tracking-widest">KG</span>
+                <div class="max-w-2xl mx-auto relative z-10 mb-10">
+                    <input type="range" min="40" max="130" value="90" class="slider-cyan" id="rpm-slider">
+                    <div class="flex justify-between text-[10px] font-bold text-zinc-600 uppercase mt-4 tracking-widest">
+                        <span>40 Atrancado</span>
+                        <span>130 Molinillo</span>
                     </div>
                 </div>
 
-                <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center items-center relative overflow-hidden group">
-                    <div class="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                    <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center z-10">Compartir Setup</label>
-                    <button onclick="copyShareLink()" class="relative z-10 flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-cyan-600 text-zinc-300 hover:text-black border border-zinc-700 hover:border-cyan-500 px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95">
-                        <i class="fas fa-link"></i> Copiar Enlace
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
-            
-            <section class="glass-panel rounded-3xl p-6 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-cyan-500 transition-colors duration-300">
-                <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
-                    <h2 class="text-lg font-black text-white italic uppercase tracking-widest">Setup Actual</h2>
-                    <span class="text-[10px] font-bold text-zinc-500 bg-zinc-900 px-2 py-1 rounded">OPCIÓN A</span>
-                </div>
-
-                <div class="space-y-5 mb-6 flex-1">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Rueda y Neumático</label>
-                            <select id="wheel-a" onchange="toggleCustomWheel('a')" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-cyan-500 focus:outline-none transition-colors">
-                                <optgroup label="Carretera">
-                                    <option value="2105">700 x 25c</option>
-                                    <option value="2136" selected>700 x 28c</option>
-                                    <option value="2146">700 x 30c</option>
-                                    <option value="2155">700 x 32c</option>
-                                </optgroup>
-                                <optgroup label="Gravel">
-                                    <option value="2181">700 x 35c</option>
-                                    <option value="2224">700 x 40c</option>
-                                    <option value="2268">700 x 45c</option>
-                                    <option value="2120">650b x 47</option>
-                                </optgroup>
-                                <optgroup label="MTB">
-                                    <option value="2298">29" x 2.20"</option>
-                                    <option value="2326">29" x 2.40"</option>
-                                    <option value="2195">27.5" x 2.20"</option>
-                                </optgroup>
-                                <optgroup label="Avanzado">
-                                    <option value="custom">📏 Rueda Custom (mm)</option>
-                                </optgroup>
-                            </select>
-                            
-                            <div id="custom-wheel-container-a" class="hidden mt-2 relative">
-                                <input type="number" id="custom-wheel-a" value="2150" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-cyan-500 outline-none transition-colors" placeholder="Ej: 2150">
-                                <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-zinc-500">MM</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
-                            <select id="preset-a" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-cyan-400 font-bold focus:border-cyan-500 focus:outline-none transition-colors">
-                                <option value="custom">⚙️ Custom / Crear Perfil</option>
-                                <optgroup label="Carretera Estándar">
-                                    <option value="shi_compact_11" selected>Shi. 105/Ult 11v (50/34 - 11/34)</option>
-                                    <option value="shi_semi_12">Shi. Ultegra/DA 12v (52/36 - 11/30)</option>
-                                    <option value="shi_pro_12">Shi. Pro 12v (54/40 - 11/30)</option>
-                                    <option value="sram_red_12">SRAM AXS 12v (48/35 - 10/33)</option>
-                                    <option value="campy_12">Campagnolo 12v (50/34 - 11/32)</option>
-                                </optgroup>
-                                <optgroup label="Gravel / CX">
-                                    <option value="grx_1x">Shi. GRX 1x11 (40T - 11/42)</option>
-                                    <option value="sram_xplr">SRAM XPLR 1x12 (40T - 10/44)</option>
-                                    <option value="campy_ekar">Campy Ekar 13v (38T - 9/42)</option>
-                                </optgroup>
-                                <optgroup label="MTB">
-                                    <option value="shi_xt_1x12">Shimano XT 1x12 (32T - 10/51)</option>
-                                    <option value="sram_eagle">SRAM Eagle 1x12 (32T - 10/52)</option>
-                                    <option value="shi_mtb_2x">Shimano MTB 2x11 (36/26 - 11/42)</option>
-                                </optgroup>
-                            </select>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+                    <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center">
+                        <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Inclinación de la Vía</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="setGradient(0, 'Llano 0%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">0%</button>
+                            <button onclick="setGradient(8, 'Puerto 8%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">8%</button>
+                            <button onclick="setGradient(12, 'Muro 12%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">12%</button>
                         </div>
                     </div>
 
-                    <div id="quick-selects-a" class="p-3 bg-black/40 rounded-xl border border-zinc-800/80 hidden transition-all"></div>
-
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Plato Elegido</label>
-                            <div class="relative">
-                                <i class="fas fa-cog absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
-                                <input type="number" id="plato-a" value="50" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center shadow-inner">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Piñón Elegido</label>
-                            <div class="relative">
-                                <i class="fas fa-bullseye absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
-                                <input type="number" id="pinon-a" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center shadow-inner">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-black/50 rounded-2xl p-5 border border-zinc-800/50 mt-auto">
-                    <p class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
-                    <div class="flex justify-between items-end mb-4">
-                        <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
-                        <div class="flex items-baseline gap-1">
-                            <span id="speed-a" class="text-5xl font-black italic text-white leading-none">0.0</span>
-                            <span class="text-xs font-bold text-zinc-500">km/h</span>
+                    <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center items-center">
+                        <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Peso (Ciclista + Bici)</label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="system-weight" value="85" min="40" max="150" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>150)this.value=150; syncWeights();" class="w-20 bg-zinc-900 border border-zinc-700 rounded-xl px-2 py-2 text-xl text-white font-black font-mono text-center focus:border-cyan-500 focus:outline-none transition-colors shadow-inner">
+                            <span class="text-xs font-black text-zinc-500 tracking-widest">KG</span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2 mb-4 text-center border-y border-zinc-800/50 py-3">
-                        <div>
-                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Atrancado (60)</span>
-                            <span id="speed-a-60" class="text-sm font-bold font-mono text-red-400">0.0</span>
-                        </div>
-                        <div class="border-x border-zinc-800/50">
-                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Crucero (90)</span>
-                            <span id="speed-a-90" class="text-sm font-bold font-mono text-emerald-400">0.0</span>
-                        </div>
-                        <div>
-                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Molinillo (110)</span>
-                            <span id="speed-a-110" class="text-sm font-bold font-mono text-cyan-400">0.0</span>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 divide-x divide-zinc-800 bg-zinc-900 border border-zinc-800 rounded-lg py-3 relative z-10 text-center items-center shadow-inner">
-                        <div class="px-2">
-                            <span id="power-label-a" class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia (Llano 0%)</span>
-                            <span id="power-a" class="text-lg md:text-xl font-black font-mono text-white">0 W</span>
-                        </div>
-                        <div class="px-2">
-                            <span class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Relación W/Kg</span>
-                            <span id="wkg-a" class="text-lg md:text-xl font-black font-mono text-cyan-400">0.0</span>
-                        </div>
-                    </div>
-
-                    <div id="crosschain-warning-a" class="hidden mt-3 p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse">
-                        <i class="fas fa-exclamation-triangle mr-1"></i> Cadena Cruzada: Pierdes ~5W por fricción
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 mt-4 border-t border-zinc-800/50 pt-4">
-                        <div>
-                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Avance/Pedalada</span>
-                            <span id="dev-a" class="text-lg font-mono font-bold text-zinc-300">0.00m</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Ratio (Vueltas)</span>
-                            <span id="ratio-a" class="text-lg font-mono font-bold text-zinc-300">0.00</span>
-                        </div>
+                    <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center items-center relative overflow-hidden group">
+                        <div class="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                        <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center z-10">Compartir Setup</label>
+                        <button onclick="copyShareLink()" class="relative z-10 flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-cyan-600 text-zinc-300 hover:text-black border border-zinc-700 hover:border-cyan-500 px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95">
+                            <i class="fas fa-link"></i> Copiar Enlace
+                        </button>
                     </div>
                 </div>
             </section>
 
-            <section class="glass-panel rounded-3xl p-6 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-violet-500 transition-colors duration-300">
-                <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
-                    <h2 class="text-lg font-black text-white italic uppercase tracking-widest">Nuevo Setup</h2>
-                    <span class="text-[10px] font-bold text-zinc-500 bg-zinc-900 px-2 py-1 rounded">OPCIÓN B</span>
-                </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start mt-8">
+                
+                <section class="glass-panel rounded-3xl p-6 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-cyan-500 transition-colors duration-300">
+                    <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
+                        <h2 class="text-lg font-black text-white italic uppercase tracking-widest">Setup Actual</h2>
+                        <span class="text-[10px] font-bold text-zinc-500 bg-zinc-900 px-2 py-1 rounded">OPCIÓN A</span>
+                    </div>
 
-                <div class="space-y-5 mb-6 flex-1">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Rueda y Neumático</label>
-                            <select id="wheel-b" onchange="toggleCustomWheel('b')" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-violet-500 focus:outline-none transition-colors">
-                                <optgroup label="Carretera">
-                                    <option value="2105">700 x 25c</option>
-                                    <option value="2136" selected>700 x 28c</option>
-                                    <option value="2146">700 x 30c</option>
-                                    <option value="2155">700 x 32c</option>
-                                </optgroup>
-                                <optgroup label="Gravel">
-                                    <option value="2181">700 x 35c</option>
-                                    <option value="2224">700 x 40c</option>
-                                    <option value="2268">700 x 45c</option>
-                                    <option value="2120">650b x 47</option>
-                                </optgroup>
-                                <optgroup label="MTB">
-                                    <option value="2298">29" x 2.20"</option>
-                                    <option value="2326">29" x 2.40"</option>
-                                    <option value="2195">27.5" x 2.20"</option>
-                                </optgroup>
-                                <optgroup label="Avanzado">
-                                    <option value="custom">📏 Rueda Custom (mm)</option>
-                                </optgroup>
-                            </select>
-
-                            <div id="custom-wheel-container-b" class="hidden mt-2 relative">
-                                <input type="number" id="custom-wheel-b" value="2150" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-violet-500 outline-none transition-colors" placeholder="Ej: 2150">
-                                <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-zinc-500">MM</span>
+                    <div class="space-y-5 mb-6 flex-1">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Rueda y Neumático</label>
+                                <select id="wheel-a" onchange="toggleCustomWheel('a')" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-cyan-500 focus:outline-none transition-colors">
+                                    <optgroup label="Carretera">
+                                        <option value="2105">700 x 25c</option>
+                                        <option value="2136" selected>700 x 28c</option>
+                                        <option value="2146">700 x 30c</option>
+                                        <option value="2155">700 x 32c</option>
+                                    </optgroup>
+                                    <optgroup label="Gravel">
+                                        <option value="2181">700 x 35c</option>
+                                        <option value="2224">700 x 40c</option>
+                                        <option value="2268">700 x 45c</option>
+                                        <option value="2120">650b x 47</option>
+                                    </optgroup>
+                                    <optgroup label="MTB">
+                                        <option value="2298">29" x 2.20"</option>
+                                        <option value="2326">29" x 2.40"</option>
+                                        <option value="2195">27.5" x 2.20"</option>
+                                    </optgroup>
+                                    <optgroup label="Avanzado">
+                                        <option value="custom">📏 Rueda Custom (mm)</option>
+                                    </optgroup>
+                                </select>
+                                
+                                <div id="custom-wheel-container-a" class="hidden mt-2 relative">
+                                    <input type="number" id="custom-wheel-a" value="2150" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-cyan-500 outline-none transition-colors" placeholder="Ej: 2150">
+                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-zinc-500">MM</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
+                                <select id="preset-a" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-cyan-400 font-bold focus:border-cyan-500 focus:outline-none transition-colors">
+                                    <option value="custom">⚙️ Custom / Crear Perfil</option>
+                                    <optgroup label="Carretera Estándar">
+                                        <option value="shi_compact_11" selected>Shi. 105/Ult 11v (50/34 - 11/34)</option>
+                                        <option value="shi_semi_12">Shi. Ultegra/DA 12v (52/36 - 11/30)</option>
+                                        <option value="shi_pro_12">Shi. Pro 12v (54/40 - 11/30)</option>
+                                        <option value="sram_red_12">SRAM AXS 12v (48/35 - 10/33)</option>
+                                        <option value="campy_12">Campagnolo 12v (50/34 - 11/32)</option>
+                                    </optgroup>
+                                    <optgroup label="Gravel / CX">
+                                        <option value="grx_1x">Shi. GRX 1x11 (40T - 11/42)</option>
+                                        <option value="sram_xplr">SRAM XPLR 1x12 (40T - 10/44)</option>
+                                        <option value="campy_ekar">Campy Ekar 13v (38T - 9/42)</option>
+                                    </optgroup>
+                                    <optgroup label="MTB">
+                                        <option value="shi_xt_1x12">Shimano XT 1x12 (32T - 10/51)</option>
+                                        <option value="sram_eagle">SRAM Eagle 1x12 (32T - 10/52)</option>
+                                        <option value="shi_mtb_2x">Shimano MTB 2x11 (36/26 - 11/42)</option>
+                                    </optgroup>
+                                </select>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
-                            <select id="preset-b" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-violet-400 font-bold focus:border-violet-500 focus:outline-none transition-colors">
-                                <option value="custom">⚙️ Custom / Crear Perfil</option>
-                                <optgroup label="Carretera Estándar">
-                                    <option value="shi_compact_11">Shi. 105/Ult 11v (50/34 - 11/34)</option>
-                                    <option value="shi_semi_12" selected>Shi. Ultegra/DA 12v (52/36 - 11/30)</option>
-                                    <option value="shi_pro_12">Shi. Pro 12v (54/40 - 11/30)</option>
-                                    <option value="sram_red_12">SRAM AXS 12v (48/35 - 10/33)</option>
-                                    <option value="campy_12">Campagnolo 12v (50/34 - 11/32)</option>
-                                </optgroup>
-                                <optgroup label="Gravel / CX">
-                                    <option value="grx_1x">Shi. GRX 1x11 (40T - 11/42)</option>
-                                    <option value="sram_xplr">SRAM XPLR 1x12 (40T - 10/44)</option>
-                                    <option value="campy_ekar">Campy Ekar 13v (38T - 9/42)</option>
-                                </optgroup>
-                                <optgroup label="MTB">
-                                    <option value="shi_xt_1x12">Shimano XT 1x12 (32T - 10/51)</option>
-                                    <option value="sram_eagle">SRAM Eagle 1x12 (32T - 10/52)</option>
-                                    <option value="shi_mtb_2x">Shimano MTB 2x11 (36/26 - 11/42)</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                    </div>
 
-                    <div id="quick-selects-b" class="p-3 bg-black/40 rounded-xl border border-zinc-800/80 hidden transition-all"></div>
+                        <div id="quick-selects-a" class="p-3 bg-black/40 rounded-xl border border-zinc-800/80 hidden transition-all"></div>
 
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Plato Elegido</label>
-                            <div class="relative">
-                                <i class="fas fa-cog absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
-                                <input type="number" id="plato-b" value="52" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center shadow-inner">
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div class="bg-black/60 rounded-2xl p-4 border border-zinc-800/80">
+                                <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 text-center">Plato (Dientes)</label>
+                                <div class="relative max-w-[140px] mx-auto">
+                                    <i class="fas fa-cog absolute left-4 top-1/2 transform -translate-y-1/2 text-cyan-500/50 text-lg"></i>
+                                    <input type="number" id="plato-a" value="50" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-zinc-900 border-2 border-zinc-700 rounded-2xl pl-12 pr-4 py-4 text-3xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Piñón Elegido</label>
-                            <div class="relative">
-                                <i class="fas fa-bullseye absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-600"></i>
-                                <input type="number" id="pinon-b" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-black border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center shadow-inner">
+                            <div class="bg-black/60 rounded-2xl p-4 border border-zinc-800/80">
+                                <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 text-center">Piñón (Dientes)</label>
+                                <div class="relative max-w-[140px] mx-auto">
+                                    <i class="fas fa-bullseye absolute left-4 top-1/2 transform -translate-y-1/2 text-cyan-500/50 text-lg"></i>
+                                    <input type="number" id="pinon-a" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-zinc-900 border-2 border-zinc-700 rounded-2xl pl-12 pr-4 py-4 text-3xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="bg-black/50 rounded-2xl p-5 border border-zinc-800/50 mt-auto relative overflow-hidden">
-                    <div class="absolute inset-0 bg-violet-500/5 opacity-0 hover:opacity-100 transition-opacity"></div>
-                    <p class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
-                    <div class="flex justify-between items-end mb-4 relative z-10">
-                        <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
-                        <div class="flex items-baseline gap-1">
-                            <span id="speed-b" class="text-5xl font-black italic text-white leading-none">0.0</span>
-                            <span class="text-xs font-bold text-zinc-500">km/h</span>
+                    <div class="bg-black/50 rounded-2xl p-5 border border-zinc-800/50 mt-auto">
+                        <p class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
+                        <div class="flex justify-between items-end mb-4">
+                            <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
+                            <div class="flex items-baseline gap-1">
+                                <span id="speed-a" class="text-5xl font-black italic text-white leading-none">0.0</span>
+                                <span class="text-xs font-bold text-zinc-500">km/h</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4 text-center border-y border-zinc-800/50 py-3">
+                            <div>
+                                <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Atrancado (60)</span>
+                                <span id="speed-a-60" class="text-sm font-bold font-mono text-red-400">0.0</span>
+                            </div>
+                            <div class="border-x border-zinc-800/50">
+                                <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Crucero (90)</span>
+                                <span id="speed-a-90" class="text-sm font-bold font-mono text-emerald-400">0.0</span>
+                            </div>
+                            <div>
+                                <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Molinillo (110)</span>
+                                <span id="speed-a-110" class="text-sm font-bold font-mono text-cyan-400">0.0</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 divide-x divide-zinc-800 bg-zinc-900 border border-zinc-800 rounded-lg py-3 relative z-10 text-center items-center shadow-inner">
+                            <div class="px-2">
+                                <span id="power-label-a" class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia (Llano 0%)</span>
+                                <span id="power-a" class="text-lg md:text-xl font-black font-mono text-white">0 W</span>
+                            </div>
+                            <div class="px-2">
+                                <span class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Relación W/Kg</span>
+                                <span id="wkg-a" class="text-lg md:text-xl font-black font-mono text-cyan-400">0.0</span>
+                            </div>
+                        </div>
+
+                        <div id="crosschain-warning-a" class="hidden mt-3 p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> Cadena Cruzada: Pierdes ~5W por fricción
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-4 border-t border-zinc-800/50 pt-4">
+                            <div>
+                                <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Avance/Pedalada</span>
+                                <span id="dev-a" class="text-lg font-mono font-bold text-zinc-300">0.00m</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Ratio (Vueltas)</span>
+                                <span id="ratio-a" class="text-lg font-mono font-bold text-zinc-300">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="glass-panel rounded-3xl p-6 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-violet-500 transition-colors duration-300">
+                    <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
+                        <h2 class="text-lg font-black text-white italic uppercase tracking-widest">Nuevo Setup</h2>
+                        <span class="text-[10px] font-bold text-zinc-500 bg-zinc-900 px-2 py-1 rounded">OPCIÓN B</span>
+                    </div>
+
+                    <div class="space-y-5 mb-6 flex-1">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Rueda y Neumático</label>
+                                <select id="wheel-b" onchange="toggleCustomWheel('b')" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-violet-500 focus:outline-none transition-colors">
+                                    <optgroup label="Carretera">
+                                        <option value="2105">700 x 25c</option>
+                                        <option value="2136" selected>700 x 28c</option>
+                                        <option value="2146">700 x 30c</option>
+                                        <option value="2155">700 x 32c</option>
+                                    </optgroup>
+                                    <optgroup label="Gravel">
+                                        <option value="2181">700 x 35c</option>
+                                        <option value="2224">700 x 40c</option>
+                                        <option value="2268">700 x 45c</option>
+                                        <option value="2120">650b x 47</option>
+                                    </optgroup>
+                                    <optgroup label="MTB">
+                                        <option value="2298">29" x 2.20"</option>
+                                        <option value="2326">29" x 2.40"</option>
+                                        <option value="2195">27.5" x 2.20"</option>
+                                    </optgroup>
+                                    <optgroup label="Avanzado">
+                                        <option value="custom">📏 Rueda Custom (mm)</option>
+                                    </optgroup>
+                                </select>
+
+                                <div id="custom-wheel-container-b" class="hidden mt-2 relative">
+                                    <input type="number" id="custom-wheel-b" value="2150" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-violet-500 outline-none transition-colors" placeholder="Ej: 2150">
+                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-zinc-500">MM</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
+                                <select id="preset-b" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-violet-400 font-bold focus:border-violet-500 focus:outline-none transition-colors">
+                                    <option value="custom">⚙️ Custom / Crear Perfil</option>
+                                    <optgroup label="Carretera Estándar">
+                                        <option value="shi_compact_11">Shi. 105/Ult 11v (50/34 - 11/34)</option>
+                                        <option value="shi_semi_12" selected>Shi. Ultegra/DA 12v (52/36 - 11/30)</option>
+                                        <option value="shi_pro_12">Shi. Pro 12v (54/40 - 11/30)</option>
+                                        <option value="sram_red_12">SRAM AXS 12v (48/35 - 10/33)</option>
+                                        <option value="campy_12">Campagnolo 12v (50/34 - 11/32)</option>
+                                    </optgroup>
+                                    <optgroup label="Gravel / CX">
+                                        <option value="grx_1x">Shi. GRX 1x11 (40T - 11/42)</option>
+                                        <option value="sram_xplr">SRAM XPLR 1x12 (40T - 10/44)</option>
+                                        <option value="campy_ekar">Campy Ekar 13v (38T - 9/42)</option>
+                                    </optgroup>
+                                    <optgroup label="MTB">
+                                        <option value="shi_xt_1x12">Shimano XT 1x12 (32T - 10/51)</option>
+                                        <option value="sram_eagle">SRAM Eagle 1x12 (32T - 10/52)</option>
+                                        <option value="shi_mtb_2x">Shimano MTB 2x11 (36/26 - 11/42)</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="quick-selects-b" class="p-3 bg-black/40 rounded-xl border border-zinc-800/80 hidden transition-all"></div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div class="bg-black/60 rounded-2xl p-4 border border-zinc-800/80">
+                                <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 text-center">Plato (Dientes)</label>
+                                <div class="relative max-w-[140px] mx-auto">
+                                    <i class="fas fa-cog absolute left-4 top-1/2 transform -translate-y-1/2 text-violet-500/50 text-lg"></i>
+                                    <input type="number" id="plato-b" value="52" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-zinc-900 border-2 border-zinc-700 rounded-2xl pl-12 pr-4 py-4 text-3xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                                </div>
+                            </div>
+                            <div class="bg-black/60 rounded-2xl p-4 border border-zinc-800/80">
+                                <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 text-center">Piñón (Dientes)</label>
+                                <div class="relative max-w-[140px] mx-auto">
+                                    <i class="fas fa-bullseye absolute left-4 top-1/2 transform -translate-y-1/2 text-violet-500/50 text-lg"></i>
+                                    <input type="number" id="pinon-b" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-zinc-900 border-2 border-zinc-700 rounded-2xl pl-12 pr-4 py-4 text-3xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2 mb-4 text-center border-y border-zinc-800/50 py-3 relative z-10">
-                        <div>
-                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Atrancado (60)</span>
-                            <span id="speed-b-60" class="text-sm font-bold font-mono text-red-400">0.0</span>
+                    <div class="bg-black/50 rounded-2xl p-5 border border-zinc-800/50 mt-auto relative overflow-hidden">
+                        <div class="absolute inset-0 bg-violet-500/5 opacity-0 hover:opacity-100 transition-opacity"></div>
+                        <p class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
+                        <div class="flex justify-between items-end mb-4 relative z-10">
+                            <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
+                            <div class="flex items-baseline gap-1">
+                                <span id="speed-b" class="text-5xl font-black italic text-white leading-none">0.0</span>
+                                <span class="text-xs font-bold text-zinc-500">km/h</span>
+                            </div>
                         </div>
-                        <div class="border-x border-zinc-800/50">
-                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Crucero (90)</span>
-                            <span id="speed-b-90" class="text-sm font-bold font-mono text-emerald-400">0.0</span>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4 text-center border-y border-zinc-800/50 py-3 relative z-10">
+                            <div>
+                                <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Atrancado (60)</span>
+                                <span id="speed-b-60" class="text-sm font-bold font-mono text-red-400">0.0</span>
+                            </div>
+                            <div class="border-x border-zinc-800/50">
+                                <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Crucero (90)</span>
+                                <span id="speed-b-90" class="text-sm font-bold font-mono text-emerald-400">0.0</span>
+                            </div>
+                            <div>
+                                <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Molinillo (110)</span>
+                                <span id="speed-b-110" class="text-sm font-bold font-mono text-cyan-400">0.0</span>
+                            </div>
                         </div>
-                        <div>
-                            <span class="block text-[8px] text-zinc-500 uppercase tracking-widest">Molinillo (110)</span>
-                            <span id="speed-b-110" class="text-sm font-bold font-mono text-cyan-400">0.0</span>
+
+                        <div class="grid grid-cols-2 divide-x divide-zinc-800 bg-zinc-900 border border-zinc-800 rounded-lg py-3 relative z-10 text-center items-center shadow-inner">
+                            <div class="px-2">
+                                <span id="power-label-b" class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia (Llano 0%)</span>
+                                <span id="power-b" class="text-lg md:text-xl font-black font-mono text-white">0 W</span>
+                            </div>
+                            <div class="px-2">
+                                <span class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Relación W/Kg</span>
+                                <span id="wkg-b" class="text-lg md:text-xl font-black font-mono text-violet-400">0.0</span>
+                            </div>
+                        </div>
+
+                        <div id="crosschain-warning-b" class="hidden mt-3 p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse relative z-10">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> Cadena Cruzada: Pierdes ~5W por fricción
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 relative z-10 mt-4 border-t border-zinc-800/50 pt-4">
+                            <div>
+                                <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Avance/Pedalada</span>
+                                <span id="dev-b" class="text-lg font-mono font-bold text-zinc-300">0.00m</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Ratio (Vueltas)</span>
+                                <span id="ratio-b" class="text-lg font-mono font-bold text-zinc-300">0.00</span>
+                            </div>
                         </div>
                     </div>
+                </section>
 
-                    <div class="grid grid-cols-2 divide-x divide-zinc-800 bg-zinc-900 border border-zinc-800 rounded-lg py-3 relative z-10 text-center items-center shadow-inner">
-                        <div class="px-2">
-                            <span id="power-label-b" class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Potencia (Llano 0%)</span>
-                            <span id="power-b" class="text-lg md:text-xl font-black font-mono text-white">0 W</span>
-                        </div>
-                        <div class="px-2">
-                            <span class="block text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Relación W/Kg</span>
-                            <span id="wkg-b" class="text-lg md:text-xl font-black font-mono text-violet-400">0.0</span>
-                        </div>
-                    </div>
-
-                    <div id="crosschain-warning-b" class="hidden mt-3 p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse relative z-10">
-                        <i class="fas fa-exclamation-triangle mr-1"></i> Cadena Cruzada: Pierdes ~5W por fricción
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 relative z-10 mt-4 border-t border-zinc-800/50 pt-4">
-                        <div>
-                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Avance/Pedalada</span>
-                            <span id="dev-b" class="text-lg font-mono font-bold text-zinc-300">0.00m</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Ratio (Vueltas)</span>
-                            <span id="ratio-b" class="text-lg font-mono font-bold text-zinc-300">0.00</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
+            </div>
         </div>
+
+        <div class="mt-20">
+            <div class="flex items-center gap-3 mb-6 px-2">
+                <div class="w-8 h-8 rounded-full bg-purple-900/40 border border-purple-500/30 flex items-center justify-center">
+                    <i class="fas fa-compress-arrows-alt text-purple-400 text-sm"></i>
+                </div>
+                <h2 class="text-xl md:text-2xl font-black text-white italic uppercase tracking-widest">Tyre Pressure Lab</h2>
+            </div>
+            <p class="text-zinc-400 text-sm px-2 mb-8 max-w-3xl">El cálculo de presión se basa en modelos matemáticos profesionales que minimizan la resistencia a la rodadura (Crr) absorbiendo las vibraciones de alta frecuencia, según el peso del sistema, tipo de cubierta y superficie.</p>
+
+            <section class="glass-panel rounded-3xl p-6 md:p-10 relative overflow-hidden shadow-2xl w-full border-l-4 border-purple-500">
+                <div class="absolute top-0 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 relative z-10">
+                    
+                    <div class="space-y-8">
+                        
+                        <div>
+                            <div class="flex justify-between items-end mb-3">
+                                <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest">Peso Total (Tú + Bici + Ropa)</label>
+                                <span class="text-xs font-bold text-purple-400 font-mono bg-purple-950/50 px-2 py-1 rounded border border-purple-500/30">
+                                    <span id="tp-weight-val">85</span> KG
+                                </span>
+                            </div>
+                            <input type="range" min="50" max="130" value="85" class="slider-purple" id="tp-weight" oninput="updateTyrePressure()">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-end mb-3">
+                                <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest">Ancho Real del Neumático</label>
+                                <span class="text-xs font-bold text-purple-400 font-mono bg-purple-950/50 px-2 py-1 rounded border border-purple-500/30">
+                                    <span id="tp-width-val">28</span> MM
+                                </span>
+                            </div>
+                            <input type="range" min="23" max="55" value="28" class="slider-purple" id="tp-width" oninput="updateTyrePressure()">
+                            <p class="text-[9px] text-zinc-500 mt-2 text-right">Mídelo montado, las llantas anchas aumentan el tamaño real.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Superficie Principal</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="tp-terrain-container">
+                                <button class="btn-terrain active py-3 px-2 rounded-xl text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1">Asfalto Perfecto</button>
+                                <button class="btn-terrain py-3 px-2 rounded-xl text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1.05">Asfalto Roto</button>
+                                <button class="btn-terrain py-3 px-2 rounded-xl text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1.15">Gravel Ligero</button>
+                                <button class="btn-terrain py-3 px-2 rounded-xl text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1.3">Gravel Roto</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Sistema</label>
+                            <div class="grid grid-cols-2 gap-2" id="tp-system-container">
+                                <button class="btn-terrain active py-3 px-2 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1">Tubeless / Tubular</button>
+                                <button class="btn-terrain py-3 px-2 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1.08">Cámara (Butyl/Latex)</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <div class="flex flex-col justify-center">
+                        <div class="bg-black/60 border border-purple-500/20 rounded-3xl p-8 relative overflow-hidden text-center shadow-inner h-full flex flex-col justify-center">
+                            <div class="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none"></div>
+                            
+                            <h3 class="text-sm font-black text-white italic uppercase tracking-widest mb-8 relative z-10">Presión Óptima</h3>
+                            
+                            <div class="grid grid-cols-2 gap-4 relative z-10 divide-x divide-zinc-800">
+                                <div class="px-2">
+                                    <span class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
+                                        <i class="fas fa-dot-circle mr-1"></i> Delantera
+                                    </span>
+                                    <div class="mb-1">
+                                        <span id="tp-front-bar" class="text-4xl md:text-5xl font-black font-mono text-white tracking-tighter">0.0</span>
+                                        <span class="text-sm font-bold text-purple-400">BAR</span>
+                                    </div>
+                                    <div>
+                                        <span id="tp-front-psi" class="text-xl font-bold font-mono text-zinc-400">00</span>
+                                        <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">PSI</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="px-2">
+                                    <span class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
+                                        <i class="fas fa-bullseye mr-1"></i> Trasera
+                                    </span>
+                                    <div class="mb-1">
+                                        <span id="tp-rear-bar" class="text-4xl md:text-5xl font-black font-mono text-white tracking-tighter">0.0</span>
+                                        <span class="text-sm font-bold text-purple-400">BAR</span>
+                                    </div>
+                                    <div>
+                                        <span id="tp-rear-psi" class="text-xl font-bold font-mono text-zinc-400">00</span>
+                                        <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">PSI</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 pt-6 border-t border-zinc-800/50 relative z-10 text-left">
+                                <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-bold mb-2">
+                                    <i class="fas fa-info-circle text-purple-500 mr-1"></i> Velo Insight:
+                                </p>
+                                <p class="text-xs text-zinc-400 leading-relaxed font-mono">
+                                    La rueda trasera soporta aprox. el 55-60% del peso, por eso necesita más presión. Una presión excesiva aumenta la resistencia al rebotar contra las imperfecciones del suelo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
     </main>
 
     <div id="delete-modal" class="fixed inset-0 z-[400] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-all opacity-0">
@@ -407,8 +534,20 @@
     <script src="layout.js?v=7.1"></script>
 
     <script>
+        // ==========================================
+        // LÓGICA GEARING LAB (Existente modificada)
+        // ==========================================
         let currentGradient = 0;
         let gradientLabel = "Llano 0%";
+
+        function syncWeights() {
+            const w = document.getElementById('system-weight').value;
+            const wSlider = document.getElementById('tp-weight');
+            if(wSlider && w >= wSlider.min && w <= wSlider.max) {
+                wSlider.value = w;
+                updateTyrePressure();
+            }
+        }
 
         function setGradient(percent, labelText) {
             currentGradient = percent;
@@ -424,7 +563,7 @@
         }
 
         const groupsetsDB = {
-            shi_compact_11: { name: "11v Compact", platos: [50, 34], pinones: [11, 12, 13, 14, 15, 17, 19, 21, 24, 27, 30, 34] },
+            shi_compact_11: { name: "11v Compact", platos: [50, 34], pinones: [11, 12, 13, 14, 15, 17, 19, 21, 24, 27, 30] },
             shi_semi_12: { name: "12v Semi-Compact", platos: [52, 36], pinones: [11, 12, 13, 14, 15, 16, 17, 19, 21, 24, 27, 30] },
             shi_pro_12: { name: "12v Pro", platos: [54, 40], pinones: [11, 12, 13, 14, 15, 16, 17, 19, 21, 24, 27, 30] },
             sram_red_12: { name: "SRAM 12v", platos: [48, 35], pinones: [10, 11, 12, 13, 14, 15, 17, 19, 21, 24, 28, 33] },
@@ -501,7 +640,10 @@
             if (!params.has('share')) return false;
 
             if (params.has('rpm')) rpmSlider.value = params.get('rpm');
-            if (params.has('w')) weightInput.value = params.get('w');
+            if (params.has('w')) {
+                weightInput.value = params.get('w');
+                syncWeights(); // Sincroniza con TP Lab
+            }
             if (params.has('g')) {
                 let g = params.get('g');
                 setGradient(parseInt(g), g == '8' ? 'Puerto 8%' : g == '12' ? 'Muro 12%' : 'Llano 0%');
@@ -768,7 +910,10 @@
             const saved = localStorage.getItem('velo_calc_memory');
             if (saved) {
                 const config = JSON.parse(saved);
-                rpmSlider.value = config.rpm || 90; weightInput.value = config.weight || 85;
+                rpmSlider.value = config.rpm || 90; 
+                weightInput.value = config.weight || 85;
+                syncWeights(); // Sincroniza con TP Lab
+
                 window.customMemoryA = { platos: config.a.customP || "50, 34", pinones: config.a.customC || "11, 12, 13, 14, 15, 17, 19, 21, 24, 28" };
                 window.customMemoryB = { platos: config.b.customP || "52, 36", pinones: config.b.customC || "11, 12, 13, 14, 15, 17, 19, 21, 24, 28" };
 
@@ -881,7 +1026,6 @@
 
             calcSide('a'); calcSide('b');
             
-            // Actualiza el CSS de la barra del slider de RPM
             const rpmPercent = ((rpm - rpmSlider.min) / (rpmSlider.max - rpmSlider.min)) * 100;
             rpmSlider.style.setProperty('--val', `${rpmPercent}%`);
             
@@ -898,6 +1042,85 @@
             document.getElementById(`preset-${id}`).addEventListener('change', () => { renderQuickSelects(id, false); });
         });
 
+        // ==========================================
+        // LÓGICA TYRE PRESSURE LAB (NUEVO)
+        // ==========================================
+        
+        let tpTerrainFactor = 1; // 1 = Perfecto, 1.05 = Roto, 1.15 = Gravel Ligero, 1.3 = Gravel Roto
+        let tpSystemFactor = 1;  // 1 = Tubeless, 1.08 = Cámara
+
+        const tpWeightSlider = document.getElementById('tp-weight');
+        const tpWidthSlider = document.getElementById('tp-width');
+        
+        function updateTyrePressure() {
+            const w = parseInt(tpWeightSlider.value);
+            const width = parseInt(tpWidthSlider.value);
+            
+            document.getElementById('tp-weight-val').innerText = w;
+            document.getElementById('tp-width-val').innerText = width;
+
+            // Ecuación base (aprox. modelo de Silca/SRAM)
+            // Peso base * factor ancho * terreno * cámara
+            const baseWeight = (w * 0.453592) * 2.20462; // Convertimos a Lbs para la fórmula
+            
+            // Un neumático más ancho requiere MENOS presión exponencialmente
+            const widthFactor = Math.pow((28 / width), 1.5); 
+            
+            let optimalPSI_rear = (baseWeight / 2.5) * widthFactor * tpTerrainFactor * tpSystemFactor;
+            
+            // Limits de seguridad (no menos de 20 PSI, no más de 120 PSI)
+            optimalPSI_rear = Math.min(120, Math.max(20, optimalPSI_rear));
+            
+            // La rueda delantera siempre lleva menos presión (aprox 4-6% menos porque carga menos peso)
+            const optimalPSI_front = optimalPSI_rear * 0.95;
+
+            // Conversión a BAR (1 BAR = 14.5038 PSI)
+            const barRear = (optimalPSI_rear / 14.5038).toFixed(2);
+            const barFront = (optimalPSI_front / 14.5038).toFixed(2);
+
+            // Actualizar UI
+            document.getElementById('tp-rear-psi').innerText = Math.round(optimalPSI_rear);
+            document.getElementById('tp-rear-bar').innerText = barRear;
+            
+            document.getElementById('tp-front-psi').innerText = Math.round(optimalPSI_front);
+            document.getElementById('tp-front-bar').innerText = barFront;
+
+            // Guardar preferencias de Tyres
+            localStorage.setItem('velo_tp_width', width);
+            localStorage.setItem('velo_tp_terrain', tpTerrainFactor);
+            localStorage.setItem('velo_tp_system', tpSystemFactor);
+        }
+
+        // Listeners para botones de Terreno y Sistema
+        document.querySelectorAll('#tp-terrain-container .btn-terrain').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('#tp-terrain-container .btn-terrain').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                tpTerrainFactor = parseFloat(e.target.dataset.val);
+                updateTyrePressure();
+            });
+        });
+
+        document.querySelectorAll('#tp-system-container .btn-terrain').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('#tp-system-container .btn-terrain').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                tpSystemFactor = parseFloat(e.target.dataset.val);
+                updateTyrePressure();
+            });
+        });
+
+        tpWeightSlider.addEventListener('input', () => {
+            document.getElementById('system-weight').value = tpWeightSlider.value; // Sincroniza hacia arriba
+            calculateTelemetry(); // Recalcula la velocidad arriba
+            updateTyrePressure();
+        });
+        
+        tpWidthSlider.addEventListener('input', updateTyrePressure);
+
+        // ==========================================
+        // INIT GLOBAL
+        // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
             if (!loadFromURL()) {
                 loadConfigFromMemory(); 
@@ -905,52 +1128,33 @@
             } else {
                 calculateTelemetry();
             }
-        });
-    </script>
 
-    <div id="cookie-banner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-8 md:bottom-8 md:w-[400px] bg-zinc-900/95 backdrop-blur-md border border-zinc-700 shadow-2xl rounded-2xl p-6 z-[999] transform transition-transform duration-500 translate-y-full">
-        <div class="flex items-center gap-3 mb-3">
-            <i class="fas fa-shield-alt text-cyan-500 text-xl"></i>
-            <h3 class="text-white font-black uppercase tracking-widest text-sm">Privacidad y Telemetría</h3>
-        </div>
-        <p class="text-zinc-400 text-xs leading-relaxed mb-5 font-mono">
-            En Velo Insights utilizamos cookies propias y de terceros para medir el rendimiento de la web (telemetría) y ofrecerte la mejor experiencia. 
-            <a href="privacidad.html" class="text-cyan-400 hover:text-cyan-300 underline decoration-cyan-500/30">Leer política completa</a>.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-3">
-            <button id="btn-accept-cookies" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-widest py-2.5 rounded-xl transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                Aceptar Todas
-            </button>
-            <button id="btn-reject-cookies" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold uppercase tracking-widest py-2.5 rounded-xl border border-zinc-700 transition-colors">
-                Solo Esenciales
-            </button>
-        </div>
-    </div>
+            // Init Tyre Pressure con datos guardados
+            const savedWidth = localStorage.getItem('velo_tp_width');
+            const savedTerrain = localStorage.getItem('velo_tp_terrain');
+            const savedSystem = localStorage.getItem('velo_tp_system');
 
-    <script>
-        // Lógica del Banner de Cookies
-        document.addEventListener('DOMContentLoaded', () => {
-            const banner = document.getElementById('cookie-banner');
-            const btnAccept = document.getElementById('btn-accept-cookies');
-            const btnReject = document.getElementById('btn-reject-cookies');
-
-            if (!localStorage.getItem('velo_cookies_consent')) {
-                banner.classList.remove('hidden');
-                setTimeout(() => {
-                    banner.classList.remove('translate-y-full');
-                }, 100);
+            if(savedWidth) {
+                tpWidthSlider.value = savedWidth;
             }
-
-            const hideBanner = (decision) => {
-                localStorage.setItem('velo_cookies_consent', decision);
-                banner.classList.add('translate-y-full');
-                setTimeout(() => {
-                    banner.classList.add('hidden');
-                }, 500);
-            };
-
-            if(btnAccept) btnAccept.addEventListener('click', () => hideBanner('accepted'));
-            if(btnReject) btnReject.addEventListener('click', () => hideBanner('rejected'));
+            if(savedTerrain) {
+                tpTerrainFactor = parseFloat(savedTerrain);
+                document.querySelectorAll('#tp-terrain-container .btn-terrain').forEach(b => {
+                    b.classList.remove('active');
+                    if(parseFloat(b.dataset.val) === tpTerrainFactor) b.classList.add('active');
+                });
+            }
+            if(savedSystem) {
+                tpSystemFactor = parseFloat(savedSystem);
+                document.querySelectorAll('#tp-system-container .btn-terrain').forEach(b => {
+                    b.classList.remove('active');
+                    if(parseFloat(b.dataset.val) === tpSystemFactor) b.classList.add('active');
+                });
+            }
+            
+            // Fuerza la sincronización de pesos al cargar
+            syncWeights();
+            updateTyrePressure();
         });
     </script>
 </body>
