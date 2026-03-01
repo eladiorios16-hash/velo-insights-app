@@ -289,37 +289,37 @@
             } else loadMoreContainer.innerHTML = '';
         }
 
-        function getRecommendations(currentArticle) {
+     function getRecommendations(currentArticle) {
+            // Quitamos la noticia que estamos leyendo actualmente de la lista
             let availableNews = allNews.filter(n => n.id != currentArticle.id);
             let recommendations = [];
 
             if (availableNews.length === 0) return recommendations;
 
-            // 1. Misma categoría
+            // 1. Buscamos la primera noticia RELACIONADA (mismo tag)
             let relatedIndex = availableNews.findIndex(n => (n.tag || '').toUpperCase() === (currentArticle.tag || '').toUpperCase());
             if (relatedIndex !== -1) {
                 recommendations.push(availableNews[relatedIndex]);
-                availableNews.splice(relatedIndex, 1);
+                availableNews.splice(relatedIndex, 1); // SÚPER IMPORTANTE: sacarla de la lista
             }
 
-            // 2. Descubrimiento (Distinta categoría)
-            if (availableNews.length > 0) {
+            // 2. Si todavía hay hueco, buscamos una de DESCUBRIMIENTO (diferente tag)
+            if (availableNews.length > 0 && recommendations.length < 2) {
                 let differentIndex = availableNews.findIndex(n => (n.tag || '').toUpperCase() !== (currentArticle.tag || '').toUpperCase());
                 if (differentIndex !== -1) {
                     recommendations.push(availableNews[differentIndex]);
-                } else {
-                    recommendations.push(availableNews[0]);
+                    availableNews.splice(differentIndex, 1); // SÚPER IMPORTANTE: sacarla de la lista
                 }
             }
 
-            // Fallback
-            if (recommendations.length < 2 && availableNews.length > 0) {
-                 recommendations.push(availableNews[0]);
+            // 3. Relleno de seguridad (Si faltan noticias, coge las siguientes más nuevas sin repetir)
+            while (recommendations.length < 2 && availableNews.length > 0) {
+                recommendations.push(availableNews[0]);
+                availableNews.splice(0, 1);
             }
 
             return recommendations;
         }
-
         window.openArticle = (id) => {
             const article = allNews.find(n => n.id == id);
             if(!article) return;
