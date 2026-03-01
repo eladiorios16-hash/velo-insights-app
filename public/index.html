@@ -162,6 +162,42 @@
             </div>
         </section>
 
+        <section id="countdown-section" class="hidden mb-12 animate-fade-in-up mt-2">
+            <div class="bg-gradient-to-r from-cyan-950/30 to-black border border-cyan-900/40 rounded-2xl p-6 relative overflow-hidden shadow-[0_10px_30px_rgba(6,182,212,0.05)] flex flex-col lg:flex-row items-center justify-between gap-6">
+                <div class="absolute -top-10 -left-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="text-center lg:text-left z-10">
+                    <h3 class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-1 flex items-center justify-center lg:justify-start gap-2">
+                        <i class="fas fa-stopwatch"></i> NEXT RACE
+                    </h3>
+                    <h2 id="cd-race-name" class="text-2xl md:text-3xl font-heading text-white italic uppercase tracking-tighter">--</h2>
+                </div>
+                
+                <div class="flex items-center gap-2 sm:gap-4 z-10">
+                    <div class="bg-black/80 border border-zinc-800 rounded-xl w-14 h-14 sm:w-16 sm:h-16 flex flex-col items-center justify-center shadow-inner">
+                        <span id="cd-days" class="text-xl sm:text-2xl font-black font-mono text-white leading-none">00</span>
+                        <span class="text-[7px] sm:text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Días</span>
+                    </div>
+                    <div class="text-zinc-600 font-bold animate-pulse">:</div>
+                    <div class="bg-black/80 border border-zinc-800 rounded-xl w-14 h-14 sm:w-16 sm:h-16 flex flex-col items-center justify-center shadow-inner">
+                        <span id="cd-hours" class="text-xl sm:text-2xl font-black font-mono text-white leading-none">00</span>
+                        <span class="text-[7px] sm:text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Hrs</span>
+                    </div>
+                    <div class="text-zinc-600 font-bold animate-pulse">:</div>
+                    <div class="bg-black/80 border border-zinc-800 rounded-xl w-14 h-14 sm:w-16 sm:h-16 flex flex-col items-center justify-center shadow-inner">
+                        <span id="cd-minutes" class="text-xl sm:text-2xl font-black font-mono text-white leading-none">00</span>
+                        <span class="text-[7px] sm:text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Min</span>
+                    </div>
+                    <div class="text-zinc-600 font-bold animate-pulse">:</div>
+                    <div class="bg-black/80 border border-zinc-800 rounded-xl w-14 h-14 sm:w-16 sm:h-16 flex flex-col items-center justify-center shadow-inner relative overflow-hidden">
+                        <div class="absolute bottom-0 left-0 w-full h-1 bg-cyan-500/50"></div>
+                        <span id="cd-seconds" class="text-xl sm:text-2xl font-black font-mono text-cyan-400 leading-none">00</span>
+                        <span class="text-[7px] sm:text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Seg</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section>
             <div class="flex justify-between items-end px-2 mb-3">
                 <div class="text-left overflow-hidden">
@@ -380,6 +416,51 @@
             document.getElementById('amateur-bar').style.width = d.b;
         }
 
+        // LÓGICA DE LA CUENTA REGRESIVA
+        let countdownTimer;
+        function setupCountdown(races) {
+            clearInterval(countdownTimer);
+            const now = new Date();
+            
+            // Buscamos la carrera más próxima en el futuro
+            const upcomingRaces = races.filter(r => {
+                const start = new Date(r.dateISO);
+                // Si no hay hora, asumimos las 10:00 AM para el reloj
+                start.setHours(10, 0, 0, 0); 
+                return start > now;
+            }).sort((a,b) => new Date(a.dateISO) - new Date(b.dateISO));
+
+            if (upcomingRaces.length > 0) {
+                const nextRace = upcomingRaces[0];
+                const targetDate = new Date(nextRace.dateISO);
+                targetDate.setHours(10, 0, 0, 0);
+
+                document.getElementById('countdown-section').classList.remove('hidden');
+                document.getElementById('cd-race-name').innerText = nextRace.name;
+
+                countdownTimer = setInterval(() => {
+                    const currentTime = new Date().getTime();
+                    const distance = targetDate.getTime() - currentTime;
+
+                    if (distance < 0) {
+                        clearInterval(countdownTimer);
+                        document.getElementById('countdown-section').classList.add('hidden');
+                        return;
+                    }
+
+                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    document.getElementById('cd-days').innerText = days.toString().padStart(2, '0');
+                    document.getElementById('cd-hours').innerText = hours.toString().padStart(2, '0');
+                    document.getElementById('cd-minutes').innerText = minutes.toString().padStart(2, '0');
+                    document.getElementById('cd-seconds').innerText = seconds.toString().padStart(2, '0');
+                }, 1000);
+            }
+        }
+
         function renderRaceControlRoom(races) {
             const liveRace = races.find(r => r.status === 'Live');
             if (liveRace) {
@@ -412,29 +493,56 @@
             }
         }
 
-        async function loadContent() {
-            const [newsRes, calRes, teamsRes, glosRes, rankRes, trendRes] = await Promise.all([
-                fetch('/api/news').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/calendar').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/glossary').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/ranking').then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch('/api/trending').then(r => r.ok ? r.json() : []).catch(() => [])
-            ]);
+        // CARGA ASÍNCRONA OPTIMIZADA (PERFORMANCE BOOT)
+        function loadContentOptimized() {
+            // Disparamos todas las peticiones a la vez
+            const pNews = fetch('/api/news').then(r => r.ok ? r.json() : []).catch(() => []);
+            const pCal = fetch('/api/calendar').then(r => r.ok ? r.json() : []).catch(() => []);
+            const pTeams = fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => []);
+            const pGlos = fetch('/api/glossary').then(r => r.ok ? r.json() : []).catch(() => []);
+            const pRank = fetch('/api/ranking').then(r => r.ok ? r.json() : []).catch(() => []);
+            const pTrend = fetch('/api/trending').then(r => r.ok ? r.json() : []).catch(() => []);
 
-            renderNews(newsRes);
+            // Noticia principal (Se renderiza sola en cuanto llega)
+            pNews.then(renderNews);
             
-            const insightCard = document.getElementById('ranking-insight-text');
-            if (glosRes && glosRes.length > 0) {
-                const itemsWithInsight = glosRes.filter(g => g.insight && g.insight.length > 5);
-                if (itemsWithInsight.length > 0) {
-                    const selected = itemsWithInsight[Math.floor(Math.random() * itemsWithInsight.length)];
-                    insightCard.innerHTML = `<strong class="text-white">${selected.term}:</strong> ${selected.insight}`;
-                } else {
-                    insightCard.innerHTML = "Actualizando base de datos técnica para la temporada 2026. Revisando métricas...";
+            // Ranking UCI
+            pRank.then(rank => {
+                if(rank && rank.length > 0) renderRanking(rank);
+                else renderRanking([{ name: "Añade ciclistas", team: "en tu panel Admin", points: 0 }]);
+            });
+            
+            // Módulos del Calendario
+            pCal.then(cal => {
+                const races = cal.map(r => ({ ...r, ...(typeof r.details === 'string' ? JSON.parse(r.details || '{}') : r.details || {}) }));
+                renderRaceControlRoom(races);
+                renderTimeline(races);
+                renderUpcomingWidget(races);
+                setupCountdown(races); // Lanzamos el reloj
+            });
+            
+            // Dato destacado (Glosario)
+            pGlos.then(glos => {
+                const insightCard = document.getElementById('ranking-insight-text');
+                if (glos && glos.length > 0) {
+                    const itemsWithInsight = glos.filter(g => g.insight && g.insight.length > 5);
+                    if (itemsWithInsight.length > 0) {
+                        const selected = itemsWithInsight[Math.floor(Math.random() * itemsWithInsight.length)];
+                        insightCard.innerHTML = `<strong class="text-white">${selected.term}:</strong> ${selected.insight}`;
+                    } else {
+                        insightCard.innerHTML = "Actualizando base de datos técnica para la temporada...";
+                    }
                 }
-            }
+            });
 
+            // Módulo de Trends (Este necesita juntar varios datos)
+            Promise.all([pTrend, pTeams, pNews, pCal]).then(([trendRes, teamsRes, newsRes, calRes]) => {
+                renderTrending(trendRes, teamsRes, newsRes, calRes);
+            });
+        }
+
+        // Función extraída para organizar el código de Trends
+        function renderTrending(trendRes, teamsRes, newsRes, calRes) {
             const topicsMap = new Map();
             let riders = [];
             
@@ -563,15 +671,6 @@
             } else {
                 document.getElementById('trending-riders-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">Esperando resultados...</p>`;
             }
-
-            const races = calRes.map(r => ({ ...r, ...(typeof r.details === 'string' ? JSON.parse(r.details || '{}') : r.details || {}) }));
-            
-            renderRaceControlRoom(races);
-            renderTimeline(races);
-            renderUpcomingWidget(races);
-
-            if(rankRes && rankRes.length > 0) renderRanking(rankRes);
-            else renderRanking([{ name: "Añade ciclistas", team: "en tu panel Admin", points: 0 }]);
         }
 
         function renderNews(news) {
@@ -592,7 +691,7 @@
 
                         <div class="md:col-span-5 flex flex-col justify-center space-y-4 pr-4">
                             <div class="flex items-center gap-3 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                                <span>${n.date || 'HOY'}</span><span class="w-1 h-1 bg-zinc-700 rounded-full"></span><span>4 MIN READ</span>
+                                <span>${n.date || 'HOY'}</span><span class="w-1 h-1 bg-zinc-700 rounded-full"></span><span>ÚLTIMA HORA</span>
                             </div>
                             <h3 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-tight group-hover:text-cyan-400 transition-colors">${n.title}</h3>
                             <p class="text-sm text-zinc-400 leading-relaxed line-clamp-3">${excerpt}</p>
@@ -711,7 +810,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initComparisonEngine();
-            loadContent(); 
+            loadContentOptimized(); // Llamamos a la nueva función ultra-rápida
         });
     </script>
 
