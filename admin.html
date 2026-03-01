@@ -19,6 +19,12 @@
         
         .input-dark { background-color: #0f172a; border: 1px solid #334155; color: #f1f5f9; transition: all 0.3s; }
         .input-dark:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+
+        .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-6 flex flex-col">
@@ -28,7 +34,7 @@
             <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-black text-xl shadow-lg shadow-emerald-500/20">V</div>
             <h1 class="text-xl md:text-2xl font-bold text-white tracking-tight">VELO <span class="text-emerald-400">ADMIN</span></h1>
         </div>
-        <button onclick="logout()" class="text-slate-400 hover:text-red-400 transition text-sm font-semibold flex items-center gap-2">
+        <button onclick="logout()" class="text-slate-400 hover:text-red-400 transition text-sm font-semibold flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700">
             <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Cerrar Sesión</span>
         </button>
     </header>
@@ -45,10 +51,36 @@
         <button onclick="openCopilot()" id="btn-copilot" class="nav-btn shrink-0 px-5 py-2.5 bg-indigo-950/40 hover:bg-indigo-900 text-indigo-300 rounded-xl transition flex items-center gap-2 border border-indigo-500/30 text-sm font-bold shadow-[0_0_15px_rgba(99,102,241,0.15)]"><i class="fas fa-robot text-indigo-400"></i> Copilot IA</button>
     </nav>
 
-    <main id="content-area" class="glass rounded-2xl p-4 md:p-8 flex-1 overflow-x-auto relative">
-        <div class="flex flex-col items-center justify-center h-64 text-slate-500">
-            <i class="fas fa-database text-4xl mb-4 opacity-50"></i>
-            <p>Selecciona una categoría arriba para gestionar la base de datos.</p>
+    <main id="content-area" class="glass rounded-2xl p-4 md:p-8 flex-1 overflow-x-auto relative min-h-[500px]">
+        <div class="animate-fade-in-up max-w-5xl mx-auto mt-6 md:mt-10">
+            <div class="text-center mb-12">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 mb-6 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                    <i class="fas fa-database text-3xl text-emerald-400"></i>
+                </div>
+                <h2 class="text-3xl md:text-5xl font-black text-white tracking-tight mb-4 italic uppercase">Command <span class="text-emerald-500">Center</span></h2>
+                <p class="text-slate-400 text-base md:text-lg max-w-2xl mx-auto">Bienvenido al motor de Velo Insights. Selecciona un módulo en la barra superior para gestionar el contenido o inicia el Copilot para generar artículos de alto rendimiento.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div onclick="loadTable('noticias')" class="bg-slate-800/40 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/50 rounded-2xl p-6 cursor-pointer transition-all hover:-translate-y-1 group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -mr-10 -mt-10 transition-all group-hover:bg-emerald-500/10"></div>
+                    <i class="fas fa-newspaper text-emerald-400 text-2xl mb-4"></i>
+                    <h3 class="text-lg font-bold text-white mb-2 uppercase tracking-widest">Noticias & Journal</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Gestiona los artículos, reportajes y análisis técnicos de la portada.</p>
+                </div>
+                <div onclick="openCopilot()" class="bg-indigo-900/20 hover:bg-indigo-900/40 border border-indigo-500/20 hover:border-indigo-500/50 rounded-2xl p-6 cursor-pointer transition-all hover:-translate-y-1 group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -mr-10 -mt-10 transition-all group-hover:bg-indigo-500/20"></div>
+                    <i class="fas fa-robot text-indigo-400 text-2xl mb-4"></i>
+                    <h3 class="text-lg font-bold text-white mb-2 uppercase tracking-widest">Copilot IA Engine</h3>
+                    <p class="text-xs text-indigo-300/70 leading-relaxed">Asistente de redacción inteligente. Genera artículos formateados en segundos.</p>
+                </div>
+                <div onclick="loadTable('calendario')" class="bg-slate-800/40 hover:bg-slate-800 border border-slate-700 hover:border-blue-500/50 rounded-2xl p-6 cursor-pointer transition-all hover:-translate-y-1 group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl -mr-10 -mt-10 transition-all group-hover:bg-blue-500/10"></div>
+                    <i class="fas fa-calendar-alt text-blue-400 text-2xl mb-4"></i>
+                    <h3 class="text-lg font-bold text-white mb-2 uppercase tracking-widest">Calendario WT</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Actualiza carreras, fechas, ganadores y perfiles de etapa.</p>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -71,7 +103,7 @@
     <script>
         let currentTable = '';
         let currentData = [];
-        let globalTeamsData = []; // Guardamos los equipos aquí para el desplegable
+        let globalTeamsData = []; 
         let isEditing = false;
         let editId = null;
 
@@ -118,6 +150,30 @@
             } catch (e) { content.innerHTML = `<div class="text-red-400 text-center">Error: ${e.message}</div>`; }
         }
 
+        // --- SISTEMA DE BÚSQUEDA / FILTRO ---
+        function filterTable() {
+            const input = document.getElementById("searchInput");
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById("dataTable");
+            if (!table) return;
+            const trs = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < trs.length; i++) { 
+                let display = false;
+                const tds = trs[i].getElementsByTagName("td");
+                for(let j = 0; j < tds.length - 1; j++) { 
+                    if(tds[j]) {
+                        const txtValue = tds[j].textContent || tds[j].innerText;
+                        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                            display = true;
+                            break;
+                        }
+                    }
+                }
+                trs[i].style.display = display ? "" : "none";
+            }
+        }
+
         // --- SISTEMA VELO COPILOT (IA) ---
         function openCopilot() {
             currentTable = 'copilot';
@@ -127,7 +183,7 @@
 
             const container = document.getElementById('content-area');
             container.innerHTML = `
-                <div class="max-w-4xl mx-auto w-full animate-fade-in pb-10">
+                <div class="max-w-4xl mx-auto w-full animate-fade-in-up pb-10 mt-4">
                     <div class="mb-8">
                         <h2 class="text-3xl md:text-4xl font-black text-white flex items-center gap-3 uppercase italic tracking-tighter">
                             <span class="w-3 h-8 bg-indigo-500 rounded-sm transform skew-x-[-15deg]"></span> 
@@ -182,7 +238,6 @@
 
             if(!prompt.trim()) { alert("Por favor, dale instrucciones al Copilot."); return; }
 
-            // Estado de carga
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> PROCESANDO DATOS IA...';
             btn.disabled = true;
             btn.classList.replace('bg-indigo-600', 'bg-slate-700');
@@ -202,7 +257,6 @@
                     resultArea.value = data.result;
                     resultContainer.classList.remove('hidden');
                     
-                    // Hacer scroll hacia el resultado
                     setTimeout(() => {
                         resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }, 100);
@@ -214,7 +268,6 @@
                 alert("Error de conexión con el servidor IA: " + e.message);
             }
 
-            // Restaurar botón
             btn.innerHTML = '<i class="fas fa-bolt"></i> INICIAR SECUENCIA DE REDACCIÓN';
             btn.disabled = false;
             btn.classList.replace('bg-slate-700', 'bg-indigo-600');
@@ -225,7 +278,6 @@
             const resultArea = document.getElementById('ai-result');
             resultArea.select();
             document.execCommand('copy');
-            // Deseleccionar para que no se quede todo azul
             window.getSelection().removeAllRanges();
             alert("✅ ¡HTML copiado al portapapeles! Listo para pegarse en una noticia.");
         }
@@ -236,20 +288,25 @@
             
             let extraBtn = '';
             if (currentTable === 'trending') {
-                extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 mr-3 shadow-lg transition-transform active:scale-95 text-sm"><i class="fas fa-brain"></i> AUTO-GENERAR (IA)</button>`;
+                extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform active:scale-95 text-sm shrink-0"><i class="fas fa-brain"></i> AUTO-GENERAR</button>`;
             }
 
             let headerHtml = `
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 animate-fade-in-up">
                     <h2 class="text-3xl font-bold text-white capitalize flex items-center gap-3"><span class="w-2 h-8 bg-emerald-500 rounded-full"></span>${currentTable}</h2>
-                    <div class="flex items-center">
+                    
+                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                        <div class="relative flex-1 lg:w-64 min-w-[200px]">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500"></i>
+                            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Buscar en ${currentTable}..." class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl pl-10 pr-4 py-2 text-sm focus:border-emerald-500 focus:outline-none transition-colors shadow-inner">
+                        </div>
                         ${extraBtn}
-                        <button onclick="openCreateModal()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform active:scale-95 text-sm"><i class="fas fa-plus-circle"></i> AÑADIR NUEVO</button>
+                        <button onclick="openCreateModal()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-5 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-transform active:scale-95 text-sm shrink-0"><i class="fas fa-plus-circle"></i> NUEVO</button>
                     </div>
                 </div>`;
 
             if (!data || data.length === 0) { 
-                container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10 bg-slate-900/50 rounded-xl border border-slate-800">No hay datos en esta categoría. Puedes añadirlos a mano o usar el auto-generador.</div>'; 
+                container.innerHTML = headerHtml + '<div class="text-center text-slate-400 p-10 bg-slate-900/50 rounded-xl border border-slate-800">No hay datos en esta categoría. Puedes añadirlos a mano.</div>'; 
                 return; 
             }
 
@@ -257,7 +314,7 @@
             const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight'];
             const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
 
-            let tableHtml = `<div class="overflow-hidden rounded-xl border border-slate-700 shadow-2xl"><table class="w-full text-left text-sm text-slate-300">
+            let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl animate-fade-in-up"><table id="dataTable" class="w-full text-left text-sm text-slate-300 whitespace-nowrap">
                 <thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr>
                     ${displayCols.map(c => `<th class="p-4">${c}</th>`).join('')}
                     <th class="p-4 text-right">ACCIONES</th>
@@ -277,13 +334,15 @@
                     else if (col === 'tipo' && currentTable === 'trending') val = val === 'ciclista' ? '<span class="text-emerald-400 font-bold">🚴‍♂️ CICLISTA</span>' : '<span class="text-cyan-400 font-bold"># TOPIC</span>';
                     else if (col === 'points' && currentTable === 'ranking') val = `<span class="text-amber-400 font-bold text-base">${val} PTS</span>`;
                     else if (typeof val === 'string' && val.startsWith('assets/')) val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md border border-slate-700">`;
-                    else if (typeof val === 'string' && val.length > 40) val = val.substring(0, 40) + '...';
+                    else if (typeof val === 'string' && val.length > 50) val = val.substring(0, 50) + '...';
                     
                     tableHtml += `<td class="p-4 font-medium">${val || '-'}</td>`;
                 });
-                tableHtml += `<td class="p-4 text-right flex justify-end gap-2">
-                    <button onclick='openEditModal(${row.id})' class="bg-blue-500/10 text-blue-400 p-2 rounded hover:bg-blue-500 hover:text-white transition"><i class="fas fa-pen"></i></button>
-                    <button onclick='deleteItem(${row.id})' class="bg-red-500/10 text-red-400 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
+                tableHtml += `<td class="p-4 text-right">
+                    <div class="flex justify-end gap-2">
+                        <button onclick='openEditModal(${row.id})' class="bg-blue-500/10 text-blue-400 p-2 rounded-lg hover:bg-blue-500 hover:text-white transition"><i class="fas fa-pen"></i></button>
+                        <button onclick='deleteItem(${row.id})' class="bg-red-500/10 text-red-400 p-2 rounded-lg hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
+                    </div>
                 </td></tr>`;
             });
             container.innerHTML = headerHtml + tableHtml + `</tbody></table></div>`;
