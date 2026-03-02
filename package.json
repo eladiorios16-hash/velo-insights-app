@@ -4,7 +4,8 @@
   "description": "Servidor backend Velo Insights",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:css": "npx @tailwindcss/cli -i ./input.css -o ./public/assets/tailwind.css --minify"
   },
   "dependencies": {
     "@google/genai": "^1.42.0",
@@ -16,5 +17,9 @@
     "helmet": "^8.1.0",
     "mysql2": "^3.17.0",
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.2.1",
+    "@tailwindcss/cli": "^4.2.1"
   }
 }
