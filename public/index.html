@@ -56,7 +56,7 @@
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         .timeline-tick { width: 1px; height: 12px; background-color: #3f3f46; margin: 0 auto; transition: all 0.3s; }
-        .timeline-day { flex: 0 0 52px; height: 75px; display: flex; flex-direction: column; justify-content: start; align-items: center; padding-top: 10px; transition: all 0.2s; position: relative; cursor: pointer; }
+        .timeline-day { flex: 0 0 52px; height: 75px; display: flex; flex-direction: column; justify-content: start; align-items: center; padding-top: 10px; transition: all 0.2s; position: relative; cursor: pointer; text-decoration: none; }
         
         .day-active { background: rgba(139, 92, 246, 0.05); }
         .day-active .timeline-tick { display: none; } 
@@ -429,7 +429,6 @@
             // Buscamos la carrera más próxima en el futuro
             const upcomingRaces = races.filter(r => {
                 const start = new Date(r.dateISO);
-                // Si no hay hora, asumimos las 10:00 AM para el reloj
                 start.setHours(10, 0, 0, 0); 
                 return start > now;
             }).sort((a,b) => new Date(a.dateISO) - new Date(b.dateISO));
@@ -499,7 +498,6 @@
 
         // CARGA ASÍNCRONA OPTIMIZADA (PERFORMANCE BOOT)
         function loadContentOptimized() {
-            // Disparamos todas las peticiones a la vez
             const pNews = fetch('/api/news').then(r => r.ok ? r.json() : []).catch(() => []);
             const pCal = fetch('/api/calendar').then(r => r.ok ? r.json() : []).catch(() => []);
             const pTeams = fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => []);
@@ -507,25 +505,23 @@
             const pRank = fetch('/api/ranking').then(r => r.ok ? r.json() : []).catch(() => []);
             const pTrend = fetch('/api/trending').then(r => r.ok ? r.json() : []).catch(() => []);
 
-            // Noticia principal (Se renderiza sola en cuanto llega)
+            // NOTICIA PRINCIPAL CON ENLACE HTML PURO PARA SEO
             pNews.then(renderNews);
             
-            // Ranking UCI
             pRank.then(rank => {
                 if(rank && rank.length > 0) renderRanking(rank);
                 else renderRanking([{ name: "Añade ciclistas", team: "en tu panel Admin", points: 0 }]);
             });
             
-            // Módulos del Calendario
+            // TIMELINE DEL CALENDARIO CON ENLACES HTML PUROS PARA SEO
             pCal.then(cal => {
                 const races = cal.map(r => ({ ...r, ...(typeof r.details === 'string' ? JSON.parse(r.details || '{}') : r.details || {}) }));
                 renderRaceControlRoom(races);
                 renderTimeline(races);
                 renderUpcomingWidget(races);
-                setupCountdown(races); // Lanzamos el reloj
+                setupCountdown(races); 
             });
             
-            // Dato destacado (Glosario)
             pGlos.then(glos => {
                 const insightCard = document.getElementById('ranking-insight-text');
                 if (glos && glos.length > 0) {
@@ -539,26 +535,18 @@
                 }
             });
 
-            // Módulo de Trends (Este necesita juntar varios datos)
             Promise.all([pTrend, pTeams, pNews, pCal]).then(([trendRes, teamsRes, newsRes, calRes]) => {
                 renderTrending(trendRes, teamsRes, newsRes, calRes);
             });
         }
 
-        // Función extraída para organizar el código de Trends
         function renderTrending(trendRes, teamsRes, newsRes, calRes) {
             const topicsMap = new Map();
             let riders = [];
             
             if (trendRes && trendRes.length > 0) {
                 trendRes.filter(t => t.tipo.toLowerCase() === 'ciclista').forEach(r => {
-                    riders.push({ 
-                        name: r.title, 
-                        team: r.subtitle || 'WorldTour', 
-                        value: r.value || '+UP', 
-                        manual: true, 
-                        mentions: 0 
-                    });
+                    riders.push({ name: r.title, team: r.subtitle || 'WorldTour', value: r.value || '+UP', manual: true, mentions: 0 });
                 });
 
                 trendRes.filter(t => t.tipo.toLowerCase() === 'topic').forEach(t => {
@@ -597,14 +585,7 @@
                     
                     if (match && match.length > 0) {
                         if (!riders.find(r => r.name.toLowerCase() === pro.name.toLowerCase())) {
-                            riders.push({
-                                name: pro.name,
-                                team: pro.team,
-                                jersey: pro.jersey,
-                                value: '+TREND',
-                                manual: false,
-                                mentions: match.length
-                            });
+                            riders.push({ name: pro.name, team: pro.team, jersey: pro.jersey, value: '+TREND', manual: false, mentions: match.length });
                         }
                     }
                 });
@@ -677,14 +658,16 @@
             }
         }
 
+        // ====== LA CIRUGÍA SEO APLICADA AQUÍ ======
         function renderNews(news) {
             const container = document.getElementById('latest-news-container');
             if (news && news.length > 0) {
                 const n = news[0]; 
                 const excerpt = n.excerpt || n.lead || "Descubre el análisis de datos completo, las métricas clave de rendimiento y el desglose táctico de la jornada.";
 
+                // CAMBIO CLAVE: Cambiado de <article onclick="..."> a <a href="..."> para que Google indexe la noticia
                 let html = `
-                    <article class="group cursor-pointer grid grid-cols-1 md:grid-cols-12 gap-6 items-center transform transition-all active:scale-[0.99] duration-200" onclick="window.location.href='noticias.html?article=${n.id}'">
+                    <a href="noticias.html?article=${n.id}" class="group cursor-pointer grid grid-cols-1 md:grid-cols-12 gap-6 items-center transform transition-all active:scale-[0.99] duration-200 block">
                         <div class="md:col-span-7 relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-white/5 bg-zinc-900">
                             <div class="absolute top-4 left-4 z-10">
                                 <span class="bg-cyan-500 text-black text-[10px] font-black px-2.5 py-1 rounded uppercase tracking-widest shadow-lg">${n.tag || 'Race Report'}</span>
@@ -700,7 +683,7 @@
                             <h3 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-tight group-hover:text-cyan-400 transition-colors">${n.title}</h3>
                             <p class="text-sm text-zinc-400 leading-relaxed line-clamp-3">${excerpt}</p>
                         </div>
-                    </article>`;
+                    </a>`;
 
                 if (news.length > 1) {
                     html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 pt-6 border-t border-zinc-800/50">`;
@@ -758,6 +741,7 @@
             } else { container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center py-4">Sin carreras próximas.</p>'; }
         }
 
+        // ====== LA CIRUGÍA SEO APLICADA AQUÍ TAMBIÉN ======
         function renderTimeline(races) {
             const now = new Date();
             const m = now.getMonth(); const y = now.getFullYear(); const dToday = now.getDate();
@@ -803,7 +787,8 @@
                 const isToday = d === dToday;
                 if (activeRaces.length > 0) {
                     const indicators = activeRaces.map((r, index) => `<div class="w-8 h-1 ${raceColors[index % raceColors.length].bg} rounded-full mb-1 shadow-[0_0_5px_currentColor]"></div>`).join('');
-                    html += `<div class="timeline-day day-active group ${isToday ? 'day-today' : ''}" onclick="window.location.href='calendario.html?race=${encodeURIComponent(activeRaces[0].name)}'"><span class="day-month">${monthNames[m]}</span><span class="day-number">${d}</span><div class="flex flex-col items-center mt-1 w-full px-1">${indicators}</div></div>`;
+                    // CAMBIO CLAVE: Cambiado a <a href="..."> para SEO en el calendario
+                    html += `<a href="calendario.html?race=${encodeURIComponent(activeRaces[0].name)}" class="timeline-day day-active group ${isToday ? 'day-today' : ''}"><span class="day-month">${monthNames[m]}</span><span class="day-number">${d}</span><div class="flex flex-col items-center mt-1 w-full px-1">${indicators}</div></a>`;
                 } else {
                     html += `<div class="timeline-day day-empty ${isToday ? 'day-today' : ''}"><span class="day-number">${d}</span><div class="timeline-tick"></div></div>`;
                 }
@@ -814,7 +799,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initComparisonEngine();
-            loadContentOptimized(); // Llamamos a la nueva función ultra-rápida
+            loadContentOptimized(); 
         });
     </script>
 
@@ -846,14 +831,12 @@
 
             // Comprobar si ya tomó una decisión antes
             if (!localStorage.getItem('velo_cookies_consent')) {
-                // Si no hay registro, mostramos el banner con una pequeña animación
                 banner.classList.remove('hidden');
                 setTimeout(() => {
                     banner.classList.remove('translate-y-full');
                 }, 100);
             }
 
-            // Función para guardar y ocultar
             const hideBanner = (decision) => {
                 localStorage.setItem('velo_cookies_consent', decision);
                 banner.classList.add('translate-y-full');
