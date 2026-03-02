@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v7.4 (VERSIÓN COMPLETA SIN RECORTES) */
+/* VELO INSIGHTS - LAYOUT ENGINE v7.5 (BRANDING ACTUALIZADO) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -133,9 +133,9 @@ function renderNavbar() {
     
     nav.innerHTML = `
         <div class="w-full max-w-7xl mx-auto flex justify-between items-center h-full relative">
-            <a href="index.html" class="flex items-center gap-2 group">
-                <div class="w-10 h-10 bg-white text-black flex items-center justify-center font-black italic rounded-full text-sm tracking-tighter group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(255,255,255,0.5)] border-2 border-transparent group-hover:border-cyan-400">VI</div>
-                <span class="font-black italic text-white uppercase tracking-tighter text-2xl md:text-3xl ml-1 drop-shadow-lg">VELO<span class="text-cyan-500">INSIGHTS</span></span>
+            <a href="index.html" class="flex items-center gap-2 md:gap-3 group">
+                <img src="assets/favicon-144.png" alt="Velo Insights Logo" class="w-9 h-9 md:w-10 md:h-10 object-contain group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.2)]">
+                <span class="font-black italic text-white uppercase tracking-tighter text-2xl md:text-3xl drop-shadow-lg">VELO<span class="text-cyan-500">INSIGHTS</span></span>
             </a>
 
             <button onclick="toggleMenu()" class="md:hidden flex items-center gap-2 px-3 py-1.5 text-zinc-400 hover:text-white active:scale-95 transition-all bg-zinc-900/90 backdrop-blur-xl rounded-full border border-zinc-700 shadow-[0_5px_15px_rgba(0,0,0,0.8)] group">
