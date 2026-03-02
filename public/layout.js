@@ -134,7 +134,7 @@ function renderNavbar() {
     nav.innerHTML = `
         <div class="w-full max-w-7xl mx-auto flex justify-between items-center h-full relative">
             <a href="index.html" class="flex items-center gap-2 md:gap-3 group">
-                <img src="assets/favicon-144.png" alt="Velo Insights Logo" class="w-9 h-9 md:w-10 md:h-10 object-contain group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.2)]">
+                <img src="assets/logoweb.png" alt="Velo Insights Logo" class="w-9 h-9 md:w-10 md:h-10 object-contain group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.2)]">
                 <span class="font-black italic text-white uppercase tracking-tighter text-2xl md:text-3xl drop-shadow-lg">VELO<span class="text-cyan-500">INSIGHTS</span></span>
             </a>
 
