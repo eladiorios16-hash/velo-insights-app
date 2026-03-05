@@ -234,6 +234,38 @@ app.get('/api/ranking', async (req, res) => {
     } catch(e){ res.status(500).json([]); }
 });
 
+// --- RUTA MAESTRA (NUEVA FASE 1: PERFORMANCE BOOT) ---
+app.get('/api/home', async (req, res) => {
+    try {
+        const [news] = await db.query("SELECT * FROM noticias ORDER BY id DESC LIMIT 5");
+        const [teams] = await db.query("SELECT * FROM equipos");
+        const [calendar] = await db.query("SELECT * FROM calendario ORDER BY dateISO ASC");
+        const [glossary] = await db.query("SELECT id, term, cat, definition as def, insight FROM glosario");
+        const [trending] = await db.query("SELECT * FROM trending ORDER BY id DESC LIMIT 10");
+        const [ranking] = await db.query("SELECT * FROM ranking ORDER BY points DESC LIMIT 5");
+
+        const formattedTeams = teams.map(t => ({...t, riders: typeof t.riders === 'string' ? JSON.parse(t.riders || '[]') : t.riders}));
+        const formattedCalendar = calendar.map(c => {
+            let d = {};
+            try { d = typeof c.details === 'string' ? JSON.parse(c.details || '{}') : (c.details || {}); } catch (e) {}
+            return { ...c, details: d };
+        });
+
+        res.json({
+            news,
+            teams: formattedTeams,
+            calendar: formattedCalendar,
+            glossary,
+            trending,
+            ranking
+        });
+    } catch(error) {
+        console.error("Error en /api/home:", error);
+        res.status(500).json({ error: "Error interno" });
+    }
+});
+
+
 // --- SISTEMA DE VATIOS (LIKES) CON PROTECCIÓN DE IP ---
 const vatiosTracker = new Set(); // Guarda las IPs en la memoria RAM del servidor temporalmente
 
@@ -293,7 +325,7 @@ async function upgradeDatabase() {
 }
 upgradeDatabase();
 
-// --- RUTAS SEO PARA REDES SOCIALES (OPEN GRAPH) ---
+// --- RUTAS SEO PARA REDES SOCIALES (OPEN GRAPH REPARADO) ---
 app.get('/noticias.html', async (req, res, next) => {
     const articleId = req.query.article;
     if (!articleId) return next(); 
@@ -306,11 +338,14 @@ app.get('/noticias.html', async (req, res, next) => {
         const htmlPath = path.join(__dirname, 'public', 'noticias.html');
         let html = fs.readFileSync(htmlPath, 'utf8');
 
-        const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
-        let imageUrl = noticia.image ? noticia.image : defaultImage;
+        const defaultImage = '[https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop](https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop)';
+        let imageUrl = noticia.image ? noticia.image.trim() : defaultImage;
         
+        // REPARACIÓN CRÍTICA: Asegurar ruta absoluta sin importar subcarpetas (assets/noticias/2026/...)
         if (imageUrl && !imageUrl.startsWith('http')) {
-            imageUrl = 'https://veloinsights.es' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
+            // Eliminamos la barra inicial si la tiene para no duplicar
+            imageUrl = imageUrl.replace(/^\/+/, ''); 
+            imageUrl = '[https://veloinsights.es/](https://veloinsights.es/)' + imageUrl;
         }
 
         const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
@@ -323,7 +358,7 @@ app.get('/noticias.html', async (req, res, next) => {
     <meta property="og:title" content="${cleanTitle}" />
     <meta property="og:description" content="${cleanDesc}" />
     <meta property="og:image" content="${imageUrl}" />
-    <meta property="og:url" content="https://veloinsights.es/noticias.html?article=${articleId}" />
+    <meta property="og:url" content="[https://veloinsights.es/noticias.html?article=$](https://veloinsights.es/noticias.html?article=$){articleId}" />
     <meta property="og:site_name" content="Velo Insights" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${cleanTitle}" />
@@ -331,8 +366,8 @@ app.get('/noticias.html', async (req, res, next) => {
     <meta name="twitter:image" content="${imageUrl}" />
         `;
 
-        if (html.includes('<!-- INYECTAR-SEO-AQUI -->')) {
-            html = html.replace('<!-- INYECTAR-SEO-AQUI -->', ogTags);
+        if (html.includes('')) {
+            html = html.replace('', ogTags);
         } else {
             html = html.replace('<head>', '<head>\n' + ogTags);
         }
@@ -350,7 +385,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const baseUrl = 'https://veloinsights.es'; 
+        const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
 
         res.set('Content-Type', 'application/xml');
         let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
