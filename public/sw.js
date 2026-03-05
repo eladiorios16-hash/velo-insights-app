@@ -1,6 +1,5 @@
-const CACHE_NAME = 'velo-insights-v1.0';
+const CACHE_NAME = 'velo-insights-v2.0';
 
-// Aquí ponemos los archivos vitales de tu diseño para que funcionen sin internet
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -9,24 +8,19 @@ const ASSETS_TO_CACHE = [
   '/equipos.html',
   '/glosario.html',
   '/assets/main.css',
-  '/layout.js',
-  '/renderers.js',
   '/assets/logo-icon.svg',
   '/assets/favicon-144.png'
 ];
 
-// 1. Instalar la App y guardar los archivos visuales
+// 1. Instalar la App (Forzamos a que tome el control inmediatamente)
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); 
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Velo App] Guardando archivos en caché...');
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
   );
-  self.skipWaiting();
 });
 
-// 2. Limpiar versiones antiguas si actualizas la web
+// 2. Activar y limpiar la basura de la versión 1.0
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -43,23 +37,49 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 3. Interceptar peticiones (Caché primero para lo visual, Red primero para los datos)
+// 3. Estrategia de Interceptación (El secreto para que funcione fluido)
 self.addEventListener('fetch', (event) => {
-  // Si la petición es a la API de datos (noticias, calendario, etc) -> Buscamos en internet primero
+  
+  // A. Para llamadas a la Base de Datos (/api/...) -> Red primero, si falla, Caché.
   if (event.request.url.includes('/api/')) {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        // Si no hay internet, devolvemos lo último que guardamos
-        return caches.match(event.request);
-      })
+      fetch(event.request)
+        .then(response => {
+          const clonedResponse = response.clone();
+          caches.open('velo-api-cache').then(cache => cache.put(event.request, clonedResponse));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
     );
     return;
   }
 
-  // Si es un archivo de diseño (html, css, imágenes) -> Buscamos en caché primero
+  // B. Para cambiar de sección (Navegación HTML) -> Red primero, si falla, Caché.
+  if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clonedResponse));
+          return response;
+        })
+        .catch(() => caches.match(event.request, { ignoreSearch: true }))
+    );
+    return;
+  }
+
+  // C. Para Imágenes, CSS y Scripts -> Caché primero (para que cargue al instante), pero actualizamos por detrás.
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        // Solo guardamos si es válido
+        if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
+           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
+        }
+        return networkResponse;
+      }).catch(() => null);
+
+      return cachedResponse || fetchPromise;
     })
   );
 });
