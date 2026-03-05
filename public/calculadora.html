@@ -36,8 +36,20 @@
     <meta name="twitter:title" content="Performance Lab | Velo Insights">
     <meta name="twitter:description" content="Ajusta desarrollos, descubre tu velocidad estimada y calcula la presión óptima de tus neumáticos.">
     <meta name="twitter:image" content="https://veloinsights.es/assets/default-news.jpg">
-    <meta name="theme-color" content="#050505">
     
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Velo App registrada con éxito'))
+                    .catch(err => console.log('❌ Error al registrar Velo App', err));
+            });
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/main.css">
