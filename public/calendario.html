@@ -36,14 +36,20 @@
     <meta name="twitter:title" content="Calendario Ciclismo WorldTour | Velo Insights">
     <meta name="twitter:description" content="Fechas, etapas y perfiles de todas las carreras del calendario WorldTour. Añádelas a tu Google Calendar.">
     <meta name="twitter:image" content="https://veloinsights.es/assets/default-news.jpg">
-    <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
+    
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#050505">
-    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="/assets/icon-192.png">
-    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Velo App registrada con éxito'))
+                    .catch(err => console.log('❌ Error al registrar Velo App', err));
+            });
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="assets/main.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -483,6 +489,7 @@
     </div>
 
     <script>
+        // Lógica del Banner de Cookies
         document.addEventListener('DOMContentLoaded', () => {
             const banner = document.getElementById('cookie-banner');
             const btnAccept = document.getElementById('btn-accept-cookies');
