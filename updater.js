@@ -31,8 +31,8 @@ async function updateRanking() {
                 const teamLink = $(element).find('a[href*="team.php"]');
                 const team = teamLink.length > 0 ? teamLink.text().trim() : 'Independiente';
 
-                // Los puntos SIEMPRE están en la última columna de la tabla
-                const pointsStr = $(element).find('td').last().text().trim().replace(/,/g, '').replace(/\s/g, '');
+                // CORRECCIÓN CRÍTICA: Eliminamos los puntos (.) y las comas (,) antes de pasarlo a número
+                const pointsStr = $(element).find('td').last().text().trim().replace(/\./g, '').replace(/,/g, '').replace(/\s/g, '');
                 const points = parseInt(pointsStr) || 0;
 
                 // Arreglamos el formato de nombre (FC lo pone como "POGAČAR Tadej" -> "Tadej POGAČAR")
