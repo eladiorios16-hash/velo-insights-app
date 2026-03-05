@@ -4,9 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" type="image/svg+xml" href="assets/logo-icon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icon-192.png">
+    <meta name="apple-mobile-web-app-title" content="Velo">
     
     <title>Privacidad y Legal | VELO INSIGHTS</title>
-    <meta name="robots" content="noindex, follow"> <meta name="theme-color" content="#050505">
+    <meta name="robots" content="noindex, follow">
+    
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Velo App registrada con éxito'))
+                    .catch(err => console.log('❌ Error al registrar Velo App', err));
+            });
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="assets/main.css">
     
@@ -46,7 +62,7 @@
             </p>
             <ul>
                 <li><strong>Responsable:</strong> Equipo de Velo Insights</li>
-                <li><strong>Contacto:</strong> <a href="mailto:[veloinsights@gmail.com]">[TU CORREO ELECTRÓNICO]</a></li>
+                <li><strong>Contacto:</strong> <a href="mailto:veloinsights@gmail.com">veloinsights@gmail.com</a></li>
             </ul>
 
             <h2>2. Política de Privacidad y Datos</h2>
