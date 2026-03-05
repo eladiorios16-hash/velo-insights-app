@@ -6,6 +6,8 @@ const fs = require('fs');
 const db = require('./db');
 const helmet = require('helmet'); 
 const rateLimit = require('express-rate-limit'); 
+// --- IMPORTAR EL DATA BOT ---
+const veloBot = require('./updater');
 
 // --- 1. CONFIGURACIÓN IA (VELO COPILOT) ---
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
@@ -450,4 +452,8 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => { 
     console.log(`🚀 Servidor Velo Admin Universal listo en puerto ${PORT}`); 
+    // Forzamos al bot a ejecutarse una vez justo al arrancar para probarlo
+    setTimeout(() => {
+        veloBot.updateRanking();
+    }, 3000); // Espera 3 segundos después de arrancar para no saturar
 });
