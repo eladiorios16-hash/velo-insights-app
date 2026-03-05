@@ -503,45 +503,72 @@
             }
         }
 
-        function loadContentOptimized() {
-            const pNews = fetch('/api/news').then(r => r.ok ? r.json() : []).catch(() => []);
-            const pCal = fetch('/api/calendar').then(r => r.ok ? r.json() : []).catch(() => []);
-            const pTeams = fetch('/api/teams').then(r => r.ok ? r.json() : []).catch(() => []);
-            const pGlos = fetch('/api/glossary').then(r => r.ok ? r.json() : []).catch(() => []);
-            const pRank = fetch('/api/ranking').then(r => r.ok ? r.json() : []).catch(() => []);
-            const pTrend = fetch('/api/trending').then(r => r.ok ? r.json() : []).catch(() => []);
+        // FASE 1: CARGA ASÍNCRONA ULTRA-RÁPIDA (CACHÉ LOCAL)
+        async function loadContentOptimized() {
+            const CACHE_KEY = 'velo_home_data';
+            const cachedData = localStorage.getItem(CACHE_KEY);
 
-            pNews.then(renderNews);
+            // 1. Mostrar datos cacheados AL INSTANTE (Cero tiempos de carga)
+            if (cachedData) {
+                try {
+                    const data = JSON.parse(cachedData);
+                    renderAllWidgets(data);
+                } catch(e) { console.error("Error en caché, recargando..."); }
+            }
+
+            // 2. Buscar datos frescos al servidor en SEGUNDO PLANO
+            try {
+                const [pNews, pCal, pTeams, pGlos, pRank, pTrend] = await Promise.all([
+                    fetch('/api/news').then(r => r.ok ? r.json() : []),
+                    fetch('/api/calendar').then(r => r.ok ? r.json() : []),
+                    fetch('/api/teams').then(r => r.ok ? r.json() : []),
+                    fetch('/api/glossary').then(r => r.ok ? r.json() : []),
+                    fetch('/api/ranking').then(r => r.ok ? r.json() : []),
+                    fetch('/api/trending').then(r => r.ok ? r.json() : [])
+                ]);
+
+                // Empaquetar todo en un solo objeto
+                const freshData = {
+                    news: pNews, cal: pCal, teams: pTeams,
+                    glos: pGlos, rank: pRank, trend: pTrend
+                };
+
+                // 3. Guardar la nueva copia en la memoria del móvil del usuario
+                localStorage.setItem(CACHE_KEY, JSON.stringify(freshData));
+
+                // 4. Actualizar la vista de forma invisible
+                renderAllWidgets(freshData);
+
+            } catch (error) {
+                console.error("Error conectando con el Lab Central:", error);
+            }
+        }
+
+        // Función maestra que distribuye los datos a cada sección
+        function renderAllWidgets(data) {
+            if(data.news) renderNews(data.news);
             
-            pRank.then(rank => {
-                if(rank && rank.length > 0) renderRanking(rank);
-                else renderRanking([{ name: "Añade ciclistas", team: "en tu panel Admin", points: 0 }]);
-            });
+            if(data.rank && data.rank.length > 0) renderRanking(data.rank);
+            else renderRanking([{ name: "Añade ciclistas", team: "Panel Admin", points: 0 }]);
             
-            pCal.then(cal => {
-                const races = cal.map(r => ({ ...r, ...(typeof r.details === 'string' ? JSON.parse(r.details || '{}') : r.details || {}) }));
+            if(data.cal) {
+                const races = data.cal.map(r => ({ ...r, ...(typeof r.details === 'string' ? JSON.parse(r.details || '{}') : r.details || {}) }));
                 renderRaceControlRoom(races);
                 renderTimeline(races);
                 renderUpcomingWidget(races);
                 setupCountdown(races); 
-            });
+            }
             
-            pGlos.then(glos => {
+            if (data.glos && data.glos.length > 0) {
                 const insightCard = document.getElementById('ranking-insight-text');
-                if (glos && glos.length > 0) {
-                    const itemsWithInsight = glos.filter(g => g.insight && g.insight.length > 5);
-                    if (itemsWithInsight.length > 0) {
-                        const selected = itemsWithInsight[Math.floor(Math.random() * itemsWithInsight.length)];
-                        insightCard.innerHTML = `<strong class="text-white">${selected.term}:</strong> ${selected.insight}`;
-                    } else {
-                        insightCard.innerHTML = "Actualizando base de datos técnica para la temporada...";
-                    }
+                const itemsWithInsight = data.glos.filter(g => g.insight && g.insight.length > 5);
+                if (itemsWithInsight.length > 0 && insightCard) {
+                    const selected = itemsWithInsight[Math.floor(Math.random() * itemsWithInsight.length)];
+                    insightCard.innerHTML = `<strong class="text-white">${selected.term}:</strong> ${selected.insight}`;
                 }
-            });
+            }
 
-            Promise.all([pTrend, pTeams, pNews, pCal]).then(([trendRes, teamsRes, newsRes, calRes]) => {
-                renderTrending(trendRes, teamsRes, newsRes, calRes);
-            });
+            if(data.trend) renderTrending(data.trend, data.teams || [], data.news || [], data.cal || []);
         }
 
         function renderTrending(trendRes, teamsRes, newsRes, calRes) {
