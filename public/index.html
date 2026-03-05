@@ -503,7 +503,7 @@
             }
         }
 
-        // FASE 1: CARGA ASÍNCRONA ULTRA-RÁPIDA (CACHÉ LOCAL)
+        // FASE 1: CARGA ASÍNCRONA ULTRA-RÁPIDA (CACHÉ LOCAL + API UNIFICADA)
         async function loadContentOptimized() {
             const CACHE_KEY = 'velo_home_data';
             const cachedData = localStorage.getItem(CACHE_KEY);
@@ -516,24 +516,13 @@
                 } catch(e) { console.error("Error en caché, recargando..."); }
             }
 
-            // 2. Buscar datos frescos al servidor en SEGUNDO PLANO
+            // 2. Buscar datos frescos en un SOLO GOLPE al servidor
             try {
-                const [pNews, pCal, pTeams, pGlos, pRank, pTrend] = await Promise.all([
-                    fetch('/api/news').then(r => r.ok ? r.json() : []),
-                    fetch('/api/calendar').then(r => r.ok ? r.json() : []),
-                    fetch('/api/teams').then(r => r.ok ? r.json() : []),
-                    fetch('/api/glossary').then(r => r.ok ? r.json() : []),
-                    fetch('/api/ranking').then(r => r.ok ? r.json() : []),
-                    fetch('/api/trending').then(r => r.ok ? r.json() : [])
-                ]);
+                const response = await fetch('/api/home');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const freshData = await response.json();
 
-                // Empaquetar todo en un solo objeto
-                const freshData = {
-                    news: pNews, cal: pCal, teams: pTeams,
-                    glos: pGlos, rank: pRank, trend: pTrend
-                };
-
-                // 3. Guardar la nueva copia en la memoria del móvil del usuario
+                // 3. Guardar la nueva copia
                 localStorage.setItem(CACHE_KEY, JSON.stringify(freshData));
 
                 // 4. Actualizar la vista de forma invisible
@@ -548,27 +537,26 @@
         function renderAllWidgets(data) {
             if(data.news) renderNews(data.news);
             
-            if(data.rank && data.rank.length > 0) renderRanking(data.rank);
+            if(data.ranking && data.ranking.length > 0) renderRanking(data.ranking);
             else renderRanking([{ name: "Añade ciclistas", team: "Panel Admin", points: 0 }]);
             
-            if(data.cal) {
-                const races = data.cal.map(r => ({ ...r, ...(typeof r.details === 'string' ? JSON.parse(r.details || '{}') : r.details || {}) }));
-                renderRaceControlRoom(races);
-                renderTimeline(races);
-                renderUpcomingWidget(races);
-                setupCountdown(races); 
+            if(data.calendar) {
+                renderRaceControlRoom(data.calendar);
+                renderTimeline(data.calendar);
+                renderUpcomingWidget(data.calendar);
+                setupCountdown(data.calendar); 
             }
             
-            if (data.glos && data.glos.length > 0) {
+            if (data.glossary && data.glossary.length > 0) {
                 const insightCard = document.getElementById('ranking-insight-text');
-                const itemsWithInsight = data.glos.filter(g => g.insight && g.insight.length > 5);
+                const itemsWithInsight = data.glossary.filter(g => g.insight && g.insight.length > 5);
                 if (itemsWithInsight.length > 0 && insightCard) {
                     const selected = itemsWithInsight[Math.floor(Math.random() * itemsWithInsight.length)];
                     insightCard.innerHTML = `<strong class="text-white">${selected.term}:</strong> ${selected.insight}`;
                 }
             }
 
-            if(data.trend) renderTrending(data.trend, data.teams || [], data.news || [], data.cal || []);
+            if(data.trending) renderTrending(data.trending, data.teams || [], data.news || [], data.calendar || []);
         }
 
         function renderTrending(trendRes, teamsRes, newsRes, calRes) {
