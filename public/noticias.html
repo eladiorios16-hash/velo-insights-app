@@ -26,11 +26,19 @@
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://veloinsights.es/noticias.html">
     
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#050505">
-    <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Velo App registrada con éxito'))
+                    .catch(err => console.log('❌ Error al registrar Velo App', err));
+            });
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/main.css">
@@ -113,7 +121,7 @@
 
     <div id="article-modal" class="fixed inset-0 z-[200] bg-black/95 modal-hidden backdrop-blur-md overflow-y-auto modal-scroll">
         <div class="min-h-screen w-full md:py-12 flex justify-center">
-            <button onclick="closeArticle()" class="fixed top-4 right-4 md:top-8 md:right-8 z-[210] p-3 bg-black/60 text-white rounded-full hover:bg-white hover:text-black transition-all backdrop-blur-md border border-white/20 shadow-2xl">
+            <button onclick="closeArticle()" class="fixed top-4 right-4 md:top-8 right-8 z-[210] p-3 bg-black/60 text-white rounded-full hover:bg-white hover:text-black transition-all backdrop-blur-md border border-white/20 shadow-2xl">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
             <div class="w-full max-w-5xl bg-[#050505] md:border border-zinc-800 md:rounded-[2rem] overflow-hidden relative shadow-[0_0_50px_rgba(0,0,0,0.8)] pb-20 md:pb-10" id="modal-content"></div>
