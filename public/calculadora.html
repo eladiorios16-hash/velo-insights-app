@@ -89,12 +89,12 @@
         <div>
             <div class="flex items-center gap-3 mb-6 px-2">
                 <div class="w-8 h-8 rounded-full bg-cyan-900/40 border border-cyan-500/30 flex items-center justify-center">
-                    <i class="fas fa-cogs text-cyan-400 text-sm"></i>
+                    <i class="fas fa-cogs text-cyan-400 text-sm" aria-hidden="true"></i>
                 </div>
                 <h2 class="text-xl md:text-2xl font-black text-white italic uppercase tracking-widest">Gearing Lab</h2>
             </div>
 
-            <section class="glass-panel rounded-3xl p-6 md:p-10 relative overflow-hidden shadow-2xl max-w-5xl mx-auto w-full">
+            <section class="glass-panel rounded-3xl p-6 md:p-10 relative overflow-hidden shadow-2xl max-w-5xl mx-auto w-full" aria-label="Configuración general de transmisión">
                 <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
                 
                 <div class="text-center mb-8">
@@ -102,43 +102,44 @@
                         <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span> Cadencia Objetivo
                     </p>
                     <div class="flex items-end justify-center gap-2">
-                        <span id="rpm-display" class="text-6xl md:text-8xl font-black italic tracking-tighter text-cyan-400 neon-text leading-none transition-colors duration-300">90</span>
+                        <span id="rpm-display" class="text-6xl md:text-8xl font-black italic tracking-tighter text-cyan-400 neon-text leading-none transition-colors duration-300" aria-live="polite">90</span>
                         <span class="text-lg md:text-xl font-bold text-zinc-500 mb-2 md:mb-4">RPM</span>
                     </div>
-                    <span id="rpm-status" class="inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border border-cyan-500/30 text-cyan-400 bg-cyan-950/30 transition-colors duration-300">ZONA ÓPTIMA</span>
+                    <span id="rpm-status" class="inline-block mt-3 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border border-cyan-500/30 text-cyan-400 bg-cyan-950/30 transition-colors duration-300" aria-live="polite">ZONA ÓPTIMA</span>
                 </div>
 
                 <div class="max-w-2xl mx-auto relative z-10 mb-10">
-                    <input type="range" min="40" max="130" value="90" class="slider-cyan" id="rpm-slider">
-                    <div class="flex justify-between text-[10px] font-bold text-zinc-600 uppercase mt-4 tracking-widest">
+                    <label for="rpm-slider" class="sr-only">Ajustar cadencia objetivo</label>
+                    <input type="range" min="40" max="130" value="90" class="slider-cyan" id="rpm-slider" aria-label="Ajustar cadencia en RPM">
+                    <div class="flex justify-between text-[10px] font-bold text-zinc-600 uppercase mt-4 tracking-widest" aria-hidden="true">
                         <span>40 Atrancado</span>
                         <span>130 Molinillo</span>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
-                    <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center">
+                    <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center" role="group" aria-label="Selector de inclinación de la vía">
                         <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Inclinación de la Vía</label>
                         <div class="grid grid-cols-3 gap-2">
-                            <button onclick="setGradient(0, 'Llano 0%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">0%</button>
-                            <button onclick="setGradient(8, 'Puerto 8%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">8%</button>
-                            <button onclick="setGradient(12, 'Muro 12%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all">12%</button>
+                            <button onclick="setGradient(0, 'Llano 0%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all" aria-pressed="true">0%</button>
+                            <button onclick="setGradient(8, 'Puerto 8%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all" aria-pressed="false">8%</button>
+                            <button onclick="setGradient(12, 'Muro 12%')" class="gradient-btn px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-bold text-zinc-300 hover:border-cyan-500/50 hover:text-white transition-all" aria-pressed="false">12%</button>
                         </div>
                     </div>
 
                     <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center items-center">
-                        <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Peso (Ciclista + Bici)</label>
+                        <label for="system-weight" class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center">Peso (Ciclista + Bici)</label>
                         <div class="flex items-center gap-3">
-                            <input type="number" id="system-weight" value="85" min="40" max="150" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>150)this.value=150; syncWeights();" class="w-20 bg-zinc-900 border border-zinc-700 rounded-xl px-2 py-2 text-xl text-white font-black font-mono text-center focus:border-cyan-500 focus:outline-none transition-colors shadow-inner">
-                            <span class="text-xs font-black text-zinc-500 tracking-widest">KG</span>
+                            <input type="number" id="system-weight" value="85" min="40" max="150" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>150)this.value=150; syncWeights();" class="w-20 bg-zinc-900 border border-zinc-700 rounded-xl px-2 py-2 text-xl text-white font-black font-mono text-center focus:border-cyan-500 focus:outline-none transition-colors shadow-inner" aria-label="Introducir peso total en kilogramos">
+                            <span class="text-xs font-black text-zinc-500 tracking-widest" aria-hidden="true">KG</span>
                         </div>
                     </div>
 
                     <div class="border border-zinc-800 rounded-2xl p-4 bg-black/40 flex flex-col justify-center items-center relative overflow-hidden group">
                         <div class="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                         <label class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3 text-center z-10">Compartir Setup</label>
-                        <button onclick="copyShareLink()" class="relative z-10 flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-cyan-600 text-zinc-300 hover:text-black border border-zinc-700 hover:border-cyan-500 px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95">
-                            <i class="fas fa-link"></i> Copiar Enlace
+                        <button onclick="copyShareLink()" class="relative z-10 flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-cyan-600 text-zinc-300 hover:text-black border border-zinc-700 hover:border-cyan-500 px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95" aria-label="Copiar enlace con tu configuración actual para compartir">
+                            <i class="fas fa-link" aria-hidden="true"></i> Copiar Enlace
                         </button>
                     </div>
                 </div>
@@ -146,7 +147,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start mt-8">
                 
-                <section class="glass-panel rounded-3xl p-5 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-cyan-500 transition-colors duration-300">
+                <section class="glass-panel rounded-3xl p-5 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-cyan-500 transition-colors duration-300" aria-label="Configuración de bicicleta Opción A">
                     <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
                         <h2 class="text-lg font-black text-white italic uppercase tracking-widest">Setup Actual</h2>
                         <span class="text-[10px] font-bold text-zinc-500 bg-zinc-900 px-2 py-1 rounded">OPCIÓN A</span>
@@ -155,8 +156,8 @@
                     <div class="space-y-5 mb-6 flex-1">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Rueda y Neumático</label>
-                                <select id="wheel-a" onchange="toggleCustomWheel('a')" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-cyan-500 focus:outline-none transition-colors">
+                                <label for="wheel-a" class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Rueda y Neumático</label>
+                                <select id="wheel-a" onchange="toggleCustomWheel('a')" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-cyan-500 focus:outline-none transition-colors" aria-label="Seleccionar tamaño de rueda para opción A">
                                     <optgroup label="Carretera">
                                         <option value="2105">700 x 25c</option>
                                         <option value="2136" selected>700 x 28c</option>
@@ -180,13 +181,14 @@
                                 </select>
                                 
                                 <div id="custom-wheel-container-a" class="hidden mt-2 relative">
-                                    <input type="number" id="custom-wheel-a" value="2150" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-cyan-500 outline-none transition-colors" placeholder="Ej: 2150">
-                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-zinc-500">MM</span>
+                                    <label for="custom-wheel-a" class="sr-only">Circunferencia de rueda personalizada opción A</label>
+                                    <input type="number" id="custom-wheel-a" value="2150" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-cyan-500 outline-none transition-colors" placeholder="Ej: 2150" aria-label="Milímetros de circunferencia de la rueda">
+                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-zinc-500" aria-hidden="true">MM</span>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
-                                <select id="preset-a" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-cyan-400 font-bold focus:border-cyan-500 focus:outline-none transition-colors">
+                                <label for="preset-a" class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
+                                <select id="preset-a" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-cyan-400 font-bold focus:border-cyan-500 focus:outline-none transition-colors" aria-label="Seleccionar grupo de transmisión predefinido opción A">
                                     <option value="custom">⚙️ Custom / Crear Perfil</option>
                                     <optgroup label="Carretera Estándar">
                                         <option value="shi_compact_11" selected>Shi. 105/Ult 11v (50/34 - 11/34)</option>
@@ -209,33 +211,33 @@
                             </div>
                         </div>
 
-                        <div id="quick-selects-a" class="p-3 md:p-4 bg-black/40 rounded-xl border border-zinc-800/80 hidden transition-all"></div>
+                        <div id="quick-selects-a" class="p-3 md:p-4 bg-black/40 rounded-xl border border-zinc-800/80 hidden transition-all" aria-live="polite"></div>
 
                         <div class="grid grid-cols-2 gap-4 mt-6">
                             <div class="bg-black/60 rounded-xl p-3 border border-zinc-800/80">
-                                <label class="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 text-center">Plato (Dientes)</label>
+                                <label for="plato-a" class="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 text-center">Plato (Dientes)</label>
                                 <div class="relative max-w-[110px] mx-auto">
-                                    <i class="fas fa-cog absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-500/50 text-base"></i>
-                                    <input type="number" id="plato-a" value="50" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-9 pr-2 py-2 text-xl md:text-2xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center shadow-inner">
+                                    <i class="fas fa-cog absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-500/50 text-base" aria-hidden="true"></i>
+                                    <input type="number" id="plato-a" value="50" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-9 pr-2 py-2 text-xl md:text-2xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center shadow-inner" aria-label="Número de dientes del plato opción A">
                                 </div>
                             </div>
                             <div class="bg-black/60 rounded-xl p-3 border border-zinc-800/80">
-                                <label class="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 text-center">Piñón (Dientes)</label>
+                                <label for="pinon-a" class="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 text-center">Piñón (Dientes)</label>
                                 <div class="relative max-w-[110px] mx-auto">
-                                    <i class="fas fa-bullseye absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-500/50 text-base"></i>
-                                    <input type="number" id="pinon-a" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-9 pr-2 py-2 text-xl md:text-2xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center shadow-inner">
+                                    <i class="fas fa-bullseye absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-500/50 text-base" aria-hidden="true"></i>
+                                    <input type="number" id="pinon-a" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-9 pr-2 py-2 text-xl md:text-2xl text-white font-black font-mono focus:border-cyan-500 focus:outline-none transition-colors text-center shadow-inner" aria-label="Número de dientes del piñón opción A">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-black/50 rounded-2xl p-4 md:p-5 border border-zinc-800/50 mt-auto">
+                    <div class="bg-black/50 rounded-2xl p-4 md:p-5 border border-zinc-800/50 mt-auto" aria-live="polite" aria-atomic="true">
                         <p class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
                         <div class="flex justify-between items-end mb-4">
                             <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
                             <div class="flex items-baseline gap-1">
                                 <span id="speed-a" class="text-4xl md:text-5xl font-black italic text-white leading-none">0.0</span>
-                                <span class="text-xs font-bold text-zinc-500">km/h</span>
+                                <span class="text-xs font-bold text-zinc-500" aria-hidden="true">km/h</span>
                             </div>
                         </div>
 
@@ -265,8 +267,8 @@
                             </div>
                         </div>
 
-                        <div id="crosschain-warning-a" class="hidden mt-3 p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse">
-                            <i class="fas fa-exclamation-triangle mr-1"></i> Cadena Cruzada: Pierdes ~5W por fricción
+                        <div id="crosschain-warning-a" class="hidden mt-3 p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse" role="alert">
+                            <i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i> Cadena Cruzada: Pierdes ~5W por fricción
                         </div>
 
                         <div class="grid grid-cols-2 gap-4 mt-4 border-t border-zinc-800/50 pt-4">
@@ -282,7 +284,7 @@
                     </div>
                 </section>
 
-                <section class="glass-panel rounded-3xl p-5 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-violet-500 transition-colors duration-300">
+                <section class="glass-panel rounded-3xl p-5 md:p-8 flex flex-col relative border-t-4 border-t-zinc-700 hover:border-t-violet-500 transition-colors duration-300" aria-label="Configuración de bicicleta Opción B">
                     <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
                         <h2 class="text-lg font-black text-white italic uppercase tracking-widest">Nuevo Setup</h2>
                         <span class="text-[10px] font-bold text-zinc-500 bg-zinc-900 px-2 py-1 rounded">OPCIÓN B</span>
@@ -291,8 +293,8 @@
                     <div class="space-y-5 mb-6 flex-1">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Rueda y Neumático</label>
-                                <select id="wheel-b" onchange="toggleCustomWheel('b')" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-violet-500 focus:outline-none transition-colors">
+                                <label for="wheel-b" class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Rueda y Neumático</label>
+                                <select id="wheel-b" onchange="toggleCustomWheel('b')" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-white font-mono focus:border-violet-500 focus:outline-none transition-colors" aria-label="Seleccionar tamaño de rueda para opción B">
                                     <optgroup label="Carretera">
                                         <option value="2105">700 x 25c</option>
                                         <option value="2136" selected>700 x 28c</option>
@@ -316,13 +318,14 @@
                                 </select>
 
                                 <div id="custom-wheel-container-b" class="hidden mt-2 relative">
-                                    <input type="number" id="custom-wheel-b" value="2150" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-violet-500 outline-none transition-colors" placeholder="Ej: 2150">
-                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-zinc-500">MM</span>
+                                    <label for="custom-wheel-b" class="sr-only">Circunferencia de rueda personalizada opción B</label>
+                                    <input type="number" id="custom-wheel-b" value="2150" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-violet-500 outline-none transition-colors" placeholder="Ej: 2150" aria-label="Milímetros de circunferencia de la rueda B">
+                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-zinc-500" aria-hidden="true">MM</span>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
-                                <select id="preset-b" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-violet-400 font-bold focus:border-violet-500 focus:outline-none transition-colors">
+                                <label for="preset-b" class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Grupo de Transmisión</label>
+                                <select id="preset-b" class="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-violet-400 font-bold focus:border-violet-500 focus:outline-none transition-colors" aria-label="Seleccionar grupo de transmisión predefinido opción B">
                                     <option value="custom">⚙️ Custom / Crear Perfil</option>
                                     <optgroup label="Carretera Estándar">
                                         <option value="shi_compact_11">Shi. 105/Ult 11v (50/34 - 11/34)</option>
@@ -345,34 +348,34 @@
                             </div>
                         </div>
 
-                        <div id="quick-selects-b" class="p-3 md:p-4 bg-black/40 rounded-xl border border-zinc-800/80 hidden transition-all"></div>
+                        <div id="quick-selects-b" class="p-3 md:p-4 bg-black/40 rounded-xl border border-zinc-800/80 hidden transition-all" aria-live="polite"></div>
 
                         <div class="grid grid-cols-2 gap-4 mt-6">
                             <div class="bg-black/60 rounded-xl p-3 border border-zinc-800/80">
-                                <label class="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 text-center">Plato (Dientes)</label>
+                                <label for="plato-b" class="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 text-center">Plato (Dientes)</label>
                                 <div class="relative max-w-[110px] mx-auto">
-                                    <i class="fas fa-cog absolute left-3 top-1/2 transform -translate-y-1/2 text-violet-500/50 text-base"></i>
-                                    <input type="number" id="plato-b" value="52" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-9 pr-2 py-2 text-xl md:text-2xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center shadow-inner">
+                                    <i class="fas fa-cog absolute left-3 top-1/2 transform -translate-y-1/2 text-violet-500/50 text-base" aria-hidden="true"></i>
+                                    <input type="number" id="plato-b" value="52" min="20" max="70" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>70)this.value=70;" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-9 pr-2 py-2 text-xl md:text-2xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center shadow-inner" aria-label="Número de dientes del plato opción B">
                                 </div>
                             </div>
                             <div class="bg-black/60 rounded-xl p-3 border border-zinc-800/80">
-                                <label class="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 text-center">Piñón (Dientes)</label>
+                                <label for="pinon-b" class="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 text-center">Piñón (Dientes)</label>
                                 <div class="relative max-w-[110px] mx-auto">
-                                    <i class="fas fa-bullseye absolute left-3 top-1/2 transform -translate-y-1/2 text-violet-500/50 text-base"></i>
-                                    <input type="number" id="pinon-b" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-9 pr-2 py-2 text-xl md:text-2xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center shadow-inner">
+                                    <i class="fas fa-bullseye absolute left-3 top-1/2 transform -translate-y-1/2 text-violet-500/50 text-base" aria-hidden="true"></i>
+                                    <input type="number" id="pinon-b" value="15" min="9" max="60" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value>60)this.value=60;" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-9 pr-2 py-2 text-xl md:text-2xl text-white font-black font-mono focus:border-violet-500 focus:outline-none transition-colors text-center shadow-inner" aria-label="Número de dientes del piñón opción B">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-black/50 rounded-2xl p-4 md:p-5 border border-zinc-800/50 mt-auto relative overflow-hidden">
-                        <div class="absolute inset-0 bg-violet-500/5 opacity-0 hover:opacity-100 transition-opacity"></div>
+                    <div class="bg-black/50 rounded-2xl p-4 md:p-5 border border-zinc-800/50 mt-auto relative overflow-hidden" aria-live="polite" aria-atomic="true">
+                        <div class="absolute inset-0 bg-violet-500/5 opacity-0 hover:opacity-100 transition-opacity pointer-events-none"></div>
                         <p class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">Telemetría Resultante</p>
                         <div class="flex justify-between items-end mb-4 relative z-10">
                             <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Velocidad</span>
                             <div class="flex items-baseline gap-1">
                                 <span id="speed-b" class="text-4xl md:text-5xl font-black italic text-white leading-none">0.0</span>
-                                <span class="text-xs font-bold text-zinc-500">km/h</span>
+                                <span class="text-xs font-bold text-zinc-500" aria-hidden="true">km/h</span>
                             </div>
                         </div>
 
@@ -402,8 +405,8 @@
                             </div>
                         </div>
 
-                        <div id="crosschain-warning-b" class="hidden mt-3 p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse relative z-10">
-                            <i class="fas fa-exclamation-triangle mr-1"></i> Cadena Cruzada: Pierdes ~5W por fricción
+                        <div id="crosschain-warning-b" class="hidden mt-3 p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse relative z-10" role="alert">
+                            <i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i> Cadena Cruzada: Pierdes ~5W por fricción
                         </div>
 
                         <div class="grid grid-cols-2 gap-4 relative z-10 mt-4 border-t border-zinc-800/50 pt-4">
@@ -425,13 +428,13 @@
         <div class="mt-20">
             <div class="flex items-center gap-3 mb-6 px-2">
                 <div class="w-8 h-8 rounded-full bg-purple-900/40 border border-purple-500/30 flex items-center justify-center">
-                    <i class="fas fa-compress-arrows-alt text-purple-400 text-sm"></i>
+                    <i class="fas fa-compress-arrows-alt text-purple-400 text-sm" aria-hidden="true"></i>
                 </div>
                 <h2 class="text-xl md:text-2xl font-black text-white italic uppercase tracking-widest">Tyre Pressure Lab</h2>
             </div>
             <p class="text-zinc-400 text-sm px-2 mb-8 max-w-3xl">El cálculo de presión se basa en modelos matemáticos de disipación de energía, adaptando la rigidez del neumático al peso del sistema, tipo de cubierta y la disciplina practicada.</p>
 
-            <section class="glass-panel rounded-3xl p-5 md:p-10 relative overflow-hidden shadow-2xl w-full border-l-4 border-purple-500">
+            <section class="glass-panel rounded-3xl p-5 md:p-10 relative overflow-hidden shadow-2xl w-full border-l-4 border-purple-500" aria-label="Calculadora de presión de neumáticos">
                 <div class="absolute top-0 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 relative z-10">
@@ -439,65 +442,67 @@
                     <div class="space-y-8">
 
                         <div class="mb-4 border-b border-zinc-800 pb-4">
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Mis Bicicletas Guardadas</label>
+                            <label for="tp-preset" class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Mis Bicicletas Guardadas</label>
                             <div class="flex gap-2">
-                                <select id="tp-preset" onchange="loadTyreProfile(this.value)" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-purple-400 font-bold focus:border-purple-500 focus:outline-none transition-colors">
+                                <select id="tp-preset" onchange="loadTyreProfile(this.value)" class="w-full bg-black border border-zinc-700 rounded-xl px-3 py-3 text-xs md:text-sm text-purple-400 font-bold focus:border-purple-500 focus:outline-none transition-colors" aria-label="Seleccionar perfil de presión guardado">
                                     <option value="default">⚙️ Nuevo / Sin Guardar</option>
                                 </select>
-                                <button onclick="deleteTyreProfilePrompt()" id="btn-delete-tp" class="hidden text-red-500/50 hover:text-red-400 p-3 rounded-xl border border-zinc-800 hover:bg-red-950/30 transition-colors"><i class="fas fa-trash"></i></button>
+                                <button onclick="deleteTyreProfilePrompt()" id="btn-delete-tp" class="hidden text-red-500/50 hover:text-red-400 p-3 rounded-xl border border-zinc-800 hover:bg-red-950/30 transition-colors" aria-label="Borrar perfil de presión seleccionado">
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                </button>
                             </div>
                         </div>
                         
                         <div>
                             <div class="flex justify-between items-end mb-3">
-                                <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest">Peso Total (Tú + Bici + Ropa)</label>
+                                <label for="tp-weight" class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest">Peso Total (Tú + Bici + Ropa)</label>
                                 <span class="text-xs font-bold text-purple-400 font-mono bg-purple-950/50 px-2 py-1 rounded border border-purple-500/30">
-                                    <span id="tp-weight-val">85</span> KG
+                                    <span id="tp-weight-val" aria-live="polite">85</span> KG
                                 </span>
                             </div>
-                            <input type="range" min="50" max="130" value="85" class="slider-purple" id="tp-weight" oninput="updateTyrePressure()">
+                            <input type="range" min="50" max="130" value="85" class="slider-purple" id="tp-weight" oninput="updateTyrePressure()" aria-label="Ajustar peso total en kilogramos">
                         </div>
 
                         <div>
                             <div class="flex justify-between items-end mb-3">
-                                <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest">Ancho Real del Neumático</label>
+                                <label for="tp-width" class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest">Ancho Real del Neumático</label>
                                 <span class="text-xs font-bold text-purple-400 font-mono bg-purple-950/50 px-2 py-1 rounded border border-purple-500/30">
-                                    <span id="tp-width-val">28</span> MM
+                                    <span id="tp-width-val" aria-live="polite">28</span> MM
                                 </span>
                             </div>
-                            <input type="range" min="23" max="65" value="28" class="slider-purple" id="tp-width" oninput="updateTyrePressure()">
+                            <input type="range" min="23" max="65" value="28" class="slider-purple" id="tp-width" oninput="updateTyrePressure()" aria-label="Ajustar ancho del neumático en milímetros">
                             <p class="text-[9px] text-zinc-500 mt-2 text-right">Las llantas anchas pueden expandir tu cubierta entre 1 y 2 mm extra.</p>
                         </div>
 
                         <div>
                             <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Modalidad</label>
-                            <div class="grid grid-cols-3 gap-2" id="tp-discipline-container">
-                                <button class="btn-terrain active py-3 px-1 md:px-2 rounded-xl text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="road">Carretera</button>
-                                <button class="btn-terrain py-3 px-1 md:px-2 rounded-xl text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="gravel">Gravel / CX</button>
-                                <button class="btn-terrain py-3 px-1 md:px-2 rounded-xl text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="mtb">MTB / XC</button>
+                            <div class="grid grid-cols-3 gap-2" id="tp-discipline-container" role="group" aria-label="Seleccionar disciplina ciclista">
+                                <button class="btn-terrain active py-3 px-1 md:px-2 rounded-xl text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="road" aria-pressed="true">Carretera</button>
+                                <button class="btn-terrain py-3 px-1 md:px-2 rounded-xl text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="gravel" aria-pressed="false">Gravel / CX</button>
+                                <button class="btn-terrain py-3 px-1 md:px-2 rounded-xl text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="mtb" aria-pressed="false">MTB / XC</button>
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Condición del Terreno</label>
-                            <div class="grid grid-cols-3 gap-2" id="tp-terrain-container">
+                            <div class="grid grid-cols-3 gap-2" id="tp-terrain-container" role="group" aria-label="Seleccionar tipo de terreno">
                                 </div>
                         </div>
 
                         <div>
                             <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Sistema</label>
-                            <div class="grid grid-cols-2 gap-2" id="tp-system-container">
-                                <button class="btn-terrain active py-3 px-2 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1">Tubeless / Tubular</button>
-                                <button class="btn-terrain py-3 px-2 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1.1">Cámara (Butyl/Latex)</button>
+                            <div class="grid grid-cols-2 gap-2" id="tp-system-container" role="group" aria-label="Seleccionar sistema de neumático">
+                                <button class="btn-terrain active py-3 px-2 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1" aria-pressed="true">Tubeless / Tubular</button>
+                                <button class="btn-terrain py-3 px-2 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="1.1" aria-pressed="false">Cámara (Butyl/Latex)</button>
                             </div>
                         </div>
                         
                         <div class="pt-4 border-t border-zinc-800/50 mt-4">
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Guardar este Setup de Presión</label>
+                            <label for="tp-profile-name" class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Guardar este Setup de Presión</label>
                             <div class="flex items-end gap-2">
-                                <input type="text" id="tp-profile-name" placeholder="Ej: Tarmac Asfalto, Orbea Barro..." class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-xs text-white focus:border-purple-500 outline-none transition-colors">
-                                <button onclick="saveTyreProfile()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-[10px] px-4 py-2.5 rounded-xl uppercase tracking-widest transition-colors flex items-center shadow-lg shadow-purple-500/20 shrink-0">
-                                    <i class="fas fa-save mr-1"></i> Guardar
+                                <input type="text" id="tp-profile-name" placeholder="Ej: Tarmac Asfalto, Orbea Barro..." class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-xs text-white focus:border-purple-500 outline-none transition-colors" aria-label="Nombre para guardar la configuración de presión">
+                                <button onclick="saveTyreProfile()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-[10px] px-4 py-2.5 rounded-xl uppercase tracking-widest transition-colors flex items-center shadow-lg shadow-purple-500/20 shrink-0" aria-label="Guardar perfil de presión">
+                                    <i class="fas fa-save mr-1" aria-hidden="true"></i> Guardar
                                 </button>
                             </div>
                         </div>
@@ -505,7 +510,7 @@
                     </div>
 
                     <div class="flex flex-col justify-center">
-                        <div class="bg-black/60 border border-purple-500/20 rounded-3xl p-6 md:p-8 relative overflow-hidden text-center shadow-inner h-full flex flex-col justify-center mt-6 lg:mt-0">
+                        <div class="bg-black/60 border border-purple-500/20 rounded-3xl p-6 md:p-8 relative overflow-hidden text-center shadow-inner h-full flex flex-col justify-center mt-6 lg:mt-0" aria-live="polite" aria-atomic="true">
                             <div class="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none"></div>
                             
                             <h3 class="text-sm font-black text-white italic uppercase tracking-widest mb-8 relative z-10">Presión Óptima Calculada</h3>
@@ -513,36 +518,36 @@
                             <div class="grid grid-cols-2 gap-4 relative z-10 divide-x divide-zinc-800">
                                 <div class="px-2">
                                     <span class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
-                                        <i class="fas fa-dot-circle mr-1"></i> Delantera
+                                        <i class="fas fa-dot-circle mr-1" aria-hidden="true"></i> Delantera
                                     </span>
                                     <div class="mb-1 flex items-baseline justify-center gap-1">
                                         <span id="tp-front-bar" class="text-4xl md:text-5xl font-black font-mono text-white tracking-tighter">0.0</span>
-                                        <span class="text-xs font-bold text-purple-400">BAR</span>
+                                        <span class="text-xs font-bold text-purple-400" aria-hidden="true">BAR</span>
                                     </div>
                                     <div>
                                         <span id="tp-front-psi" class="text-xl font-bold font-mono text-zinc-400">00</span>
-                                        <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">PSI</span>
+                                        <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" aria-hidden="true">PSI</span>
                                     </div>
                                 </div>
                                 
                                 <div class="px-2">
                                     <span class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
-                                        <i class="fas fa-bullseye mr-1"></i> Trasera
+                                        <i class="fas fa-bullseye mr-1" aria-hidden="true"></i> Trasera
                                     </span>
                                     <div class="mb-1 flex items-baseline justify-center gap-1">
                                         <span id="tp-rear-bar" class="text-4xl md:text-5xl font-black font-mono text-white tracking-tighter">0.0</span>
-                                        <span class="text-xs font-bold text-purple-400">BAR</span>
+                                        <span class="text-xs font-bold text-purple-400" aria-hidden="true">BAR</span>
                                     </div>
                                     <div>
                                         <span id="tp-rear-psi" class="text-xl font-bold font-mono text-zinc-400">00</span>
-                                        <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">PSI</span>
+                                        <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" aria-hidden="true">PSI</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mt-8 pt-6 border-t border-zinc-800/50 relative z-10 text-left">
                                 <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-bold mb-2">
-                                    <i class="fas fa-info-circle text-purple-500 mr-1"></i> Velo Insight:
+                                    <i class="fas fa-info-circle text-purple-500 mr-1" aria-hidden="true"></i> Velo Insight:
                                 </p>
                                 <p class="text-xs text-zinc-400 leading-relaxed font-mono">
                                     La rueda trasera soporta el mayor porcentaje de peso. Pasarse de presión provoca "rebotes" microscópicos que disparan la fricción (Crr) y te hacen perder vatios. Más duro no siempre es más rápido.
@@ -557,21 +562,21 @@
 
     </main>
 
-    <div id="delete-modal" class="fixed inset-0 z-[400] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-all opacity-0">
+    <div id="delete-modal" class="fixed inset-0 z-[400] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-all opacity-0" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl transform scale-95 transition-all">
             <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 mb-4 mx-auto border border-red-500/30">
-                <i class="fas fa-trash text-red-500 text-xl"></i>
+                <i class="fas fa-trash text-red-500 text-xl" aria-hidden="true"></i>
             </div>
-            <h3 class="text-lg font-black text-white text-center uppercase italic tracking-widest mb-2">Confirmar Borrado</h3>
+            <h3 id="modal-title" class="text-lg font-black text-white text-center uppercase italic tracking-widest mb-2">Confirmar Borrado</h3>
             <p class="text-sm text-zinc-400 text-center mb-6">¿Estás seguro de que quieres eliminar <strong id="modal-bike-name" class="text-white"></strong> de tu garaje virtual?</p>
             <div class="flex gap-3">
-                <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 font-bold uppercase tracking-widest text-[10px] hover:bg-zinc-800 transition-colors">Cancelar</button>
-                <button id="modal-confirm-btn" class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-black uppercase tracking-widest text-[10px] hover:bg-red-500 shadow-lg shadow-red-900/50 transition-colors">Borrar</button>
+                <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 font-bold uppercase tracking-widest text-[10px] hover:bg-zinc-800 transition-colors" aria-label="Cancelar borrado">Cancelar</button>
+                <button id="modal-confirm-btn" class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-black uppercase tracking-widest text-[10px] hover:bg-red-500 shadow-lg shadow-red-900/50 transition-colors" aria-label="Confirmar borrado">Borrar</button>
             </div>
         </div>
     </div>
 
-    <div id="toast-container" class="fixed bottom-6 right-6 z-[500] flex flex-col gap-3 pointer-events-none"></div>
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[500] flex flex-col gap-3 pointer-events-none" aria-live="polite"></div>
 
     <script src="layout.js?v=7.1"></script>
 
@@ -596,10 +601,16 @@
             gradientLabel = labelText;
             
             const buttons = document.querySelectorAll('.gradient-btn');
-            buttons.forEach(btn => btn.classList.remove('border-cyan-500/50', 'text-white'));
+            buttons.forEach(btn => {
+                btn.classList.remove('border-cyan-500/50', 'text-white');
+                btn.setAttribute('aria-pressed', 'false');
+            });
             
             const activeButton = [...buttons].find(btn => btn.innerText.includes(`${percent}%`));
-            if(activeButton) activeButton.classList.add('border-cyan-500/50', 'text-white');
+            if(activeButton) {
+                activeButton.classList.add('border-cyan-500/50', 'text-white');
+                activeButton.setAttribute('aria-pressed', 'true');
+            }
             
             calculateTelemetry();
         }
@@ -630,7 +641,7 @@
             const toast = document.createElement('div');
             const isError = type === 'error';
             toast.className = `p-4 rounded-xl shadow-2xl transform transition-all duration-300 translate-y-10 opacity-0 flex items-center gap-3 backdrop-blur-md ${isError ? 'bg-red-950/90 border border-red-500/50 text-red-200' : 'bg-emerald-950/90 border border-emerald-500/50 text-emerald-200'}`;
-            toast.innerHTML = `<i class="fas ${isError ? 'fa-trash' : 'fa-check-circle'} text-lg"></i><span class="font-bold text-[10px] uppercase tracking-widest">${message}</span>`;
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-trash' : 'fa-check-circle'} text-lg" aria-hidden="true"></i><span class="font-bold text-[10px] uppercase tracking-widest">${message}</span>`;
             
             document.getElementById('toast-container').appendChild(toast);
             
@@ -752,21 +763,21 @@
                     <div class="mb-2 grid grid-cols-1 gap-2 border-b border-zinc-800 pb-3">
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mis Platos</label>
-                                <input type="text" id="custom-platos-${setupId}" value="${mem.platos}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors" placeholder="Ej: 50, 34">
+                                <label for="custom-platos-${setupId}" class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mis Platos</label>
+                                <input type="text" id="custom-platos-${setupId}" value="${mem.platos}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors" placeholder="Ej: 50, 34" aria-label="Ingresar números de dientes separados por comas para los platos">
                             </div>
                             <div>
-                                <label class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mi Cassette</label>
-                                <input type="text" id="custom-pinones-${setupId}" value="${mem.pinones}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors" placeholder="Ej: 11, 13, 15...">
+                                <label for="custom-pinones-${setupId}" class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mi Cassette</label>
+                                <input type="text" id="custom-pinones-${setupId}" value="${mem.pinones}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors" placeholder="Ej: 11, 13, 15..." aria-label="Ingresar números de dientes separados por comas para el cassette">
                             </div>
                         </div>
                         <div class="flex items-end gap-2 mt-1">
                             <div class="flex-1">
-                                <label class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Guardar Perfil</label>
-                                <input type="text" id="profile-name-${setupId}" placeholder="Ej: Trek Emonda" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white focus:border-${colorClass}-500 outline-none transition-colors">
+                                <label for="profile-name-${setupId}" class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Guardar Perfil</label>
+                                <input type="text" id="profile-name-${setupId}" placeholder="Ej: Trek Emonda" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white focus:border-${colorClass}-500 outline-none transition-colors" aria-label="Nombre para guardar este perfil de transmisión">
                             </div>
-                            <button onclick="saveCustomProfile('${setupId}')" class="bg-${colorClass}-600 hover:bg-${colorClass}-500 text-black font-bold text-[10px] px-3 py-1.5 rounded-lg uppercase tracking-widest transition-colors h-[30px] flex items-center shadow-lg shadow-${colorClass}-500/20 shrink-0">
-                                <i class="fas fa-save mr-1"></i> Guardar
+                            <button onclick="saveCustomProfile('${setupId}')" class="bg-${colorClass}-600 hover:bg-${colorClass}-500 text-black font-bold text-[10px] px-3 py-1.5 rounded-lg uppercase tracking-widest transition-colors h-[30px] flex items-center shadow-lg shadow-${colorClass}-500/20 shrink-0" aria-label="Guardar perfil de transmisión personalizado">
+                                <i class="fas fa-save mr-1" aria-hidden="true"></i> Guardar
                             </button>
                         </div>
                     </div>
@@ -778,17 +789,15 @@
 
             const data = groupsetsDB[presetVal];
             
-            // Botones de Platos (RESPONSIVOS: Pequeños en móvil, Grandes en PC)
             const platosHTML = data.platos.map(p => 
-                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 md:px-4 md:py-2 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-sm md:text-base font-black font-mono shadow-sm">${p}T</button>`
+                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 md:px-4 md:py-2 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-sm md:text-base font-black font-mono shadow-sm" aria-label="Seleccionar plato de ${p} dientes">${p}T</button>`
             ).join('');
 
-            // Botones de Piñones (RESPONSIVOS)
             const pinonesHTML = data.pinones.map(p => 
-                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-xs md:text-sm font-bold font-mono transition-colors shadow-sm">${p}</button>`
+                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-xs md:text-sm font-bold font-mono transition-colors shadow-sm" aria-label="Seleccionar piñón de ${p} dientes">${p}</button>`
             ).join('');
 
-            const deleteBtn = data.isUser ? `<button onclick="confirmDeleteProfile('${presetVal}', '${setupId}')" class="text-red-500/50 hover:text-red-400 p-2 rounded-lg hover:bg-red-950/30 transition-colors" title="Borrar perfil"><i class="fas fa-trash"></i></button>` : '';
+            const deleteBtn = data.isUser ? `<button onclick="confirmDeleteProfile('${presetVal}', '${setupId}')" class="text-red-500/50 hover:text-red-400 p-2 rounded-lg hover:bg-red-950/30 transition-colors" title="Borrar perfil" aria-label="Borrar este perfil de transmisión"><i class="fas fa-trash" aria-hidden="true"></i></button>` : '';
 
             container.innerHTML = `
                 <div class="mb-4 flex items-center gap-3 md:gap-4">
@@ -796,7 +805,7 @@
                         <span class="block text-[9px] md:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
                         <span class="block text-xs md:text-sm font-black text-${colorClass}-500 mt-1">${data.platos.length}x</span>
                     </div>
-                    <div class="flex gap-2 flex-wrap flex-1">${platosHTML}</div>
+                    <div class="flex gap-2 flex-wrap flex-1" role="group" aria-label="Selección rápida de plato">${platosHTML}</div>
                     ${deleteBtn}
                 </div>
                 <div class="flex items-start gap-3 md:gap-4">
@@ -804,7 +813,7 @@
                         <span class="block text-[9px] md:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
                         <span class="block text-xs md:text-sm font-black text-${colorClass}-500 mt-1">${data.pinones.length}v</span>
                     </div>
-                    <div class="flex flex-wrap gap-1.5 md:gap-2 flex-1">${pinonesHTML}</div>
+                    <div class="flex flex-wrap gap-1.5 md:gap-2 flex-1" role="group" aria-label="Selección rápida de piñón">${pinonesHTML}</div>
                 </div>
             `;
 
@@ -834,11 +843,11 @@
             const hoverClass = `hover:bg-${colorClass}-500 hover:text-black`;
 
             const platosHTML = platosArr.map(p => 
-                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 md:px-4 md:py-2 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-sm md:text-base font-black font-mono shadow-sm">${p}T</button>`
+                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 md:px-4 md:py-2 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-sm md:text-base font-black font-mono shadow-sm" aria-label="Seleccionar plato de ${p} dientes">${p}T</button>`
             ).join('');
 
             const pinonesHTML = pinonesArr.map(p => 
-                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-xs md:text-sm font-bold font-mono transition-colors shadow-sm">${p}</button>`
+                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-xs md:text-sm font-bold font-mono transition-colors shadow-sm" aria-label="Seleccionar piñón de ${p} dientes">${p}</button>`
             ).join('');
 
             const targetDiv = document.getElementById(`custom-buttons-container-${setupId}`);
@@ -849,14 +858,14 @@
                             <span class="block text-[9px] md:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
                             <span class="block text-xs md:text-sm font-black text-${colorClass}-500 mt-1">${platosArr.length}x</span>
                         </div>
-                        <div class="flex gap-2 flex-wrap flex-1">${platosHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
+                        <div class="flex gap-2 flex-wrap flex-1" role="group" aria-label="Selección rápida de plato">${platosHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
                     </div>
                     <div class="flex items-start gap-3 md:gap-4">
                         <div class="w-16 shrink-0 mt-2">
                             <span class="block text-[9px] md:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
                             <span class="block text-xs md:text-sm font-black text-${colorClass}-500 mt-1">${pinonesArr.length}v</span>
                         </div>
-                        <div class="flex flex-wrap gap-1.5 md:gap-2 flex-1">${pinonesHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
+                        <div class="flex flex-wrap gap-1.5 md:gap-2 flex-1" role="group" aria-label="Selección rápida de piñón">${pinonesHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
                     </div>
                 `;
             }
@@ -1129,7 +1138,7 @@
             const opts = terrenos[discipline];
             
             container.innerHTML = opts.map((t, index) => `
-                <button class="btn-terrain-sub ${index === 0 ? 'active' : ''} py-3 px-1 md:px-2 rounded-xl text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="${t.mult}">
+                <button class="btn-terrain-sub ${index === 0 ? 'active' : ''} py-3 px-1 md:px-2 rounded-xl text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-900/50" data-val="${t.mult}" aria-pressed="${index === 0 ? 'true' : 'false'}">
                     ${t.label}
                 </button>
             `).join('');
@@ -1138,8 +1147,12 @@
 
             document.querySelectorAll('#tp-terrain-container .btn-terrain-sub').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('#tp-terrain-container .btn-terrain-sub').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('#tp-terrain-container .btn-terrain-sub').forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
                     e.target.classList.add('active');
+                    e.target.setAttribute('aria-pressed', 'true');
                     tpTerrainFactor = parseFloat(e.target.dataset.val);
                     updateTyrePressure();
                 });
@@ -1153,7 +1166,7 @@
             document.getElementById('tp-weight-val').innerText = w;
             document.getElementById('tp-width-val').innerText = width;
 
-            // FÓRMULA VELO INSIGHTS (Mejorada para Road, Gravel y MTB)
+            // FÓRMULA VELO INSIGHTS
             let basePSI = 90 * (w / 85) * Math.pow((28 / width), 1.6);
             
             let disciplineMult = 1.0; 
@@ -1252,15 +1265,27 @@
                 // Update UI Buttons visually
                 document.querySelectorAll('#tp-discipline-container .btn-terrain').forEach(b => {
                     b.classList.remove('active');
-                    if(b.dataset.val === tpDiscipline) b.classList.add('active');
+                    b.setAttribute('aria-pressed', 'false');
+                    if(b.dataset.val === tpDiscipline) {
+                        b.classList.add('active');
+                        b.setAttribute('aria-pressed', 'true');
+                    }
                 });
                 document.querySelectorAll('#tp-system-container .btn-terrain').forEach(b => {
                     b.classList.remove('active');
-                    if(parseFloat(b.dataset.val) === tpSystemFactor) b.classList.add('active');
+                    b.setAttribute('aria-pressed', 'false');
+                    if(parseFloat(b.dataset.val) === tpSystemFactor) {
+                        b.classList.add('active');
+                        b.setAttribute('aria-pressed', 'true');
+                    }
                 });
                 document.querySelectorAll('#tp-terrain-container .btn-terrain-sub').forEach(b => {
                     b.classList.remove('active');
-                    if(parseFloat(b.dataset.val) === tpTerrainFactor) b.classList.add('active');
+                    b.setAttribute('aria-pressed', 'false');
+                    if(parseFloat(b.dataset.val) === tpTerrainFactor) {
+                        b.classList.add('active');
+                        b.setAttribute('aria-pressed', 'true');
+                    }
                 });
 
                 updateTyrePressure();
@@ -1304,8 +1329,12 @@
         // Listeners básicos de Presiones
         document.querySelectorAll('#tp-discipline-container .btn-terrain').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                document.querySelectorAll('#tp-discipline-container .btn-terrain').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#tp-discipline-container .btn-terrain').forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-pressed', 'false');
+                });
                 e.target.classList.add('active');
+                e.target.setAttribute('aria-pressed', 'true');
                 tpDiscipline = e.target.dataset.val;
                 updateTerrainButtons(tpDiscipline); 
                 updateTyrePressure();
@@ -1316,8 +1345,12 @@
 
         document.querySelectorAll('#tp-system-container .btn-terrain').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                document.querySelectorAll('#tp-system-container .btn-terrain').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#tp-system-container .btn-terrain').forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-pressed', 'false');
+                });
                 e.target.classList.add('active');
+                e.target.setAttribute('aria-pressed', 'true');
                 tpSystemFactor = parseFloat(e.target.dataset.val);
                 updateTyrePressure();
                 document.getElementById('tp-preset').value = 'default';
