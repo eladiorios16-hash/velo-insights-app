@@ -43,16 +43,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/assets/icon-192.png">
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('✅ App registrada', reg.scope))
-                    .catch(err => console.log('❌ Error registro App', err));
-            });
-        }
-    </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="assets/main.css">
@@ -89,7 +79,7 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        .filter-btn { transition: all 0.3s ease; background: transparent; }
+        .filter-btn { transition: all 0.3s ease; background: transparent; touch-action: manipulation; }
         .filter-btn.active-all { border-color: #ffffff; color: #ffffff; background: rgba(255,255,255,0.05); box-shadow: 0 0 10px rgba(255,255,255,0.1); }
         .filter-btn.active-gt { border-color: #ec4899; color: #ec4899; background: rgba(236, 72, 153, 0.1); box-shadow: 0 0 15px rgba(236, 72, 153, 0.2); }
         .filter-btn.active-monument { border-color: #facc15; color: #facc15; background: rgba(250, 204, 21, 0.1); box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); }
@@ -119,19 +109,20 @@
             </h1>
             
             <div class="max-w-md mx-auto relative group mb-8">
+                <label for="search-input" class="sr-only">Buscar carrera en el calendario</label>
                 <input type="text" id="search-input" placeholder="BUSCAR CARRERA..." 
-                       class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-3 px-12 text-white outline-none focus:border-cyan-500 focus:bg-black transition-all text-center uppercase font-bold tracking-wider text-xs md:text-sm placeholder-zinc-700 backdrop-blur-sm">
+                       class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-3 px-12 text-white outline-none focus:border-cyan-500 focus:bg-black transition-all text-center uppercase font-bold tracking-wider text-xs md:text-sm placeholder-zinc-700 backdrop-blur-sm" aria-label="Buscador de carreras">
             </div>
 
-            <div class="flex flex-wrap justify-center gap-3">
-                <button id="btn-ALL" onclick="filterRaces('ALL')" class="filter-btn active-all px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-zinc-600 hover:text-zinc-300">Todos</button>
-                <button id="btn-GT" onclick="filterRaces('GT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-pink-900 hover:text-pink-800">Grand Tours</button>
-                <button id="btn-MONUMENT" onclick="filterRaces('MONUMENT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-yellow-900 hover:text-yellow-800">Monumentos</button>
-                <button id="btn-WT" onclick="filterRaces('WT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-cyan-900 hover:text-cyan-800">World Tour</button>
+            <div class="flex flex-wrap justify-center gap-3" role="group" aria-label="Filtros por tipo de carrera">
+                <button id="btn-ALL" onclick="filterRaces('ALL')" class="filter-btn active-all px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-zinc-600 hover:text-zinc-300" aria-pressed="true">Todos</button>
+                <button id="btn-GT" onclick="filterRaces('GT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-pink-900 hover:text-pink-800" aria-pressed="false">Grand Tours</button>
+                <button id="btn-MONUMENT" onclick="filterRaces('MONUMENT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-yellow-900 hover:text-yellow-800" aria-pressed="false">Monumentos</button>
+                <button id="btn-WT" onclick="filterRaces('WT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-cyan-900 hover:text-cyan-800" aria-pressed="false">World Tour</button>
             </div>
         </header>
 
-        <div id="calendar-container" class="space-y-4"></div>
+        <div id="calendar-container" class="space-y-4" role="list" aria-label="Lista de carreras del WorldTour"></div>
 
     </main>
 
@@ -187,17 +178,18 @@
                     <div onclick="toggleStage(${raceIndex}, ${index}); event.stopPropagation();" 
                          title="Etapa ${s.n}: ${s.type || 'Etapa'}"
                          class="flex-1 mx-[1px] rounded-t-sm relative group/bar flex flex-col justify-end items-center"
-                         style="height: 100%;">
+                         style="height: 100%;"
+                         role="button" aria-expanded="false" aria-label="Ver detalles etapa ${s.n}">
                         <div class="w-full rounded-t-sm profile-bar ${colorClass} opacity-80 group-hover/bar:opacity-100" style="height: ${height}"></div>
                     </div>
                 `;
             });
 
             return `
-                <div class="px-5 py-6 bg-[#0a0a0a] border-b border-zinc-800">
+                <div class="px-5 py-6 bg-[#0a0a0a] border-b border-zinc-800" aria-label="Gráfico de altimetría de la carrera">
                     <div class="flex justify-between items-end mb-2">
                          <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Perfil de Carrera</span>
-                         <span class="text-[9px] font-mono text-zinc-600 uppercase">Interactive Chart</span>
+                         <span class="text-[9px] font-mono text-zinc-600 uppercase" aria-hidden="true">Interactive Chart</span>
                     </div>
                     <div class="h-24 w-full flex items-end border-b border-zinc-800 pb-px relative">
                          <div class="absolute w-full h-full border-t border-dashed border-zinc-800/30 top-0 left-0 pointer-events-none"></div>
@@ -205,7 +197,7 @@
                          
                          ${barsHTML}
                     </div>
-                    <div class="flex justify-between mt-2">
+                    <div class="flex justify-between mt-2" aria-hidden="true">
                         <span class="text-[8px] text-zinc-600">E1</span>
                         <span class="text-[8px] text-zinc-600">FINAL</span>
                     </div>
@@ -215,7 +207,7 @@
 
         function renderCalendar(data) {
             if (data.length === 0) {
-                container.innerHTML = `<div class="text-center py-20 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20"><p class="text-zinc-600 font-bold uppercase text-xs">Sin resultados</p></div>`;
+                container.innerHTML = `<div class="text-center py-20 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20"><p class="text-zinc-600 font-bold uppercase text-xs" role="alert">Sin resultados</p></div>`;
                 return;
             }
 
@@ -233,12 +225,10 @@
                     stagesHTML = stages.map((s, j) => {
                         const typeClass = s.type ? s.type.toLowerCase().replace(/\s+/g, '') : 'llano';
                         
-                        // Cálculo de la fecha para esta etapa
                         let dateStr = '';
                         let stageDateObj = new Date(r.dateISO);
                         if (!isNaN(stageDateObj.getTime())) {
                             stageDateObj.setDate(stageDateObj.getDate() + j);
-                            // Si el usuario especificó "date" en el JSON lo usamos, si no calculamos automático
                             dateStr = s.date || stageDateObj.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
                         } else {
                             dateStr = s.date || 'TBD';
@@ -246,17 +236,17 @@
                         
                         const winnerHTML = s.winner ? 
                             `<div class="mt-1.5 flex items-center gap-1.5 animate-pulse-slow">
-                                <svg class="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                <svg class="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
-                                <span class="text-[10px] font-black text-amber-400 uppercase tracking-wide border-b border-amber-400/20">${s.winner}</span>
+                                <span class="text-[10px] font-black text-amber-400 uppercase tracking-wide border-b border-amber-400/20">Ganador: ${s.winner}</span>
                             </div>` : '';
 
                         return `
-                        <div class="border-b border-zinc-800 last:border-0">
-                            <button onclick="toggleStage(${i}, ${j})" id="stage-btn-${i}-${j}" class="stage-btn w-full p-4 hover:bg-white/5 transition-colors flex items-center justify-between gap-4 text-left group/stage">
+                        <div class="border-b border-zinc-800 last:border-0" role="listitem">
+                            <button onclick="toggleStage(${i}, ${j})" id="stage-btn-${i}-${j}" class="stage-btn w-full p-4 hover:bg-white/5 transition-colors flex items-center justify-between gap-4 text-left group/stage" aria-expanded="false" aria-controls="stage-content-${i}-${j}">
                                 <div class="flex items-center gap-3 w-full">
-                                    <span class="font-heading text-lg text-zinc-500 w-6 shrink-0 text-center group-hover/stage:text-white transition-colors">${s.n}</span>
+                                    <span class="font-heading text-lg text-zinc-500 w-6 shrink-0 text-center group-hover/stage:text-white transition-colors" aria-hidden="true">${s.n}</span>
                                     <div class="flex-1 min-w-0">
                                         <h4 class="text-xs md:text-sm font-bold text-white uppercase stage-name transition-colors truncate flex items-baseline gap-2">
                                             Etapa ${s.n} 
@@ -272,7 +262,7 @@
                                     </div>
                                 </div>
                                 <div class="stage-arrow text-zinc-600 shrink-0">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
                             </button>
                             <div id="stage-content-${i}-${j}" class="stage-detail-content race-${i}-stage-content">
@@ -285,12 +275,12 @@
                                     
                                     ${s.image ? `
                                         <div class="bg-white rounded-xl p-1 md:p-2 overflow-hidden border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all flex justify-center group/img">
-                                            <img src="${s.image}" onclick="openLightbox(this.src)" loading="lazy" class="w-full h-auto object-contain max-h-[350px] md:max-h-[500px] cursor-pointer group-hover/img:scale-[1.02] transition-transform duration-300" alt="Perfil etapa ${s.n}">
+                                            <img src="${s.image}" onclick="openLightbox(this.src)" loading="lazy" class="w-full h-auto object-contain max-h-[350px] md:max-h-[500px] cursor-pointer group-hover/img:scale-[1.02] transition-transform duration-300" alt="Perfil altimétrico de la etapa ${s.n}">
                                         </div>
                                         <div class="mt-4 flex justify-end">
                                             <button onclick="shareStage('${r.name}', ${s.n}, '${s.route}', '${s.km}', '${s.gain}', '${s.image}')" 
-                                                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase hover:bg-cyan-500 hover:text-black transition-all">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 12a3 3 0 100-2.684 3 3 0 000 2.684z"></path></svg>
+                                                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase hover:bg-cyan-500 hover:text-black transition-all" aria-label="Compartir perfil de la etapa">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 12a3 3 0 100-2.684 3 3 0 000 2.684z"></path></svg>
                                                 Compartir Etapa
                                             </button>
                                         </div>
@@ -300,16 +290,16 @@
                         </div>`;
                     }).join('');
                 } else {
-                    stagesHTML = `<div class="p-6 text-center text-zinc-600 text-xs italic">Detalles de etapas no disponibles.</div>`;
+                    stagesHTML = `<div class="p-6 text-center text-zinc-600 text-xs italic" role="status">Detalles de etapas no disponibles.</div>`;
                 }
 
                 const today = new Date().toISOString().split('T')[0];
                 const isLive = r.dateISO === today;
-                const statusBadge = isLive ? `<span class="bg-green-500 text-black text-[9px] font-black px-2 py-0.5 rounded animate-pulse ml-2">EN VIVO</span>` : '';
+                const statusBadge = isLive ? `<span class="bg-green-500 text-black text-[9px] font-black px-2 py-0.5 rounded animate-pulse ml-2" aria-label="Carrera en vivo">EN VIVO</span>` : '';
 
                 const raceWinnerBadge = r.winner ? `
                     <div class="mt-2 flex items-center gap-1.5">
-                        <span class="bg-amber-500/20 border border-amber-500/40 text-amber-500 text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest flex items-center gap-1">
+                        <span class="bg-amber-500/20 border border-amber-500/40 text-amber-500 text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest flex items-center gap-1" aria-hidden="true">
                             <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M21 5h-4M19 3v4M9 11v3m-3 4h12M12 3v8m0 0a4 4 0 01-4-4m4 4a4 4 0 004-4"></path></svg>
                             GANADOR
                         </span>
@@ -318,10 +308,10 @@
                 ` : '';
 
                 return `
-                <div id="card-${i}" class="race-card bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden mb-4">
-                    <div class="p-5 flex items-center justify-between cursor-pointer" onclick="toggleDetails(${i})">
+                <div id="card-${i}" class="race-card bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden mb-4" role="listitem">
+                    <div class="p-5 flex items-center justify-between cursor-pointer" onclick="toggleDetails(${i})" role="button" aria-expanded="false" aria-controls="details-${i}" aria-label="Ver detalles de ${r.name}">
                         <div class="flex items-center gap-5">
-                            <div class="flex flex-col items-center justify-center w-12 shrink-0 border-r border-zinc-800 pr-5">
+                            <div class="flex flex-col items-center justify-center w-12 shrink-0 border-r border-zinc-800 pr-5" aria-hidden="true">
                                 <span class="text-3xl font-black italic text-white leading-none">${day}</span>
                                 <span class="text-[10px] font-bold text-zinc-500 uppercase">${month}</span>
                             </div>
@@ -338,15 +328,17 @@
                             </div>
                         </div>
                         <div class="w-8 h-8 rounded-full border border-zinc-700 flex items-center justify-center text-zinc-400 transition-all icon-toggle" id="icon-${i}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
-                    <div id="details-${i}" class="details-content">
+                    <div id="details-${i}" class="details-content" role="region">
                         ${graphHTML}
-                        ${stagesHTML}
+                        <div role="list" aria-label="Etapas de la carrera">
+                            ${stagesHTML}
+                        </div>
                         <div class="p-4 bg-zinc-900 border-t border-zinc-800 flex justify-center">
-                            <button onclick="addToCalendar('${r.name}', '${r.dateISO}')" class="flex items-center gap-2 text-[10px] font-bold text-zinc-400 hover:text-white uppercase transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <button onclick="addToCalendar('${r.name}', '${r.dateISO}')" class="flex items-center gap-2 text-[10px] font-bold text-zinc-400 hover:text-white uppercase transition-colors" aria-label="Añadir esta carrera a Google Calendar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 Agendar en Google Calendar
                             </button>
                         </div>
@@ -357,16 +349,21 @@
 
         function filterRaces(category) {
             currentFilter = category;
+            
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active-all', 'active-gt', 'active-monument', 'active-wt');
+                btn.setAttribute('aria-pressed', 'false');
             });
+            
             const activeBtn = document.getElementById(`btn-${category}`);
             if (activeBtn) {
+                activeBtn.setAttribute('aria-pressed', 'true');
                 if (category === 'ALL') activeBtn.classList.add('active-all');
                 else if (category === 'GT') activeBtn.classList.add('active-gt');
                 else if (category === 'MONUMENT') activeBtn.classList.add('active-monument');
                 else if (category === 'WT') activeBtn.classList.add('active-wt');
             }
+            
             const term = searchInput.value.toLowerCase().trim();
             const filtered = allRaces.filter(r => {
                 const matchesCategory = category === 'ALL' || r.category === category;
@@ -376,36 +373,63 @@
             renderCalendar(filtered);
         }
 
+        // --- UX MÓVIL: Acordeón Inteligente (Solo una carrera abierta a la vez) ---
         function toggleDetails(index) {
             const content = document.getElementById(`details-${index}`);
             const card = document.getElementById(`card-${index}`);
             const icon = document.getElementById(`icon-${index}`);
             const isOpen = content.classList.contains('open');
-            document.querySelectorAll('.details-content').forEach(el => el.classList.remove('open'));
+            
+            // Cerrar todas las demás carreras primero (Evita el scroll infinito)
+            document.querySelectorAll('.details-content').forEach(el => {
+                el.classList.remove('open');
+                el.parentElement.setAttribute('aria-expanded', 'false');
+            });
             document.querySelectorAll('.race-card').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.icon-toggle').forEach(el => el.style.transform = 'rotate(0deg)');
+            
+            // Si no estaba abierta, la abrimos y hacemos auto-scroll para enfocarla
             if(!isOpen) {
                 content.classList.add('open');
                 card.classList.add('active');
+                card.setAttribute('aria-expanded', 'true');
                 icon.style.transform = 'rotate(180deg)';
+                
+                // Pequeño retardo para dejar que la animación del CSS termine antes de hacer scroll
+                setTimeout(() => {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
             }
         }
 
+        // --- UX MÓVIL: Acordeón Inteligente para Etapas ---
         window.toggleStage = (raceIndex, stageIndex) => {
             const contentID = `stage-content-${raceIndex}-${stageIndex}`;
             const btnID = `stage-btn-${raceIndex}-${stageIndex}`;
             const targetContent = document.getElementById(contentID);
             const targetBtn = document.getElementById(btnID);
             const isAlreadyOpen = targetContent.classList.contains('open');
+            
+            // Cerrar todas las demás etapas de ESA carrera
             const allStagesInRace = document.querySelectorAll(`.race-${raceIndex}-stage-content`);
             allStagesInRace.forEach(el => el.classList.remove('open'));
+            
             const parentDetails = document.getElementById(`details-${raceIndex}`);
             const allBtns = parentDetails.querySelectorAll('.stage-btn');
-            allBtns.forEach(btn => btn.classList.remove('active'));
+            allBtns.forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-expanded', 'false');
+            });
             
+            // Si la etapa estaba cerrada, abrirla y enfocarla
             if (!isAlreadyOpen) {
                 targetContent.classList.add('open');
                 targetBtn.classList.add('active');
+                targetBtn.setAttribute('aria-expanded', 'true');
+                
+                setTimeout(() => {
+                    targetBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 300);
             }
         };
 
@@ -439,9 +463,9 @@
         document.addEventListener('DOMContentLoaded', initCalendar);
     </script>
 
-    <div id="cookie-banner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-8 md:bottom-8 md:w-[400px] bg-zinc-900/95 backdrop-blur-md border border-zinc-700 shadow-2xl rounded-2xl p-6 z-[999] transform transition-transform duration-500 translate-y-full">
+    <div id="cookie-banner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-8 md:bottom-8 md:w-[400px] bg-zinc-900/95 backdrop-blur-md border border-zinc-700 shadow-2xl rounded-2xl p-6 z-[999] transform transition-transform duration-500 translate-y-full" role="dialog" aria-live="polite">
         <div class="flex items-center gap-3 mb-3">
-            <i class="fas fa-shield-alt text-cyan-500 text-xl"></i>
+            <i class="fas fa-shield-alt text-cyan-500 text-xl" aria-hidden="true"></i>
             <h3 class="text-white font-black uppercase tracking-widest text-sm">Privacidad y Telemetría</h3>
         </div>
         <p class="text-zinc-400 text-xs leading-relaxed mb-5 font-mono">
@@ -459,7 +483,6 @@
     </div>
 
     <script>
-        // Lógica del Banner de Cookies
         document.addEventListener('DOMContentLoaded', () => {
             const banner = document.getElementById('cookie-banner');
             const btnAccept = document.getElementById('btn-accept-cookies');
