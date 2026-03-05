@@ -325,7 +325,7 @@ async function upgradeDatabase() {
 }
 upgradeDatabase();
 
-// --- RUTAS SEO PARA REDES SOCIALES (OPEN GRAPH REPARADO) ---
+// --- RUTAS SEO PARA REDES SOCIALES Y SCHEMA.ORG (FASE 2) ---
 app.get('/noticias.html', async (req, res, next) => {
     const articleId = req.query.article;
     if (!articleId) return next(); 
@@ -341,15 +341,37 @@ app.get('/noticias.html', async (req, res, next) => {
         const defaultImage = '[https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop](https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop)';
         let imageUrl = noticia.image ? noticia.image.trim() : defaultImage;
         
-        // REPARACIÓN CRÍTICA: Asegurar ruta absoluta sin importar subcarpetas (assets/noticias/2026/...)
+        // REPARACIÓN CRÍTICA: Asegurar ruta absoluta sin importar subcarpetas
         if (imageUrl && !imageUrl.startsWith('http')) {
-            // Eliminamos la barra inicial si la tiene para no duplicar
             imageUrl = imageUrl.replace(/^\/+/, ''); 
             imageUrl = '[https://veloinsights.es/](https://veloinsights.es/)' + imageUrl;
         }
 
         const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
         const cleanDesc = noticia.lead ? noticia.lead.replace(/"/g, '&quot;') : 'Análisis técnico y táctico de ciclismo.';
+
+        // NUEVO: Generador de Datos Estructurados (Schema.org) para Google
+        const schemaData = {
+            "@context": "[https://schema.org](https://schema.org)",
+            "@type": "NewsArticle",
+            "headline": cleanTitle,
+            "description": cleanDesc,
+            "image": [imageUrl],
+            "datePublished": noticia.dateISO || new Date().toISOString(),
+            "author": [{
+                "@type": "Organization",
+                "name": "Velo Insights",
+                "url": "[https://veloinsights.es](https://veloinsights.es)"
+            }],
+            "publisher": {
+                "@type": "Organization",
+                "name": "Velo Insights",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "[https://veloinsights.es/assets/favicon-144.png](https://veloinsights.es/assets/favicon-144.png)"
+                }
+            }
+        };
 
         const ogTags = `
     <title>${cleanTitle} | Velo Insights</title>
@@ -364,6 +386,9 @@ app.get('/noticias.html', async (req, res, next) => {
     <meta name="twitter:title" content="${cleanTitle}" />
     <meta name="twitter:description" content="${cleanDesc}" />
     <meta name="twitter:image" content="${imageUrl}" />
+    <script type="application/ld+json">
+    ${JSON.stringify(schemaData)}
+    </script>
         `;
 
         if (html.includes('')) {
@@ -375,7 +400,7 @@ app.get('/noticias.html', async (req, res, next) => {
         res.send(html);
 
     } catch (error) {
-        console.error("Error fatal inyectando Open Graph:", error);
+        console.error("Error fatal inyectando Open Graph y Schema:", error);
         next();
     }
 });
