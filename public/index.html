@@ -392,6 +392,16 @@
             10: { tag: "World Tour", time: "00:39:50", watts: "445W", wkg: "6.8", b: "100%" }
         };
 
+        // --- NUEVA FUNCIÓN: GENERADOR DE RUTAS PARA FOTOS DE CICLISTAS ---
+        function getRiderImageUrl(name) {
+            if (!name) return 'assets/ciclistas/default.jpg';
+            // Quita acentos, minúsculas, cambia espacios y puntos por guiones
+            let slug = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            slug = slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+            return `assets/ciclistas/${slug}.jpg`;
+        }
+        // ------------------------------------------------------------------
+
         function initComparisonEngine() {
             const savedWatts = localStorage.getItem('velo_watts');
             const savedWeight = localStorage.getItem('velo_weight');
@@ -489,7 +499,6 @@
                 document.getElementById('rcr-category').innerText = liveRace.category || 'WT';
                 
                 try {
-                    // EL BLINDAJE: Nos aseguramos de leer el JSON sin importar cómo lo envíe el servidor
                     let detailsObj = {};
                     if (liveRace.details) {
                         if (typeof liveRace.details === 'string' && liveRace.details.trim().startsWith('{')) {
@@ -499,7 +508,6 @@
                         }
                     }
 
-                    // Inyectamos Telemetría
                     if (detailsObj.stages && detailsObj.stages.length > 0) {
                         const etapa1 = detailsObj.stages[0];
                         document.getElementById('rcr-km').innerText = (etapa1.km || '---') + ' km';
@@ -507,7 +515,6 @@
                         document.getElementById('rcr-type').innerText = etapa1.type || '---';
                     }
 
-                    // Inyectamos Táctica
                     if (detailsObj.tactical) {
                         const tacticalContainer = document.querySelector('#race-control-room .prose');
                         if (tacticalContainer) {
@@ -520,12 +527,10 @@
             }
         }
 
-        // FASE 1: CARGA ASÍNCRONA ULTRA-RÁPIDA (CACHÉ LOCAL + API UNIFICADA)
         async function loadContentOptimized() {
             const CACHE_KEY = 'velo_home_data';
             const cachedData = localStorage.getItem(CACHE_KEY);
 
-            // 1. Mostrar datos cacheados AL INSTANTE (Cero tiempos de carga)
             if (cachedData) {
                 try {
                     const data = JSON.parse(cachedData);
@@ -533,16 +538,12 @@
                 } catch(e) { console.error("Error en caché, recargando..."); }
             }
 
-            // 2. Buscar datos frescos en un SOLO GOLPE al servidor
             try {
                 const response = await fetch('/api/home');
                 if (!response.ok) throw new Error('Network response was not ok');
                 const freshData = await response.json();
 
-                // 3. Guardar la nueva copia
                 localStorage.setItem(CACHE_KEY, JSON.stringify(freshData));
-
-                // 4. Actualizar la vista de forma invisible
                 renderAllWidgets(freshData);
 
             } catch (error) {
@@ -550,7 +551,6 @@
             }
         }
 
-        // Función maestra que distribuye los datos a cada sección
         function renderAllWidgets(data) {
             if(data.news) renderNews(data.news);
             
@@ -646,20 +646,9 @@
             
             if(finalRiders.length > 0) {
                 document.getElementById('trending-riders-container').innerHTML = finalRiders.map(r => {
-                    let jerseyHTML = `<div class="w-14 h-14 shrink-0 rounded-full bg-zinc-800 flex items-center justify-center text-xl border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors">🚴‍♂️</div>`;
-                    
-                    if (teamsRes && teamsRes.length > 0) {
-                        const matchedTeam = teamsRes.find(t => 
-                            t.name.toLowerCase().includes(r.team.toLowerCase()) || 
-                            r.team.toLowerCase().includes(t.name.toLowerCase()) ||
-                            t.code.toLowerCase() === r.team.toLowerCase()
-                        );
-                        if (matchedTeam && matchedTeam.jersey) {
-                            jerseyHTML = `<img src="${matchedTeam.jersey}" alt="Maillot ${r.team}" class="w-14 h-14 shrink-0 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110">`;
-                        } else if (r.jersey) {
-                            jerseyHTML = `<img src="${r.jersey}" alt="Maillot" class="w-14 h-14 shrink-0 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110">`;
-                        }
-                    }
+                    // AHORA USA LA CARA DEL CICLISTA EN LUGAR DEL MAILLOT
+                    const imgUrl = getRiderImageUrl(r.name);
+                    let avatarHTML = `<img src="${imgUrl}" onerror="this.onerror=null; this.src='assets/ciclistas/default.jpg';" alt="${r.name}" class="w-12 h-12 shrink-0 rounded-full object-cover border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors">`;
 
                     const isNegative = r.value && (r.value.includes('-') || r.value.toLowerCase().includes('baja') || r.value.toLowerCase().includes('down'));
                     const textColor = isNegative ? 'text-red-500' : 'text-emerald-400';
@@ -672,11 +661,11 @@
 
                     return `
                     <a href="noticias.html" class="flex justify-between items-center p-2 hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-zinc-700/50 group">
-                        <div class="flex items-center gap-4">
-                            ${jerseyHTML}
-                            <div>
-                                <p class="text-[15px] font-bold text-white group-hover:text-cyan-400 transition-colors leading-tight">${r.name}</p>
-                                <p class="text-[9px] text-zinc-500 font-mono truncate max-w-[120px] mt-0.5">${r.team}</p>
+                        <div class="flex items-center gap-3">
+                            ${avatarHTML}
+                            <div class="ml-1">
+                                <p class="text-[14px] font-bold text-white group-hover:text-cyan-400 transition-colors leading-tight">${r.name}</p>
+                                <p class="text-[9px] text-zinc-500 font-mono truncate max-w-[130px] mt-0.5">${r.team}</p>
                             </div>
                         </div>
                         <div class="text-right shrink-0">
@@ -743,20 +732,27 @@
         function renderRanking(data) {
             const container = document.getElementById('ranking-list');
             const sorted = data.sort((a,b) => b.points - a.points).slice(0, 5);
-            container.innerHTML = sorted.map((r, i) => `
-            <div class="flex items-center justify-between p-3 border-b border-zinc-800/50 last:border-0 group hover:bg-white/5 transition-colors rounded-xl">
-                <div class="flex items-center gap-4">
-                    <span class="text-sm font-black text-zinc-600 group-hover:text-amber-500 transition-colors w-5">${i + 1}</span>
-                    <div class="flex flex-col">
-                        <span class="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">${r.name}</span>
-                        <span class="text-[10px] font-black uppercase text-zinc-600">${r.team}</span>
+            
+            container.innerHTML = sorted.map((r, i) => {
+                // AÑADIDO: IMAGEN PARA EL RANKING
+                const imgUrl = getRiderImageUrl(r.name);
+                
+                return `
+                <div class="flex items-center justify-between p-3 border-b border-zinc-800/50 last:border-0 group hover:bg-white/5 transition-colors rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-black text-zinc-600 group-hover:text-amber-500 transition-colors w-4 text-center">${i + 1}</span>
+                        <img src="${imgUrl}" onerror="this.onerror=null; this.src='assets/ciclistas/default.jpg';" alt="${r.name}" class="w-10 h-10 rounded-full object-cover border border-zinc-700 shadow-sm group-hover:border-amber-500/50 transition-colors">
+                        <div class="flex flex-col ml-1">
+                            <span class="text-sm font-bold text-white group-hover:text-amber-400 transition-colors leading-tight">${r.name}</span>
+                            <span class="text-[9px] font-black uppercase text-zinc-500 truncate max-w-[130px]">${r.team}</span>
+                        </div>
                     </div>
-                </div>
-                <div class="text-right pr-2">
-                    <span class="block text-lg font-black text-amber-500 leading-none">${r.points}</span>
-                    <span class="text-[8px] text-zinc-600 uppercase font-black">PTS</span>
-                </div>
-            </div>`).join('');
+                    <div class="text-right pr-2 shrink-0">
+                        <span class="block text-lg font-black text-amber-500 leading-none">${r.points}</span>
+                        <span class="text-[8px] text-zinc-600 uppercase font-black">PTS</span>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         function renderUpcomingWidget(races) {
