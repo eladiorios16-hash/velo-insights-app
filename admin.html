@@ -94,8 +94,8 @@
                 <form id="dynamicForm" class="grid grid-cols-1 gap-6"></form>
             </div>
             <div class="p-6 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex justify-end gap-4">
-                <button onclick="closeModal()" class="px-6 py-2 text-slate-300 hover:text-white font-medium">Cancelar</button>
-                <button onclick="saveData()" class="px-8 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg shadow-lg flex items-center gap-2"><i class="fas fa-save"></i> Guardar</button>
+                <button type="button" onclick="closeModal()" class="px-6 py-2 text-slate-300 hover:text-white font-medium">Cancelar</button>
+                <button type="button" onclick="saveData()" class="px-8 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg shadow-lg flex items-center gap-2"><i class="fas fa-save"></i> Guardar</button>
             </div>
         </div>
     </div>
@@ -309,7 +309,7 @@
             }
 
             const keys = Object.keys(data[0]);
-            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight'];
+            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight', 'tactical_data'];
             const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
 
             let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl animate-fade-in-up"><table id="dataTable" class="w-full text-left text-sm text-slate-300 whitespace-nowrap">
@@ -469,10 +469,13 @@
                 label.innerText = key;
                 
                 let input;
+                
+                // DETECCIÓN INTELIGENTE DE JSON Y TEXTOS LARGOS
+                let isJsonText = (typeof value === 'string' && (value.trim().startsWith('{') || value.trim().startsWith('[')));
 
-                if (['content', 'riders', 'details', 'definition', 'def', 'insight'].includes(key)) {
+                if (['content', 'riders', 'details', 'definition', 'def', 'insight', 'tactical', 'tactical_data'].includes(key) || typeof value === 'object' || isJsonText) {
                     input = document.createElement('textarea');
-                    input.rows = key === 'insight' ? 3 : (key === 'details' || key === 'riders' || key === 'content' ? 15 : 8); 
+                    input.rows = key === 'insight' ? 3 : (['details', 'riders', 'content', 'tactical', 'tactical_data'].includes(key) ? 15 : 8); 
                     input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm leading-relaxed";
                     
                     if (typeof value === 'object' && value !== null) {
@@ -616,6 +619,13 @@
             for (let [key, value] of formData.entries()) {
                 if (key === 'points') {
                     value = parseInt(value) || 0;
+                } else if (typeof value === 'string' && (value.trim().startsWith('{') || value.trim().startsWith('['))) {
+                    // CONVERSIÓN DE TEXTO A OBJETO JSON
+                    try { 
+                        value = JSON.parse(value); 
+                    } catch(e) { 
+                        console.warn("No se pudo parsear como JSON, enviando como texto normal", key); 
+                    }
                 }
                 dataObj[key] = value;
             }
