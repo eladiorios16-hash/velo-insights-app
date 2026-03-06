@@ -489,26 +489,33 @@
                 document.getElementById('rcr-category').innerText = liveRace.category || 'WT';
                 
                 try {
-                    let details = liveRace;
-                    if (liveRace.details && typeof liveRace.details === 'string' && liveRace.details.trim().startsWith('{')) {
-                        details = JSON.parse(liveRace.details);
+                    // EL BLINDAJE: Nos aseguramos de leer el JSON sin importar cómo lo envíe el servidor
+                    let detailsObj = {};
+                    if (liveRace.details) {
+                        if (typeof liveRace.details === 'string' && liveRace.details.trim().startsWith('{')) {
+                            detailsObj = JSON.parse(liveRace.details);
+                        } else if (typeof liveRace.details === 'object') {
+                            detailsObj = liveRace.details;
+                        }
                     }
 
-                    if (details.stages && details.stages.length > 0) {
-                        const etapa1 = details.stages[0];
+                    // Inyectamos Telemetría
+                    if (detailsObj.stages && detailsObj.stages.length > 0) {
+                        const etapa1 = detailsObj.stages[0];
                         document.getElementById('rcr-km').innerText = (etapa1.km || '---') + ' km';
                         document.getElementById('rcr-elevation').innerText = (etapa1.gain || '---') + ' m+';
                         document.getElementById('rcr-type').innerText = etapa1.type || '---';
                     }
 
-                    if (details.tactical) {
+                    // Inyectamos Táctica
+                    if (detailsObj.tactical) {
                         const tacticalContainer = document.querySelector('#race-control-room .prose');
                         if (tacticalContainer) {
-                            tacticalContainer.innerHTML = `<div class="text-slate-300 text-sm md:text-base leading-relaxed">${details.tactical}</div>`;
+                            tacticalContainer.innerHTML = `<div class="text-slate-300 text-sm md:text-base leading-relaxed">${detailsObj.tactical}</div>`;
                         }
                     }
                 } catch(e) {
-                    console.log("Detalles técnicos de la carrera no disponibles.", e);
+                    console.error("Error inyectando detalles de la carrera en el panel:", e);
                 }
             }
         }
