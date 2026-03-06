@@ -646,9 +646,12 @@
             
             if(finalRiders.length > 0) {
                 document.getElementById('trending-riders-container').innerHTML = finalRiders.map(r => {
-                    // AHORA USA LA CARA DEL CICLISTA EN LUGAR DEL MAILLOT
+                    // AHORA USA LA CARA DEL CICLISTA CON ZOOM Y ENCUADRE A LA CABEZA
                     const imgUrl = getRiderImageUrl(r.name);
-                    let avatarHTML = `<img src="${imgUrl}" onerror="this.onerror=null; this.src='assets/ciclistas/default.jpg';" alt="${r.name}" class="w-12 h-12 shrink-0 rounded-full object-cover border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors">`;
+                    let avatarHTML = `
+                    <div class="w-12 h-12 rounded-full overflow-hidden border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors shrink-0">
+                        <img src="${imgUrl}" onerror="this.onerror=null; this.src='assets/ciclistas/default.jpg';" alt="${r.name}" class="w-full h-full object-cover object-top scale-110 transition-transform duration-300 group-hover:scale-125">
+                    </div>`;
 
                     const isNegative = r.value && (r.value.includes('-') || r.value.toLowerCase().includes('baja') || r.value.toLowerCase().includes('down'));
                     const textColor = isNegative ? 'text-red-500' : 'text-emerald-400';
@@ -734,14 +737,15 @@
             const sorted = data.sort((a,b) => b.points - a.points).slice(0, 5);
             
             container.innerHTML = sorted.map((r, i) => {
-                // AÑADIDO: IMAGEN PARA EL RANKING
                 const imgUrl = getRiderImageUrl(r.name);
                 
                 return `
                 <div class="flex items-center justify-between p-3 border-b border-zinc-800/50 last:border-0 group hover:bg-white/5 transition-colors rounded-xl">
                     <div class="flex items-center gap-3">
                         <span class="text-sm font-black text-zinc-600 group-hover:text-amber-500 transition-colors w-4 text-center">${i + 1}</span>
-                        <img src="${imgUrl}" onerror="this.onerror=null; this.src='assets/ciclistas/default.jpg';" alt="${r.name}" class="w-10 h-10 rounded-full object-cover border border-zinc-700 shadow-sm group-hover:border-amber-500/50 transition-colors">
+                        <div class="w-12 h-12 rounded-full overflow-hidden border border-zinc-700 shadow-sm group-hover:border-amber-500/50 transition-colors shrink-0">
+                            <img src="${imgUrl}" onerror="this.onerror=null; this.src='assets/ciclistas/default.jpg';" alt="${r.name}" class="w-full h-full object-cover object-top scale-110 transition-transform duration-300 group-hover:scale-125">
+                        </div>
                         <div class="flex flex-col ml-1">
                             <span class="text-sm font-bold text-white group-hover:text-amber-400 transition-colors leading-tight">${r.name}</span>
                             <span class="text-[9px] font-black uppercase text-zinc-500 truncate max-w-[130px]">${r.team}</span>
