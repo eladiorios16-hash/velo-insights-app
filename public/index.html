@@ -493,6 +493,8 @@
 
         function renderRaceControlRoom(races) {
             const liveRace = races.find(r => r.status === 'Live');
+            const currentHour = new Date().getHours();
+            
             if (liveRace) {
                 document.getElementById('race-control-room').classList.remove('hidden');
                 document.getElementById('rcr-name').innerText = liveRace.name;
@@ -646,7 +648,6 @@
             
             if(finalRiders.length > 0) {
                 document.getElementById('trending-riders-container').innerHTML = finalRiders.map(r => {
-                    // AHORA USA LA CARA DEL CICLISTA CON ZOOM Y ENCUADRE A LA CABEZA
                     const imgUrl = getRiderImageUrl(r.name);
                     let avatarHTML = `
                     <div class="w-12 h-12 rounded-full overflow-hidden border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors shrink-0">
@@ -777,6 +778,7 @@
 
         function renderTimeline(races) {
             const now = new Date();
+            const currentHour = now.getHours(); // OBTENEMOS LA HORA ACTUAL
             const m = now.getMonth(); const y = now.getFullYear(); const dToday = now.getDate();
             const monthNames = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
             const fullMonthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -794,10 +796,28 @@
 
             if (todayRaces.length > 0) {
                 const r = todayRaces[0];
-                document.getElementById('timeline-race-name').innerText = r.name; document.getElementById('timeline-race-name').classList.add('text-cyan-400'); document.getElementById('timeline-race-meta').style.opacity = '1';
-                const badge = document.getElementById('meta-cat'); badge.innerText = "NOW RACING"; badge.className = "text-[9px] font-black uppercase text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded border border-cyan-500/30 animate-pulse";
+                document.getElementById('timeline-race-name').innerText = r.name; 
+                document.getElementById('timeline-race-name').classList.add('text-cyan-400'); 
+                document.getElementById('timeline-race-meta').style.opacity = '1';
+                
+                const badge = document.getElementById('meta-cat'); 
+                
+                // CONDICIONAL: HORARIO DE CARRERA (Entre 10:00 y 17:59)
+                if (currentHour >= 10 && currentHour < 18) {
+                    badge.innerText = "NOW RACING"; 
+                    badge.className = "text-[9px] font-black uppercase text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded border border-cyan-500/30 animate-pulse";
+                    
+                    document.getElementById('live-race-banner').classList.remove('hidden'); 
+                    document.getElementById('live-race-name').innerText = r.name; 
+                    document.getElementById('live-race-link').href = `calendario.html?race=${encodeURIComponent(r.name)}`;
+                } else {
+                    badge.innerText = "HOY"; 
+                    badge.className = "text-[9px] font-bold uppercase text-cyan-400 bg-cyan-900/30 border border-cyan-500/30 px-1.5 py-0.5 rounded";
+                    
+                    document.getElementById('live-race-banner').classList.add('hidden');
+                }
+                
                 document.getElementById('meta-link').href = `calendario.html?race=${encodeURIComponent(r.name)}`;
-                document.getElementById('live-race-banner').classList.remove('hidden'); document.getElementById('live-race-name').innerText = r.name; document.getElementById('live-race-link').href = `calendario.html?race=${encodeURIComponent(r.name)}`;
             } else {
                 const futureRaces = races.filter(r => {
                     const start = new Date(r.dateISO); const current = new Date(y, m, dToday);
