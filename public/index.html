@@ -86,7 +86,8 @@
         .day-month { display: block; color: #a1a1aa; font-size: 8px; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; }
         .day-empty .day-number { font-size: 0.65rem; color: #52525b; font-weight: 500; margin-bottom: 6px; }
 
-        .comparison-card { background: linear-gradient(180deg, rgba(6, 25, 20, 0.6) 0%, rgba(5,5,5,0.9) 100%); position: relative; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.15); height: 100%; }
+        /* Eliminado el height: 100% para que se ajuste naturalmente a su contenido */
+        .comparison-card { background: linear-gradient(180deg, rgba(6, 25, 20, 0.6) 0%, rgba(5,5,5,0.9) 100%); position: relative; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.15); }
         .stage-profile-bg { 
             position: absolute; bottom: 0; left: 0; width: 100%; height: 70%; 
             background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300' preserveAspectRatio='none'%3E%3Cpath d='M0,300 L50,280 L150,250 L300,200 L450,150 L600,100 L750,50 L900,20 L1000,300 Z' fill='rgba(16, 185, 129, 0.05)' /%3E%3Cpath d='M0,300 L50,280 L150,250 L300,200 L450,150 L600,100 L750,50 L900,20 L1000,0' fill='none' stroke='rgba(16, 185, 129, 0.15)' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat bottom; 
@@ -259,13 +260,14 @@
 
         </div>
 
-        <section class="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 items-stretch">
+        <section class="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 items-start">
             
-            <div class="lg:col-span-3">
-                <div class="comparison-card rounded-2xl p-5 md:p-8 opacity-90 hover:opacity-100 transition-opacity flex flex-col justify-between">
+            <div class="lg:col-span-3 flex flex-col gap-6 w-full">
+                
+                <div class="comparison-card rounded-2xl p-5 md:p-6 lg:p-8 opacity-90 hover:opacity-100 transition-opacity">
                     <div class="stage-profile-bg"></div>
 
-                    <div class="relative z-10 w-full mb-8">
+                    <div class="relative z-10 w-full">
                         <div class="flex justify-between items-start mb-6">
                             <div>
                                 <h3 class="text-sm font-heading text-white italic uppercase flex items-center gap-2">
@@ -277,7 +279,7 @@
                             <div id="level-tag" class="text-emerald-400 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm bg-black/40 border border-emerald-500/30 px-3 py-1 rounded">--</div>
                         </div>
 
-                        <div class="mb-6 border-l-2 border-zinc-700 pl-3">
+                        <div class="mb-5 border-l-2 border-zinc-700 pl-3">
                             <div class="flex justify-between items-center mb-1">
                                 <span class="text-[9px] font-bold uppercase text-zinc-400">Tadej Pogačar</span>
                                 <span class="text-xs font-mono text-white font-bold">39' 50"</span>
@@ -291,7 +293,7 @@
                             </div>
                         </div>
 
-                        <div class="mb-4 border-l-2 border-emerald-500 pl-3">
+                        <div class="mb-6 border-l-2 border-emerald-500 pl-3">
                             <div class="flex justify-between items-center mb-1">
                                 <span id="amateur-label" class="text-[9px] font-bold uppercase text-emerald-500">Tu Nivel Estimado</span>
                                 <span id="amateur-time" class="text-xs font-mono text-white font-bold">--</span>
@@ -304,18 +306,31 @@
                                 <div id="amateur-bar" class="h-full bg-emerald-500 w-[50%] shadow-[0_0_10px_#10b981] transition-all duration-500"></div>
                             </div>
                         </div>
-                    </div>
 
-                    <div id="slider-container" class="pt-2 relative z-10 w-full mt-auto">
-                        <input type="range" min="1" max="10" value="4" class="slider-green w-full block" id="level-slider" aria-label="Ajustar nivel ciclista">
-                        <div class="flex justify-between text-[8px] font-bold text-zinc-600 uppercase mt-2 tracking-widest">
-                            <span>Globero</span><span>World Tour</span>
+                        <div id="slider-container" class="pt-2 w-full">
+                            <input type="range" min="1" max="10" value="4" class="slider-green w-full block" id="level-slider" aria-label="Ajustar nivel ciclista">
+                            <div class="flex justify-between text-[8px] font-bold text-zinc-600 uppercase mt-2 tracking-widest">
+                                <span>Globero</span><span>World Tour</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <a href="calculadora.html" class="group relative bg-gradient-to-r from-cyan-950/20 to-[#050505] border border-cyan-900/50 rounded-2xl p-4 md:p-5 overflow-hidden transition-all duration-300 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col md:flex-row items-center text-center md:text-left gap-4 md:gap-5 w-full">
+                    <div class="w-12 h-12 shrink-0 bg-cyan-900/30 rounded-full flex items-center justify-center border border-cyan-500/30 group-hover:bg-cyan-500 group-hover:border-cyan-400 transition-colors shadow-inner">
+                        <i class="fas fa-cogs text-cyan-400 group-hover:text-black text-xl transition-colors"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-sm font-black text-white uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Calculadora Transmisión</h3>
+                        <p class="text-[10px] text-zinc-400 font-mono leading-relaxed m-0">Simula desarrollos, ratios, y velocidad vs cadencia en tiempo real.</p>
+                    </div>
+                    <span class="shrink-0 text-[9px] font-bold bg-cyan-900/40 text-cyan-400 px-5 py-2.5 rounded-full border border-cyan-500/30 uppercase tracking-widest group-hover:bg-cyan-500 group-hover:text-black transition-colors w-full md:w-auto text-center mt-2 md:mt-0">
+                        Abrir Tech Lab &rarr;
+                    </span>
+                </a>
             </div>
 
-            <div class="lg:col-span-2 flex flex-col gap-6">
+            <div class="lg:col-span-2 flex flex-col gap-6 w-full">
                 <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-5 shadow-inner">
                     <h3 class="text-[10px] font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-zinc-300"></span>
@@ -335,18 +350,8 @@
                         <p class="text-[10px] text-zinc-500 uppercase tracking-widest animate-pulse">Analizando términos...</p>
                     </div>
                 </div>
-
-                <a href="calculadora.html" class="mt-auto group relative bg-gradient-to-br from-cyan-950/30 to-[#050505] border border-cyan-900/50 rounded-2xl p-5 overflow-hidden transition-all duration-300 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col items-center text-center">
-                    <div class="w-10 h-10 bg-cyan-900/30 rounded-full flex items-center justify-center mb-3 border border-cyan-500/30 group-hover:bg-cyan-500 group-hover:border-cyan-400 transition-colors">
-                        <i class="fas fa-cogs text-cyan-400 group-hover:text-black text-lg transition-colors"></i>
-                    </div>
-                    <h3 class="text-sm font-black text-white uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Calculadora Transmisión</h3>
-                    <p class="text-[10px] text-zinc-400 font-mono mb-4 leading-relaxed">Simula desarrollos, ratios, y velocidad vs cadencia en tiempo real.</p>
-                    <span class="text-[9px] font-bold bg-cyan-900/40 text-cyan-400 px-4 py-2 rounded-full border border-cyan-500/30 uppercase tracking-widest group-hover:bg-cyan-500 group-hover:text-black transition-colors w-full">
-                        Abrir Tech Lab &rarr;
-                    </span>
-                </a>
             </div>
+            
         </section>
 
         <section class="w-full mt-4">
@@ -759,26 +764,20 @@
             }).join('');
         }
 
-        // --- SISTEMA CORREGIDO: CARRERAS PRÓXIMAS (MÁX. 5 Y AUTO-BORRADO) ---
         function renderUpcomingWidget(races) {
             const container = document.getElementById('upcoming-races');
             
-            // Obtenemos el inicio del día de hoy para comparar
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
             const upcoming = races.filter(r => {
-                // Si la carrera tiene endDateISO (ej. vueltas por etapas), usamos esa. Si no, dateISO (clásicas).
                 const endStr = r.endDateISO || r.dateISO;
                 const endDate = new Date(endStr);
-                // Le ponemos las 23:59:59 para que siga saliendo hoy si la carrera termina hoy
                 endDate.setHours(23, 59, 59, 999);
-                
-                // Solo mantenemos las carreras que aún no han terminado
                 return endDate >= today;
             })
             .sort((a, b) => new Date(a.dateISO) - new Date(b.dateISO))
-            .slice(0, 5); // Límite ampliado a 5 carreras
+            .slice(0, 5); 
 
             if (upcoming.length > 0) {
                 container.innerHTML = upcoming.map(r => `
@@ -793,7 +792,6 @@
                 container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center py-4">Sin carreras próximas.</p>'; 
             }
         }
-        // ----------------------------------------------------------------------
 
         function showTimelineTooltip(event, racesDataEncoded) {
             const races = JSON.parse(decodeURIComponent(racesDataEncoded));
