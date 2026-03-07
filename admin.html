@@ -617,15 +617,11 @@
             const dataObj = {};
             
             for (let [key, value] of formData.entries()) {
+                // Solo convertimos los puntos del ranking a número. 
+                // Todo lo demás (incluido el JSON de details) se envía como TEXTO puro, 
+                // para que MySQL lo guarde intacto sin convertirlo en [object Object].
                 if (key === 'points') {
                     value = parseInt(value) || 0;
-                } else if (typeof value === 'string' && (value.trim().startsWith('{') || value.trim().startsWith('['))) {
-                    // CONVERSIÓN DE TEXTO A OBJETO JSON
-                    try { 
-                        value = JSON.parse(value); 
-                    } catch(e) { 
-                        console.warn("No se pudo parsear como JSON, enviando como texto normal", key); 
-                    }
                 }
                 dataObj[key] = value;
             }
