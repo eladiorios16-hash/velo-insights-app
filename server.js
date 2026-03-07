@@ -312,6 +312,8 @@ app.post('/api/news/:id/vatios', async (req, res) => {
 
 // --- 8. ACTUALIZACIÓN AUTOMÁTICA DE BASE DE DATOS ---
 async function upgradeDatabase() {
+    try { await db.query("ALTER TABLE calendario MODIFY COLUMN details TEXT"); } catch (e) { console.log("Nota: ", e.message); }
+    
     try { await db.query("ALTER TABLE glosario ADD COLUMN insight TEXT NULL"); } catch (e) {}
     try { await db.query("ALTER TABLE noticias ADD COLUMN vatios INT DEFAULT 0"); } catch (e) {}
     try {
