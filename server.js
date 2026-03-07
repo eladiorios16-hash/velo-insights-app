@@ -330,13 +330,25 @@ async function upgradeDatabase() {
 upgradeDatabase();
 
 // --- RUTAS SEO PARA REDES SOCIALES Y SCHEMA.ORG (FASE 2) ---
-app.get('/noticias.html', async (req, res, next) => {
-    const articleId = req.query.article;
+// --- HELPER PARA CREAR SLUGS SEO ---
+function generateSlug(text) {
+    if (!text) return 'velo-insight';
+    return text.toString().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Quita acentos
+        .replace(/[^a-z0-9]+/g, '-') // Cambia espacios y raros por guiones
+        .replace(/^-+|-+$/g, ''); // Limpia guiones en los extremos
+}
+
+// --- RUTAS SEO PARA REDES SOCIALES Y SCHEMA.ORG (FASE 2) ---
+
+// 1. NUEVA RUTA AMIGABLE (Ej: /noticia/28/exhibicion-de-pogacar)
+app.get('/noticia/:id/:slug?', async (req, res, next) => {
+    const articleId = req.params.id;
     if (!articleId) return next(); 
 
     try {
         const [rows] = await db.query("SELECT * FROM noticias WHERE id = ?", [articleId]);
-        if (rows.length === 0) return next();
+        if (rows.length === 0) return res.redirect('/');
 
         const noticia = rows[0];
         const htmlPath = path.join(__dirname, 'public', 'noticias.html');
@@ -345,7 +357,6 @@ app.get('/noticias.html', async (req, res, next) => {
         const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
         let imageUrl = noticia.image ? noticia.image.trim() : defaultImage;
         
-        // REPARACIÓN CRÍTICA: Asegurar ruta absoluta sin importar subcarpetas
         if (imageUrl && !imageUrl.startsWith('http')) {
             imageUrl = imageUrl.replace(/^\/+/, ''); 
             imageUrl = 'https://veloinsights.es/' + imageUrl;
@@ -353,29 +364,30 @@ app.get('/noticias.html', async (req, res, next) => {
 
         const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
         const cleanDesc = noticia.lead ? noticia.lead.replace(/"/g, '&quot;') : 'Análisis técnico y táctico de ciclismo.';
+        const currentUrl = `https://veloinsights.es/noticia/${articleId}/${generateSlug(noticia.title)}`;
 
-        // NUEVO: Generador de Datos Estructurados (Schema.org) para Google
-      const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "NewsArticle",
-    "headline": cleanTitle,
-    "description": cleanDesc,
-    "image": [imageUrl],
-    "datePublished": noticia.dateISO || new Date().toISOString(),
-    "author": [{
-        "@type": "Organization",
-        "name": "Velo Insights",
-        "url": "https://veloinsights.es"
-    }],
-    "publisher": {
-        "@type": "Organization",
-        "name": "Velo Insights",
-        "logo": {
-            "@type": "ImageObject",
-            "url": "https://veloinsights.es/assets/favicon-144.png"
-        }
-    }
-};
+        // Datos Estructurados (Schema.org) para Google
+        const schemaData = {
+            "@context": "https://schema.org",
+            "@type": "NewsArticle",
+            "headline": cleanTitle,
+            "description": cleanDesc,
+            "image": [imageUrl],
+            "datePublished": noticia.dateISO || new Date().toISOString(),
+            "author": [{
+                "@type": "Organization",
+                "name": "Velo Insights",
+                "url": "https://veloinsights.es"
+            }],
+            "publisher": {
+                "@type": "Organization",
+                "name": "Velo Insights",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://veloinsights.es/assets/favicon-144.png"
+                }
+            }
+        };
 
         const ogTags = `
     <title>${cleanTitle} | Velo Insights</title>
@@ -384,7 +396,7 @@ app.get('/noticias.html', async (req, res, next) => {
     <meta property="og:title" content="${cleanTitle}" />
     <meta property="og:description" content="${cleanDesc}" />
     <meta property="og:image" content="${imageUrl}" />
-    <meta property="og:url" content="https://veloinsights.es/noticias.html?article=$){articleId}" />
+    <meta property="og:url" content="${currentUrl}" />
     <meta property="og:site_name" content="Velo Insights" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${cleanTitle}" />
@@ -395,8 +407,8 @@ app.get('/noticias.html', async (req, res, next) => {
     </script>
         `;
 
-        if (html.includes('<!-- INYECTAR-SEO-AQUI -->')) {
-            html = html.replace('<!-- INYECTAR-SEO-AQUI -->', ogTags);
+        if (html.includes('')) {
+            html = html.replace('', ogTags);
         } else {
             html = html.replace('<head>', '<head>\n' + ogTags);
         }
@@ -409,9 +421,19 @@ app.get('/noticias.html', async (req, res, next) => {
     }
 });
 
+// 2. REDIRECCIÓN AUTOMÁTICA DE ENLACES VIEJOS
+app.get('/noticias.html', (req, res, next) => {
+    if (req.query.article) {
+        res.redirect(301, `/noticia/${req.query.article}/noticia`);
+    } else {
+        next();
+    }
+});
+
 // A. Servimos la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
 
+// B. SITEMAP SEO OPTIMIZADO
 app.get('/sitemap.xml', async (req, res) => {
     try {
         const baseUrl = 'https://veloinsights.es'; 
@@ -420,8 +442,8 @@ app.get('/sitemap.xml', async (req, res) => {
         let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
         const staticPages = [
-            '/', '/noticias.html', '/calendario.html', '/equipos.html', 
-            '/labs.html', '/calculadora.html', '/glosario.html', '/privacidad.html'
+            '/', '/calendario.html', '/equipos.html', 
+            '/calculadora.html', '/glosario.html', '/privacidad.html'
         ];
         
         staticPages.forEach(page => {
@@ -429,10 +451,12 @@ app.get('/sitemap.xml', async (req, res) => {
         });
 
         try {
-            const [noticias] = await db.query("SELECT id FROM noticias ORDER BY id DESC");
+            // AHORA OBTENEMOS TAMBIÉN EL TÍTULO PARA EL SITEMAP
+            const [noticias] = await db.query("SELECT id, title FROM noticias ORDER BY id DESC");
             if (noticias && noticias.length > 0) {
                 noticias.forEach(news => {
-                    xml += `  <url>\n    <loc>${baseUrl}/noticias.html?article=${news.id}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
+                    const slug = generateSlug(news.title);
+                    xml += `  <url>\n    <loc>${baseUrl}/noticia/${news.id}/${slug}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
                 });
             }
         } catch (e) {}
@@ -445,7 +469,6 @@ app.get('/sitemap.xml', async (req, res) => {
         res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<url><loc>https://veloinsights.es/</loc></url>\n</urlset>`);
     }
 });
-
 // C. CIERRE GLOBAL (Debe ir siempre al final)
 app.use((req, res) => { 
     res.sendFile(path.join(__dirname, 'public', 'index.html')); 
