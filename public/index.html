@@ -370,6 +370,8 @@
         </section>
 
     </main>
+
+    <div id="timeline-tooltip" class="fixed hidden flex-col gap-1.5 z-[999] pointer-events-none transform -translate-x-1/2 -translate-y-full pb-3 transition-opacity duration-200 opacity-0 drop-shadow-2xl"></div>
     
     <script src="renderers.js?v=1"></script>
     <script src="layout.js?v=6.1"></script>
@@ -392,15 +394,12 @@
             10: { tag: "World Tour", time: "00:39:50", watts: "445W", wkg: "6.8", b: "100%" }
         };
 
-        // --- NUEVA FUNCIÓN: GENERADOR DE RUTAS PARA FOTOS DE CICLISTAS ---
         function getRiderImageUrl(name) {
             if (!name) return 'assets/ciclistas/default.jpg';
-            // Quita acentos, minúsculas, cambia espacios y puntos por guiones
             let slug = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
             slug = slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
             return `assets/ciclistas/${slug}.jpg`;
         }
-        // ------------------------------------------------------------------
 
         function initComparisonEngine() {
             const savedWatts = localStorage.getItem('velo_watts');
@@ -776,9 +775,43 @@
             } else { container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center py-4">Sin carreras próximas.</p>'; }
         }
 
+        // --- SISTEMA INTELIGENTE DE TOOLTIPS (ETIQUETAS FLOTANTES) ---
+        function showTimelineTooltip(event, racesDataEncoded) {
+            const races = JSON.parse(decodeURIComponent(racesDataEncoded));
+            const tooltip = document.getElementById('timeline-tooltip');
+            
+            tooltip.innerHTML = races.map(r => {
+                const colorStr = r.colorClass.replace('bg-', 'text-');
+                const borderStr = r.colorClass.replace('bg-', 'border-');
+                return `<div class="text-[10px] font-black ${colorStr} bg-black/95 backdrop-blur-sm px-4 py-2 rounded-xl border border-${borderStr}/50 shadow-[0_10px_30px_rgba(0,0,0,0.8)] uppercase tracking-widest whitespace-nowrap">${r.name}</div>`;
+            }).join('');
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            tooltip.style.left = `${rect.left + rect.width / 2}px`;
+            tooltip.style.top = `${rect.top}px`;
+            
+            tooltip.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                tooltip.classList.remove('opacity-0');
+                tooltip.classList.add('opacity-100');
+            });
+        }
+
+        function hideTimelineTooltip() {
+            const tooltip = document.getElementById('timeline-tooltip');
+            tooltip.classList.remove('opacity-100');
+            tooltip.classList.add('opacity-0');
+            setTimeout(() => {
+                if(tooltip.classList.contains('opacity-0')) {
+                    tooltip.classList.add('hidden');
+                }
+            }, 200);
+        }
+        // -------------------------------------------------------------
+
         function renderTimeline(races) {
             const now = new Date();
-            const currentHour = now.getHours(); // OBTENEMOS LA HORA ACTUAL
+            const currentHour = now.getHours();
             const m = now.getMonth(); const y = now.getFullYear(); const dToday = now.getDate();
             const monthNames = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
             const fullMonthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -802,7 +835,6 @@
                 
                 const badge = document.getElementById('meta-cat'); 
                 
-                // CONDICIONAL: HORARIO DE CARRERA (Entre 10:00 y 17:59)
                 if (currentHour >= 10 && currentHour < 18) {
                     badge.innerText = "NOW RACING"; 
                     badge.className = "text-[9px] font-black uppercase text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded border border-cyan-500/30 animate-pulse";
@@ -838,9 +870,25 @@
                     start.setHours(0,0,0,0); end.setHours(0,0,0,0); current.setHours(0,0,0,0); return current >= start && current <= end;
                 });
                 const isToday = d === dToday;
+                
                 if (activeRaces.length > 0) {
                     const indicators = activeRaces.map((r, index) => `<div class="w-8 h-1 ${raceColors[index % raceColors.length].bg} rounded-full mb-1 shadow-[0_0_5px_currentColor]"></div>`).join('');
-                    html += `<a href="calendario.html?race=${encodeURIComponent(activeRaces[0].name)}" class="timeline-day day-active group ${isToday ? 'day-today' : ''}"><span class="day-month">${monthNames[m]}</span><span class="day-number">${d}</span><div class="flex flex-col items-center mt-1 w-full px-1">${indicators}</div></a>`;
+                    
+                    // PREPARAMOS LA INFORMACIÓN PARA EL TOOLTIP
+                    const tooltipData = activeRaces.map((r, index) => ({
+                        name: r.name, 
+                        colorClass: raceColors[index % raceColors.length].bg
+                    }));
+                    const racesJsonEncoded = encodeURIComponent(JSON.stringify(tooltipData));
+
+                    html += `<a href="calendario.html?race=${encodeURIComponent(activeRaces[0].name)}" 
+                                onmouseenter="showTimelineTooltip(event, '${racesJsonEncoded}')" 
+                                onmouseleave="hideTimelineTooltip()"
+                                class="timeline-day day-active group ${isToday ? 'day-today' : ''}">
+                                <span class="day-month">${monthNames[m]}</span>
+                                <span class="day-number">${d}</span>
+                                <div class="flex flex-col items-center mt-1 w-full px-1">${indicators}</div>
+                            </a>`;
                 } else {
                     html += `<div class="timeline-day day-empty ${isToday ? 'day-today' : ''}"><span class="day-number">${d}</span><div class="timeline-tick"></div></div>`;
                 }
