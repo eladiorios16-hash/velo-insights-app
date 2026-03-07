@@ -329,6 +329,7 @@ async function upgradeDatabase() {
 }
 upgradeDatabase();
 
+// --- RUTAS SEO PARA REDES SOCIALES Y SCHEMA.ORG (FASE 2) ---
 // --- HELPER PARA CREAR SLUGS SEO ---
 function generateSlug(text) {
     if (!text) return 'velo-insight';
@@ -340,8 +341,8 @@ function generateSlug(text) {
 
 // --- RUTAS SEO PARA REDES SOCIALES Y SCHEMA.ORG (FASE 2) ---
 
-// 1. NUEVA RUTA AMIGABLE (Ej: /noticia/28/exhibicion-de-pogacar)
-app.get('/noticia/:id/:slug?', async (req, res, next) => {
+// 1. NUEVAS RUTAS AMIGABLES (Con Array para evitar el error del '?')
+app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
     const articleId = req.params.id;
     if (!articleId) return next(); 
 
@@ -389,6 +390,7 @@ app.get('/noticia/:id/:slug?', async (req, res, next) => {
         };
 
         const ogTags = `
+    <base href="/">
     <title>${cleanTitle} | Velo Insights</title>
     <meta name="description" content="${cleanDesc}" />
     <meta property="og:type" content="article" />
@@ -468,7 +470,6 @@ app.get('/sitemap.xml', async (req, res) => {
         res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<url><loc>https://veloinsights.es/</loc></url>\n</urlset>`);
     }
 });
-
 // C. CIERRE GLOBAL (Debe ir siempre al final)
 app.use((req, res) => { 
     res.sendFile(path.join(__dirname, 'public', 'index.html')); 
