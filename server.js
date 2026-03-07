@@ -329,7 +329,6 @@ async function upgradeDatabase() {
 }
 upgradeDatabase();
 
-// --- RUTAS SEO PARA REDES SOCIALES Y SCHEMA.ORG (FASE 2) ---
 // --- HELPER PARA CREAR SLUGS SEO ---
 function generateSlug(text) {
     if (!text) return 'velo-insight';
@@ -354,12 +353,12 @@ app.get('/noticia/:id/:slug?', async (req, res, next) => {
         const htmlPath = path.join(__dirname, 'public', 'noticias.html');
         let html = fs.readFileSync(htmlPath, 'utf8');
 
-        const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
+        const defaultImage = '[https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop](https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop)';
         let imageUrl = noticia.image ? noticia.image.trim() : defaultImage;
         
         if (imageUrl && !imageUrl.startsWith('http')) {
             imageUrl = imageUrl.replace(/^\/+/, ''); 
-            imageUrl = 'https://veloinsights.es/' + imageUrl;
+            imageUrl = '[https://veloinsights.es/](https://veloinsights.es/)' + imageUrl;
         }
 
         const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
@@ -368,7 +367,7 @@ app.get('/noticia/:id/:slug?', async (req, res, next) => {
 
         // Datos Estructurados (Schema.org) para Google
         const schemaData = {
-            "@context": "https://schema.org",
+            "@context": "[https://schema.org](https://schema.org)",
             "@type": "NewsArticle",
             "headline": cleanTitle,
             "description": cleanDesc,
@@ -377,14 +376,14 @@ app.get('/noticia/:id/:slug?', async (req, res, next) => {
             "author": [{
                 "@type": "Organization",
                 "name": "Velo Insights",
-                "url": "https://veloinsights.es"
+                "url": "[https://veloinsights.es](https://veloinsights.es)"
             }],
             "publisher": {
                 "@type": "Organization",
                 "name": "Velo Insights",
                 "logo": {
                     "@type": "ImageObject",
-                    "url": "https://veloinsights.es/assets/favicon-144.png"
+                    "url": "[https://veloinsights.es/assets/favicon-144.png](https://veloinsights.es/assets/favicon-144.png)"
                 }
             }
         };
@@ -436,7 +435,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // B. SITEMAP SEO OPTIMIZADO
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const baseUrl = 'https://veloinsights.es'; 
+        const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
 
         res.set('Content-Type', 'application/xml');
         let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
@@ -469,6 +468,7 @@ app.get('/sitemap.xml', async (req, res) => {
         res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<url><loc>https://veloinsights.es/</loc></url>\n</urlset>`);
     }
 });
+
 // C. CIERRE GLOBAL (Debe ir siempre al final)
 app.use((req, res) => { 
     res.sendFile(path.join(__dirname, 'public', 'index.html')); 
