@@ -759,10 +759,27 @@
             }).join('');
         }
 
+        // --- SISTEMA CORREGIDO: CARRERAS PRÓXIMAS (MÁX. 5 Y AUTO-BORRADO) ---
         function renderUpcomingWidget(races) {
             const container = document.getElementById('upcoming-races');
-            const now = new Date().toISOString().split('T')[0];
-            const upcoming = races.filter(r => r.dateISO >= now || r.status === 'Active').sort((a,b) => a.dateISO.localeCompare(b.dateISO)).slice(0, 3);
+            
+            // Obtenemos el inicio del día de hoy para comparar
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const upcoming = races.filter(r => {
+                // Si la carrera tiene endDateISO (ej. vueltas por etapas), usamos esa. Si no, dateISO (clásicas).
+                const endStr = r.endDateISO || r.dateISO;
+                const endDate = new Date(endStr);
+                // Le ponemos las 23:59:59 para que siga saliendo hoy si la carrera termina hoy
+                endDate.setHours(23, 59, 59, 999);
+                
+                // Solo mantenemos las carreras que aún no han terminado
+                return endDate >= today;
+            })
+            .sort((a, b) => new Date(a.dateISO) - new Date(b.dateISO))
+            .slice(0, 5); // Límite ampliado a 5 carreras
+
             if (upcoming.length > 0) {
                 container.innerHTML = upcoming.map(r => `
                     <a href="calendario.html?race=${encodeURIComponent(r.name)}" class="block p-3 bg-black/40 border border-zinc-800 hover:border-zinc-600 rounded-xl transition-all group">
@@ -772,10 +789,12 @@
                         </div>
                         <h4 class="text-sm font-bold text-zinc-300 group-hover:text-white truncate">${r.name}</h4>
                     </a>`).join('');
-            } else { container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center py-4">Sin carreras próximas.</p>'; }
+            } else { 
+                container.innerHTML = '<p class="text-[10px] text-zinc-500 text-center py-4">Sin carreras próximas.</p>'; 
+            }
         }
+        // ----------------------------------------------------------------------
 
-        // --- SISTEMA INTELIGENTE DE TOOLTIPS (ETIQUETAS FLOTANTES) ---
         function showTimelineTooltip(event, racesDataEncoded) {
             const races = JSON.parse(decodeURIComponent(racesDataEncoded));
             const tooltip = document.getElementById('timeline-tooltip');
@@ -807,7 +826,6 @@
                 }
             }, 200);
         }
-        // -------------------------------------------------------------
 
         function renderTimeline(races) {
             const now = new Date();
@@ -874,7 +892,6 @@
                 if (activeRaces.length > 0) {
                     const indicators = activeRaces.map((r, index) => `<div class="w-8 h-1 ${raceColors[index % raceColors.length].bg} rounded-full mb-1 shadow-[0_0_5px_currentColor]"></div>`).join('');
                     
-                    // PREPARAMOS LA INFORMACIÓN PARA EL TOOLTIP
                     const tooltipData = activeRaces.map((r, index) => ({
                         name: r.name, 
                         colorClass: raceColors[index % raceColors.length].bg
