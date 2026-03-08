@@ -6,6 +6,9 @@ const fs = require('fs');
 const db = require('./db');
 const helmet = require('helmet'); 
 const rateLimit = require('express-rate-limit'); 
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const upload = multer({ dest: '/tmp/' }); // Carpeta temporal de Railway
 // --- IMPORTAR EL DATA BOT ---
 const veloBot = require('./updater');
 
@@ -67,6 +70,26 @@ app.get('/velo-lab-hq', loginLimiter, htmlAuthMiddleware, (req, res) => {
 });
 
 app.use('/api/admin', apiAuthMiddleware);
+// --- RUTA PARA SUBIR IMÁGENES A CLOUDINARY ---
+app.post('/api/admin/upload', apiAuthMiddleware, upload.single('imagen'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No se envió ninguna imagen.' });
+    
+    try {
+        // Sube a Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'velo-insights' // Crea una carpeta en tu Cloudinary
+        });
+        
+        // Borra el archivo temporal del servidor
+        fs.unlinkSync(req.file.path); 
+        
+        // Devuelve la URL pura
+        res.json({ success: true, url: result.secure_url });
+    } catch (error) {
+        console.error("Error en Cloudinary:", error);
+        res.status(500).json({ error: 'Error al subir la imagen a la nube.' });
+    }
+});
 
 // --- 5. RUTA EXCLUSIVA: VELO COPILOT (INTELIGENCIA ARTIFICIAL) ---
 app.post('/api/admin/copilot', async (req, res) => {
