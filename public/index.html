@@ -114,7 +114,7 @@
                     LIVE: <span id="live-race-name" class="text-red-400">--</span>
                 </p>
             </div>
-            <a href="#" id="live-race-link" class="flex-shrink-0 text-[9px] font-bold uppercase text-white bg-red-600 hover:bg-red-500 transition-colors px-4 py-1.5 rounded-full shadow-lg shadow-red-900/50">Ver</a>
+            <a href="calendario.html" id="live-race-link" class="flex-shrink-0 text-[9px] font-bold uppercase text-white bg-red-600 hover:bg-red-500 transition-colors px-4 py-1.5 rounded-full shadow-lg shadow-red-900/50">Ver</a>
         </div>
     </div>
 
@@ -130,13 +130,17 @@
     <main class="max-w-7xl mx-auto px-4 md:px-6 space-y-8 md:space-y-10 pb-12">
         
         <section id="race-control-room" class="hidden animate-fade-in-up">
-            <div class="flex items-center gap-4 mb-6 border-b border-slate-700/50 pb-4">
-                <div class="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full">
+            <div class="flex flex-col md:flex-row md:items-center gap-4 mb-6 border-b border-slate-700/50 pb-4">
+                <div class="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full shrink-0 w-fit">
                     <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
                     <span class="text-[10px] md:text-xs font-black uppercase tracking-widest text-red-400">RACE CENTER</span>
                 </div>
-                <h2 id="rcr-name" class="text-xl md:text-3xl font-black text-white italic tracking-tight">Cargando...</h2>
-                <span id="rcr-category" class="bg-slate-800 text-slate-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest ml-auto border border-slate-600">WT</span>
+                
+                <h2 id="rcr-single-title" class="text-xl md:text-3xl font-black text-white italic tracking-tight hidden">Cargando...</h2>
+                
+                <div id="rcr-tabs" class="flex overflow-x-auto custom-scrollbar gap-2 hidden w-full md:w-auto pb-1 md:pb-0"></div>
+
+                <span id="rcr-category" class="bg-slate-800 text-slate-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest md:ml-auto border border-slate-600 w-fit shrink-0">WT</span>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -169,8 +173,8 @@
                     <p class="text-[10px] font-black uppercase text-amber-500 tracking-widest mb-6 flex items-center gap-2">
                         <i class="fas fa-bolt"></i> TACTICAL BOARD
                     </p>
-                    <div class="prose prose-invert max-w-none text-slate-300 text-sm md:text-base leading-relaxed">
-                        <em>(Espacio reservado: Al redactar una noticia sobre esta carrera, copia y pega aquí tus claves tácticas del día).</em>
+                    <div id="rcr-tactical-content" class="prose prose-invert max-w-none text-slate-300 text-sm md:text-base leading-relaxed">
+                        <em>Calculando táctica en tiempo real...</em>
                     </div>
                 </div>
             </div>
@@ -493,7 +497,77 @@
             }
         }
 
-        // --- SISTEMA INTELIGENTE DE RACE CONTROL ROOM (CON AVANCE DE ETAPA AUTOMÁTICO) ---
+        // --- SISTEMA MULTI-CARRERA: RACE CONTROL ROOM ---
+        window.currentLiveRaces = []; // Guardamos las carreras activas para las pestañas
+
+        window.switchLiveRace = function(index) {
+            const race = window.currentLiveRaces[index];
+            if (!race) return;
+
+            // 1. Actualizar el estilo visual de las pestañas
+            document.querySelectorAll('.rcr-tab-btn').forEach((btn, i) => {
+                if (i === index) {
+                    btn.className = "rcr-tab-btn px-4 py-2 rounded-xl border text-[10px] md:text-xs font-black uppercase transition-all bg-red-500/20 border-red-500/50 text-red-400 shrink-0";
+                } else {
+                    btn.className = "rcr-tab-btn px-4 py-2 rounded-xl border text-[10px] md:text-xs font-black uppercase transition-all bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600 shrink-0";
+                }
+            });
+
+            document.getElementById('rcr-category').innerText = race.category || 'WT';
+
+            // Resetear datos visuales por si acaso no tiene
+            document.getElementById('rcr-km').innerText = '--- km';
+            document.getElementById('rcr-elevation').innerText = '--- m+';
+            document.getElementById('rcr-type').innerText = '---';
+            document.getElementById('rcr-tactical-content').innerHTML = '<em class="text-zinc-500">No hay datos tácticos disponibles para esta carrera.</em>';
+
+            // 2. Inyectar datos dinámicos (calculando la etapa del día)
+            try {
+                let detailsObj = {};
+                if (race.details) {
+                    if (typeof race.details === 'string' && race.details.trim().startsWith('{')) {
+                        detailsObj = JSON.parse(race.details);
+                    } else if (typeof race.details === 'object') {
+                        detailsObj = race.details;
+                    }
+                }
+
+                if (detailsObj.stages && detailsObj.stages.length > 0) {
+                    const now = new Date();
+                    const y = now.getFullYear(); const m = now.getMonth(); const dToday = now.getDate();
+                    
+                    const startDate = new Date(race.dateISO);
+                    startDate.setHours(0,0,0,0);
+                    const today = new Date(y, m, dToday);
+                    today.setHours(0,0,0,0);
+                    
+                    const diffTime = today.getTime() - startDate.getTime();
+                    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+                    
+                    const stageIndex = Math.max(0, Math.min(diffDays, detailsObj.stages.length - 1));
+                    const currentStage = detailsObj.stages[stageIndex];
+
+                    const stageDate = new Date(startDate);
+                    stageDate.setDate(startDate.getDate() + stageIndex);
+                    const formattedDate = stageDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }).toUpperCase();
+
+                    const isStageRace = detailsObj.stages.length > 1;
+                    document.getElementById('rcr-stage-label').innerText = isStageRace ? `ETAPA ${currentStage.n || (stageIndex + 1)}` : 'FECHA';
+                    document.getElementById('rcr-date').innerText = formattedDate;
+
+                    document.getElementById('rcr-km').innerText = (currentStage.km || '---') + ' km';
+                    document.getElementById('rcr-elevation').innerText = (currentStage.gain || '---') + ' m+';
+                    document.getElementById('rcr-type').innerText = currentStage.type || '---';
+                }
+
+                if (detailsObj.tactical) {
+                    document.getElementById('rcr-tactical-content').innerHTML = detailsObj.tactical;
+                }
+            } catch(e) {
+                console.error("Error inyectando detalles de la carrera en las pestañas:", e);
+            }
+        };
+
         function renderRaceControlRoom(races) {
             const now = new Date();
             const currentHour = now.getHours();
@@ -501,8 +575,8 @@
             const m = now.getMonth();
             const dToday = now.getDate();
 
-            // Busca automáticamente la carrera que se está corriendo HOY
-            const liveRace = races.find(r => {
+            // Filtramos TODAS las carreras que se estén corriendo HOY
+            const liveRaces = races.filter(r => {
                 const start = new Date(r.dateISO); 
                 let end = r.endDateISO ? new Date(r.endDateISO) : new Date(r.dateISO); 
                 const current = new Date(y, m, dToday);
@@ -510,63 +584,38 @@
                 return current >= start && current <= end;
             });
             
-            // Si hay carrera Y es horario de retransmisión (10:00 - 17:59)
-            if (liveRace && currentHour >= 10 && currentHour < 18) {
-                document.getElementById('race-control-room').classList.remove('hidden');
-                document.getElementById('rcr-name').innerText = liveRace.name;
-                document.getElementById('rcr-category').innerText = liveRace.category || 'WT';
+            // Guardamos globalmente para que las pestañas puedan acceder
+            window.currentLiveRaces = liveRaces;
+            
+            const rcrContainer = document.getElementById('race-control-room');
+            const tabsContainer = document.getElementById('rcr-tabs');
+            const singleTitle = document.getElementById('rcr-single-title');
+
+            if (liveRaces.length > 0 && currentHour >= 10 && currentHour < 18) {
+                rcrContainer.classList.remove('hidden');
                 
-                try {
-                    let detailsObj = {};
-                    if (liveRace.details) {
-                        if (typeof liveRace.details === 'string' && liveRace.details.trim().startsWith('{')) {
-                            detailsObj = JSON.parse(liveRace.details);
-                        } else if (typeof liveRace.details === 'object') {
-                            detailsObj = liveRace.details;
-                        }
-                    }
-
-                    if (detailsObj.stages && detailsObj.stages.length > 0) {
-                        // 1. Calculamos qué etapa es hoy usando la diferencia de días
-                        const startDate = new Date(liveRace.dateISO);
-                        startDate.setHours(0,0,0,0);
-                        const today = new Date(y, m, dToday);
-                        today.setHours(0,0,0,0);
-                        
-                        const diffTime = today.getTime() - startDate.getTime();
-                        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
-                        
-                        // Si es vuelta de varios días, avanza de índice cada día (Día 0 = Etapa 1, Día 1 = Etapa 2...)
-                        const stageIndex = Math.max(0, Math.min(diffDays, detailsObj.stages.length - 1));
-                        const currentStage = detailsObj.stages[stageIndex];
-
-                        // 2. Calculamos la fecha exacta de esa etapa para pintarla
-                        const stageDate = new Date(startDate);
-                        stageDate.setDate(startDate.getDate() + stageIndex);
-                        const formattedDate = stageDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }).toUpperCase();
-
-                        // 3. Pintamos los datos exactos del día de hoy en la pantalla
-                        const isStageRace = detailsObj.stages.length > 1;
-                        document.getElementById('rcr-stage-label').innerText = isStageRace ? `ETAPA ${currentStage.n || (stageIndex + 1)}` : 'FECHA';
-                        document.getElementById('rcr-date').innerText = formattedDate;
-
-                        document.getElementById('rcr-km').innerText = (currentStage.km || '---') + ' km';
-                        document.getElementById('rcr-elevation').innerText = (currentStage.gain || '---') + ' m+';
-                        document.getElementById('rcr-type').innerText = currentStage.type || '---';
-                    }
-
-                    if (detailsObj.tactical) {
-                        const tacticalContainer = document.querySelector('#race-control-room .prose');
-                        if (tacticalContainer) {
-                            tacticalContainer.innerHTML = `<div class="text-slate-300 text-sm md:text-base leading-relaxed">${detailsObj.tactical}</div>`;
-                        }
-                    }
-                } catch(e) {
-                    console.error("Error inyectando detalles de la carrera en el panel:", e);
+                // Si hay MÁS DE UNA carrera simultánea, montamos las pestañas
+                if (liveRaces.length > 1) {
+                    singleTitle.classList.add('hidden');
+                    tabsContainer.classList.remove('hidden');
+                    
+                    tabsContainer.innerHTML = liveRaces.map((r, index) => `
+                        <button onclick="switchLiveRace(${index})" id="rcr-tab-${index}" class="rcr-tab-btn px-4 py-2 rounded-xl border text-[10px] md:text-xs font-black uppercase transition-all shrink-0">
+                            ${r.name}
+                        </button>
+                    `).join('');
+                } else {
+                    // Si solo hay una, mostramos el título clásico gigante
+                    tabsContainer.classList.add('hidden');
+                    singleTitle.classList.remove('hidden');
+                    singleTitle.innerText = liveRaces[0].name;
                 }
+
+                // Ejecutamos siempre la primera carrera por defecto al cargar
+                switchLiveRace(0);
+                
             } else {
-                // Si no hay carrera hoy o estamos fuera de horario, ocultar todo.
-                document.getElementById('race-control-room').classList.add('hidden');
+                rcrContainer.classList.add('hidden');
             }
         }
         // --------------------------------------------------------------------------------
@@ -882,8 +931,11 @@
             });
 
             if (todayRaces.length > 0) {
-                const r = todayRaces[0];
-                document.getElementById('timeline-race-name').innerText = r.name; 
+                // ACTUALIZACIÓN BANNER INFERIOR Y TEXTO SUPERIOR MULTI-CARRERA
+                const joinedNames = todayRaces.map(r => r.name).join(' <span class="text-zinc-500 font-bold mx-1">+</span> ');
+                const joinedBannerNames = todayRaces.map(r => r.name).join(' <span class="text-red-700/50 mx-1">•</span> ');
+
+                document.getElementById('timeline-race-name').innerHTML = joinedNames; 
                 document.getElementById('timeline-race-name').classList.add('text-cyan-400'); 
                 document.getElementById('timeline-race-meta').style.opacity = '1';
                 
@@ -894,8 +946,9 @@
                     badge.className = "text-[9px] font-black uppercase text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded border border-cyan-500/30 animate-pulse";
                     
                     document.getElementById('live-race-banner').classList.remove('hidden'); 
-                    document.getElementById('live-race-name').innerText = r.name; 
-                    document.getElementById('live-race-link').href = `calendario.html?race=${encodeURIComponent(r.name)}`;
+                    document.getElementById('live-race-name').innerHTML = joinedBannerNames;
+                    // Si hay varias, enviamos al calendario general. Si hay 1, enviamos directo.
+                    document.getElementById('live-race-link').href = todayRaces.length > 1 ? 'calendario.html' : `calendario.html?race=${encodeURIComponent(todayRaces[0].name)}`;
                 } else {
                     badge.innerText = "HOY"; 
                     badge.className = "text-[9px] font-bold uppercase text-cyan-400 bg-cyan-900/30 border border-cyan-500/30 px-1.5 py-0.5 rounded";
@@ -903,7 +956,7 @@
                     document.getElementById('live-race-banner').classList.add('hidden');
                 }
                 
-                document.getElementById('meta-link').href = `calendario.html?race=${encodeURIComponent(r.name)}`;
+                document.getElementById('meta-link').href = todayRaces.length > 1 ? 'calendario.html' : `calendario.html?race=${encodeURIComponent(todayRaces[0].name)}`;
             } else {
                 const futureRaces = races.filter(r => {
                     const start = new Date(r.dateISO); const current = new Date(y, m, dToday);
