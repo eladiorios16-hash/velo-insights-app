@@ -137,6 +137,18 @@
             return text.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
         }
 
+        // --- INTERCEPTOR DE CLOUDINARY PARA CONTENIDO HTML ---
+        function interceptCloudinaryImages(htmlContent) {
+            if (!htmlContent) return '';
+            
+            const cloudName = 'dr1c3gqwf';
+            
+            // Reemplaza "assets/ciclistas/nombre.jpg" por la URL dinámica de Cloudinary
+            return htmlContent.replace(/src=["'](assets\/ciclistas\/([^"']+))["']/g, (match, path, filename) => {
+                return `src="https://res.cloudinary.com/${cloudName}/image/upload/ciclistas/${filename}"`;
+            });
+        }
+
         let allNews = [];
         let allGlossary = []; 
         let currentTag = 'ALL';
@@ -369,6 +381,9 @@
             
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
             const readTime = getReadingTime(article.content);
+            
+            // APLICAR INTERCEPTOR AL CONTENIDO ANTES DE RENDERIZAR
+            const processedContent = interceptCloudinaryImages(article.content);
 
             const recommendedArticles = getRecommendations(article);
             let recommendationHTML = '';
@@ -424,7 +439,7 @@
                         </div>
                         ${article.lead ? `<p class="text-lg md:text-xl text-zinc-200 font-serif leading-relaxed mb-8 md:mb-16 border-l-4 border-cyan-500 pl-4 md:pl-6 italic">"${article.lead}"</p>` : ''}
                         
-                        <div class="prose-custom text-sm md:text-base">${article.content || '<p class="text-center text-zinc-600">No hay contenido disponible.</p>'}</div>
+                        <div class="prose-custom text-sm md:text-base">${processedContent || '<p class="text-center text-zinc-600">No hay contenido disponible.</p>'}</div>
                         
                         <div class="mt-12 md:mt-16 pt-8 md:pt-10 border-t border-zinc-900 flex flex-col sm:flex-row justify-center items-center gap-4">
                             
