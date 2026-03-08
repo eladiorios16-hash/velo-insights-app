@@ -401,14 +401,14 @@
             10: { tag: "World Tour", time: "00:39:50", watts: "445W", wkg: "6.8", b: "100%" }
         };
 
+        // --- RUTA MODIFICADA A CLOUDINARY PARA LAS CARAS DE LOS CICLISTAS ---
         function getRiderImageUrl(name) {
-            // AQUI CONFIGURAMOS LA URL POR DEFECTO PARA LOS CICLISTAS
-            if (!name) return 'https://res.cloudinary.com/dr1c3gqwf/image/upload/ciclistas/default.jpg';
+            if (!name) return 'https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/ciclistas/default.jpg';
             let slug = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
             slug = slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
             
-            // LA MAGIA: CONSTRUYE LA URL BASADA EN EL NOMBRE DEL CICLISTA
-            return `https://res.cloudinary.com/dr1c3gqwf/image/upload/ciclistas/${slug}.jpg`;
+            // CONVERTIMOS LA RUTA AL SERVIDOR DE CLOUDINARY
+            return `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/ciclistas/${slug}.jpg`;
         }
 
         function initComparisonEngine() {
@@ -745,7 +745,7 @@
                     const imgUrl = getRiderImageUrl(r.name);
                     let avatarHTML = `
                     <div class="w-12 h-12 rounded-full overflow-hidden border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors shrink-0">
-                        <img src="${imgUrl}" onerror="this.onerror=null; this.src='assets/ciclistas/default.jpg';" alt="${r.name}" class="w-full h-full object-cover object-top scale-110 transition-transform duration-300 group-hover:scale-125">
+                        <img src="${imgUrl}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/ciclistas/default.jpg';" alt="${r.name}" class="w-full h-full object-cover object-top scale-110 transition-transform duration-300 group-hover:scale-125">
                     </div>`;
 
                     const isNegative = r.value && (r.value.includes('-') || r.value.toLowerCase().includes('baja') || r.value.toLowerCase().includes('down'));
@@ -839,7 +839,7 @@
                     <div class="flex items-center gap-3">
                         <span class="text-sm font-black text-zinc-600 group-hover:text-amber-500 transition-colors w-4 text-center">${i + 1}</span>
                         <div class="w-12 h-12 rounded-full overflow-hidden border border-zinc-700 shadow-sm group-hover:border-amber-500/50 transition-colors shrink-0">
-                            <img src="${imgUrl}" onerror="this.onerror=null; this.src='assets/ciclistas/default.jpg';" alt="${r.name}" class="w-full h-full object-cover object-top scale-110 transition-transform duration-300 group-hover:scale-125">
+                            <img src="${imgUrl}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/ciclistas/default.jpg';" alt="${r.name}" class="w-full h-full object-cover object-top scale-110 transition-transform duration-300 group-hover:scale-125">
                         </div>
                         <div class="flex flex-col ml-1">
                             <span class="text-sm font-bold text-white group-hover:text-amber-400 transition-colors leading-tight">${r.name}</span>
