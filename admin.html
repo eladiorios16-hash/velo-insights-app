@@ -454,21 +454,31 @@
         }
 
         // --- SISTEMA DE SUBIDA A CLOUDINARY DESDE EL ADMIN ---
-        async function uploadToCloudinary(input, inputTargetId) {
+    async function uploadToCloudinary(input, inputTargetId) {
             const file = input.files[0];
             if (!file) return;
+
+            // NUEVO: Preguntar por la carpeta
+            let sugerencia = currentTable === 'noticias' ? 'noticias/marzo' : 'general';
+            const folderName = prompt("¿En qué carpeta de Cloudinary quieres guardarla? (Ej: carreras/paris-niza)", sugerencia);
+            
+            if (folderName === null) {
+                input.value = ""; // Si le das a cancelar, aborta la subida
+                return;
+            }
 
             const authHeader = 'Basic ' + btoa('admin:velo2026');
             const statusMsg = document.getElementById(`upload-status-${inputTargetId}`);
             const btnUI = document.getElementById(`upload-btn-${inputTargetId}`);
             
-            statusMsg.innerText = "⏳ Subiendo foto...";
+            statusMsg.innerText = "⏳ Subiendo foto a la carpeta: " + folderName + "...";
             statusMsg.classList.remove('hidden', 'text-emerald-400', 'text-red-400');
             statusMsg.classList.add('text-cyan-400');
             btnUI.classList.add('opacity-50');
 
             const formData = new FormData();
             formData.append('imagen', file);
+            formData.append('folder', folderName); // Enviamos el nombre de la carpeta al servidor
 
             try {
                 const res = await fetch('/api/admin/upload', {
