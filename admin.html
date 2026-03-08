@@ -453,6 +453,50 @@
             document.body.classList.add('overflow-hidden'); // Bloquea el scroll del fondo
         }
 
+        // --- SISTEMA DE SUBIDA A CLOUDINARY DESDE EL ADMIN ---
+        async function uploadToCloudinary(input, inputTargetId) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const authHeader = 'Basic ' + btoa('admin:velo2026');
+            const statusMsg = document.getElementById(`upload-status-${inputTargetId}`);
+            const btnUI = document.getElementById(`upload-btn-${inputTargetId}`);
+            
+            statusMsg.innerText = "⏳ Subiendo foto...";
+            statusMsg.classList.remove('hidden', 'text-emerald-400', 'text-red-400');
+            statusMsg.classList.add('text-cyan-400');
+            btnUI.classList.add('opacity-50');
+
+            const formData = new FormData();
+            formData.append('imagen', file);
+
+            try {
+                const res = await fetch('/api/admin/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': authHeader },
+                    body: formData
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById(inputTargetId).value = data.url;
+                    statusMsg.innerText = "✅ ¡Subida con éxito!";
+                    statusMsg.classList.replace('text-cyan-400', 'text-emerald-400');
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                statusMsg.innerText = "❌ Error: " + error.message;
+                statusMsg.classList.replace('text-cyan-400', 'text-red-400');
+            } finally {
+                btnUI.classList.remove('opacity-50');
+                input.value = ""; 
+                setTimeout(() => statusMsg.classList.add('hidden'), 5000);
+            }
+        }
+        // -----------------------------------------------------
+
         function buildForm(data) {
             const form = document.getElementById('dynamicForm');
             form.innerHTML = '';
@@ -468,9 +512,31 @@
                 label.className = "block text-[10px] md:text-xs uppercase text-emerald-500 font-bold mb-2 tracking-widest";
                 label.innerText = key;
                 
-                let input;
+                let inputHtml = '';
                 
-                // DETECCIÓN INTELIGENTE DE JSON Y TEXTOS LARGOS
+                // MÓDULO ESPECIAL PARA IMÁGENES (Noticias, Equipos, Calendario)
+                if (key === 'image' || key === 'jersey' || key === 'profile') {
+                    const uniqueId = `input-${key}`;
+                    inputHtml = `
+                    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                        <input type="text" id="${uniqueId}" name="${key}" value="${value || ''}" class="input-dark w-full rounded-lg p-3 text-sm flex-1" placeholder="URL de la imagen...">
+                        
+                        <div class="relative shrink-0">
+                            <input type="file" accept="image/*" onchange="uploadToCloudinary(this, '${uniqueId}')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <button type="button" id="upload-btn-${uniqueId}" class="bg-cyan-600 hover:bg-cyan-500 text-black font-black uppercase text-[10px] tracking-widest px-4 py-3.5 rounded-xl transition-colors flex items-center gap-2 shadow-lg">
+                                <i class="fas fa-cloud-upload-alt"></i> Subir Nube
+                            </button>
+                        </div>
+                    </div>
+                    <p id="upload-status-${uniqueId}" class="text-[10px] mt-2 hidden animate-pulse"></p>
+                    `;
+                    wrapper.innerHTML = label.outerHTML + inputHtml;
+                    form.appendChild(wrapper);
+                    continue;
+                }
+
+                // RESTO DEL FORMULARIO NORMAL
+                let input;
                 let isJsonText = (typeof value === 'string' && (value.trim().startsWith('{') || value.trim().startsWith('[')));
 
                 if (['content', 'riders', 'details', 'definition', 'def', 'insight', 'tactical', 'tactical_data'].includes(key) || typeof value === 'object' || isJsonText) {
@@ -617,9 +683,6 @@
             const dataObj = {};
             
             for (let [key, value] of formData.entries()) {
-                // Solo convertimos los puntos del ranking a número. 
-                // Todo lo demás (incluido el JSON de details) se envía como TEXTO puro, 
-                // para que MySQL lo guarde intacto sin convertirlo en [object Object].
                 if (key === 'points') {
                     value = parseInt(value) || 0;
                 }
