@@ -75,15 +75,14 @@ app.post('/api/admin/upload', apiAuthMiddleware, upload.single('imagen'), async 
     if (!req.file) return res.status(400).json({ error: 'No se envió ninguna imagen.' });
     
     try {
-        // Sube a Cloudinary
+        // Coge la carpeta que has escrito, o usa 'general' por defecto
+        const targetFolder = req.body.folder || 'velo-insights/general'; 
+
         const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'velo-insights' // Crea una carpeta en tu Cloudinary
+            folder: targetFolder 
         });
         
-        // Borra el archivo temporal del servidor
         fs.unlinkSync(req.file.path); 
-        
-        // Devuelve la URL pura
         res.json({ success: true, url: result.secure_url });
     } catch (error) {
         console.error("Error en Cloudinary:", error);
