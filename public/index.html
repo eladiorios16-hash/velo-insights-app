@@ -489,12 +489,24 @@
             }
         }
 
-        // --- SISTEMA CORREGIDO: OCULTAR RACE CONTROL ROOM FUERA DE HORARIO (10:00 - 17:59) ---
+        // --- SISTEMA 100% AUTOMÁTICO: RACE CONTROL ROOM ---
         function renderRaceControlRoom(races) {
-            const liveRace = races.find(r => r.status === 'Live');
-            const currentHour = new Date().getHours();
+            const now = new Date();
+            const currentHour = now.getHours();
+            const y = now.getFullYear();
+            const m = now.getMonth();
+            const dToday = now.getDate();
+
+            // Busca automáticamente la carrera que cae en la fecha de HOY
+            const liveRace = races.find(r => {
+                const start = new Date(r.dateISO); 
+                let end = r.endDateISO ? new Date(r.endDateISO) : new Date(r.dateISO); 
+                const current = new Date(y, m, dToday);
+                start.setHours(0,0,0,0); end.setHours(0,0,0,0); current.setHours(0,0,0,0); 
+                return current >= start && current <= end;
+            });
             
-            // Verificamos que haya carrera Live Y que estemos en el horario de carrera
+            // Si hay carrera hoy Y estamos en horario de retransmisión (10:00 - 17:59)
             if (liveRace && currentHour >= 10 && currentHour < 18) {
                 document.getElementById('race-control-room').classList.remove('hidden');
                 document.getElementById('rcr-name').innerText = liveRace.name;
@@ -511,10 +523,22 @@
                     }
 
                     if (detailsObj.stages && detailsObj.stages.length > 0) {
-                        const etapa1 = detailsObj.stages[0];
-                        document.getElementById('rcr-km').innerText = (etapa1.km || '---') + ' km';
-                        document.getElementById('rcr-elevation').innerText = (etapa1.gain || '---') + ' m+';
-                        document.getElementById('rcr-type').innerText = etapa1.type || '---';
+                        // Encontrar la etapa correspondiente al día de hoy
+                        const startDate = new Date(liveRace.dateISO);
+                        startDate.setHours(0,0,0,0);
+                        const today = new Date(y, m, dToday);
+                        today.setHours(0,0,0,0);
+                        
+                        const diffTime = Math.abs(today - startDate);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                        
+                        // Si es vuelta de varios días, coge la etapa actual. Si no, coge la única que hay.
+                        const stageIndex = Math.min(diffDays, detailsObj.stages.length - 1);
+                        const currentStage = detailsObj.stages[stageIndex];
+
+                        document.getElementById('rcr-km').innerText = (currentStage.km || '---') + ' km';
+                        document.getElementById('rcr-elevation').innerText = (currentStage.gain || '---') + ' m+';
+                        document.getElementById('rcr-type').innerText = currentStage.type || '---';
                     }
 
                     if (detailsObj.tactical) {
@@ -527,11 +551,10 @@
                     console.error("Error inyectando detalles de la carrera en el panel:", e);
                 }
             } else {
-                // Si no hay carrera live o estamos fuera de horario, ocultamos todo el bloque
+                // Fuera de horario o sin carrera: Se oculta automáticamente.
                 document.getElementById('race-control-room').classList.add('hidden');
             }
         }
-        // ----------------------------------------------------------------------------------
 
         async function loadContentOptimized() {
             const CACHE_KEY = 'velo_home_data';
