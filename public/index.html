@@ -402,10 +402,13 @@
         };
 
         function getRiderImageUrl(name) {
-            if (!name) return 'assets/ciclistas/default.jpg';
+            // AQUI CONFIGURAMOS LA URL POR DEFECTO PARA LOS CICLISTAS
+            if (!name) return 'https://res.cloudinary.com/dr1c3gqwf/image/upload/ciclistas/default.jpg';
             let slug = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
             slug = slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
-            return `assets/ciclistas/${slug}.jpg`;
+            
+            // LA MAGIA: CONSTRUYE LA URL BASADA EN EL NOMBRE DEL CICLISTA
+            return `https://res.cloudinary.com/dr1c3gqwf/image/upload/ciclistas/${slug}.jpg`;
         }
 
         function initComparisonEngine() {
