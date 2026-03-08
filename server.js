@@ -354,12 +354,12 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
         const htmlPath = path.join(__dirname, 'public', 'noticias.html');
         let html = fs.readFileSync(htmlPath, 'utf8');
 
-        const defaultImage = '[https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop](https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop)';
+        const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
         let imageUrl = noticia.image ? noticia.image.trim() : defaultImage;
         
         if (imageUrl && !imageUrl.startsWith('http')) {
             imageUrl = imageUrl.replace(/^\/+/, ''); 
-            imageUrl = '[https://veloinsights.es/](https://veloinsights.es/)' + imageUrl;
+            imageUrl = 'https://veloinsights.es/' + imageUrl;
         }
 
         const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
@@ -367,8 +367,8 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
         const currentUrl = `https://veloinsights.es/noticia/${articleId}/${generateSlug(noticia.title)}`;
 
         // Datos Estructurados (Schema.org) para Google
-        const schemaData = {
-            "@context": "[https://schema.org](https://schema.org)",
+       const schemaData = {
+            "@context": "https://schema.org",
             "@type": "NewsArticle",
             "headline": cleanTitle,
             "description": cleanDesc,
@@ -377,14 +377,14 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
             "author": [{
                 "@type": "Organization",
                 "name": "Velo Insights",
-                "url": "[https://veloinsights.es](https://veloinsights.es)"
+                "url": "https://veloinsights.es"
             }],
             "publisher": {
                 "@type": "Organization",
                 "name": "Velo Insights",
                 "logo": {
                     "@type": "ImageObject",
-                    "url": "[https://veloinsights.es/assets/favicon-144.png](https://veloinsights.es/assets/favicon-144.png)"
+                    "url": "https://veloinsights.es/assets/favicon-144.png"
                 }
             }
         };
@@ -408,8 +408,8 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
     </script>
         `;
 
-        if (html.includes('')) {
-            html = html.replace('', ogTags);
+        if (html.includes('<!--INYECTAR-SEO-AQUI-->')) {
+            html = html.replace('<!--INYECTAR-SEO-AQUI-->', ogTags);
         } else {
             html = html.replace('<head>', '<head>\n' + ogTags);
         }
@@ -437,7 +437,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // B. SITEMAP SEO OPTIMIZADO
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
+        const baseUrl = 'https://veloinsights.es'; 
 
         res.set('Content-Type', 'application/xml');
         let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
