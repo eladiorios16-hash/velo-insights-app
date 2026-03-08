@@ -403,12 +403,12 @@
 
         // --- RUTA MODIFICADA A CLOUDINARY PARA LAS CARAS DE LOS CICLISTAS ---
         function getRiderImageUrl(name) {
-            if (!name) return 'https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/ciclistas/default.png';
+            if (!name) return 'https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';
             let slug = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
             slug = slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
             
             // CONVERTIMOS LA RUTA AL SERVIDOR DE CLOUDINARY
-            return `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/ciclistas/${slug}.png`;
+            return `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${slug}.png`;
         }
 
         function initComparisonEngine() {
