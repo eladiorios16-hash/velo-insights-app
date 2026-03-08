@@ -489,11 +489,13 @@
             }
         }
 
+        // --- SISTEMA CORREGIDO: OCULTAR RACE CONTROL ROOM FUERA DE HORARIO (10:00 - 17:59) ---
         function renderRaceControlRoom(races) {
             const liveRace = races.find(r => r.status === 'Live');
             const currentHour = new Date().getHours();
             
-            if (liveRace) {
+            // Verificamos que haya carrera Live Y que estemos en el horario de carrera
+            if (liveRace && currentHour >= 10 && currentHour < 18) {
                 document.getElementById('race-control-room').classList.remove('hidden');
                 document.getElementById('rcr-name').innerText = liveRace.name;
                 document.getElementById('rcr-category').innerText = liveRace.category || 'WT';
@@ -524,8 +526,12 @@
                 } catch(e) {
                     console.error("Error inyectando detalles de la carrera en el panel:", e);
                 }
+            } else {
+                // Si no hay carrera live o estamos fuera de horario, ocultamos todo el bloque
+                document.getElementById('race-control-room').classList.add('hidden');
             }
         }
+        // ----------------------------------------------------------------------------------
 
         async function loadContentOptimized() {
             const CACHE_KEY = 'velo_home_data';
