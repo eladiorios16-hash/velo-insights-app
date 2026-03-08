@@ -19,6 +19,8 @@
     "helmet": "^8.1.0",
     "mysql2": "^3.17.0",
     "node-cron": "^4.2.1",
+    "cloudinary": "^2.0.0",
+    "multer": "^1.4.5-lts.1",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
