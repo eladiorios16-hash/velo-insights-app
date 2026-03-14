@@ -3,7 +3,6 @@ const cheerio = require('cheerio');
 const cron = require('node-cron');
 const db = require('./db');
 
-// Función auxiliar para no saturar los servidores de FirstCycling
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 function normalizeName(name) {
@@ -15,61 +14,53 @@ async function searchRiderProfile(riderName) {
     try {
         console.log(`   ├─ 🔎 Buscando perfil de: ${riderName}`);
         const { data } = await axios.get(`https://firstcycling.com/rider.php?q=${encodeURIComponent(riderName)}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
             timeout: 10000
         });
         const $ = cheerio.load(data);
         const firstResult = $('table.ws_tb tbody tr').first().find('a[href*="rider.php"]').attr('href');
         return firstResult || null;
-    } catch (e) {
-        return null;
-    }
+    } catch (e) { return null; }
 }
 
-async function fetchRiderPalmares(riderUrl) {
+async function fetchRiderResults(riderUrl) {
     try {
-        console.log(`   └─ 🕵️‍♂️ Extrayendo palmarés desde: ${riderUrl}`);
+        console.log(`   └─ 🕵️‍♂️ Extrayendo últimos resultados desde: ${riderUrl}`);
         
         const { data } = await axios.get(`https://firstcycling.com/${riderUrl}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
             timeout: 15000
         });
         
         const $ = cheerio.load(data);
-        const palmares = [];
+        const resultados = [];
 
-        // NUEVA ESTRATEGIA: ESCÁNER A PRUEBA DE BOMBAS
-        // Buscamos cualquier enlace a una carrera dentro de la tabla de resultados
-        $('a[href*="race.php"]').each((i, el) => {
-            if (palmares.length >= 6) return; // Límite de 6 victorias
+        // Buscamos en la tabla principal de resultados
+        $('table.sortable tbody tr').each((i, row) => {
+            if (resultados.length >= 8) return; // Límite: últimos 8 resultados
             
-            const raceName = $(el).text().trim();
-            const row = $(el).closest('tr');
+            // La posición suele estar en la columna 2
+            let pos = $(row).find('td').eq(1).text().trim();
+            // La carrera/etapa está en la columna 4
+            let raceText = $(row).find('td').eq(3).text().trim();
             
-            // FirstCycling suele poner la posición en la columna 1 o 2 (depende de si hay banderas)
-            const pos1 = row.find('td').eq(1).text().trim();
-            const pos2 = row.find('td').eq(2).text().trim();
-            
-            // Verificamos si hizo podio (1, 2 o 3)
-            if (['1','2','3','1st','2nd','3rd','1º','2º','3º'].includes(pos1) || ['1','2','3','1st','2nd','3rd','1º','2º','3º'].includes(pos2)) {
-                if (raceName && raceName.length > 2) {
-                    // Si no fue 1º, le añadimos el sufijo para que se vea que fue podio
-                    const isWin = ['1','1st','1º'].includes(pos1) || ['1','1st','1º'].includes(pos2);
-                    const suffix = isWin ? '' : ` (Podio)`;
-                    const finalWin = `${raceName}${suffix}`;
-                    
-                    // Evitar duplicados
-                    if (!palmares.includes(finalWin)) {
-                        palmares.push(finalWin);
-                    }
-                }
+            if (pos && raceText) {
+                // Limpiamos los códigos UCI feos como "| 1.UWT" o "| 2.Pro"
+                raceText = raceText.replace(/\s*\|\s*\d\.[A-Z]+/ig, '').trim();
+                // Limpiamos espacios dobles
+                raceText = raceText.replace(/\s+/g, ' ');
+                
+                resultados.push({
+                    posicion: pos,
+                    carrera: raceText
+                });
             }
         });
 
-        console.log(`   └─ 🏆 Encontradas: ${palmares.length} victorias/podios`);
-        return palmares.length > 0 ? JSON.stringify(palmares) : null;
+        console.log(`   └─ 📊 Extraídos: ${resultados.length} resultados recientes`);
+        return resultados.length > 0 ? JSON.stringify(resultados) : null;
     } catch (error) {
-        console.error(`   └─ ❌ Error al leer palmarés:`, error.message);
+        console.error(`   └─ ❌ Error al leer resultados:`, error.message);
         return null;
     }
 }
@@ -81,10 +72,9 @@ async function updateRanking() {
     try {
         const [trendingDB] = await db.query("SELECT title FROM trending WHERE tipo = 'ciclista'");
         const trendingNames = trendingDB.map(r => r.title);
-        console.log(`📋 Detectados ${trendingNames.length} ciclistas manuales en el Panel Admin.`);
 
         const { data } = await axios.get('https://firstcycling.com/ranking.php', {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
             timeout: 15000 
         });
         const $ = cheerio.load(data);
@@ -123,13 +113,12 @@ async function updateRanking() {
             }
         }
 
-        console.log(`\n🔍 Iniciando Deep Scan para ${targetRiders.length} corredores. ESTO TARDARÁ UNOS SEGUNDOS...\n`);
+        console.log(`\n🔍 Extrayendo historial de ${targetRiders.length} corredores...\n`);
 
-        // Extraer Palmarés
         for (let rider of targetRiders) {
             if (rider.profileUrl) {
-                rider.palmares = await fetchRiderPalmares(rider.profileUrl);
-                await delay(2000); // 2 segundos de pausa por ciclista (1 min total aprox)
+                rider.palmares = await fetchRiderResults(rider.profileUrl);
+                await delay(2000); 
             } else {
                 rider.palmares = null;
             }
@@ -156,7 +145,7 @@ async function updateRanking() {
                 }
             }
         }
-        console.log("\n✅ [VELO BOT] MISIÓN CUMPLIDA AL 100%. PALMARÉS ACTUALIZADO.");
+        console.log("\n✅ [VELO BOT] MISIÓN CUMPLIDA AL 100%.");
         console.log("===============================================\n");
 
     } catch (error) {
