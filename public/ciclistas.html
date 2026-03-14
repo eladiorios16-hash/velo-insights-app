@@ -42,14 +42,22 @@
                         </div>
                 </div>
 
-                <div class="flex justify-center md:justify-start gap-8 mt-8 border-t border-zinc-800/60 pt-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-8 border-t border-zinc-800/60 pt-6">
                     <div>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Puntos UCI Globales</p>
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Puntos UCI</p>
                         <p id="rider-points" class="text-2xl md:text-3xl font-black text-amber-500 leading-none">--</p>
                     </div>
-                    <div class="border-l border-zinc-800 pl-8">
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Ranking Mundial</p>
+                    <div class="md:border-l border-zinc-800 md:pl-6">
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Ranking</p>
                         <p id="rider-rank" class="text-2xl md:text-3xl font-black text-white leading-none">--</p>
+                    </div>
+                    <div class="md:border-l border-zinc-800 md:pl-6">
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Nacionalidad</p>
+                        <p id="rider-nat" class="text-base md:text-lg font-bold text-zinc-200 leading-none mt-1">--</p>
+                    </div>
+                    <div class="md:border-l border-zinc-800 md:pl-6">
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Especialidad</p>
+                        <p id="rider-spec" class="text-base md:text-lg font-bold text-zinc-200 leading-none mt-1">--</p>
                     </div>
                 </div>
             </div>
@@ -87,13 +95,11 @@
     </main>
 
     <script>
-        // Función vital para limpiar acentos y comparar nombres sin fallos
         function normalizeName(name) {
             if (!name) return '';
             return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         }
 
-        // Genera la url de la imagen (manteniendo guiones en vez de espacios)
         function getSlug(name) {
             let slug = normalizeName(name);
             return slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
@@ -113,33 +119,32 @@
             
             document.getElementById('rider-name').innerText = rawName;
             
-            // 1. Cargar Foto
             const imgUrl = `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${getSlug(rawName)}.png`;
             document.getElementById('rider-image').src = imgUrl;
 
             try {
-                // 2. Obtener datos
                 const response = await fetch('/api/home');
                 const data = await response.json();
 
-                // --- BUSCAR EN EL RANKING (Búsqueda Inteligente) ---
+                let riderData = null;
+                let nat = null;
+                let spec = null;
+
+                // --- BUSCAR EN EL RANKING ---
                 const ranking = data.ranking.sort((a,b) => b.points - a.points);
-                
-                // Buscamos coincidencia exacta o parcial (ej: "Isaac del Toro" vs "Isaac DEL TORO")
                 const riderRankIndex = ranking.findIndex(r => {
                     const normRiderDB = normalizeName(r.name);
                     const partsRaw = normalizedRawName.split(' ');
-                    // Si coinciden exactamente o si la DB contiene todas las palabras de nuestro nombre buscado
                     return normRiderDB === normalizedRawName || partsRaw.every(word => normRiderDB.includes(word));
                 });
                 
                 if (riderRankIndex !== -1) {
-                    const riderData = ranking[riderRankIndex];
+                    riderData = ranking[riderRankIndex];
                     document.getElementById('rider-points').innerText = riderData.points;
                     document.getElementById('rider-rank').innerText = `#${riderRankIndex + 1}`;
                     document.getElementById('rider-team').innerText = riderData.team;
                     
-                    // --- INYECTAR EL PALMARÉS ---
+                    // Extraer palmarés
                     const palmaresContainer = document.getElementById('palmares-container');
                     if (riderData.palmares) {
                         try {
@@ -167,14 +172,32 @@
                         `;
                     }
 
+                    nat = riderData.nacionalidad || riderData.nationality;
+                    spec = riderData.especialidad || riderData.specialty;
+
                 } else {
-                    // Si no está en el ranking
                     document.getElementById('rider-points').innerText = "0";
                     document.getElementById('rider-rank').innerText = "--";
                     const teamFromTrending = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
                     document.getElementById('rider-team').innerText = teamFromTrending ? teamFromTrending.subtitle : "Pro Rider";
-                    document.getElementById('palmares-container').innerHTML = `<p class="text-xs font-mono text-zinc-500">Corredor sin puntos UCI registrados actualmente.</p>`;
+                    document.getElementById('palmares-container').innerHTML = `<p class="text-xs font-mono text-zinc-500">Corredor sin historial registrado actualmente.</p>`;
                 }
+
+                // --- BUSCAR EN EQUIPOS PARA RELLENAR NACIONALIDAD Y ESPECIALIDAD ---
+                if ((!nat || !spec) && data.teams) {
+                    for (const team of data.teams) {
+                        if (team.riders && Array.isArray(team.riders)) {
+                            const r = team.riders.find(x => normalizeName(x.name) === normalizedRawName || normalizeName(x.name).includes(normalizedRawName.split(' ').pop()));
+                            if (r) {
+                                if (!nat) nat = r.nacionalidad || r.nationality || r.pais || r.country;
+                                if (!spec) spec = r.especialidad || r.specialty || r.rol || r.role;
+                            }
+                        }
+                    }
+                }
+
+                document.getElementById('rider-nat').innerText = nat || 'N/D';
+                document.getElementById('rider-spec').innerText = spec || 'N/D';
 
                 // --- BUSCAR EN EL ESTADO DE FORMA (TRENDING) ---
                 const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
@@ -197,7 +220,6 @@
                 const relatedNewsContainer = document.getElementById('related-news');
                 const mentionedNews = data.news.filter(n => {
                     const fullText = (n.title + " " + (n.lead||"") + " " + (n.excerpt||"")).toLowerCase();
-                    // Buscar el apellido
                     const lastName = normalizedRawName.split(' ').pop();
                     return fullText.includes(lastName); 
                 });
