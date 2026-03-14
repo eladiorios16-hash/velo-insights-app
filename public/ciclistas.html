@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil del Ciclista | VELO INSIGHTS</title>
+    <link rel="icon" type="image/png" sizes="144x144" href="/assets/favicon-144.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        .bg-grid-pattern { background-image: radial-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px); background-size: 20px 20px; }
+    </style>
+</head>
+<body class="bg-[#050505] antialiased text-slate-300 pb-20 selection:bg-cyan-500/30 selection:text-cyan-200">
+
+    <nav class="fixed top-0 w-full bg-black/80 backdrop-blur-md border-b border-zinc-800 z-50 px-4 py-4">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <a href="index.html" class="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+                <i class="fas fa-arrow-left"></i> Volver al Lab
+            </a>
+            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500">Rider Data Center</span>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 pt-28 pb-12">
+        <div class="relative bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 md:p-10 overflow-hidden shadow-2xl mb-8 flex flex-col md:flex-row items-center md:items-start gap-8">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="w-32 h-32 md:w-48 md:h-48 shrink-0 rounded-full overflow-hidden border-2 border-zinc-700 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-10 bg-zinc-800">
+                <img id="rider-image" src="" alt="Rider" class="w-full h-full object-cover object-top" onerror="this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';">
+            </div>
+
+            <div class="relative z-10 text-center md:text-left flex-1 w-full">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
+                    <div>
+                        <h1 id="rider-name" class="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter italic leading-none mb-1">Cargando...</h1>
+                        <p id="rider-team" class="text-sm md:text-base font-mono text-cyan-400 uppercase tracking-widest">Buscando equipo...</p>
+                    </div>
+                    <div id="rider-trend" class="hidden px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0">
+                        </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 border-t border-zinc-800/60 pt-6">
+                    <div>
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Puntos UCI</p>
+                        <p id="rider-points" class="text-xl md:text-2xl font-black text-amber-500 leading-none">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Pos. Ranking</p>
+                        <p id="rider-rank" class="text-xl md:text-2xl font-black text-white leading-none">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Nacionalidad</p>
+                        <p id="rider-nat" class="text-sm md:text-base font-mono text-white leading-none mt-1 animate-pulse">Wait...</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Especialidad</p>
+                        <p id="rider-spec" class="text-sm md:text-base font-mono text-white leading-none mt-1 animate-pulse">Wait...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-gradient-to-br from-zinc-900/80 to-[#050505] border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern">
+                    <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3">
+                        <i class="fas fa-trophy text-amber-500"></i>
+                        <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Palmarés / <span class="text-amber-500">Victorias</span></h2>
+                    </div>
+                    
+                    <div class="flex flex-col items-center justify-center py-10 opacity-70">
+                        <i class="fas fa-satellite-dish text-3xl text-cyan-500 mb-4 animate-ping"></i>
+                        <p class="text-sm font-mono text-zinc-400 text-center max-w-md">El Tech Lab está calibrando el bot para sincronizar el palmarés histórico desde las bases de datos oficiales...</p>
+                        <span class="mt-4 px-3 py-1 bg-cyan-900/30 text-cyan-400 text-[10px] uppercase tracking-widest rounded border border-cyan-500/30">Módulo en construcción</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3">
+                        <i class="fas fa-newspaper text-cyan-400"></i>
+                        <h2 class="text-base font-black text-white italic uppercase tracking-tight">Noticias <span class="text-cyan-400">Menciones</span></h2>
+                    </div>
+                    
+                    <div id="related-news" class="space-y-4">
+                        <p class="text-xs text-zinc-500 animate-pulse font-mono">Buscando en el archivo...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Función para limpiar acentos y preparar la URL de Cloudinary
+        function getSlug(name) {
+            let slug = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            return slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+        }
+
+        async function loadRiderProfile() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const riderNameQuery = urlParams.get('rider');
+            
+            if (!riderNameQuery) {
+                document.getElementById('rider-name').innerText = "Ciclista no encontrado";
+                return;
+            }
+
+            const rawName = decodeURIComponent(riderNameQuery);
+            document.getElementById('rider-name').innerText = rawName;
+            
+            // 1. Cargar Foto
+            const imgUrl = `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${getSlug(rawName)}.png`;
+            document.getElementById('rider-image').src = imgUrl;
+
+            try {
+                // 2. Obtener datos de la base de datos general (Ranking, Noticias, Trending)
+                const response = await fetch('/api/home');
+                const data = await response.json();
+
+                // --- BUSCAR EN EL RANKING ---
+                const ranking = data.ranking.sort((a,b) => b.points - a.points);
+                const riderRankIndex = ranking.findIndex(r => r.name.toLowerCase() === rawName.toLowerCase());
+                
+                if (riderRankIndex !== -1) {
+                    const riderData = ranking[riderRankIndex];
+                    document.getElementById('rider-points').innerText = riderData.points;
+                    document.getElementById('rider-rank').innerText = `#${riderRankIndex + 1}`;
+                    document.getElementById('rider-team').innerText = riderData.team;
+                } else {
+                    // Si no está en el ranking
+                    const teamFromTrending = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && t.title.toLowerCase() === rawName.toLowerCase());
+                    document.getElementById('rider-team').innerText = teamFromTrending ? teamFromTrending.subtitle : "Equipo WorldTour";
+                }
+
+                // --- BUSCAR EN EL ESTADO DE FORMA (TRENDING) ---
+                const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && t.title.toLowerCase() === rawName.toLowerCase());
+                if (trendData) {
+                    const val = trendData.value ? trendData.value.toLowerCase() : '';
+                    const isNegative = val.includes('-') || val.includes('baja') || val.includes('down') || val.includes('lesi');
+                    const trendBox = document.getElementById('rider-trend');
+                    
+                    trendBox.classList.remove('hidden');
+                    if (isNegative) {
+                        trendBox.className = "px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 bg-red-900/20 border-red-500/30 text-red-400";
+                        trendBox.innerHTML = `<i class="fas fa-arrow-down mr-1"></i> ${trendData.value || 'BAJA / LESIÓN'}`;
+                    } else {
+                        trendBox.className = "px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 bg-emerald-900/20 border-emerald-500/30 text-emerald-400";
+                        trendBox.innerHTML = `<i class="fas fa-fire mr-1"></i> ${trendData.value || 'EN FORMA'}`;
+                    }
+                }
+
+                // --- BUSCAR MENCIONES EN NOTICIAS ---
+                const relatedNewsContainer = document.getElementById('related-news');
+                const mentionedNews = data.news.filter(n => {
+                    const fullText = (n.title + " " + n.lead + " " + (n.excerpt||"")).toLowerCase();
+                    return fullText.includes(rawName.toLowerCase().split(' ')[0]); // Busca al menos el apellido o nombre
+                });
+
+                if (mentionedNews.length > 0) {
+                    relatedNewsContainer.innerHTML = mentionedNews.map(n => `
+                        <a href="noticias.html?article=${n.id}" class="block group border-b border-zinc-800/50 pb-3 last:border-0 last:pb-0">
+                            <span class="text-[8px] font-black text-cyan-600 uppercase tracking-widest block mb-1">${n.tag || 'News'} • ${n.date || ''}</span>
+                            <h4 class="text-xs font-bold text-zinc-300 group-hover:text-white transition-colors leading-snug">${n.title}</h4>
+                        </a>
+                    `).join('');
+                } else {
+                    relatedNewsContainer.innerHTML = `<p class="text-xs text-zinc-600 italic">No hay noticias recientes sobre este corredor en el archivo.</p>`;
+                }
+
+            } catch (error) {
+                console.error("Error cargando perfil:", error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadRiderProfile);
+    </script>
+</body>
+</html>
