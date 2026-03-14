@@ -3,67 +3,89 @@ const cheerio = require('cheerio');
 const cron = require('node-cron');
 const db = require('./db');
 
-// Función auxiliar para esperar y no saturar el servidor de FC
+// Función auxiliar para no saturar los servidores de FirstCycling
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// Normalizar nombres para evitar duplicados entre tu BD y FirstCycling
+function normalizeName(name) {
+    if (!name) return '';
+    return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+// NUEVO: Función que usa el buscador de FC para encontrar a un ciclista cualquiera
+async function searchRiderProfile(riderName) {
+    try {
+        console.log(`   ├─ 🔎 Buscando perfil oculto de: ${riderName}`);
+        const { data } = await axios.get(`https://firstcycling.com/rider.php?q=${encodeURIComponent(riderName)}`, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+            timeout: 10000
+        });
+        const $ = cheerio.load(data);
+        // Coge el primer resultado de la tabla de búsqueda
+        const firstResult = $('table.ws_tb tbody tr').first().find('a[href*="rider.php"]').attr('href');
+        return firstResult || null;
+    } catch (e) {
+        return null;
+    }
+}
 
 async function fetchRiderPalmares(riderUrl) {
     try {
         console.log(`   └─ 🕵️‍♂️ Extrayendo palmarés desde: ${riderUrl}`);
         
-        // Forzamos a pedir la web en inglés para que las clases CSS sean consistentes
         const { data } = await axios.get(`https://firstcycling.com/${riderUrl}`, {
-            headers: { 
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Accept-Language': 'en-US,en;q=0.9' 
-            },
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
             timeout: 15000
         });
         
         const $ = cheerio.load(data);
         const palmares = [];
 
-        // NUEVO MÉTODO DE EXTRACCIÓN (Basado en la estructura real de FirstCycling)
-        // Buscamos las listas de Highlights que están en la parte superior derecha
-        $('.rider-highlights li, ul.list-highlights li').each((i, el) => {
-            let text = $(el).text().trim();
-            
-            // Filtramos para coger solo victorias importantes (Clasificaciones Generales, Campeonatos, Monumentos)
-            // FirstCycling suele listarlos como "3x Tour de France GC ('23, '22...)"
-            if (text && (text.includes('GC') || text.includes('Stage') || text.includes('World') || text.includes('National') || text.includes('1st') || text.includes('Winner'))) {
-                
-                // Limpiamos el texto: quitamos el multiplicador "3x " o "1x " del principio
-                let cleanWin = text.replace(/^\d+x\s/, '').trim();
-                
-                if (palmares.length < 6 && cleanWin.length > 3) {
-                    palmares.push(cleanWin);
-                }
+        // ESTRATEGIA 1: Buscar la caja específica de "Top Results" (Incluye Podios importantes)
+        $('h3').each((i, el) => {
+            if ($(el).text().trim() === 'Top Results') {
+                $(el).next('table').find('tr').each((j, tr) => {
+                    if (palmares.length >= 6) return; 
+                    
+                    let race = $(tr).find('td').eq(1).text().trim();   
+                    let years = $(tr).find('td').eq(2).text().trim();  
+                    
+                    if (race) {
+                        let cleanWin = `${race} ${years}`.trim();
+                        if (!palmares.includes(cleanWin)) palmares.push(cleanWin);
+                    }
+                });
             }
         });
 
-        // PLAN B: Si no encuentra la lista de highlights rápidos, buscamos en las tablas de resultados abajo
+        // ESTRATEGIA 2: Si no hay "Top Results", buscamos PODIOS (1º, 2º o 3º) en las tablas
         if (palmares.length === 0) {
-             $('table.sortable tbody tr').each((i, row) => {
-                 // La columna 2 (Pos) suele tener la posición
-                 const posText = $(row).find('td').eq(1).text().trim();
-                 
-                 // Si quedó 1º
-                 if (posText === '1' && palmares.length < 5) {
-                     const raceLink = $(row).find('td').eq(3).find('a').first();
-                     let raceName = raceLink.text().trim();
-                     
-                     // Extraer el año de la primera columna
-                     let year = $(row).find('td').eq(0).text().trim();
-                     if (year.length > 4) year = year.substring(0, 4); 
-                     
-                     if (raceName) {
-                         const entry = year.match(/^\d{4}$/) ? `${raceName} ('${year.slice(-2)})` : raceName;
-                         if (!palmares.includes(entry)) palmares.push(entry);
-                     }
-                 }
-             });
+            $('table.sortable tbody tr').each((i, tr) => {
+                if (palmares.length >= 6) return;
+                
+                const pos1 = $(tr).find('td').eq(1).text().trim(); 
+                const pos2 = $(tr).find('td').eq(2).text().trim(); 
+                
+                // Validamos si la posición es 1, 2 o 3 (o 1st, 2nd, 3rd)
+                const isPodium = ['1','2','3','1st','2nd','3rd'].includes(pos1) || ['1','2','3','1st','2nd','3rd'].includes(pos2);
+                
+                if (isPodium) {
+                    const raceNode = $(tr).find('a[href*="race.php"]').first();
+                    const raceName = raceNode.text().trim();
+                    const year = $(tr).find('td').eq(0).text().trim(); 
+                    
+                    if (raceName && raceName.length > 2) {
+                        const shortYear = year.match(/^\d{4}$/) ? year.slice(-2) : year;
+                        // Añadimos el puesto para que en la web se vea que fue podio y no victoria
+                        const positionLabel = (pos1==='1'||pos2==='1'||pos1==='1st'||pos2==='1st') ? '' : ` (${pos1||pos2}º)`;
+                        const entry = `${raceName} ('${shortYear})${positionLabel}`;
+                        
+                        if (!palmares.includes(entry)) palmares.push(entry);
+                    }
+                }
+            });
         }
 
-        // Devolvemos el array en formato JSON para que MySQL lo acepte
         return palmares.length > 0 ? JSON.stringify(palmares) : null;
     } catch (error) {
         console.error(`   └─ ❌ Error al leer palmarés de ${riderUrl}:`, error.message);
@@ -72,33 +94,31 @@ async function fetchRiderPalmares(riderUrl) {
 }
 
 async function updateRanking() {
-    console.log("🤖 [Velo Bot] Iniciando escaneo de FirstCycling...");
+    console.log("🤖 [Velo Bot] Iniciando Escáner Global...");
     try {
+        // 1. OBTENER CORREDORES DESTACADOS POR EL ADMIN (Tabla Trending)
+        const [trendingDB] = await db.query("SELECT title FROM trending WHERE tipo = 'ciclista'");
+        const trendingNames = trendingDB.map(r => r.title);
+        console.log(`📋 [Velo Bot] Encontrados ${trendingNames.length} ciclistas manuales en el Panel Admin.`);
+
+        // 2. DESCARGAR EL RANKING UCI (Top 30 para tener una buena base)
         const { data } = await axios.get('https://firstcycling.com/ranking.php', {
-            headers: { 
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Accept-Language': 'en-US,en;q=0.9' 
-            },
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
             timeout: 15000 
         });
-        
         const $ = cheerio.load(data);
-        const topRiders = [];
+        const targetRiders = [];
 
-        // 1. Extraer los corredores del Ranking
         $('table tbody tr').each((index, element) => {
-            if (topRiders.length >= 10) return false; 
+            if (targetRiders.length >= 30) return false; // Guardamos el Top 30
 
             const riderLink = $(element).find('a[href*="rider.php"]');
-            
             if (riderLink.length > 0) {
                 let name = riderLink.text().trim();
-                const profileUrl = riderLink.attr('href'); // Guardamos la URL de su perfil
-                
+                const profileUrl = riderLink.attr('href');
                 const teamLink = $(element).find('a[href*="team.php"]');
                 const team = teamLink.length > 0 ? teamLink.text().trim() : 'Independiente';
-
-                const pointsStr = $(element).find('td').last().text().trim().replace(/\./g, '').replace(/,/g, '').replace(/\s/g, '');
+                const pointsStr = $(element).find('td').last().text().trim().replace(/[\.,\s]/g, '');
                 const points = parseInt(pointsStr) || 0;
 
                 // Formateo del nombre: "POGAČAR Tadej" -> "Tadej POGAČAR"
@@ -109,54 +129,65 @@ async function updateRanking() {
                 }
 
                 if (name && points > 0) {
-                    topRiders.push({ name, team, points, profileUrl });
+                    targetRiders.push({ name, team, points, profileUrl });
                 }
             }
         });
 
-        console.log(`🔍 [Velo Bot] Cazados ${topRiders.length} corredores en el Ranking. Iniciando Deep Scan de Palmarés...`);
-
-        // 2. Extracción profunda (Deep Scan) del palmarés para cada corredor
-        if (topRiders.length > 0) {
-            
-            for (let rider of topRiders) {
-                if (rider.profileUrl) {
-                    rider.palmares = await fetchRiderPalmares(rider.profileUrl);
-                    // Retraso seguro para no saturar al servidor ajeno
-                    await delay(2500); 
+        // 3. FUSIONAR LISTAS: Si un ciclista manual NO está en el Top 30, lo buscamos y lo añadimos
+        for (let tName of trendingNames) {
+            const exists = targetRiders.find(r => normalizeName(r.name) === normalizeName(tName));
+            if (!exists) {
+                const searchUrl = await searchRiderProfile(tName);
+                if (searchUrl) {
+                    targetRiders.push({
+                        name: tName,
+                        team: 'Pro Rider', // ciclista.html lo sobrescribirá con tu base de datos de equipos
+                        points: 0,         // Al no estar en el top, le ponemos 0 puntos temporalmente
+                        profileUrl: searchUrl
+                    });
+                    await delay(1500); // Respetar el servidor
                 } else {
-                    rider.palmares = null;
+                    console.log(`   ├─ ⚠️ No se encontró perfil para: ${tName}`);
                 }
             }
+        }
 
-            // 3. Guardar en Base de Datos
-            console.log("💾 [Velo Bot] Guardando datos estructurados en la base de datos...");
-            await db.query("DELETE FROM ranking"); 
-            
-            for (const rider of topRiders) {
-                try {
-                    await db.query(
+        console.log(`🔍 [Velo Bot] Lista final: ${targetRiders.length} corredores. Iniciando Deep Scan de Palmarés...`);
+
+        // 4. EXTRAER PALMARÉS PARA TODOS
+        for (let rider of targetRiders) {
+            if (rider.profileUrl) {
+                rider.palmares = await fetchRiderPalmares(rider.profileUrl);
+                await delay(2500); // Retraso de seguridad
+            } else {
+                rider.palmares = null;
+            }
+        }
+
+        // 5. GUARDAR TODO EN LA BASE DE DATOS
+        console.log("💾 [Velo Bot] Guardando datos en MySQL...");
+        await db.query("DELETE FROM ranking"); 
+        
+        for (const rider of targetRiders) {
+            try {
+                await db.query(
+                    "INSERT INTO ranking (name, team, points, palmares) VALUES (?, ?, ?, ?)", 
+                    [rider.name, rider.team, rider.points, rider.palmares]
+                );
+            } catch(dbErr) {
+                if (dbErr.code === 'ER_BAD_FIELD_ERROR') {
+                     await db.query("ALTER TABLE ranking ADD COLUMN palmares TEXT NULL");
+                     await db.query(
                         "INSERT INTO ranking (name, team, points, palmares) VALUES (?, ?, ?, ?)", 
                         [rider.name, rider.team, rider.points, rider.palmares]
                     );
-                } catch(dbErr) {
-                    if (dbErr.code === 'ER_BAD_FIELD_ERROR') {
-                         console.warn("⚠️ Advertencia: La columna 'palmares' no existe. Creándola automáticamente...");
-                         await db.query("ALTER TABLE ranking ADD COLUMN palmares TEXT NULL");
-                         // Reintento
-                         await db.query(
-                            "INSERT INTO ranking (name, team, points, palmares) VALUES (?, ?, ?, ?)", 
-                            [rider.name, rider.team, rider.points, rider.palmares]
-                        );
-                    } else {
-                        throw dbErr;
-                    }
+                } else {
+                    throw dbErr;
                 }
             }
-            console.log(`✅ [Velo Bot] MISIÓN CUMPLIDA. Ranking y Palmarés actualizados. (Top 1: ${topRiders[0].name})`);
-        } else {
-            console.log("⚠️ [Velo Bot] El robot entró a la web, pero no reconoció el HTML de los corredores.");
         }
+        console.log(`✅ [Velo Bot] MISIÓN CUMPLIDA. Ranking y Palmarés guardados con éxito.`);
 
     } catch (error) {
         console.error("❌ [Velo Bot] Error Fatal:", error.message);
