@@ -9,41 +9,61 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function fetchRiderPalmares(riderUrl) {
     try {
         console.log(`   └─ 🕵️‍♂️ Extrayendo palmarés desde: ${riderUrl}`);
+        
+        // Forzamos a pedir la web en inglés para que las clases CSS sean consistentes
         const { data } = await axios.get(`https://firstcycling.com/${riderUrl}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
-            timeout: 10000
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Accept-Language': 'en-US,en;q=0.9' 
+            },
+            timeout: 15000
         });
         
         const $ = cheerio.load(data);
         const palmares = [];
 
-        // MÉTODO DE RASTREO AGRESIVO: Buscamos en todas las tablas de resultados
-        $('table tbody tr').each((i, row) => {
-            const tds = $(row).find('td');
+        // NUEVO MÉTODO DE EXTRACCIÓN (Basado en la estructura real de FirstCycling)
+        // Buscamos las listas de Highlights que están en la parte superior derecha
+        $('.rider-highlights li, ul.list-highlights li').each((i, el) => {
+            let text = $(el).text().trim();
             
-            // Comprobamos si el corredor quedó 1º (Puede estar en la columna 1, 2 o 3)
-            let isWin = false;
-            tds.each((j, td) => {
-                const text = $(td).text().trim();
-                if (text === '1' || text === '1st') isWin = true;
-            });
-
-            // Si es una victoria y aún no tenemos 6, extraemos el nombre de la carrera
-            if (isWin && palmares.length < 6) {
-                const raceLink = $(row).find('a').first(); // El primer enlace suele ser el nombre de la carrera
-                const raceName = raceLink.text().trim();
+            // Filtramos para coger solo victorias importantes (Clasificaciones Generales, Campeonatos, Monumentos)
+            // FirstCycling suele listarlos como "3x Tour de France GC ('23, '22...)"
+            if (text && (text.includes('GC') || text.includes('Stage') || text.includes('World') || text.includes('National') || text.includes('1st') || text.includes('Winner'))) {
                 
-                let year = $(row).find('td').first().text().trim();
-                if (year.length > 4) year = year.substring(0, 4); // Extraemos solo el año
+                // Limpiamos el texto: quitamos el multiplicador "3x " o "1x " del principio
+                let cleanWin = text.replace(/^\d+x\s/, '').trim();
                 
-                // Limpiamos y guardamos (Solo si tiene un nombre real)
-                if (raceName && raceName.length > 3) {
-                    const entry = year.match(/^\d{4}$/) ? `${raceName} ('${year.slice(-2)})` : raceName;
-                    if (!palmares.includes(entry)) palmares.push(entry);
+                if (palmares.length < 6 && cleanWin.length > 3) {
+                    palmares.push(cleanWin);
                 }
             }
         });
 
+        // PLAN B: Si no encuentra la lista de highlights rápidos, buscamos en las tablas de resultados abajo
+        if (palmares.length === 0) {
+             $('table.sortable tbody tr').each((i, row) => {
+                 // La columna 2 (Pos) suele tener la posición
+                 const posText = $(row).find('td').eq(1).text().trim();
+                 
+                 // Si quedó 1º
+                 if (posText === '1' && palmares.length < 5) {
+                     const raceLink = $(row).find('td').eq(3).find('a').first();
+                     let raceName = raceLink.text().trim();
+                     
+                     // Extraer el año de la primera columna
+                     let year = $(row).find('td').eq(0).text().trim();
+                     if (year.length > 4) year = year.substring(0, 4); 
+                     
+                     if (raceName) {
+                         const entry = year.match(/^\d{4}$/) ? `${raceName} ('${year.slice(-2)})` : raceName;
+                         if (!palmares.includes(entry)) palmares.push(entry);
+                     }
+                 }
+             });
+        }
+
+        // Devolvemos el array en formato JSON para que MySQL lo acepte
         return palmares.length > 0 ? JSON.stringify(palmares) : null;
     } catch (error) {
         console.error(`   └─ ❌ Error al leer palmarés de ${riderUrl}:`, error.message);
@@ -55,8 +75,11 @@ async function updateRanking() {
     console.log("🤖 [Velo Bot] Iniciando escaneo de FirstCycling...");
     try {
         const { data } = await axios.get('https://firstcycling.com/ranking.php', {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
-            timeout: 10000 
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Accept-Language': 'en-US,en;q=0.9' 
+            },
+            timeout: 15000 
         });
         
         const $ = cheerio.load(data);
@@ -78,6 +101,7 @@ async function updateRanking() {
                 const pointsStr = $(element).find('td').last().text().trim().replace(/\./g, '').replace(/,/g, '').replace(/\s/g, '');
                 const points = parseInt(pointsStr) || 0;
 
+                // Formateo del nombre: "POGAČAR Tadej" -> "Tadej POGAČAR"
                 if (name.match(/^[A-ZÁÉÍÓÚÑÄËÏÖÜ]+ [A-Z]/)) { 
                      const parts = name.split(' ');
                      const lastName = parts.shift();
@@ -90,7 +114,7 @@ async function updateRanking() {
             }
         });
 
-        console.log(`🔍 [Velo Bot] Cazados ${topRiders.length} corredores en el Ranking. Iniciando Deep Scan...`);
+        console.log(`🔍 [Velo Bot] Cazados ${topRiders.length} corredores en el Ranking. Iniciando Deep Scan de Palmarés...`);
 
         // 2. Extracción profunda (Deep Scan) del palmarés para cada corredor
         if (topRiders.length > 0) {
@@ -98,8 +122,8 @@ async function updateRanking() {
             for (let rider of topRiders) {
                 if (rider.profileUrl) {
                     rider.palmares = await fetchRiderPalmares(rider.profileUrl);
-                    // Esperar 2 segundos entre peticiones para no ser bloqueados
-                    await delay(2000); 
+                    // Retraso seguro para no saturar al servidor ajeno
+                    await delay(2500); 
                 } else {
                     rider.palmares = null;
                 }
