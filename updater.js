@@ -25,37 +25,66 @@ async function searchRiderProfile(riderName) {
 
 async function fetchRiderResults(riderUrl) {
     try {
-        console.log(`   └─ 🕵️‍♂️ Extrayendo últimos resultados desde: ${riderUrl}`);
+        console.log(`   └─ 🕵️‍♂️ Extrayendo resultados desde: ${riderUrl}`);
         
-        const { data } = await axios.get(`https://firstcycling.com/${riderUrl}`, {
+        let { data } = await axios.get(`https://firstcycling.com/${riderUrl}`, {
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
             timeout: 15000
         });
         
-        const $ = cheerio.load(data);
+        let $ = cheerio.load(data);
         const resultados = [];
 
-        // Buscamos en la tabla principal de resultados
-        $('table.sortable tbody tr').each((i, row) => {
-            if (resultados.length >= 8) return; // Límite: últimos 8 resultados
-            
-            // La posición suele estar en la columna 2
-            let pos = $(row).find('td').eq(1).text().trim();
-            // La carrera/etapa está en la columna 4
-            let raceText = $(row).find('td').eq(3).text().trim();
-            
-            if (pos && raceText) {
-                // Limpiamos los códigos UCI feos como "| 1.UWT" o "| 2.Pro"
-                raceText = raceText.replace(/\s*\|\s*\d\.[A-Z]+/ig, '').trim();
-                // Limpiamos espacios dobles
-                raceText = raceText.replace(/\s+/g, ' ');
+        const extraerTabla = () => {
+            // FirstCycling usa 'table.ws_tb' para la tabla general de resultados 
+            $('table.ws_tb tbody tr').each((i, row) => {
+                if (resultados.length >= 8) return; // Límite de 8 últimos resultados para la interfaz
                 
-                resultados.push({
-                    posicion: pos,
-                    carrera: raceText
+                const tds = $(row).find('td');
+                if (tds.length < 4) return;
+
+                let pos = tds.eq(1).text().trim(); // Columna Posición
+                let raceText = tds.eq(3).text().trim(); // Columna Carrera
+                
+                // Saltamos las cabeceras generales de las vueltas por etapas que no tienen posición
+                if (!pos || pos === '-' || pos === '') return;
+
+                // Limpieza absoluta de códigos de categoría UCI
+                raceText = raceText.replace(/\s*2\.UWT/ig, '');
+                raceText = raceText.replace(/\s*1\.UWT/ig, '');
+                raceText = raceText.replace(/\s*2\.Pro/ig, '');
+                raceText = raceText.replace(/\s*1\.Pro/ig, '');
+                
+                // Formatear "Carrera | Etapa" a "Carrera - Etapa"
+                raceText = raceText.replace(/\s*\|\s*/g, ' - ').trim();
+                raceText = raceText.replace(/\s+/g, ' '); // Eliminar espacios extra
+
+                // Validar que la posición sea un número o un abandono (DNF/DNS/OTL)
+                if (pos.match(/^\d+$/) || ['DNF', 'DNS', 'OTL'].includes(pos.toUpperCase())) {
+                    resultados.push({
+                        posicion: pos,
+                        carrera: raceText
+                    });
+                }
+            });
+        };
+
+        extraerTabla();
+
+        // MAGIA DEL CALENDARIO: Si este año ha corrido poco (< 5 carreras), extraemos el año anterior (2025)
+        if (resultados.length < 5) {
+            console.log(`   └─ 🔄 Pocos resultados. Escaneando la temporada anterior (2025)...`);
+            let prevYearUrl = riderUrl.includes('?') ? `${riderUrl}&y=2025` : `${riderUrl}?y=2025`;
+            try {
+                let res2025 = await axios.get(`https://firstcycling.com/${prevYearUrl}`, {
+                    headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 10000
                 });
+                $ = cheerio.load(res2025.data);
+                extraerTabla();
+            } catch (e) {
+                console.log(`   └─ ⚠️ No se pudo cargar la temporada 2025`);
             }
-        });
+        }
 
         console.log(`   └─ 📊 Extraídos: ${resultados.length} resultados recientes`);
         return resultados.length > 0 ? JSON.stringify(resultados) : null;
