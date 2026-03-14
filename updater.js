@@ -17,31 +17,32 @@ async function fetchRiderPalmares(riderUrl) {
         const $ = cheerio.load(data);
         const palmares = [];
 
-        // Buscamos en la sección típica de victorias destacadas (Top Results / Wins)
-        $('.rider-highlights li, .list-highlights li').each((i, el) => {
-            const text = $(el).text().trim();
-            if (text && (text.includes('GC') || text.includes('Stage') || text.includes('World') || text.includes('National') || text.includes('1st'))) {
-                // Limpiamos un poco el texto de la victoria
-                let cleanWin = text.replace(/\s+/g, ' ').replace(/1x /g, '').trim();
+        // MÉTODO DE RASTREO AGRESIVO: Buscamos en todas las tablas de resultados
+        $('table tbody tr').each((i, row) => {
+            const tds = $(row).find('td');
+            
+            // Comprobamos si el corredor quedó 1º (Puede estar en la columna 1, 2 o 3)
+            let isWin = false;
+            tds.each((j, td) => {
+                const text = $(td).text().trim();
+                if (text === '1' || text === '1st') isWin = true;
+            });
+
+            // Si es una victoria y aún no tenemos 6, extraemos el nombre de la carrera
+            if (isWin && palmares.length < 6) {
+                const raceLink = $(row).find('a').first(); // El primer enlace suele ser el nombre de la carrera
+                const raceName = raceLink.text().trim();
                 
-                // Limitamos a 6 victorias clave para no saturar la base de datos
-                if (palmares.length < 6 && cleanWin.length > 3) {
-                    palmares.push(cleanWin);
+                let year = $(row).find('td').first().text().trim();
+                if (year.length > 4) year = year.substring(0, 4); // Extraemos solo el año
+                
+                // Limpiamos y guardamos (Solo si tiene un nombre real)
+                if (raceName && raceName.length > 3) {
+                    const entry = year.match(/^\d{4}$/) ? `${raceName} ('${year.slice(-2)})` : raceName;
+                    if (!palmares.includes(entry)) palmares.push(entry);
                 }
             }
         });
-
-        // Si la estructura cambió o no encontramos la lista rápida, buscamos en tablas
-        if (palmares.length === 0) {
-             $('table.sortable tbody tr').each((i, el) => {
-                 const pos = $(el).find('td:nth-child(2)').text().trim();
-                 if (pos === '1' && palmares.length < 5) {
-                     const race = $(el).find('td:nth-child(4) a').text().trim();
-                     const year = $(el).find('td:nth-child(1)').text().trim();
-                     if(race) palmares.push(`${race} ('${year.slice(-2)})`);
-                 }
-             });
-        }
 
         return palmares.length > 0 ? JSON.stringify(palmares) : null;
     } catch (error) {
