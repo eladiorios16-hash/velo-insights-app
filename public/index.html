@@ -122,6 +122,12 @@
             transform: translateY(0) scale(1);
             opacity: 1;
         }
+
+        /* Ajustes específicos para los modales en escritorio y textos largos */
+        .truncate-team { max-width: 120px; }
+        @media (min-width: 768px) { 
+            .truncate-team { max-width: 250px; } 
+        }
     </style>
 </head>
 
@@ -409,7 +415,7 @@
     </main>
 
     <div id="ranking-modal" class="modal-overlay fixed inset-0 z-[999] flex items-center justify-center p-4">
-        <div class="modal-content bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
+        <div class="modal-content bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md md:max-w-2xl max-h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
             <div class="p-5 border-b border-zinc-800 flex justify-between items-center bg-black/50">
                 <h3 class="text-lg font-heading text-white italic uppercase">UCI <span class="text-amber-500">RANKING</span> GLOBAL</h3>
                 <button onclick="closeModal('ranking-modal')" class="text-zinc-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-800 transition-colors">
@@ -423,7 +429,7 @@
     </div>
 
     <div id="trending-modal" class="modal-overlay fixed inset-0 z-[999] flex items-center justify-center p-4">
-        <div class="modal-content bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
+        <div class="modal-content bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md md:max-w-4xl max-h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
             <div class="p-5 border-b border-zinc-800 flex justify-between items-center bg-black/50">
                 <h3 class="text-lg font-heading text-white italic uppercase flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span> RADAR RENDIMIENTO
@@ -432,7 +438,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="p-5 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+            <div class="p-5 overflow-y-auto custom-scrollbar flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
                 <div>
                     <h4 class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-emerald-500/20 pb-2">
                         <i class="fas fa-fire"></i> En Forma (HOT)
@@ -816,7 +822,6 @@
                 const imgUrl = getRiderImageUrl(r.name);
                 let avatarSize = isModal ? 'w-12 h-12' : 'w-10 h-10'; 
                 
-                // Si es modal, le ponemos el numerito delante
                 let numberBadge = '';
                 if (isModal && index !== null) {
                     numberBadge = `<span class="text-sm font-black text-zinc-600 w-4 text-center shrink-0">${index + 1}</span>`;
@@ -843,7 +848,7 @@
                         ${avatarHTML}
                         <div class="ml-1">
                             <p class="text-[13px] font-bold text-white group-hover:text-cyan-400 transition-colors leading-tight">${r.name}</p>
-                            <p class="text-[9px] text-zinc-500 font-mono truncate max-w-[130px] mt-0.5">${r.team}</p>
+                            <p class="text-[9px] text-zinc-500 font-mono truncate truncate-team mt-0.5">${r.team}</p>
                         </div>
                     </div>
                     <div class="text-right shrink-0">
@@ -947,7 +952,7 @@
                         </div>
                         <div class="flex flex-col ml-1">
                             <span class="text-sm font-bold text-white group-hover:text-amber-400 transition-colors leading-tight">${r.name}</span>
-                            <span class="text-[9px] font-black uppercase text-zinc-500 truncate max-w-[130px]">${r.team}</span>
+                            <span class="text-[9px] font-black uppercase text-zinc-500 truncate truncate-team">${r.team}</span>
                         </div>
                     </div>
                     <div class="text-right pr-2 shrink-0">
