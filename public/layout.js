@@ -1,4 +1,4 @@
-/* VELO INSIGHTS - LAYOUT ENGINE v7.5 (BRANDING ACTUALIZADO) */
+/* VELO INSIGHTS - LAYOUT ENGINE v7.6 (BÚSQUEDA DE CICLISTAS INTEGRADA) */
 
 document.addEventListener("DOMContentLoaded", () => {
     injectGlobalStyles(); 
@@ -283,7 +283,7 @@ function injectSearchModal() {
         <div class="w-full max-w-2xl bg-[#09090b]/90 border border-zinc-700/50 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl transform transition-all scale-95 opacity-0" id="search-container">
             <div class="flex items-center justify-between border-b border-zinc-800/80 p-4">
                 <svg class="w-5 h-5 text-cyan-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" id="search-input-global" placeholder="BUSCAR CARRERAS, NOTICIAS, TÉRMINOS..." class="w-full bg-transparent px-4 text-sm md:text-base text-white outline-none font-bold tracking-wide placeholder-zinc-600 h-10 uppercase">
+                <input type="text" id="search-input-global" placeholder="BUSCAR CICLISTAS, CARRERAS, NOTICIAS..." class="w-full bg-transparent px-4 text-sm md:text-base text-white outline-none font-bold tracking-wide placeholder-zinc-600 h-10 uppercase">
                 <button onclick="toggleSearch()" class="text-zinc-500 hover:text-white p-2 rounded-full hover:bg-zinc-800 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div id="search-results" class="max-h-[60vh] overflow-y-auto custom-scrollbar p-2 space-y-1"></div>
@@ -328,17 +328,22 @@ async function performSearch(term) {
     container.innerHTML = `<p class="text-zinc-500 text-center py-8 uppercase text-[10px] font-black tracking-widest animate-pulse">Buscando en la Base de Datos...</p>`;
     const lowerTerm = term.toLowerCase();
     try {
-        const [resNews, resGlossary, resCalendar] = await Promise.all([
+        // AHORA FETCHAMOS TAMBIÉN EL RANKING PARA BUSCAR CICLISTAS
+        const [resNews, resGlossary, resCalendar, resRanking] = await Promise.all([
             fetch(`/api/news`).catch(() => null),
             fetch(`/api/glossary`).catch(() => null),
-            fetch(`/api/calendar`).catch(() => null)
+            fetch(`/api/calendar`).catch(() => null),
+            fetch(`/api/ranking`).catch(() => null)
         ]);
         
         let n = resNews && resNews.ok ? await resNews.json() : [];
         let g = resGlossary && resGlossary.ok ? await resGlossary.json() : [];
         let c = resCalendar && resCalendar.ok ? await resCalendar.json() : [];
+        let r = resRanking && resRanking.ok ? await resRanking.json() : [];
         
         const results = [
+            // LOS CICLISTAS APARECEN PRIMERO EN LA BÚSQUEDA
+            ...r.filter(i => (i.name || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.name, type: 'CICLISTA', subtitle: x.team, link: `ciclista.html?rider=${encodeURIComponent(x.name)}` })),
             ...n.filter(i => (i.title || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.title, type: 'NOTICIA', subtitle: x.date, link: `noticias.html?article=${x.id}` })),
             ...g.filter(i => (i.term || '').toLowerCase().includes(lowerTerm) || (i.def || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.term, type: 'GLOSARIO', subtitle: x.cat, link: `glosario.html?term=${encodeURIComponent(x.term)}` })),
             ...c.filter(i => (i.name || '').toLowerCase().includes(lowerTerm)).map(x => ({ title: x.name, type: 'CARRERA', subtitle: x.date, link: `calendario.html?race=${x.name}` }))
@@ -349,15 +354,15 @@ async function performSearch(term) {
             return;
         }
         
-        container.innerHTML = results.map(r => `
-            <a href="${r.link}" class="flex justify-between items-center p-3 hover:bg-zinc-800/50 rounded-xl group transition-colors border border-transparent hover:border-zinc-700">
+        container.innerHTML = results.map(res => `
+            <a href="${res.link}" class="flex justify-between items-center p-3 hover:bg-zinc-800/50 rounded-xl group transition-colors border border-transparent hover:border-zinc-700">
                 <div class="flex items-center gap-3 overflow-hidden">
                     <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-cyan-400 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
                     <div class="overflow-hidden">
-                        <h4 class="text-zinc-200 font-bold text-xs group-hover:text-cyan-400 truncate">${r.title}</h4>
-                        <p class="text-[9px] text-zinc-500 font-bold uppercase mt-0.5">${r.type} • ${r.subtitle}</p>
+                        <h4 class="text-zinc-200 font-bold text-xs group-hover:text-cyan-400 truncate">${res.title}</h4>
+                        <p class="text-[9px] text-zinc-500 font-bold uppercase mt-0.5">${res.type} • ${res.subtitle}</p>
                     </div>
                 </div>
             </a>
