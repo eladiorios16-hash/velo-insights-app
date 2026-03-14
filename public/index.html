@@ -288,7 +288,7 @@
                     <p class="text-[10px] text-zinc-500 text-center py-4 tracking-widest uppercase animate-pulse">Obteniendo puntos...</p>
                 </div>
                 <button onclick="openModal('ranking-modal')" class="absolute bottom-0 left-0 w-full bg-zinc-800/80 hover:bg-amber-500/20 text-zinc-400 hover:text-amber-400 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors rounded-b-2xl border-t border-zinc-700/50 backdrop-blur-md">
-                    Desplegar Top 10 →
+                    Desplegar Clasificación Completa →
                 </button>
             </aside>
 
@@ -411,7 +411,7 @@
     <div id="ranking-modal" class="modal-overlay fixed inset-0 z-[999] flex items-center justify-center p-4">
         <div class="modal-content bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
             <div class="p-5 border-b border-zinc-800 flex justify-between items-center bg-black/50">
-                <h3 class="text-lg font-heading text-white italic uppercase">UCI <span class="text-amber-500">RANKING</span> TOP 10</h3>
+                <h3 class="text-lg font-heading text-white italic uppercase">UCI <span class="text-amber-500">RANKING</span> GLOBAL</h3>
                 <button onclick="closeModal('ranking-modal')" class="text-zinc-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-800 transition-colors">
                     <i class="fas fa-times"></i>
                 </button>
@@ -759,10 +759,9 @@
             let ridersInForm = [];
             let ridersOutForm = [];
             
-            // 1. OBTENER SOLO LOS AÑADIDOS MANUALMENTE (Sin escaneo automático de noticias)
+            // 1. OBTENER SOLO LOS AÑADIDOS MANUALMENTE
             if (trendRes && trendRes.length > 0) {
                 trendRes.filter(t => t.tipo.toLowerCase() === 'ciclista').forEach(r => {
-                    // Detectar si el texto incluye un guion "-" o palabras clave de baja
                     const val = r.value ? r.value.toLowerCase() : '';
                     const isNegative = val.includes('-') || val.includes('baja') || val.includes('down') || val.includes('lesi');
                     
@@ -782,7 +781,7 @@
                 });
             }
 
-            // 2. ESCANEO AUTOMÁTICO SOLO PARA HASHTAGS (Ya no añade ciclistas solos)
+            // 2. ESCANEO AUTOMÁTICO SOLO PARA HASHTAGS
             const recentNews = newsRes.slice(0, 5);
             const textToScan = recentNews.map(n => (n.title + " " + (n.lead || n.excerpt || "")).toLowerCase()).join(' ');
 
@@ -813,9 +812,16 @@
             }
 
             // 3. RENDERIZADO DE CICLISTAS
-            const generateRiderHTML = (r, isModal = false) => {
+            const generateRiderHTML = (r, isModal = false, index = null) => {
                 const imgUrl = getRiderImageUrl(r.name);
-                let avatarSize = isModal ? 'w-12 h-12' : 'w-10 h-10'; // Un poco más pequeño en portada para que quepan bien
+                let avatarSize = isModal ? 'w-12 h-12' : 'w-10 h-10'; 
+                
+                // Si es modal, le ponemos el numerito delante
+                let numberBadge = '';
+                if (isModal && index !== null) {
+                    numberBadge = `<span class="text-sm font-black text-zinc-600 w-4 text-center shrink-0">${index + 1}</span>`;
+                }
+
                 let avatarHTML = `
                 <div class="${avatarSize} rounded-full overflow-hidden border border-zinc-700 shadow-inner group-hover:border-cyan-500/50 transition-colors shrink-0">
                     <img src="${imgUrl}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${r.name}" class="w-full h-full object-cover object-top scale-110 transition-transform duration-300 group-hover:scale-125">
@@ -833,6 +839,7 @@
                 return `
                 <a href="noticias.html" class="flex justify-between items-center p-2 hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-zinc-700/50 group">
                     <div class="flex items-center gap-3">
+                        ${numberBadge}
                         ${avatarHTML}
                         <div class="ml-1">
                             <p class="text-[13px] font-bold text-white group-hover:text-cyan-400 transition-colors leading-tight">${r.name}</p>
@@ -849,27 +856,27 @@
                 `;
             };
 
-            // RENDER EN PORTADA: Top 4 En Forma
+            // RENDER EN PORTADA: Top 4 En Forma (Sin número)
             const topRidersFront = ridersInForm.slice(0, 4);
             if(topRidersFront.length > 0) {
-                document.getElementById('trending-riders-container').innerHTML = topRidersFront.map(r => generateRiderHTML(r)).join('');
+                document.getElementById('trending-riders-container').innerHTML = topRidersFront.map(r => generateRiderHTML(r, false)).join('');
             } else {
                 document.getElementById('trending-riders-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic px-2">Sin ciclistas destacados.</p>`;
             }
 
-            // RENDER EN EL MODAL
+            // RENDER EN EL MODAL (TODOS LOS REGISTRADOS, SIN SLICE)
             const modalInFormContainer = document.getElementById('modal-in-form-list');
             const modalOutFormContainer = document.getElementById('modal-out-form-list');
 
             if (modalInFormContainer) {
                 modalInFormContainer.innerHTML = ridersInForm.length > 0 
-                    ? ridersInForm.map(r => generateRiderHTML(r, true)).join('')
+                    ? ridersInForm.map((r, i) => generateRiderHTML(r, true, i)).join('')
                     : `<p class="text-xs text-zinc-600 italic px-2">No hay registros de corredores en forma.</p>`;
             }
 
             if (modalOutFormContainer) {
                 modalOutFormContainer.innerHTML = ridersOutForm.length > 0 
-                    ? ridersOutForm.map(r => generateRiderHTML(r, true)).join('')
+                    ? ridersOutForm.map((r, i) => generateRiderHTML(r, true, i)).join('')
                     : `<p class="text-xs text-zinc-600 italic px-2">No hay partes de lesiones o bajas registradas.</p>`;
             }
         }
@@ -926,7 +933,7 @@
             
             const sorted = data.sort((a,b) => b.points - a.points);
             
-            // RENDERIZAR EN PORTADA (Vuelve a ser Top 5 para rellenar el espacio)
+            // RENDERIZAR EN PORTADA (Top 5)
             const top5 = sorted.slice(0, 5);
             
             const generateRankingRow = (r, i) => {
@@ -934,7 +941,7 @@
                 return `
                 <div class="flex items-center justify-between p-3 border-b border-zinc-800/50 last:border-0 group hover:bg-white/5 transition-colors rounded-xl">
                     <div class="flex items-center gap-3">
-                        <span class="text-sm font-black ${i < 3 ? 'text-amber-500' : 'text-zinc-600'} w-4 text-center">${i + 1}</span>
+                        <span class="text-sm font-black ${i < 3 ? 'text-amber-500' : 'text-zinc-600'} w-4 text-center shrink-0">${i + 1}</span>
                         <div class="w-12 h-12 rounded-full overflow-hidden border border-zinc-700 shadow-sm group-hover:border-amber-500/50 transition-colors shrink-0">
                             <img src="${imgUrl}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${r.name}" class="w-full h-full object-cover object-top scale-110 transition-transform duration-300 group-hover:scale-125">
                         </div>
@@ -952,10 +959,9 @@
 
             container.innerHTML = top5.map((r, i) => generateRankingRow(r, i)).join('');
 
-            // RENDERIZAR EN MODAL (Top 10)
-            const top10 = sorted.slice(0, 10);
+            // RENDERIZAR EN MODAL (TODOS, sin slice)
             if(modalContainer) {
-                modalContainer.innerHTML = top10.map((r, i) => generateRankingRow(r, i)).join('');
+                modalContainer.innerHTML = sorted.map((r, i) => generateRankingRow(r, i)).join('');
             }
         }
 
