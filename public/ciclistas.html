@@ -28,7 +28,7 @@
         <div class="relative bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 md:p-10 overflow-hidden shadow-2xl mb-8 flex flex-col md:flex-row items-center md:items-start gap-8">
             <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
             
-            <div class="w-32 h-32 md:w-48 md:h-48 shrink-0 rounded-full overflow-hidden border-2 border-zinc-700 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-10 bg-zinc-800">
+            <div class="w-32 h-32 md:w-48 md:h-48 shrink-0 rounded-full overflow-hidden border-2 border-zinc-700 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-10 bg-zinc-800 flex items-center justify-center">
                 <img id="rider-image" src="" alt="Rider" class="w-full h-full object-cover object-top" onerror="this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';">
             </div>
 
@@ -42,22 +42,14 @@
                         </div>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 border-t border-zinc-800/60 pt-6">
+                <div class="flex justify-center md:justify-start gap-8 mt-8 border-t border-zinc-800/60 pt-6">
                     <div>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Puntos UCI</p>
-                        <p id="rider-points" class="text-xl md:text-2xl font-black text-amber-500 leading-none">--</p>
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Puntos UCI Globales</p>
+                        <p id="rider-points" class="text-2xl md:text-3xl font-black text-amber-500 leading-none">--</p>
                     </div>
-                    <div>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Pos. Ranking</p>
-                        <p id="rider-rank" class="text-xl md:text-2xl font-black text-white leading-none">--</p>
-                    </div>
-                    <div>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Nacionalidad</p>
-                        <p id="rider-nat" class="text-sm md:text-base font-mono text-white leading-none mt-1 animate-pulse">Wait...</p>
-                    </div>
-                    <div>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Especialidad</p>
-                        <p id="rider-spec" class="text-sm md:text-base font-mono text-white leading-none mt-1 animate-pulse">Wait...</p>
+                    <div class="border-l border-zinc-800 pl-8">
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Ranking Mundial</p>
+                        <p id="rider-rank" class="text-2xl md:text-3xl font-black text-white leading-none">--</p>
                     </div>
                 </div>
             </div>
@@ -65,22 +57,21 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-6">
-                <div class="bg-gradient-to-br from-zinc-900/80 to-[#050505] border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern">
+                <div class="bg-gradient-to-br from-zinc-900/80 to-[#050505] border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern h-full">
                     <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3">
                         <i class="fas fa-trophy text-amber-500"></i>
-                        <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Palmarés / <span class="text-amber-500">Victorias</span></h2>
+                        <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Palmarés / <span class="text-amber-500">Victorias Destacadas</span></h2>
                     </div>
                     
-                    <div class="flex flex-col items-center justify-center py-10 opacity-70">
-                        <i class="fas fa-satellite-dish text-3xl text-cyan-500 mb-4 animate-ping"></i>
-                        <p class="text-sm font-mono text-zinc-400 text-center max-w-md">El Tech Lab está calibrando el bot para sincronizar el palmarés histórico desde las bases de datos oficiales...</p>
-                        <span class="mt-4 px-3 py-1 bg-cyan-900/30 text-cyan-400 text-[10px] uppercase tracking-widest rounded border border-cyan-500/30">Módulo en construcción</span>
+                    <div id="palmares-container" class="min-h-[150px] flex flex-col items-center justify-center">
+                        <i class="fas fa-spinner fa-spin text-2xl text-cyan-500 mb-3"></i>
+                        <p class="text-xs font-mono text-zinc-500">Leyendo base de datos central...</p>
                     </div>
                 </div>
             </div>
 
             <div class="lg:col-span-1">
-                <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6">
+                <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 h-full">
                     <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3">
                         <i class="fas fa-newspaper text-cyan-400"></i>
                         <h2 class="text-base font-black text-white italic uppercase tracking-tight">Noticias <span class="text-cyan-400">Menciones</span></h2>
@@ -96,9 +87,15 @@
     </main>
 
     <script>
-        // Función para limpiar acentos y preparar la URL de Cloudinary
+        // Función vital para limpiar acentos y comparar nombres sin fallos
+        function normalizeName(name) {
+            if (!name) return '';
+            return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        }
+
+        // Genera la url de la imagen (manteniendo guiones en vez de espacios)
         function getSlug(name) {
-            let slug = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            let slug = normalizeName(name);
             return slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
         }
 
@@ -112,6 +109,8 @@
             }
 
             const rawName = decodeURIComponent(riderNameQuery);
+            const normalizedRawName = normalizeName(rawName);
+            
             document.getElementById('rider-name').innerText = rawName;
             
             // 1. Cargar Foto
@@ -119,27 +118,66 @@
             document.getElementById('rider-image').src = imgUrl;
 
             try {
-                // 2. Obtener datos de la base de datos general (Ranking, Noticias, Trending)
+                // 2. Obtener datos
                 const response = await fetch('/api/home');
                 const data = await response.json();
 
-                // --- BUSCAR EN EL RANKING ---
+                // --- BUSCAR EN EL RANKING (Búsqueda Inteligente) ---
                 const ranking = data.ranking.sort((a,b) => b.points - a.points);
-                const riderRankIndex = ranking.findIndex(r => r.name.toLowerCase() === rawName.toLowerCase());
+                
+                // Buscamos coincidencia exacta o parcial (ej: "Isaac del Toro" vs "Isaac DEL TORO")
+                const riderRankIndex = ranking.findIndex(r => {
+                    const normRiderDB = normalizeName(r.name);
+                    const partsRaw = normalizedRawName.split(' ');
+                    // Si coinciden exactamente o si la DB contiene todas las palabras de nuestro nombre buscado
+                    return normRiderDB === normalizedRawName || partsRaw.every(word => normRiderDB.includes(word));
+                });
                 
                 if (riderRankIndex !== -1) {
                     const riderData = ranking[riderRankIndex];
                     document.getElementById('rider-points').innerText = riderData.points;
                     document.getElementById('rider-rank').innerText = `#${riderRankIndex + 1}`;
                     document.getElementById('rider-team').innerText = riderData.team;
+                    
+                    // --- INYECTAR EL PALMARÉS ---
+                    const palmaresContainer = document.getElementById('palmares-container');
+                    if (riderData.palmares) {
+                        try {
+                            const wins = typeof riderData.palmares === 'string' ? JSON.parse(riderData.palmares) : riderData.palmares;
+                            if (wins && wins.length > 0) {
+                                palmaresContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-4 pt-2";
+                                palmaresContainer.innerHTML = wins.map(win => `
+                                    <div class="flex items-start gap-3 p-3 bg-zinc-950/80 border border-zinc-800 rounded-xl hover:border-amber-500/30 transition-colors shadow-lg">
+                                        <i class="fas fa-medal text-amber-500 mt-1"></i>
+                                        <span class="text-sm text-zinc-300 font-bold leading-snug">${win}</span>
+                                    </div>
+                                `).join('');
+                            } else {
+                                palmaresContainer.className = "min-h-[150px] flex flex-col items-center justify-center opacity-70";
+                                palmaresContainer.innerHTML = `<p class="text-sm font-mono text-zinc-500 text-center italic">No hay victorias principales registradas en la última temporada.</p>`;
+                            }
+                        } catch(e) {
+                            console.error("Error leyendo palmarés", e);
+                        }
+                    } else {
+                        palmaresContainer.className = "min-h-[150px] flex flex-col items-center justify-center opacity-70";
+                        palmaresContainer.innerHTML = `
+                            <i class="fas fa-satellite-dish text-2xl text-cyan-500 mb-3 animate-ping"></i>
+                            <p class="text-xs font-mono text-zinc-400 text-center">El bot está indexando el palmarés histórico. Vuelve pronto.</p>
+                        `;
+                    }
+
                 } else {
                     // Si no está en el ranking
-                    const teamFromTrending = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && t.title.toLowerCase() === rawName.toLowerCase());
-                    document.getElementById('rider-team').innerText = teamFromTrending ? teamFromTrending.subtitle : "Equipo WorldTour";
+                    document.getElementById('rider-points').innerText = "0";
+                    document.getElementById('rider-rank').innerText = "--";
+                    const teamFromTrending = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
+                    document.getElementById('rider-team').innerText = teamFromTrending ? teamFromTrending.subtitle : "Pro Rider";
+                    document.getElementById('palmares-container').innerHTML = `<p class="text-xs font-mono text-zinc-500">Corredor sin puntos UCI registrados actualmente.</p>`;
                 }
 
                 // --- BUSCAR EN EL ESTADO DE FORMA (TRENDING) ---
-                const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && t.title.toLowerCase() === rawName.toLowerCase());
+                const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
                 if (trendData) {
                     const val = trendData.value ? trendData.value.toLowerCase() : '';
                     const isNegative = val.includes('-') || val.includes('baja') || val.includes('down') || val.includes('lesi');
@@ -158,8 +196,10 @@
                 // --- BUSCAR MENCIONES EN NOTICIAS ---
                 const relatedNewsContainer = document.getElementById('related-news');
                 const mentionedNews = data.news.filter(n => {
-                    const fullText = (n.title + " " + n.lead + " " + (n.excerpt||"")).toLowerCase();
-                    return fullText.includes(rawName.toLowerCase().split(' ')[0]); // Busca al menos el apellido o nombre
+                    const fullText = (n.title + " " + (n.lead||"") + " " + (n.excerpt||"")).toLowerCase();
+                    // Buscar el apellido
+                    const lastName = normalizedRawName.split(' ').pop();
+                    return fullText.includes(lastName); 
                 });
 
                 if (mentionedNews.length > 0) {
