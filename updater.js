@@ -13,7 +13,7 @@ function normalizeName(name) {
 async function searchRiderProfile(riderName) {
     try {
         const { data } = await axios.get(`https://firstcycling.com/rider.php?q=${encodeURIComponent(riderName)}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36' },
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0' },
             timeout: 8000
         });
         const $ = cheerio.load(data);
@@ -26,84 +26,93 @@ async function getYearResults(baseUrl, riderUrl, year) {
         const finalUrl = `${baseUrl}${riderUrl}${riderUrl.includes('?') ? '&' : '?'}y=${year}`;
         const { data } = await axios.get(finalUrl, {
             headers: { 
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0 Safari/537.36',
+                'Accept-Language': 'es-ES,es;q=0.9'
             },
             timeout: 12000
         });
         
         const $ = cheerio.load(data);
-        const racesList = [];
         const yearMap = new Map();
+        let currentMainRace = "Otros";
 
-        // Selector robusto: busca filas de tabla que contengan enlaces a carreras (race.php)
-        $('table tbody tr').each((i, el) => {
+        // Escaneamos TODAS las filas de la tabla de resultados
+        $('table tr').each((i, el) => {
             const row = $(el);
             const tds = row.find('td');
-            const raceLink = row.find('a[href*="race.php"]');
-            
+            if (tds.length < 3) return;
+
+            const pos = tds.eq(1).text().trim();
+            const raceTextCell = tds.eq(3);
+            const raceLink = raceTextCell.find('a[href*="race.php"]');
+
             if (raceLink.length > 0) {
-                const pos = tds.eq(1).text().trim();
-                if (pos && pos !== '-' && pos !== '') {
-                    let fullRaceName = raceLink.closest('td').text().trim();
-                    
-                    // Limpieza de categorías UCI (2.UWT, 1.Pro, etc)
-                    fullRaceName = fullRaceName.replace(/\s*(1|2)\.(UWT|Pro|1|2|Ncup|WC|CC|HC)\b/ig, '').trim();
-                    
-                    let mainName = fullRaceName;
-                    let stageInfo = null;
+                let fullText = raceTextCell.text().trim();
+                // Limpieza de basura UCI
+                fullText = fullText.replace(/\s*\d\.(UWT|Pro|1|2|Ncup|WC|CC|HC|NE)\b/ig, '').trim();
 
-                    if (fullRaceName.includes('|')) {
-                        const parts = fullRaceName.split('|');
-                        mainName = parts[0].trim();
-                        stageInfo = parts[1].trim();
+                // DETECTAR SI ES CABECERA DE CARRERA O ETAPA
+                // Si la fila tiene bandera (img) y enlace, suele ser la carrera principal
+                const hasFlag = raceTextCell.find('img').length > 0;
+                
+                if (hasFlag && !fullText.includes('|')) {
+                    currentMainRace = fullText;
+                    if (!yearMap.has(currentMainRace)) {
+                        yearMap.set(currentMainRace, { raceName: currentMainRace, gc: null, stages: [] });
                     }
+                }
 
-                    if (!yearMap.has(mainName)) {
-                        yearMap.set(mainName, { raceName: mainName, gc: null, stages: [] });
+                // Si hay posición válida (Número o DNF/DNS)
+                if (pos && pos !== '-' && (/^\d+$/.test(pos) || ['DNF', 'DNS', 'OTL', 'DSQ'].includes(pos.toUpperCase()))) {
+                    if (!yearMap.has(currentMainRace)) {
+                        yearMap.set(currentMainRace, { raceName: currentMainRace, gc: null, stages: [] });
                     }
+                    const entry = yearMap.get(currentMainRace);
 
-                    const entry = yearMap.get(mainName);
-                    // Si es la posición general (GC) o una clásica
-                    if (!stageInfo || stageInfo.toUpperCase() === 'GC' || stageInfo.toLowerCase().includes('general')) {
+                    // Clasificar el resultado
+                    if (fullText.toLowerCase().includes('general') || fullText.toLowerCase().includes('gc') || fullText === currentMainRace) {
                         entry.gc = pos;
                     } else {
-                        entry.stages.push({ stage: stageInfo, pos: pos });
+                        // Es una etapa o clasificación secundaria
+                        let stageName = fullText.includes('|') ? fullText.split('|')[1].trim() : fullText;
+                        entry.stages.push({ stage: stageName, pos: pos });
                     }
                 }
             }
         });
-        return Array.from(yearMap.values());
+
+        // Limpiar carreras vacías (que se crearon como cabecera pero no tienen resultados)
+        const finalData = Array.from(yearMap.values()).filter(r => r.gc || r.stages.length > 0);
+        return finalData;
     } catch (e) {
-        console.log(`      ⚠️ Error en año ${year}: ${e.message}`);
+        console.log(`      ⚠️ Error ${year}: ${e.message}`);
         return [];
     }
 }
 
 async function fetchRiderResults(riderUrl) {
     const baseUrl = 'https://firstcycling.com/';
-    console.log(`   └─ 🕵️‍♂️ Extrayendo: ${riderUrl}`);
+    console.log(`   └─ 🕵️‍♂️ Escaneando perfil: ${riderUrl}`);
     
-    // Ejecución SECUENCIAL para evitar bloqueos 403
+    // 2026 y luego 2025 (Secuencial para evitar bloqueos)
     const data2026 = await getYearResults(baseUrl, riderUrl, 2026);
-    await delay(1500); // Pausa entre años
+    await delay(2000); 
     const data2025 = await getYearResults(baseUrl, riderUrl, 2025);
 
     const calendarioFull = { "2026": data2026, "2025": data2025 };
     const total = data2026.length + data2025.length;
-    console.log(`   └─ 📊 OK: ${total} carreras detectadas.`);
+    console.log(`   └─ 📊 Misión OK: ${total} carreras agrupadas.`);
     return total > 0 ? JSON.stringify(calendarioFull) : null;
 }
 
 async function updateRanking() {
-    console.log("\n🚀 [VELO BOT] INICIANDO ESCÁNER");
+    console.log("\n🚀 [VELO BOT] INICIANDO ESCÁNER V3 (MODO PROXIMIDAD)");
     try {
         const [trendingDB] = await db.query("SELECT title FROM trending WHERE tipo = 'ciclista'");
         const trendingNames = trendingDB.map(r => r.title);
 
         const { data } = await axios.get('https://firstcycling.com/ranking.php', {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+            headers: { 'User-Agent': 'Mozilla/5.0' },
             timeout: 15000 
         });
         const $ = cheerio.load(data);
@@ -136,12 +145,12 @@ async function updateRanking() {
             }
         }
 
-        console.log(`🔍 Procesando ${targetRiders.length} ciclistas...`);
+        console.log(`🔍 Analizando ${targetRiders.length} perfiles...`);
 
         for (let rider of targetRiders) {
             if (rider.profileUrl) {
                 rider.palmares = await fetchRiderResults(rider.profileUrl);
-                await delay(3500); // Pausa obligatoria de seguridad
+                await delay(4000); // Pausa de seguridad extra
             }
         }
 
@@ -149,7 +158,7 @@ async function updateRanking() {
         for (const rider of targetRiders) {
             await db.query("INSERT INTO ranking (name, team, points, palmares) VALUES (?, ?, ?, ?)", [rider.name, rider.team, rider.points, rider.palmares]);
         }
-        console.log("\n✅ [VELO BOT] SINCRONIZACIÓN EXITOSA.");
+        console.log("\n✅ [VELO BOT] TODO SINCRONIZADO CORRECTAMENTE.");
     } catch (error) { console.error("\n❌ Error Crítico:", error.message); }
 }
 
