@@ -73,8 +73,8 @@
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-gradient-to-br from-zinc-900/80 to-[#050505] border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern h-full">
                     <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3">
-                        <i class="fas fa-trophy text-amber-500"></i>
-                        <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Palmarés / <span class="text-amber-500">Victorias Destacadas</span></h2>
+                        <i class="fas fa-chart-line text-cyan-400"></i>
+                        <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Últimos <span class="text-cyan-400">Resultados</span></h2>
                     </div>
                     
                     <div id="palmares-container" class="min-h-[150px] flex flex-col items-center justify-center">
@@ -138,7 +138,6 @@
                 let age = null;
                 let jerseyUrl = null;
 
-                // --- BUSCAR EN EL RANKING ---
                 const ranking = data.ranking.sort((a,b) => b.points - a.points);
                 const riderRankIndex = ranking.findIndex(r => {
                     const normRiderDB = normalizeName(r.name);
@@ -152,31 +151,47 @@
                     document.getElementById('rider-rank').innerText = `#${riderRankIndex + 1}`;
                     document.getElementById('rider-team').innerText = riderData.team;
                     
-                    // Extraer palmarés
                     const palmaresContainer = document.getElementById('palmares-container');
                     if (riderData.palmares) {
                         try {
                             const wins = typeof riderData.palmares === 'string' ? JSON.parse(riderData.palmares) : riderData.palmares;
                             if (wins && wins.length > 0) {
-                                palmaresContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-4 pt-2";
-                                palmaresContainer.innerHTML = wins.map(win => `
-                                    <div class="flex items-start gap-3 p-3 bg-zinc-950/80 border border-zinc-800 rounded-xl hover:border-amber-500/30 transition-colors shadow-lg">
-                                        <i class="fas fa-medal text-amber-500 mt-1"></i>
-                                        <span class="text-sm text-zinc-300 font-bold leading-snug">${win}</span>
-                                    </div>
-                                `).join('');
+                                palmaresContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-3 pt-2";
+                                palmaresContainer.innerHTML = wins.map(win => {
+                                    // Comprobamos si es la estructura antigua (string) o la nueva (objeto)
+                                    let isObj = typeof win === 'object' && win !== null;
+                                    let pos = isObj ? win.posicion : '';
+                                    let race = isObj ? win.carrera : win;
+
+                                    // Lógica de colores según el resultado
+                                    let badgeColor = 'text-zinc-400 bg-zinc-800 border border-zinc-700'; // Default
+                                    if(pos === '1') badgeColor = 'text-black bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] border-transparent';
+                                    else if(pos === '2' || pos === '3') badgeColor = 'text-black bg-zinc-300 border-transparent';
+                                    else if(parseInt(pos) <= 10) badgeColor = 'text-cyan-400 bg-cyan-950/50 border border-cyan-500/30';
+                                    else if(pos === 'DNF' || pos === 'DNS' || pos === 'OTL') badgeColor = 'text-red-400 bg-red-950/50 border border-red-500/30';
+
+                                    let posBadge = pos ? `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg font-black text-[10px] ${badgeColor}">${pos}º</div>` : `<i class="fas fa-flag-checkered text-zinc-500 mt-1"></i>`;
+                                    if(pos === 'DNF' || pos === 'DNS' || pos === 'OTL') {
+                                        posBadge = `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg font-black text-[9px] ${badgeColor}">${pos}</div>`;
+                                    }
+
+                                    return `
+                                        <div class="flex items-center gap-3 p-2 bg-zinc-950/50 border border-zinc-800/80 rounded-xl hover:border-cyan-500/30 transition-colors shadow-sm">
+                                            ${posBadge}
+                                            <span class="text-xs md:text-sm text-zinc-300 font-bold leading-snug truncate">${race}</span>
+                                        </div>
+                                    `;
+                                }).join('');
                             } else {
                                 palmaresContainer.className = "min-h-[150px] flex flex-col items-center justify-center opacity-70";
-                                palmaresContainer.innerHTML = `<p class="text-sm font-mono text-zinc-500 text-center italic">No hay victorias principales registradas en la última temporada.</p>`;
+                                palmaresContainer.innerHTML = `<p class="text-sm font-mono text-zinc-500 text-center italic">No hay resultados registrados recientemente.</p>`;
                             }
-                        } catch(e) {
-                            console.error("Error leyendo palmarés", e);
-                        }
+                        } catch(e) { console.error("Error parseando", e); }
                     } else {
                         palmaresContainer.className = "min-h-[150px] flex flex-col items-center justify-center opacity-70";
                         palmaresContainer.innerHTML = `
                             <i class="fas fa-satellite-dish text-2xl text-cyan-500 mb-3 animate-ping"></i>
-                            <p class="text-xs font-mono text-zinc-400 text-center px-4">El bot está indexando el palmarés histórico en los servidores. Vuelve pronto.</p>
+                            <p class="text-xs font-mono text-zinc-400 text-center px-4">Sincronizando últimos resultados con el servidor central...</p>
                         `;
                     }
                 } else {
@@ -187,16 +202,12 @@
                     document.getElementById('palmares-container').innerHTML = `<p class="text-xs font-mono text-zinc-500">Corredor sin historial registrado actualmente.</p>`;
                 }
 
-                // --- BUSCAR EN LA TABLA DE EQUIPOS (Nacionalidad, Edad, Especialidad y Maillot) ---
                 if (data.teams) {
                     for (const team of data.teams) {
                         if (team.riders && Array.isArray(team.riders)) {
                             const r = team.riders.find(x => normalizeName(x.name) === normalizedRawName || normalizeName(x.name).includes(normalizedRawName.split(' ').pop()));
-                            
                             if (r) {
-                                nat = r.country;
-                                age = r.age;
-                                spec = r.type;
+                                nat = r.country; age = r.age; spec = r.type;
                                 if(!riderData) document.getElementById('rider-team').innerText = team.name;
                                 jerseyUrl = team.jersey;
                                 break; 
@@ -205,29 +216,23 @@
                     }
                 }
 
-                // Escribir Nacionalidad y Edad
                 let natAgeText = '';
                 if (nat) natAgeText += nat;
                 if (age) natAgeText += ` <span class="text-zinc-500 text-xs font-mono ml-2 border border-zinc-700 bg-zinc-900/50 px-1.5 py-0.5 rounded">${age} años</span>`;
                 document.getElementById('rider-nat').innerHTML = natAgeText || 'N/D';
-                
-                // Escribir Especialidad
                 document.getElementById('rider-spec').innerText = spec || 'N/D';
 
-                // Pintar Maillot
                 if (jerseyUrl) {
                     const jC = document.getElementById('rider-jersey-container');
                     jC.classList.remove('hidden');
                     document.getElementById('rider-jersey').src = jerseyUrl;
                 }
 
-                // --- BUSCAR EN EL ESTADO DE FORMA (TRENDING) ---
                 const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
                 if (trendData) {
                     const val = trendData.value ? trendData.value.toLowerCase() : '';
                     const isNegative = val.includes('-') || val.includes('baja') || val.includes('down') || val.includes('lesi');
                     const trendBox = document.getElementById('rider-trend');
-                    
                     trendBox.classList.remove('hidden');
                     if (isNegative) {
                         trendBox.className = "px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 bg-red-900/20 border-red-500/30 text-red-400";
@@ -238,7 +243,6 @@
                     }
                 }
 
-                // --- BUSCAR MENCIONES EN NOTICIAS ---
                 const relatedNewsContainer = document.getElementById('related-news');
                 const mentionedNews = data.news.filter(n => {
                     const fullText = (n.title + " " + (n.lead||"") + " " + (n.excerpt||"")).toLowerCase();
