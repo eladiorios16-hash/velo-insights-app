@@ -261,13 +261,12 @@ app.get('/api/ranking', async (req, res) => {
 // --- RUTA MAESTRA (NUEVA FASE 1: PERFORMANCE BOOT) ---
 app.get('/api/home', async (req, res) => {
     try {
-        // La noticias sí se quedan con LIMIT 5 para no saturar la portada
         const [news] = await db.query("SELECT * FROM noticias ORDER BY id DESC LIMIT 5");
         const [teams] = await db.query("SELECT * FROM equipos");
         const [calendar] = await db.query("SELECT * FROM calendario ORDER BY dateISO ASC");
         const [glossary] = await db.query("SELECT id, term, cat, definition as def, insight FROM glosario");
         
-        // ¡AQUÍ ESTÁ LA MAGIA! Quitamos los LIMIT para enviar TODO al modal
+        // Sin LIMIT para enviar toda la base de datos a los modales de la web
         const [trending] = await db.query("SELECT * FROM trending ORDER BY id DESC");
         const [ranking] = await db.query("SELECT * FROM ranking ORDER BY points DESC");
 
@@ -278,13 +277,23 @@ app.get('/api/home', async (req, res) => {
             return { ...c, details: d };
         });
 
+        // --- NUEVO: FORMATAMOS EL RANKING PARA EL PALMARÉS ---
+        const formattedRanking = ranking.map(r => {
+            let parsedPalmares = null;
+            if (r.palmares) {
+                try { parsedPalmares = typeof r.palmares === 'string' ? JSON.parse(r.palmares) : r.palmares; } 
+                catch (e) { parsedPalmares = r.palmares; }
+            }
+            return { ...r, palmares: parsedPalmares };
+        });
+
         res.json({
             news,
             teams: formattedTeams,
             calendar: formattedCalendar,
             glossary,
             trending,
-            ranking
+            ranking: formattedRanking // Se envía limpio a ciclista.html
         });
     } catch(error) {
         console.error("Error en /api/home:", error);
@@ -351,6 +360,9 @@ async function upgradeDatabase() {
             id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, team VARCHAR(255), points INT DEFAULT 0
         )`);
     } catch (e) {}
+
+    // --- NUEVO: PREPARAR EL TERRENO PARA EL BOT DE PALMARÉS ---
+    try { await db.query("ALTER TABLE ranking ADD COLUMN palmares TEXT NULL"); } catch (e) {}
 }
 upgradeDatabase();
 
@@ -379,12 +391,12 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
         const htmlPath = path.join(__dirname, 'public', 'noticias.html');
         let html = fs.readFileSync(htmlPath, 'utf8');
 
-        const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
+        const defaultImage = '[https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop](https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop)';
         let imageUrl = noticia.image ? noticia.image.trim() : defaultImage;
         
         if (imageUrl && !imageUrl.startsWith('http')) {
             imageUrl = imageUrl.replace(/^\/+/, ''); 
-            imageUrl = 'https://veloinsights.es/' + imageUrl;
+            imageUrl = '[https://veloinsights.es/](https://veloinsights.es/)' + imageUrl;
         }
 
         const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
@@ -393,7 +405,7 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
 
         // Datos Estructurados (Schema.org) para Google
        const schemaData = {
-            "@context": "https://schema.org",
+            "@context": "[https://schema.org](https://schema.org)",
             "@type": "NewsArticle",
             "headline": cleanTitle,
             "description": cleanDesc,
@@ -402,14 +414,14 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
             "author": [{
                 "@type": "Organization",
                 "name": "Velo Insights",
-                "url": "https://veloinsights.es"
+                "url": "[https://veloinsights.es](https://veloinsights.es)"
             }],
             "publisher": {
                 "@type": "Organization",
                 "name": "Velo Insights",
                 "logo": {
                     "@type": "ImageObject",
-                    "url": "https://veloinsights.es/assets/favicon-144.png"
+                    "url": "[https://veloinsights.es/assets/favicon-144.png](https://veloinsights.es/assets/favicon-144.png)"
                 }
             }
         };
@@ -433,8 +445,8 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
     </script>
         `;
 
-        if (html.includes('<!--INYECTAR-SEO-AQUI-->')) {
-            html = html.replace('<!--INYECTAR-SEO-AQUI-->', ogTags);
+        if (html.includes('')) {
+            html = html.replace('', ogTags);
         } else {
             html = html.replace('<head>', '<head>\n' + ogTags);
         }
@@ -456,13 +468,13 @@ app.get('/noticias.html', (req, res, next) => {
     }
 });
 
-// A. Servimos la carpeta public
+// A. Servimos la carpeta public (Esto sirve tu nuevo archivo ciclista.html automáticamente)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // B. SITEMAP SEO OPTIMIZADO
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const baseUrl = 'https://veloinsights.es'; 
+        const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
 
         res.set('Content-Type', 'application/xml');
         let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
@@ -477,7 +489,6 @@ app.get('/sitemap.xml', async (req, res) => {
         });
 
         try {
-            // AHORA OBTENEMOS TAMBIÉN EL TÍTULO PARA EL SITEMAP
             const [noticias] = await db.query("SELECT id, title FROM noticias ORDER BY id DESC");
             if (noticias && noticias.length > 0) {
                 noticias.forEach(news => {
