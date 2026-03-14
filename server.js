@@ -261,12 +261,15 @@ app.get('/api/ranking', async (req, res) => {
 // --- RUTA MAESTRA (NUEVA FASE 1: PERFORMANCE BOOT) ---
 app.get('/api/home', async (req, res) => {
     try {
+        // La noticias sí se quedan con LIMIT 5 para no saturar la portada
         const [news] = await db.query("SELECT * FROM noticias ORDER BY id DESC LIMIT 5");
         const [teams] = await db.query("SELECT * FROM equipos");
         const [calendar] = await db.query("SELECT * FROM calendario ORDER BY dateISO ASC");
         const [glossary] = await db.query("SELECT id, term, cat, definition as def, insight FROM glosario");
-        const [trending] = await db.query("SELECT * FROM trending ORDER BY id DESC LIMIT 10");
-        const [ranking] = await db.query("SELECT * FROM ranking ORDER BY points DESC LIMIT 5");
+        
+        // ¡AQUÍ ESTÁ LA MAGIA! Quitamos los LIMIT para enviar TODO al modal
+        const [trending] = await db.query("SELECT * FROM trending ORDER BY id DESC");
+        const [ranking] = await db.query("SELECT * FROM ranking ORDER BY points DESC");
 
         const formattedTeams = teams.map(t => ({...t, riders: typeof t.riders === 'string' ? JSON.parse(t.riders || '[]') : t.riders}));
         const formattedCalendar = calendar.map(c => {
