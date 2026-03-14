@@ -11,6 +11,11 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
         .bg-grid-pattern { background-image: radial-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px); background-size: 20px 20px; }
+        
+        /* Acordeón Animación */
+        .accordion-content { transition: max-height 0.3s ease-in-out, padding 0.3s ease; max-height: 0; overflow: hidden; }
+        .accordion-item.active .accordion-content { max-height: 1000px; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .accordion-item.active .accordion-icon { transform: rotate(180deg); }
     </style>
 </head>
 <body class="bg-[#050505] antialiased text-slate-300 pb-20 selection:bg-cyan-500/30 selection:text-cyan-200">
@@ -36,7 +41,6 @@
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
                     <div>
                         <h1 id="rider-name" class="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter italic leading-none mb-1">Cargando...</h1>
-                        
                         <div class="flex items-center justify-center md:justify-start gap-4 mt-3">
                             <div id="rider-jersey-container" class="hidden shrink-0 w-10 h-10 md:w-12 md:h-12 overflow-hidden rounded-md shadow-lg border border-zinc-700 bg-white/5 p-0.5">
                                 <img id="rider-jersey" src="" alt="Jersey" class="w-full h-full object-contain">
@@ -44,8 +48,7 @@
                             <p id="rider-team" class="text-base md:text-lg font-mono text-cyan-400 uppercase tracking-widest leading-none pt-1">Buscando equipo...</p>
                         </div>
                     </div>
-                    <div id="rider-trend" class="hidden px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 mt-4 md:mt-0">
-                        </div>
+                    <div id="rider-trend" class="hidden px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 mt-4 md:mt-0"></div>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-8 border-t border-zinc-800/60 pt-6">
@@ -72,9 +75,17 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-gradient-to-br from-zinc-900/80 to-[#050505] border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern h-full">
-                    <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3">
-                        <i class="fas fa-chart-line text-cyan-400"></i>
-                        <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Últimos <span class="text-cyan-400">Resultados</span></h2>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-zinc-800/60 pb-4">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-calendar-alt text-cyan-400"></i>
+                            <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Calendario <span class="text-cyan-400">Resultados</span></h2>
+                        </div>
+                        
+                        <div class="flex bg-zinc-950 border border-zinc-800 rounded-lg p-1" id="year-tabs">
+                            <button onclick="renderCalendario('2026')" id="tab-2026" class="px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all bg-cyan-500/20 text-cyan-400">2026</button>
+                            <button onclick="renderCalendario('2025')" id="tab-2025" class="px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all text-zinc-500 hover:text-zinc-300">2025</button>
+                        </div>
                     </div>
                     
                     <div id="palmares-container" class="min-h-[150px] flex flex-col items-center justify-center">
@@ -101,6 +112,9 @@
     </main>
 
     <script>
+        // VARIABLE GLOBAL PARA GUARDAR EL CALENDARIO Y CAMBIAR DE AÑO SIN RECARGAR
+        window.riderCalendarioGlobal = null;
+
         function normalizeName(name) {
             if (!name) return '';
             return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -110,6 +124,76 @@
             let slug = normalizeName(name);
             return slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
         }
+
+        // Lógica visual para la posición (Color Badge)
+        function getBadgeHTML(pos) {
+            if (!pos) return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-zinc-600 bg-zinc-900 border border-zinc-800"><i class="fas fa-minus text-[10px]"></i></div>`;
+            
+            let badgeColor = 'text-zinc-400 bg-zinc-800 border border-zinc-700'; // Default > 10
+            
+            if(pos === '1') badgeColor = 'text-black bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] border-transparent';
+            else if(pos === '2' || pos === '3') badgeColor = 'text-black bg-zinc-300 border-transparent';
+            else if(parseInt(pos) <= 10) badgeColor = 'text-cyan-400 bg-cyan-950/50 border border-cyan-500/30';
+            else if(['DNF', 'DNS', 'OTL', 'DSQ'].includes(pos.toUpperCase())) badgeColor = 'text-red-400 bg-red-950/50 border border-red-500/30';
+
+            let fontSize = pos.length > 2 ? 'text-[9px]' : 'text-[11px]';
+            let suffix = parseInt(pos) ? 'º' : '';
+            
+            return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg font-black font-mono ${fontSize} ${badgeColor}">${pos}${suffix}</div>`;
+        }
+
+        // Función que pinta el año seleccionado
+        window.renderCalendario = function(year) {
+            // Actualizar botones visualmente
+            document.getElementById('tab-2026').className = `px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all ${year === '2026' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`;
+            document.getElementById('tab-2025').className = `px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all ${year === '2025' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`;
+
+            const container = document.getElementById('palmares-container');
+            
+            if (!window.riderCalendarioGlobal || !window.riderCalendarioGlobal[year] || window.riderCalendarioGlobal[year].length === 0) {
+                container.className = "min-h-[150px] flex flex-col items-center justify-center opacity-70 mt-4";
+                container.innerHTML = `<p class="text-sm font-mono text-zinc-500 text-center italic">No hay resultados registrados en ${year}.</p>`;
+                return;
+            }
+
+            const races = window.riderCalendarioGlobal[year];
+            container.className = "flex flex-col gap-3 pt-4 w-full";
+            
+            let html = '';
+            races.forEach(race => {
+                const hasStages = race.stages && race.stages.length > 0;
+                
+                html += `
+                <div class="accordion-item bg-zinc-950/50 border border-zinc-800 rounded-xl overflow-hidden hover:border-cyan-500/30 transition-colors">
+                    <button onclick="this.parentElement.classList.toggle('active')" class="w-full flex items-center justify-between p-3 focus:outline-none">
+                        <div class="flex items-center gap-3">
+                            ${getBadgeHTML(race.gc)}
+                            <span class="text-sm md:text-base font-bold text-zinc-200 tracking-tight text-left">${race.raceName}</span>
+                        </div>
+                        ${hasStages ? `<i class="fas fa-chevron-down text-zinc-600 accordion-icon transition-transform"></i>` : `<span class="text-[9px] font-mono text-zinc-600 uppercase">1D</span>`}
+                    </button>
+                    
+                    ${hasStages ? `
+                    <div class="accordion-content bg-black/40 border-t border-zinc-800/50 px-3">
+                        <div class="flex flex-col gap-1.5 pb-2">
+                            ${race.stages.map(stage => `
+                                <div class="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-zinc-900/50 transition-colors">
+                                    <span class="text-xs text-zinc-400 font-medium">${stage.stage}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[9px] font-mono uppercase text-zinc-600 font-bold">POS</span>
+                                        ${getBadgeHTML(stage.pos)}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        };
 
         async function loadRiderProfile() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -133,10 +217,7 @@
                 const data = await response.json();
 
                 let riderData = null;
-                let nat = null;
-                let spec = null;
-                let age = null;
-                let jerseyUrl = null;
+                let nat = null; let spec = null; let age = null; let jerseyUrl = null;
 
                 const ranking = data.ranking.sort((a,b) => b.points - a.points);
                 const riderRankIndex = ranking.findIndex(r => {
@@ -151,47 +232,23 @@
                     document.getElementById('rider-rank').innerText = `#${riderRankIndex + 1}`;
                     document.getElementById('rider-team').innerText = riderData.team;
                     
-                    const palmaresContainer = document.getElementById('palmares-container');
+                    // Extraer y procesar calendario
                     if (riderData.palmares) {
                         try {
-                            const wins = typeof riderData.palmares === 'string' ? JSON.parse(riderData.palmares) : riderData.palmares;
-                            if (wins && wins.length > 0) {
-                                palmaresContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-3 pt-2";
-                                palmaresContainer.innerHTML = wins.map(win => {
-                                    // Comprobamos si es la estructura antigua (string) o la nueva (objeto)
-                                    let isObj = typeof win === 'object' && win !== null;
-                                    let pos = isObj ? win.posicion : '';
-                                    let race = isObj ? win.carrera : win;
-
-                                    // Lógica de colores según el resultado
-                                    let badgeColor = 'text-zinc-400 bg-zinc-800 border border-zinc-700'; // Default
-                                    if(pos === '1') badgeColor = 'text-black bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] border-transparent';
-                                    else if(pos === '2' || pos === '3') badgeColor = 'text-black bg-zinc-300 border-transparent';
-                                    else if(parseInt(pos) <= 10) badgeColor = 'text-cyan-400 bg-cyan-950/50 border border-cyan-500/30';
-                                    else if(pos === 'DNF' || pos === 'DNS' || pos === 'OTL') badgeColor = 'text-red-400 bg-red-950/50 border border-red-500/30';
-
-                                    let posBadge = pos ? `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg font-black text-[10px] ${badgeColor}">${pos}º</div>` : `<i class="fas fa-flag-checkered text-zinc-500 mt-1"></i>`;
-                                    if(pos === 'DNF' || pos === 'DNS' || pos === 'OTL') {
-                                        posBadge = `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg font-black text-[9px] ${badgeColor}">${pos}</div>`;
-                                    }
-
-                                    return `
-                                        <div class="flex items-center gap-3 p-2 bg-zinc-950/50 border border-zinc-800/80 rounded-xl hover:border-cyan-500/30 transition-colors shadow-sm">
-                                            ${posBadge}
-                                            <span class="text-xs md:text-sm text-zinc-300 font-bold leading-snug truncate">${race}</span>
-                                        </div>
-                                    `;
-                                }).join('');
+                            const calObj = typeof riderData.palmares === 'string' ? JSON.parse(riderData.palmares) : riderData.palmares;
+                            // Si es la versión nueva del bot, guardamos en global y pintamos 2026
+                            if (calObj && (calObj['2026'] || calObj['2025'])) {
+                                window.riderCalendarioGlobal = calObj;
+                                window.renderCalendario('2026');
                             } else {
-                                palmaresContainer.className = "min-h-[150px] flex flex-col items-center justify-center opacity-70";
-                                palmaresContainer.innerHTML = `<p class="text-sm font-mono text-zinc-500 text-center italic">No hay resultados registrados recientemente.</p>`;
+                                // Fallback por si la DB sigue con el formato antiguo
+                                document.getElementById('palmares-container').innerHTML = `<p class="text-sm font-mono text-zinc-500 text-center italic px-4">Actualizando arquitectura del calendario. Reinicia el bot del servidor.</p>`;
                             }
-                        } catch(e) { console.error("Error parseando", e); }
+                        } catch(e) { console.error("Error parseando calendario", e); }
                     } else {
-                        palmaresContainer.className = "min-h-[150px] flex flex-col items-center justify-center opacity-70";
-                        palmaresContainer.innerHTML = `
+                        document.getElementById('palmares-container').innerHTML = `
                             <i class="fas fa-satellite-dish text-2xl text-cyan-500 mb-3 animate-ping"></i>
-                            <p class="text-xs font-mono text-zinc-400 text-center px-4">Sincronizando últimos resultados con el servidor central...</p>
+                            <p class="text-xs font-mono text-zinc-400 text-center px-4">El servidor está descargando el calendario completo. Vuelve pronto.</p>
                         `;
                     }
                 } else {
