@@ -14,7 +14,7 @@ async function searchRiderProfile(riderName) {
     try {
         console.log(`   ├─ 🔎 Buscando perfil de: ${riderName}`);
         const { data } = await axios.get(`https://firstcycling.com/rider.php?q=${encodeURIComponent(riderName)}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0' },
             timeout: 10000
         });
         const $ = cheerio.load(data);
@@ -27,62 +27,66 @@ async function fetchRiderResults(riderUrl) {
     try {
         console.log(`   └─ 🕵️‍♂️ Extrayendo resultados desde: ${riderUrl}`);
         
-        let { data } = await axios.get(`https://firstcycling.com/${riderUrl}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+        const baseUrl = 'https://firstcycling.com/';
+        let { data } = await axios.get(`${baseUrl}${riderUrl}`, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0' },
             timeout: 15000
         });
         
-        let $ = cheerio.load(data);
-        const resultados = [];
-
-        const extraerTabla = () => {
-            // FirstCycling usa 'table.ws_tb' para la tabla general de resultados 
-            $('table.ws_tb tbody tr').each((i, row) => {
-                if (resultados.length >= 8) return; // Límite de 8 últimos resultados para la interfaz
+        // FUNCIÓN INTERNA PARA EXTRAER LA TABLA SEA CUAL SEA SU CLASE
+        const extraerTabla = (htmlEl) => {
+            const res = [];
+            // Buscamos en todas las filas de tabla
+            htmlEl('table tr').each((i, row) => {
+                if (res.length >= 8) return; // Máximo 8 resultados
                 
-                const tds = $(row).find('td');
-                if (tds.length < 4) return;
+                const tds = htmlEl(row).find('td');
+                if (tds.length < 3) return; // Si la fila no tiene columnas suficientes, saltamos
 
-                let pos = tds.eq(1).text().trim(); // Columna Posición
-                let raceText = tds.eq(3).text().trim(); // Columna Carrera
+                let pos = tds.eq(1).text().trim(); // Puesto (Columna 2)
+                const raceLink = htmlEl(row).find('a[href*="race.php"]'); // Enlace de la carrera
                 
-                // Saltamos las cabeceras generales de las vueltas por etapas que no tienen posición
-                if (!pos || pos === '-' || pos === '') return;
+                // Validamos que exista carrera y que la posición sea válida (Número o DNF/DNS/OTL)
+                if (raceLink.length > 0 && pos) {
+                    if (/^\d+$/.test(pos) || ['DNF', 'DNS', 'OTL', 'DSQ'].includes(pos.toUpperCase())) {
+                        let raceText = raceLink.closest('td').text().trim();
+                        
+                        // 1. Limpiamos códigos UCI (Ej: "1.UWT", "2.Pro", etc.)
+                        raceText = raceText.replace(/\s*(1|2)\.(UWT|Pro|1|2|Ncup|WC|CC)\b/ig, '').trim();
+                        // 2. Limpiamos barras verticales sueltas al final (Ej: "Omloop | " -> "Omloop")
+                        raceText = raceText.replace(/\s*\|\s*$/g, '').trim();
+                        // 3. Cambiamos las barras intermedias por guiones (Ej: "Paris-Nice | 7º Etapa" -> "Paris-Nice - 7º Etapa")
+                        raceText = raceText.replace(/\s*\|\s*/g, ' - ').trim();
+                        // 4. Limpiamos espacios dobles y guiones finales huérfanos
+                        raceText = raceText.replace(/\s+/g, ' ').replace(/-$/, '').trim();
 
-                // Limpieza absoluta de códigos de categoría UCI
-                raceText = raceText.replace(/\s*2\.UWT/ig, '');
-                raceText = raceText.replace(/\s*1\.UWT/ig, '');
-                raceText = raceText.replace(/\s*2\.Pro/ig, '');
-                raceText = raceText.replace(/\s*1\.Pro/ig, '');
-                
-                // Formatear "Carrera | Etapa" a "Carrera - Etapa"
-                raceText = raceText.replace(/\s*\|\s*/g, ' - ').trim();
-                raceText = raceText.replace(/\s+/g, ' '); // Eliminar espacios extra
-
-                // Validar que la posición sea un número o un abandono (DNF/DNS/OTL)
-                if (pos.match(/^\d+$/) || ['DNF', 'DNS', 'OTL'].includes(pos.toUpperCase())) {
-                    resultados.push({
-                        posicion: pos,
-                        carrera: raceText
-                    });
+                        res.push({ posicion: pos, carrera: raceText });
+                    }
                 }
             });
+            return res;
         };
 
-        extraerTabla();
+        let resultados = extraerTabla(cheerio.load(data));
 
-        // MAGIA DEL CALENDARIO: Si este año ha corrido poco (< 5 carreras), extraemos el año anterior (2025)
-        if (resultados.length < 5) {
-            console.log(`   └─ 🔄 Pocos resultados. Escaneando la temporada anterior (2025)...`);
+        // MAGIA DEL CALENDARIO: Si este año ha corrido poco (< 8 carreras), vamos a 2025 a rellenar
+        if (resultados.length < 8) {
+            console.log(`   └─ 🔄 Pocos resultados (${resultados.length}). Escaneando temporada 2025...`);
             let prevYearUrl = riderUrl.includes('?') ? `${riderUrl}&y=2025` : `${riderUrl}?y=2025`;
             try {
-                let res2025 = await axios.get(`https://firstcycling.com/${prevYearUrl}`, {
-                    headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 10000
+                let res2025 = await axios.get(`${baseUrl}${prevYearUrl}`, {
+                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0' }, 
+                    timeout: 15000
                 });
-                $ = cheerio.load(res2025.data);
-                extraerTabla();
+                
+                const resultados2025 = extraerTabla(cheerio.load(res2025.data));
+                
+                // Añadimos los de 2025 hasta llegar al límite de 8
+                for (let r of resultados2025) {
+                    if (resultados.length < 8) resultados.push(r);
+                }
             } catch (e) {
-                console.log(`   └─ ⚠️ No se pudo cargar la temporada 2025`);
+                console.log(`   └─ ⚠️ No se pudo cargar 2025: ${e.message}`);
             }
         }
 
