@@ -445,8 +445,9 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
     </script>
         `;
 
-        if (html.includes('')) {
-            html = html.replace('', ogTags);
+        // SOLUCIÓN APLICADA: Ahora busca la etiqueta de cierre correcta </head>
+        if (html.includes('</head>')) {
+            html = html.replace('</head>', ogTags + '\n</head>');
         } else {
             html = html.replace('<head>', '<head>\n' + ogTags);
         }
