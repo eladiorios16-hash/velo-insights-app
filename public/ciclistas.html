@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil del Ciclista | VELO INSIGHTS</title>
     <link rel="icon" type="image/png" sizes="144x144" href="/assets/favicon-144.png">
+    
+    <link rel="stylesheet" href="assets/main.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -13,9 +16,19 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
         
-        /* Fondos de Rejilla (Grids) */
-        .bg-grid-global { background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px); background-size: 24px 24px; }
-        .bg-grid-pattern { background-image: radial-gradient(rgba(34, 211, 238, 0.08) 1px, transparent 1px); background-size: 20px 20px; }
+        /* FONDO CLAVADO AL DE LA PORTADA (Puntos separados y más definidos) */
+        .bg-grid-global { 
+            background-color: #050505;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px); 
+            background-size: 40px 40px; 
+            background-position: 0 0;
+        }
+        
+        /* Fondo para las cajas interiores (Rejilla cyan muy suave) */
+        .bg-grid-pattern { 
+            background-image: radial-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px); 
+            background-size: 20px 20px; 
+        }
         
         /* Acordeones para el calendario */
         .accordion-content { transition: max-height 0.3s ease-in-out, padding 0.3s ease; max-height: 0; overflow: hidden; }
@@ -221,11 +234,11 @@
                     riderData = ranking[riderRankIndex];
                     document.getElementById('rider-points').innerText = riderData.points;
                     
-                    // --- MAGIA APLICADA: LEEMOS TU RANK MANUAL PARA EL PERFIL ---
+                    // --- AQUÍ ESTÁ LA LECTURA DEL RANK MANUAL ---
                     const dbRank = riderData.rank || riderData.ranking || riderData.posicion || riderData.pos;
                     const finalRank = dbRank ? dbRank : (riderRankIndex + 1);
                     document.getElementById('rider-rank').innerText = `#${finalRank}`;
-                    // ------------------------------------------------------------
+                    // --------------------------------------------
 
                     document.getElementById('rider-team').innerText = riderData.team;
                     
