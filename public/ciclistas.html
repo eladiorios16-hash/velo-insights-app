@@ -12,10 +12,6 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
         .bg-grid-pattern { background-image: radial-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px); background-size: 20px 20px; }
-        
-        .accordion-content { transition: max-height 0.3s ease-in-out, padding 0.3s ease; max-height: 0; overflow: hidden; }
-        .accordion-item.active .accordion-content { max-height: 1000px; padding-top: 0.5rem; padding-bottom: 0.5rem; }
-        .accordion-item.active .accordion-icon { transform: rotate(180deg); }
     </style>
 </head>
 <body class="bg-[#050505] antialiased text-slate-300 pb-20 selection:bg-cyan-500/30 selection:text-cyan-200">
@@ -78,20 +74,17 @@
                     
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 border-b border-zinc-800/60 pb-4 shrink-0">
                         <div class="flex items-center gap-3">
-                            <i class="fas fa-calendar-alt text-cyan-400"></i>
-                            <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Calendario <span class="text-cyan-400">Resultados</span></h2>
+                            <i class="fas fa-chart-line text-cyan-400"></i>
+                            <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Registro de <span class="text-cyan-400">Resultados</span></h2>
                         </div>
                         
                         <div class="flex bg-zinc-950 border border-zinc-800 rounded-lg p-1" id="year-tabs">
-                            <button onclick="renderCalendario('2026')" id="tab-2026" class="px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all bg-cyan-500/20 text-cyan-400">2026</button>
-                            <button onclick="renderCalendario('2025')" id="tab-2025" class="px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all text-zinc-500 hover:text-zinc-300">2025</button>
-                        </div>
+                            </div>
                     </div>
                     
-                    <div id="palmares-container" class="flex-1 overflow-y-auto custom-scrollbar pr-3 pb-4 w-full flex flex-col gap-3">
+                    <div id="palmares-container" class="flex-1 overflow-y-auto custom-scrollbar pr-3 pb-4 w-full flex flex-col gap-2">
                         <div class="flex flex-col items-center justify-center h-full w-full opacity-70">
-                            <i class="fas fa-spinner fa-spin text-2xl text-cyan-500 mb-3"></i>
-                            <p class="text-xs font-mono text-zinc-500">Leyendo base de datos central...</p>
+                            <p class="text-sm font-mono text-zinc-500 text-center italic">No hay resultados registrados.</p>
                         </div>
                     </div>
                 </div>
@@ -103,7 +96,6 @@
                         <i class="fas fa-newspaper text-cyan-400"></i>
                         <h2 class="text-base font-black text-white italic uppercase tracking-tight">Noticias <span class="text-cyan-400">Menciones</span></h2>
                     </div>
-                    
                     <div id="related-news" class="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-1">
                         <p class="text-xs text-zinc-500 animate-pulse font-mono">Buscando en el archivo...</p>
                     </div>
@@ -126,62 +118,34 @@
         }
 
         function getBadgeHTML(pos) {
-            if (!pos) return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-zinc-600 bg-zinc-900 border border-zinc-800"><i class="fas fa-minus text-[10px]"></i></div>`;
-            
             let badgeColor = 'text-zinc-400 bg-zinc-800 border border-zinc-700'; 
             
             if(pos === '1') badgeColor = 'text-black bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] border-transparent';
             else if(pos === '2' || pos === '3') badgeColor = 'text-black bg-zinc-300 border-transparent';
-            else if(parseInt(pos) <= 10) badgeColor = 'text-cyan-400 bg-cyan-950/50 border border-cyan-500/30';
-            else if(['DNF', 'DNS', 'OTL', 'DSQ'].includes(pos.toUpperCase())) badgeColor = 'text-red-400 bg-red-950/50 border border-red-500/30';
+            else if(parseInt(pos) && parseInt(pos) <= 10) badgeColor = 'text-cyan-400 bg-cyan-950/50 border border-cyan-500/30';
+            else if(['DNF', 'DNS', 'OTL'].includes(pos.toUpperCase())) badgeColor = 'text-red-400 bg-red-950/50 border border-red-500/30';
 
-            let fontSize = pos.length > 2 ? 'text-[9px]' : 'text-[11px]';
             let suffix = parseInt(pos) ? 'º' : '';
-            
-            return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg font-black font-mono ${fontSize} ${badgeColor}">${pos}${suffix}</div>`;
+            return `<div class="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg font-black font-mono text-[11px] ${badgeColor}">${pos}${suffix}</div>`;
         }
 
         window.renderCalendario = function(year) {
-            document.getElementById('tab-2026').className = `px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all ${year === '2026' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`;
-            document.getElementById('tab-2025').className = `px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all ${year === '2025' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`;
+            // Actualizar diseño de botones
+            const tabs = document.querySelectorAll('.year-tab-btn');
+            tabs.forEach(btn => {
+                if(btn.dataset.year === year) btn.className = 'year-tab-btn px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all bg-cyan-500/20 text-cyan-400';
+                else btn.className = 'year-tab-btn px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all text-zinc-500 hover:text-zinc-300';
+            });
 
             const container = document.getElementById('palmares-container');
-            
-            if (!window.riderCalendarioGlobal || !window.riderCalendarioGlobal[year] || window.riderCalendarioGlobal[year].length === 0) {
-                container.innerHTML = `<div class="h-full w-full flex flex-col items-center justify-center opacity-70"><p class="text-sm font-mono text-zinc-500 text-center italic">No hay resultados en ${year}.</p></div>`;
-                return;
-            }
-
             const races = window.riderCalendarioGlobal[year];
             
             let html = '';
             races.forEach(race => {
-                const hasStages = race.stages && race.stages.length > 0;
-                
                 html += `
-                <div class="accordion-item shrink-0 bg-zinc-950/50 border border-zinc-800 rounded-xl overflow-hidden hover:border-cyan-500/30 transition-colors">
-                    <button onclick="this.parentElement.classList.toggle('active')" class="w-full flex items-center justify-between p-3 focus:outline-none">
-                        <div class="flex items-center gap-3">
-                            ${getBadgeHTML(race.gc)}
-                            <span class="text-sm md:text-base font-bold text-zinc-200 tracking-tight text-left">${race.raceName}</span>
-                        </div>
-                        ${hasStages ? `<i class="fas fa-chevron-down text-zinc-600 accordion-icon transition-transform"></i>` : `<span class="text-[9px] font-mono text-zinc-600 uppercase">1D</span>`}
-                    </button>
-                    
-                    ${hasStages ? `
-                    <div class="accordion-content bg-black/40 border-t border-zinc-800/50 px-3">
-                        <div class="flex flex-col gap-1.5 pb-2">
-                            ${race.stages.map(stage => `
-                                <div class="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-zinc-900/50 transition-colors">
-                                    <span class="text-xs text-zinc-400 font-medium">${stage.stage}</span>
-                                    <div class="flex items-center gap-2">
-                                        ${getBadgeHTML(stage.pos)}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    ` : ''}
+                <div class="flex items-center gap-4 p-2.5 bg-zinc-950/80 border border-zinc-800/80 rounded-xl hover:border-cyan-500/40 transition-colors shadow-sm">
+                    ${getBadgeHTML(race.pos)}
+                    <span class="text-sm md:text-base font-bold text-zinc-200 tracking-tight leading-snug">${race.race}</span>
                 </div>
                 `;
             });
@@ -218,22 +182,39 @@
                     document.getElementById('rider-rank').innerText = `#${riderRankIndex + 1}`;
                     document.getElementById('rider-team').innerText = riderData.team;
                     
+                    // LECTURA DEL FORMATO MANUAL (TEXTO)
                     if (riderData.palmares) {
                         try {
-                            const calObj = typeof riderData.palmares === 'string' ? JSON.parse(riderData.palmares) : riderData.palmares;
-                            if (calObj && (calObj['2026'] || calObj['2025'])) {
-                                window.riderCalendarioGlobal = calObj;
-                                window.renderCalendario('2026');
+                            const lines = riderData.palmares.split('\n').filter(l => l.trim().length > 0);
+                            const yearMap = {};
+                            
+                            lines.forEach(line => {
+                                const parts = line.split('|').map(p => p.trim());
+                                if(parts.length >= 3) {
+                                    const y = parts[0]; const p = parts[1]; const r = parts[2];
+                                    if(!yearMap[y]) yearMap[y] = [];
+                                    yearMap[y].push({pos: p, race: r});
+                                }
+                            });
+
+                            const yearsAvailable = Object.keys(yearMap).sort().reverse();
+                            if (yearsAvailable.length > 0) {
+                                window.riderCalendarioGlobal = yearMap;
+                                
+                                // Generar botones de pestañas
+                                const tabsContainer = document.getElementById('year-tabs');
+                                tabsContainer.innerHTML = yearsAvailable.map(y => `
+                                    <button onclick="renderCalendario('${y}')" data-year="${y}" class="year-tab-btn px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all text-zinc-500">${y}</button>
+                                `).join('');
+
+                                // Renderizar el más reciente
+                                window.renderCalendario(yearsAvailable[0]);
                             }
-                        } catch(e) {}
+                        } catch(e) { console.error("Error parseando texto", e); }
                     }
-                } else {
-                    document.getElementById('rider-points').innerText = "0";
-                    document.getElementById('rider-rank').innerText = "--";
-                    const td = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
-                    document.getElementById('rider-team').innerText = td ? td.subtitle : "Pro Rider";
                 }
 
+                // Extraer Equipo/Bandera de la tabla de Equipos
                 if (data.teams) {
                     for (const team of data.teams) {
                         if (team.riders && Array.isArray(team.riders)) {
@@ -257,6 +238,40 @@
                     const jC = document.getElementById('rider-jersey-container');
                     jC.classList.remove('hidden');
                     document.getElementById('rider-jersey').src = jerseyUrl;
+                }
+
+                const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
+                if (trendData) {
+                    const val = trendData.value ? trendData.value.toLowerCase() : '';
+                    const isNegative = val.includes('-') || val.includes('baja') || val.includes('down') || val.includes('lesi');
+                    const trendBox = document.getElementById('rider-trend');
+                    trendBox.classList.remove('hidden');
+                    if (isNegative) {
+                        trendBox.className = "px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 bg-red-900/20 border-red-500/30 text-red-400";
+                        trendBox.innerHTML = `<i class="fas fa-arrow-down mr-1"></i> ${trendData.value || 'BAJA / LESIÓN'}`;
+                    } else {
+                        trendBox.className = "px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 bg-emerald-900/20 border-emerald-500/30 text-emerald-400";
+                        trendBox.innerHTML = `<i class="fas fa-fire mr-1"></i> ${trendData.value || 'EN FORMA'}`;
+                    }
+                }
+
+                // Noticias
+                const relatedNewsContainer = document.getElementById('related-news');
+                const mentionedNews = data.news.filter(n => {
+                    const fullText = (n.title + " " + (n.lead||"") + " " + (n.excerpt||"")).toLowerCase();
+                    const lastName = normalizedRawName.split(' ').pop();
+                    return fullText.includes(lastName); 
+                });
+
+                if (mentionedNews.length > 0) {
+                    relatedNewsContainer.innerHTML = mentionedNews.map(n => `
+                        <a href="noticias.html?article=${n.id}" class="block group border-b border-zinc-800/50 pb-3 last:border-0 last:pb-0">
+                            <span class="text-[8px] font-black text-cyan-600 uppercase tracking-widest block mb-1">${n.tag || 'News'} • ${n.date || ''}</span>
+                            <h4 class="text-xs font-bold text-zinc-300 group-hover:text-white transition-colors leading-snug">${n.title}</h4>
+                        </a>
+                    `).join('');
+                } else {
+                    relatedNewsContainer.innerHTML = `<p class="text-xs text-zinc-600 italic">No hay noticias recientes sobre este corredor en el archivo.</p>`;
                 }
 
             } catch (error) {}
