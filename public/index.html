@@ -123,6 +123,7 @@
             opacity: 1;
         }
 
+        /* Ajustes específicos para los modales en escritorio y textos largos */
         .truncate-team { max-width: 120px; }
         @media (min-width: 768px) { 
             .truncate-team { max-width: 250px; } 
@@ -204,7 +205,8 @@
                                 <img id="telemetry-profile-img" src="" alt="Altimetría" class="w-full h-auto rounded-lg cursor-pointer hover:opacity-70 transition-opacity border border-transparent hover:border-cyan-500/50" onclick="openProfileModal(this.src)">
                             </div>
                         </div>
-                        </div>
+
+                    </div>
                 </div>
 
                 <div class="col-span-1 lg:col-span-2 bg-gradient-to-br from-amber-950/20 to-[#050505] rounded-2xl border border-amber-500/20 shadow-2xl p-6 relative overflow-hidden">
@@ -688,8 +690,8 @@
                     document.getElementById('rcr-elevation').innerText = (currentStage.gain || '---') + ' m+';
                     document.getElementById('rcr-type').innerText = currentStage.type || '---';
                     
-                    // --- NUEVO: Lógica para mostrar la altimetría/perfil de la etapa ---
-                    const profileUrl = currentStage.profile || race.profile;
+                    // --- CORRECCIÓN: Ahora lee "image" en lugar de "profile" ---
+                    const profileUrl = currentStage.image || currentStage.profile || race.image || race.profile;
                     if (profileUrl && profileUrl.trim() !== "") {
                         document.getElementById('telemetry-profile-container').classList.remove('hidden');
                         document.getElementById('telemetry-profile-img').src = profileUrl;
