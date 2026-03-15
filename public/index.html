@@ -751,7 +751,8 @@
         }
 
         async function loadContentOptimized() {
-            const CACHE_KEY = 'velo_home_data';
+            // CACHÉ ACTUALIZADA A V3 PARA FORZAR QUE LEA EL NUEVO CAMPO RANK
+            const CACHE_KEY = 'velo_home_data_v3';
             const cachedData = localStorage.getItem(CACHE_KEY);
 
             if (cachedData) {
@@ -964,7 +965,6 @@
             } else { container.innerHTML = '<p class="text-zinc-600 text-sm text-center py-10 font-mono">No hay datos en el servidor.</p>'; }
         }
 
-        // FUNCION MODIFICADA PARA LIMITAR A TOP 10 Y LEER TU RANK MANUAL
         function renderRanking(data) {
             const container = document.getElementById('ranking-list');
             const modalContainer = document.getElementById('modal-ranking-list');
@@ -976,13 +976,17 @@
             
             const generateRankingRow = (r, i) => {
                 const imgUrl = getRiderImageUrl(r.name);
-                const displayRank = r.rank ? r.rank : (i + 1);
+                
+                // MAGIA: Leemos tu campo manual (rank, ranking o posicion)
+                const dbRank = r.rank || r.ranking || r.posicion || r.pos;
+                const displayRank = dbRank ? dbRank : (i + 1);
+                
                 const rankColorClass = displayRank <= 3 ? 'text-amber-500' : 'text-zinc-600';
 
                 return `
                 <div class="flex items-center justify-between p-3 border-b border-zinc-800/50 last:border-0 group hover:bg-white/5 transition-colors rounded-xl">
                     <div class="flex items-center gap-3">
-                        <span class="text-sm font-black ${rankColorClass} w-4 text-center shrink-0">${displayRank}</span>
+                        <span class="text-sm font-black ${rankColorClass} w-6 text-center shrink-0">${displayRank}</span>
                         <div class="w-12 h-12 rounded-full overflow-hidden border border-zinc-700 shadow-sm group-hover:border-amber-500/50 transition-colors shrink-0">
                             <img src="${imgUrl}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${r.name}" class="w-full h-full object-cover object-top scale-110 transition-transform duration-300 group-hover:scale-125">
                         </div>
