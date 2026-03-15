@@ -751,7 +751,6 @@
         }
 
         async function loadContentOptimized() {
-            // CACHÉ ACTUALIZADA A V3 PARA FORZAR QUE LEA EL NUEVO CAMPO RANK
             const CACHE_KEY = 'velo_home_data_v3';
             const cachedData = localStorage.getItem(CACHE_KEY);
 
@@ -965,6 +964,7 @@
             } else { container.innerHTML = '<p class="text-zinc-600 text-sm text-center py-10 font-mono">No hay datos en el servidor.</p>'; }
         }
 
+        // --- FUNCIÓN RENDER RANKING MODIFICADA CON ENLACES ---
         function renderRanking(data) {
             const container = document.getElementById('ranking-list');
             const modalContainer = document.getElementById('modal-ranking-list');
@@ -976,15 +976,14 @@
             
             const generateRankingRow = (r, i) => {
                 const imgUrl = getRiderImageUrl(r.name);
-                
-                // MAGIA: Leemos tu campo manual (rank, ranking o posicion)
                 const dbRank = r.rank || r.ranking || r.posicion || r.pos;
                 const displayRank = dbRank ? dbRank : (i + 1);
                 
                 const rankColorClass = displayRank <= 3 ? 'text-amber-500' : 'text-zinc-600';
 
+                // CAMBIADO: De <div ...> a <a href="...">
                 return `
-                <div class="flex items-center justify-between p-3 border-b border-zinc-800/50 last:border-0 group hover:bg-white/5 transition-colors rounded-xl">
+                <a href="ciclistas.html?rider=${encodeURIComponent(r.name)}" class="flex items-center justify-between p-3 border-b border-zinc-800/50 last:border-0 group hover:bg-white/5 transition-colors rounded-xl cursor-pointer">
                     <div class="flex items-center gap-3">
                         <span class="text-sm font-black ${rankColorClass} w-6 text-center shrink-0">${displayRank}</span>
                         <div class="w-12 h-12 rounded-full overflow-hidden border border-zinc-700 shadow-sm group-hover:border-amber-500/50 transition-colors shrink-0">
@@ -999,7 +998,7 @@
                         <span class="block text-lg font-black text-amber-500 leading-none">${r.points}</span>
                         <span class="text-[8px] text-zinc-600 uppercase font-black">PTS</span>
                     </div>
-                </div>`;
+                </a>`;
             };
 
             container.innerHTML = top5.map((r, i) => generateRankingRow(r, i)).join('');
@@ -1008,6 +1007,7 @@
                 modalContainer.innerHTML = top10.map((r, i) => generateRankingRow(r, i)).join('');
             }
         }
+        // -----------------------------------------------------
 
         function renderUpcomingWidget(races) {
             const container = document.getElementById('upcoming-races');
