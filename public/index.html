@@ -690,7 +690,6 @@
                     document.getElementById('rcr-elevation').innerText = (currentStage.gain || '---') + ' m+';
                     document.getElementById('rcr-type').innerText = currentStage.type || '---';
                     
-                    // --- CORRECCIÓN: Ahora lee "image" en lugar de "profile" ---
                     const profileUrl = currentStage.image || currentStage.profile || race.image || race.profile;
                     if (profileUrl && profileUrl.trim() !== "") {
                         document.getElementById('telemetry-profile-container').classList.remove('hidden');
@@ -698,7 +697,6 @@
                     } else {
                         document.getElementById('telemetry-profile-container').classList.add('hidden');
                     }
-                    // -------------------------------------------------------------------
                 }
 
                 if (detailsObj.tactical) {
@@ -966,6 +964,7 @@
             } else { container.innerHTML = '<p class="text-zinc-600 text-sm text-center py-10 font-mono">No hay datos en el servidor.</p>'; }
         }
 
+        // FUNCION MODIFICADA PARA LIMITAR A TOP 10 Y LEER TU RANK MANUAL
         function renderRanking(data) {
             const container = document.getElementById('ranking-list');
             const modalContainer = document.getElementById('modal-ranking-list');
@@ -973,13 +972,17 @@
             const sorted = data.sort((a,b) => b.points - a.points);
             
             const top5 = sorted.slice(0, 5);
+            const top10 = sorted.slice(0, 10);
             
             const generateRankingRow = (r, i) => {
                 const imgUrl = getRiderImageUrl(r.name);
+                const displayRank = r.rank ? r.rank : (i + 1);
+                const rankColorClass = displayRank <= 3 ? 'text-amber-500' : 'text-zinc-600';
+
                 return `
                 <div class="flex items-center justify-between p-3 border-b border-zinc-800/50 last:border-0 group hover:bg-white/5 transition-colors rounded-xl">
                     <div class="flex items-center gap-3">
-                        <span class="text-sm font-black ${i < 3 ? 'text-amber-500' : 'text-zinc-600'} w-4 text-center shrink-0">${i + 1}</span>
+                        <span class="text-sm font-black ${rankColorClass} w-4 text-center shrink-0">${displayRank}</span>
                         <div class="w-12 h-12 rounded-full overflow-hidden border border-zinc-700 shadow-sm group-hover:border-amber-500/50 transition-colors shrink-0">
                             <img src="${imgUrl}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${r.name}" class="w-full h-full object-cover object-top scale-110 transition-transform duration-300 group-hover:scale-125">
                         </div>
@@ -998,7 +1001,7 @@
             container.innerHTML = top5.map((r, i) => generateRankingRow(r, i)).join('');
 
             if(modalContainer) {
-                modalContainer.innerHTML = sorted.map((r, i) => generateRankingRow(r, i)).join('');
+                modalContainer.innerHTML = top10.map((r, i) => generateRankingRow(r, i)).join('');
             }
         }
 
