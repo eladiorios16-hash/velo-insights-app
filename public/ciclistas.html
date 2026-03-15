@@ -92,7 +92,7 @@
                     <p class="text-xs text-zinc-400 uppercase tracking-widest font-black mb-5"><i class="fas fa-sliders-h mr-2 text-cyan-500"></i> Atributos de Rendimiento</p>
                     
                     <div id="rider-stats-flex" class="flex flex-col md:flex-row items-center md:items-stretch gap-8 md:gap-10">
-                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -164,7 +164,6 @@
             return slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
         }
 
-        // Diseño de la Medalla de Posición
         function getBadgeHTML(pos) {
             if (!pos) return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-zinc-600 bg-zinc-900/80 border border-zinc-800 shadow-inner"><i class="fas fa-minus text-[10px]"></i></div>`;
             
@@ -181,7 +180,6 @@
             return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg font-bold font-mono ${fontSize} ${badgeColor} transition-all">${posClean}${suffix}</div>`;
         }
 
-        // Sistema de Colores Dinámico para Estadísticas
         function getColorForStat(val) {
             if (val >= 90) return { bg: 'bg-rose-500', text: 'text-rose-500', shadow: 'shadow-[0_0_15px_rgba(244,63,94,0.4)]', border: 'border-rose-500/50' };
             if (val >= 87) return { bg: 'bg-fuchsia-500', text: 'text-fuchsia-400', shadow: 'shadow-[0_0_15px_rgba(217,70,239,0.4)]', border: 'border-fuchsia-500/50' };
@@ -228,27 +226,25 @@
                                 let stageText = stage.stage;
                                 let stageLower = stageText.toLowerCase();
                                 
-                                // Iconos Inteligentes
                                 let iconHTML = '<i class="fas fa-road text-zinc-600"></i>';
                                 if (stageLower.includes('montaña') || stageLower.includes('mountain') || stageLower.includes('alto')) iconHTML = '<i class="fas fa-mountain text-rose-500 drop-shadow-[0_0_5px_rgba(244,63,94,0.5)]"></i>';
                                 else if (stageLower.includes('crono') || stageLower.includes('tt') || stageLower.includes('time trial')) iconHTML = '<i class="fas fa-stopwatch text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]"></i>';
                                 else if (stageLower.includes('media') || stageLower.includes('colinas')) iconHTML = '<i class="fas fa-hill-rockslide text-amber-500 drop-shadow-[0_0_5px_rgba(245,158,11,0.5)]"></i>';
                                 else if (stageLower.includes('llano') || stageLower.includes('flat')) iconHTML = '<i class="fas fa-road text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]"></i>';
 
-                                // Colores del Timeline según posición
                                 let posNum = parseInt(stage.pos);
                                 let dotClass = 'bg-zinc-600 ring-black';
                                 if (posNum === 1) dotClass = 'bg-amber-400 ring-amber-900/50 shadow-[0_0_8px_rgba(251,191,36,0.8)]';
                                 else if (posNum === 2 || posNum === 3) dotClass = 'bg-zinc-300 ring-zinc-700 shadow-[0_0_5px_rgba(212,212,216,0.5)]';
                                 else if (posNum <= 10) dotClass = 'bg-cyan-500 ring-cyan-900/50 shadow-[0_0_5px_rgba(6,182,212,0.5)]';
 
-                                // Etiquetas automáticas de Km y Desnivel
                                 let kmMatch = stageText.match(/(\d+(?:\.\d+)?)\s*km/i);
                                 let mMatch = stageText.match(/(\d+)\s*m/i);
                                 
                                 let tagsHTML = '';
-                                if (kmMatch) tagsHTML += `<span class="bg-zinc-800 border border-zinc-700 text-zinc-300 text-[8px] px-1.5 py-0.5 rounded font-mono shadow-sm">${kmMatch[1]} KM</span>`;
-                                if (mMatch) tagsHTML += `<span class="bg-zinc-800 border border-zinc-700 text-zinc-300 text-[8px] px-1.5 py-0.5 rounded font-mono shadow-sm"><i class="fas fa-arrow-trend-up text-zinc-500 mr-0.5"></i>${mMatch[1]} M</span>`;
+                                // MODIFICADO: Etiquetas más grandes, en negrita y más luminosas
+                                if (kmMatch) tagsHTML += `<span class="bg-zinc-800/80 border border-zinc-700 text-zinc-200 text-[10px] sm:text-xs px-2 py-0.5 rounded font-mono shadow-sm font-bold">${kmMatch[1]} KM</span>`;
+                                if (mMatch) tagsHTML += `<span class="bg-zinc-800/80 border border-zinc-700 text-zinc-200 text-[10px] sm:text-xs px-2 py-0.5 rounded font-mono shadow-sm font-bold"><i class="fas fa-arrow-trend-up text-zinc-400 mr-1"></i>${mMatch[1]} M</span>`;
 
                                 let cleanTitle = stageText.replace(/(\d+(?:\.\d+)?)\s*km/i, '').replace(/(\d+)\s*m(?:\s*desnivel)?/i, '').replace('Montaña', '').trim();
                                 if(cleanTitle.endsWith('-') || cleanTitle.endsWith('>')) cleanTitle = cleanTitle.slice(0, -1).trim();
