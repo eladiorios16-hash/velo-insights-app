@@ -116,10 +116,8 @@
     </main>
 
     <script>
-        // VARIABLE GLOBAL DEL CALENDARIO
         window.riderCalendarioGlobal = null;
 
-        // FUNCIONES DE UTILIDAD
         function normalizeName(name) {
             if (!name) return '';
             return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -130,7 +128,6 @@
             return slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
         }
 
-        // SISTEMA DE COLORES PARA LOS PUESTOS
         function getBadgeHTML(pos) {
             if (!pos) return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-zinc-600 bg-zinc-900 border border-zinc-800 shadow-inner"><i class="fas fa-minus text-[10px]"></i></div>`;
             
@@ -147,7 +144,6 @@
             return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg font-black font-mono ${fontSize} ${badgeColor}">${posClean}${suffix}</div>`;
         }
 
-        // RENDERIZA LAS CARRERAS SEGÚN EL AÑO SELECCIONADO
         window.renderCalendario = function(year) {
             const tabs = document.querySelectorAll('.year-tab-btn');
             tabs.forEach(btn => {
@@ -198,7 +194,6 @@
             container.innerHTML = html;
         };
 
-        // CARGA EL PERFIL PRINCIPAL AL ABRIR LA PÁGINA
         async function loadRiderProfile() {
             const urlParams = new URLSearchParams(window.location.search);
             const riderNameQuery = urlParams.get('rider');
@@ -210,7 +205,6 @@
             document.getElementById('rider-image').src = `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${getSlug(rawName)}.png`;
 
             try {
-                // 1. CARGAMOS DATOS DEL RANKING Y EQUIPOS
                 const response = await fetch('/api/home');
                 const data = await response.json();
 
@@ -226,10 +220,15 @@
                 if (riderRankIndex !== -1) {
                     riderData = ranking[riderRankIndex];
                     document.getElementById('rider-points').innerText = riderData.points;
-                    document.getElementById('rider-rank').innerText = `#${riderRankIndex + 1}`;
+                    
+                    // --- MAGIA APLICADA: LEEMOS TU RANK MANUAL PARA EL PERFIL ---
+                    const dbRank = riderData.rank || riderData.ranking || riderData.posicion || riderData.pos;
+                    const finalRank = dbRank ? dbRank : (riderRankIndex + 1);
+                    document.getElementById('rider-rank').innerText = `#${finalRank}`;
+                    // ------------------------------------------------------------
+
                     document.getElementById('rider-team').innerText = riderData.team;
                     
-                    // PROCESAMOS EL PALMARÉS MANUAL
                     if (riderData.palmares && typeof riderData.palmares === 'string' && riderData.palmares.includes('|')) {
                         try {
                             const lines = riderData.palmares.split('\n').filter(l => l.trim().length > 0);
@@ -247,7 +246,6 @@
                                     let mainRace = rawRace;
                                     let subInfo = null;
                                     
-                                    // Separar carrera principal de la etapa usando el guion con espacios
                                     const splitIndex = rawRace.indexOf(' - ');
                                     if (splitIndex > -1) {
                                         mainRace = rawRace.substring(0, splitIndex).trim();
@@ -260,7 +258,6 @@
                                     
                                     const entry = yearMap[y].get(mainRace);
 
-                                    // Determinar si es un resultado general o de etapa
                                     if (!subInfo || subInfo.toLowerCase() === 'general' || subInfo.toLowerCase() === 'gc') {
                                         entry.gc = p;
                                     } else {
@@ -296,7 +293,6 @@
                     document.getElementById('rider-team').innerText = td ? td.subtitle : "Pro Rider";
                 }
 
-                // CRUZAR DATOS CON LA TABLA DE EQUIPOS
                 if (data.teams) {
                     for (const team of data.teams) {
                         let rList = [];
@@ -313,7 +309,6 @@
                     }
                 }
 
-                // ACTUALIZAR INTERFAZ VISUAL
                 let natAgeText = nat || '';
                 if (age) natAgeText += ` <span class="text-zinc-500 text-xs font-mono ml-2 border border-zinc-700 bg-zinc-900/50 px-1.5 py-0.5 rounded">${age} años</span>`;
                 document.getElementById('rider-nat').innerHTML = natAgeText || '--';
@@ -325,7 +320,6 @@
                     document.getElementById('rider-jersey').src = jerseyUrl;
                 }
 
-                // REVISAR ESTADO DE FORMA (TRENDING)
                 const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
                 if (trendData) {
                     const val = trendData.value ? trendData.value.toLowerCase() : '';
@@ -345,14 +339,12 @@
                 console.error("Error cargando el perfil principal:", error);
             }
 
-            // 2. EXTRACCIÓN DIRECTA DE NOTICIAS (Solución Anti-Bloqueos)
             try {
                 const relatedNewsContainer = document.getElementById('related-news');
                 const newsRes = await fetch('/api/news');
                 const allNews = await newsRes.json();
 
                 if (allNews && allNews.length > 0) {
-                    // Extraemos el apellido de la URL para buscar menciones
                     const lastName = normalizedRawName.split(' ').pop().toLowerCase();
                     
                     const mentionedNews = allNews.filter(n => {
@@ -379,7 +371,6 @@
             }
         }
 
-        // INICIAR AL CARGAR
         document.addEventListener('DOMContentLoaded', loadRiderProfile);
     </script>
 </body>
