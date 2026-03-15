@@ -8,11 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
         .bg-grid-pattern { background-image: radial-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px); background-size: 20px 20px; }
         
-        /* Acordeón Animación */
         .accordion-content { transition: max-height 0.3s ease-in-out, padding 0.3s ease; max-height: 0; overflow: hidden; }
         .accordion-item.active .accordion-content { max-height: 1000px; padding-top: 0.5rem; padding-bottom: 0.5rem; }
         .accordion-item.active .accordion-icon { transform: rotate(180deg); }
@@ -73,10 +73,10 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-gradient-to-br from-zinc-900/80 to-[#050505] border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern h-full">
+            <div class="lg:col-span-2">
+                <div class="bg-gradient-to-br from-zinc-900/80 to-[#050505] border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern h-[600px] flex flex-col">
                     
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-zinc-800/60 pb-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 border-b border-zinc-800/60 pb-4 shrink-0">
                         <div class="flex items-center gap-3">
                             <i class="fas fa-calendar-alt text-cyan-400"></i>
                             <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Calendario <span class="text-cyan-400">Resultados</span></h2>
@@ -88,31 +88,31 @@
                         </div>
                     </div>
                     
-                    <div id="palmares-container" class="min-h-[150px] flex flex-col items-center justify-center">
-                        <i class="fas fa-spinner fa-spin text-2xl text-cyan-500 mb-3"></i>
-                        <p class="text-xs font-mono text-zinc-500">Leyendo base de datos central...</p>
+                    <div id="palmares-container" class="flex-1 overflow-y-auto custom-scrollbar pr-3 pb-4 w-full flex flex-col gap-3">
+                        <div class="flex flex-col items-center justify-center h-full w-full opacity-70">
+                            <i class="fas fa-spinner fa-spin text-2xl text-cyan-500 mb-3"></i>
+                            <p class="text-xs font-mono text-zinc-500">Leyendo base de datos central...</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="lg:col-span-1">
-                <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 h-full">
-                    <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3">
+                <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 h-[600px] flex flex-col">
+                    <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3 shrink-0">
                         <i class="fas fa-newspaper text-cyan-400"></i>
                         <h2 class="text-base font-black text-white italic uppercase tracking-tight">Noticias <span class="text-cyan-400">Menciones</span></h2>
                     </div>
                     
-                    <div id="related-news" class="space-y-4">
+                    <div id="related-news" class="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-1">
                         <p class="text-xs text-zinc-500 animate-pulse font-mono">Buscando en el archivo...</p>
                     </div>
                 </div>
             </div>
         </div>
-
     </main>
 
     <script>
-        // VARIABLE GLOBAL PARA GUARDAR EL CALENDARIO Y CAMBIAR DE AÑO SIN RECARGAR
         window.riderCalendarioGlobal = null;
 
         function normalizeName(name) {
@@ -125,11 +125,10 @@
             return slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
         }
 
-        // Lógica visual para la posición (Color Badge)
         function getBadgeHTML(pos) {
             if (!pos) return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-zinc-600 bg-zinc-900 border border-zinc-800"><i class="fas fa-minus text-[10px]"></i></div>`;
             
-            let badgeColor = 'text-zinc-400 bg-zinc-800 border border-zinc-700'; // Default > 10
+            let badgeColor = 'text-zinc-400 bg-zinc-800 border border-zinc-700'; 
             
             if(pos === '1') badgeColor = 'text-black bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] border-transparent';
             else if(pos === '2' || pos === '3') badgeColor = 'text-black bg-zinc-300 border-transparent';
@@ -142,29 +141,25 @@
             return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg font-black font-mono ${fontSize} ${badgeColor}">${pos}${suffix}</div>`;
         }
 
-        // Función que pinta el año seleccionado
         window.renderCalendario = function(year) {
-            // Actualizar botones visualmente
             document.getElementById('tab-2026').className = `px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all ${year === '2026' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`;
             document.getElementById('tab-2025').className = `px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all ${year === '2025' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`;
 
             const container = document.getElementById('palmares-container');
             
             if (!window.riderCalendarioGlobal || !window.riderCalendarioGlobal[year] || window.riderCalendarioGlobal[year].length === 0) {
-                container.className = "min-h-[150px] flex flex-col items-center justify-center opacity-70 mt-4";
-                container.innerHTML = `<p class="text-sm font-mono text-zinc-500 text-center italic">No hay resultados registrados en ${year}.</p>`;
+                container.innerHTML = `<div class="h-full w-full flex flex-col items-center justify-center opacity-70"><p class="text-sm font-mono text-zinc-500 text-center italic">No hay resultados en ${year}.</p></div>`;
                 return;
             }
 
             const races = window.riderCalendarioGlobal[year];
-            container.className = "flex flex-col gap-3 pt-4 w-full";
             
             let html = '';
             races.forEach(race => {
                 const hasStages = race.stages && race.stages.length > 0;
                 
                 html += `
-                <div class="accordion-item bg-zinc-950/50 border border-zinc-800 rounded-xl overflow-hidden hover:border-cyan-500/30 transition-colors">
+                <div class="accordion-item shrink-0 bg-zinc-950/50 border border-zinc-800 rounded-xl overflow-hidden hover:border-cyan-500/30 transition-colors">
                     <button onclick="this.parentElement.classList.toggle('active')" class="w-full flex items-center justify-between p-3 focus:outline-none">
                         <div class="flex items-center gap-3">
                             ${getBadgeHTML(race.gc)}
@@ -180,7 +175,6 @@
                                 <div class="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-zinc-900/50 transition-colors">
                                     <span class="text-xs text-zinc-400 font-medium">${stage.stage}</span>
                                     <div class="flex items-center gap-2">
-                                        <span class="text-[9px] font-mono uppercase text-zinc-600 font-bold">POS</span>
                                         ${getBadgeHTML(stage.pos)}
                                     </div>
                                 </div>
@@ -198,32 +192,24 @@
         async function loadRiderProfile() {
             const urlParams = new URLSearchParams(window.location.search);
             const riderNameQuery = urlParams.get('rider');
-            
-            if (!riderNameQuery) {
-                document.getElementById('rider-name').innerText = "Ciclista no encontrado";
-                return;
-            }
+            if (!riderNameQuery) return;
 
             const rawName = decodeURIComponent(riderNameQuery);
             const normalizedRawName = normalizeName(rawName);
-            
             document.getElementById('rider-name').innerText = rawName;
-            
-            const imgUrl = `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${getSlug(rawName)}.png`;
-            document.getElementById('rider-image').src = imgUrl;
+            document.getElementById('rider-image').src = `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${getSlug(rawName)}.png`;
 
             try {
                 const response = await fetch('/api/home');
                 const data = await response.json();
 
-                let riderData = null;
-                let nat = null; let spec = null; let age = null; let jerseyUrl = null;
+                let riderData = null; let nat = null; let spec = null; let age = null; let jerseyUrl = null;
 
                 const ranking = data.ranking.sort((a,b) => b.points - a.points);
                 const riderRankIndex = ranking.findIndex(r => {
-                    const normRiderDB = normalizeName(r.name);
-                    const partsRaw = normalizedRawName.split(' ');
-                    return normRiderDB === normalizedRawName || partsRaw.every(word => normRiderDB.includes(word));
+                    const norm = normalizeName(r.name);
+                    const parts = normalizedRawName.split(' ');
+                    return norm === normalizedRawName || parts.every(w => norm.includes(w));
                 });
                 
                 if (riderRankIndex !== -1) {
@@ -232,31 +218,20 @@
                     document.getElementById('rider-rank').innerText = `#${riderRankIndex + 1}`;
                     document.getElementById('rider-team').innerText = riderData.team;
                     
-                    // Extraer y procesar calendario
                     if (riderData.palmares) {
                         try {
                             const calObj = typeof riderData.palmares === 'string' ? JSON.parse(riderData.palmares) : riderData.palmares;
-                            // Si es la versión nueva del bot, guardamos en global y pintamos 2026
                             if (calObj && (calObj['2026'] || calObj['2025'])) {
                                 window.riderCalendarioGlobal = calObj;
                                 window.renderCalendario('2026');
-                            } else {
-                                // Fallback por si la DB sigue con el formato antiguo
-                                document.getElementById('palmares-container').innerHTML = `<p class="text-sm font-mono text-zinc-500 text-center italic px-4">Actualizando arquitectura del calendario. Reinicia el bot del servidor.</p>`;
                             }
-                        } catch(e) { console.error("Error parseando calendario", e); }
-                    } else {
-                        document.getElementById('palmares-container').innerHTML = `
-                            <i class="fas fa-satellite-dish text-2xl text-cyan-500 mb-3 animate-ping"></i>
-                            <p class="text-xs font-mono text-zinc-400 text-center px-4">El servidor está descargando el calendario completo. Vuelve pronto.</p>
-                        `;
+                        } catch(e) {}
                     }
                 } else {
                     document.getElementById('rider-points').innerText = "0";
                     document.getElementById('rider-rank').innerText = "--";
-                    const teamFromTrending = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
-                    document.getElementById('rider-team').innerText = teamFromTrending ? teamFromTrending.subtitle : "Pro Rider";
-                    document.getElementById('palmares-container').innerHTML = `<p class="text-xs font-mono text-zinc-500">Corredor sin historial registrado actualmente.</p>`;
+                    const td = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
+                    document.getElementById('rider-team').innerText = td ? td.subtitle : "Pro Rider";
                 }
 
                 if (data.teams) {
@@ -273,11 +248,10 @@
                     }
                 }
 
-                let natAgeText = '';
-                if (nat) natAgeText += nat;
+                let natAgeText = nat || '';
                 if (age) natAgeText += ` <span class="text-zinc-500 text-xs font-mono ml-2 border border-zinc-700 bg-zinc-900/50 px-1.5 py-0.5 rounded">${age} años</span>`;
-                document.getElementById('rider-nat').innerHTML = natAgeText || 'N/D';
-                document.getElementById('rider-spec').innerText = spec || 'N/D';
+                document.getElementById('rider-nat').innerHTML = natAgeText || '--';
+                document.getElementById('rider-spec').innerText = spec || '--';
 
                 if (jerseyUrl) {
                     const jC = document.getElementById('rider-jersey-container');
@@ -285,44 +259,8 @@
                     document.getElementById('rider-jersey').src = jerseyUrl;
                 }
 
-                const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
-                if (trendData) {
-                    const val = trendData.value ? trendData.value.toLowerCase() : '';
-                    const isNegative = val.includes('-') || val.includes('baja') || val.includes('down') || val.includes('lesi');
-                    const trendBox = document.getElementById('rider-trend');
-                    trendBox.classList.remove('hidden');
-                    if (isNegative) {
-                        trendBox.className = "px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 bg-red-900/20 border-red-500/30 text-red-400";
-                        trendBox.innerHTML = `<i class="fas fa-arrow-down mr-1"></i> ${trendData.value || 'BAJA / LESIÓN'}`;
-                    } else {
-                        trendBox.className = "px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 bg-emerald-900/20 border-emerald-500/30 text-emerald-400";
-                        trendBox.innerHTML = `<i class="fas fa-fire mr-1"></i> ${trendData.value || 'EN FORMA'}`;
-                    }
-                }
-
-                const relatedNewsContainer = document.getElementById('related-news');
-                const mentionedNews = data.news.filter(n => {
-                    const fullText = (n.title + " " + (n.lead||"") + " " + (n.excerpt||"")).toLowerCase();
-                    const lastName = normalizedRawName.split(' ').pop();
-                    return fullText.includes(lastName); 
-                });
-
-                if (mentionedNews.length > 0) {
-                    relatedNewsContainer.innerHTML = mentionedNews.map(n => `
-                        <a href="noticias.html?article=${n.id}" class="block group border-b border-zinc-800/50 pb-3 last:border-0 last:pb-0">
-                            <span class="text-[8px] font-black text-cyan-600 uppercase tracking-widest block mb-1">${n.tag || 'News'} • ${n.date || ''}</span>
-                            <h4 class="text-xs font-bold text-zinc-300 group-hover:text-white transition-colors leading-snug">${n.title}</h4>
-                        </a>
-                    `).join('');
-                } else {
-                    relatedNewsContainer.innerHTML = `<p class="text-xs text-zinc-600 italic">No hay noticias recientes sobre este corredor en el archivo.</p>`;
-                }
-
-            } catch (error) {
-                console.error("Error cargando perfil:", error);
-            }
+            } catch (error) {}
         }
-
         document.addEventListener('DOMContentLoaded', loadRiderProfile);
     </script>
 </body>
