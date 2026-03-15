@@ -11,12 +11,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Barras de scroll personalizadas */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
         
-        /* FONDO CLAVADO AL DE LA PORTADA (Puntos separados y más definidos) */
         .bg-grid-global { 
             background-color: #050505;
             background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px); 
@@ -24,13 +22,11 @@
             background-position: 0 0;
         }
         
-        /* Fondo para las cajas interiores (Rejilla cyan muy suave) */
         .bg-grid-pattern { 
             background-image: radial-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px); 
             background-size: 20px 20px; 
         }
         
-        /* Acordeones para el calendario */
         .accordion-content { transition: max-height 0.3s ease-in-out, padding 0.3s ease; max-height: 0; overflow: hidden; }
         .accordion-item.active .accordion-content { max-height: 1000px; padding-top: 0.5rem; padding-bottom: 0.5rem; }
         .accordion-item.active .accordion-icon { transform: rotate(180deg); }
@@ -131,9 +127,29 @@
     <script>
         window.riderCalendarioGlobal = null;
 
+        // NORMALIZACIÓN BÁSICA DE TEXTOS
         function normalizeName(name) {
             if (!name) return '';
             return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        }
+
+        // NUEVO: SISTEMA DE MATCHING INTELIGENTE CRUZADO (A prueba de balas)
+        function isSameRider(name1, name2) {
+            if (!name1 || !name2) return false;
+            const n1 = normalizeName(name1);
+            const n2 = normalizeName(name2);
+            if (n1 === n2) return true; // Coincidencia exacta
+            
+            // Si el nombre viene desordenado, cruzamos las palabras clave (>2 letras para ignorar 'de', 'la')
+            const p1 = n1.split(' ').filter(w => w.length > 2);
+            const p2 = n2.split(' ').filter(w => w.length > 2);
+            
+            // Si todas las palabras importantes del Nombre 1 están en el Nombre 2, es él
+            if (p1.length > 0 && p1.every(w => n2.includes(w))) return true;
+            // O viceversa
+            if (p2.length > 0 && p2.every(w => n1.includes(w))) return true;
+            
+            return false;
         }
 
         function getSlug(name) {
@@ -224,21 +240,17 @@
                 let riderData = null; let nat = null; let spec = null; let age = null; let jerseyUrl = null;
 
                 const ranking = data.ranking.sort((a,b) => b.points - a.points);
-                const riderRankIndex = ranking.findIndex(r => {
-                    const norm = normalizeName(r.name);
-                    const parts = normalizedRawName.split(' ');
-                    return norm === normalizedRawName || parts.every(w => norm.includes(w));
-                });
+                
+                // NUEVO: Buscamos en el ranking con el sistema inteligente cruzado
+                const riderRankIndex = ranking.findIndex(r => isSameRider(r.name, rawName));
                 
                 if (riderRankIndex !== -1) {
                     riderData = ranking[riderRankIndex];
                     document.getElementById('rider-points').innerText = riderData.points;
                     
-                    // --- AQUÍ ESTÁ LA LECTURA DEL RANK MANUAL ---
                     const dbRank = riderData.rank || riderData.ranking || riderData.posicion || riderData.pos;
                     const finalRank = dbRank ? dbRank : (riderRankIndex + 1);
                     document.getElementById('rider-rank').innerText = `#${finalRank}`;
-                    // --------------------------------------------
 
                     document.getElementById('rider-team').innerText = riderData.team;
                     
@@ -302,16 +314,18 @@
                 } else {
                     document.getElementById('rider-points').innerText = "0";
                     document.getElementById('rider-rank').innerText = "--";
-                    const td = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
+                    
+                    const td = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && isSameRider(t.title, rawName));
                     document.getElementById('rider-team').innerText = td ? td.subtitle : "Pro Rider";
                 }
 
+                // NUEVO: Buscamos en el Array de Equipos con el sistema inteligente cruzado
                 if (data.teams) {
                     for (const team of data.teams) {
                         let rList = [];
                         try { rList = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; } catch(e){}
                         if (Array.isArray(rList)) {
-                            const r = rList.find(x => normalizeName(x.name) === normalizedRawName || normalizeName(x.name).includes(normalizedRawName.split(' ').pop()));
+                            const r = rList.find(x => isSameRider(x.name, rawName));
                             if (r) {
                                 nat = r.country; age = r.age; spec = r.type;
                                 if(!riderData) document.getElementById('rider-team').innerText = team.name;
@@ -333,7 +347,8 @@
                     document.getElementById('rider-jersey').src = jerseyUrl;
                 }
 
-                const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
+                // NUEVO: Buscamos en Trending con el sistema inteligente cruzado
+                const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && isSameRider(t.title, rawName));
                 if (trendData) {
                     const val = trendData.value ? trendData.value.toLowerCase() : '';
                     const isNegative = val.includes('-') || val.includes('baja') || val.includes('down') || val.includes('lesi');
@@ -358,11 +373,18 @@
                 const allNews = await newsRes.json();
 
                 if (allNews && allNews.length > 0) {
-                    const lastName = normalizedRawName.split(' ').pop().toLowerCase();
+                    
+                    // Para buscar en el texto de las noticias, intentamos aislar el apellido más sólido
+                    const nameParts = normalizedRawName.split(' ');
+                    let searchKey = nameParts[nameParts.length - 1];
+                    // Si el apellido es "de", "van", etc., buscamos la palabra anterior para ser más exactos
+                    if (searchKey.length <= 3 && nameParts.length > 1) {
+                        searchKey = nameParts[nameParts.length - 2]; 
+                    }
                     
                     const mentionedNews = allNews.filter(n => {
                         const fullText = (n.title + " " + (n.lead||"") + " " + (n.content||"")).toLowerCase();
-                        return fullText.includes(lastName); 
+                        return fullText.includes(searchKey); 
                     });
 
                     if (mentionedNews.length > 0) {
