@@ -113,7 +113,7 @@
             equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
             glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
             trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' },
-            ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0 }
+            ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0, palmares: '2026 | 1 | Tour de Francia - General\n2026 | 2 | Milán-San Remo' }
         };
 
         async function fetchGlobalTeams() {
@@ -309,7 +309,7 @@
             }
 
             const keys = Object.keys(data[0]);
-            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight', 'tactical_data'];
+            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight', 'tactical_data', 'palmares']; // Escondemos el palmares en la vista general
             const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
 
             let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl animate-fade-in-up"><table id="dataTable" class="w-full text-left text-sm text-slate-300 whitespace-nowrap">
@@ -545,18 +545,20 @@
                     continue;
                 }
 
-                // RESTO DEL FORMULARIO NORMAL
+                // AQUI ESTÁ LA MAGIA: HEMOS AÑADIDO 'palmares' A LA LISTA DE TEXTAREAS
                 let input;
                 let isJsonText = (typeof value === 'string' && (value.trim().startsWith('{') || value.trim().startsWith('[')));
 
-                if (['content', 'riders', 'details', 'definition', 'def', 'insight', 'tactical', 'tactical_data'].includes(key) || typeof value === 'object' || isJsonText) {
+                if (['content', 'riders', 'details', 'definition', 'def', 'insight', 'tactical', 'tactical_data', 'palmares'].includes(key) || typeof value === 'object' || isJsonText) {
                     input = document.createElement('textarea');
+                    // Le damos 8 filas por defecto al palmarés (y 15 a otros contenidos largos)
                     input.rows = key === 'insight' ? 3 : (['details', 'riders', 'content', 'tactical', 'tactical_data'].includes(key) ? 15 : 8); 
                     input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm leading-relaxed";
                     
                     if (typeof value === 'object' && value !== null) {
                         input.value = JSON.stringify(value, null, 4);
                     } else if (typeof value === 'string') {
+                        // Intentamos formatear JSON, si falla (como nuestro palmarés en texto), lo dejamos tal cual
                         try {
                             const parsed = JSON.parse(value);
                             input.value = JSON.stringify(parsed, null, 4);
