@@ -10,29 +10,29 @@ function normalizeName(name) {
     return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
-// CABECERAS DE CAMUFLAJE EXTREMO (Para evitar el Error 403)
-const reqHeaders = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-    'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Sec-Ch-Ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
-    'Sec-Ch-Ua-Mobile': '?0',
-    'Sec-Ch-Ua-Platform': '"macOS"',
-    'Sec-Fetch-Dest': 'document',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'none',
-    'Sec-Fetch-User': '?1',
-    'Upgrade-Insecure-Requests': '1'
-};
+// NUEVO MOTOR DE NAVEGACIÓN: Enmascara la IP de Railway usando un Proxy gratuito
+async function smartFetch(targetUrl) {
+    try {
+        // Usamos AllOrigins para saltarnos el bloqueo 403 de Cloudflare/FirstCycling
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+        const { data } = await axios.get(proxyUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0' },
+            timeout: 20000 // Le damos más tiempo porque tiene que dar un salto extra
+        });
+        return data;
+    } catch (error) {
+        throw new Error(`Proxy bloqueado o timeout en: ${targetUrl}`);
+    }
+}
 
 async function searchRiderProfile(riderName) {
     try {
-        console.log(`   ├─ 🔎 Buscando a: ${riderName}`);
-        const { data } = await axios.get(`https://firstcycling.com/rider.php?q=${encodeURIComponent(riderName)}`, { headers: reqHeaders, timeout: 12000 });
-        const $ = cheerio.load(data);
+        console.log(`   ├─ 🔎 Buscando a: ${riderName} (Vía Proxy)`);
+        const html = await smartFetch(`https://firstcycling.com/rider.php?q=${encodeURIComponent(riderName)}`);
+        const $ = cheerio.load(html);
         return $('table.ws_tb tbody tr').first().find('a[href*="rider.php"]').attr('href') || null;
     } catch (e) { 
-        console.log(`   ├─ ⚠️ Búsqueda bloqueada para ${riderName}`);
+        console.log(`   ├─ ⚠️ Búsqueda fallida para ${riderName}`);
         return null; 
     }
 }
@@ -40,9 +40,9 @@ async function searchRiderProfile(riderName) {
 async function getYearResults(baseUrl, riderUrl, year) {
     try {
         const finalUrl = `${baseUrl}${riderUrl}${riderUrl.includes('?') ? '&' : '?'}y=${year}`;
-        const { data } = await axios.get(finalUrl, { headers: reqHeaders, timeout: 15000 });
+        const html = await smartFetch(finalUrl);
         
-        const $ = cheerio.load(data);
+        const $ = cheerio.load(html);
         const yearMap = new Map();
         let currentMainRace = `Temporada ${year}`;
 
@@ -91,7 +91,7 @@ async function fetchRiderResults(riderUrl) {
     console.log(`   └─ 🕵️‍♂️ Extrayendo: ${riderUrl}`);
     
     const data2026 = await getYearResults(baseUrl, riderUrl, 2026);
-    await delay(2000); 
+    await delay(1000); 
     const data2025 = await getYearResults(baseUrl, riderUrl, 2025);
 
     const calendarioFull = { "2026": data2026, "2025": data2025 };
@@ -101,20 +101,19 @@ async function fetchRiderResults(riderUrl) {
 }
 
 async function updateRanking() {
-    console.log("\n🚀 [VELO BOT] INICIANDO ESCÁNER ANTI-BLOQUEO V5");
+    console.log("\n🚀 [VELO BOT] INICIANDO ESCÁNER VÍA TÚNEL PROXY");
     try {
         const [trendingDB] = await db.query("SELECT title FROM trending WHERE tipo = 'ciclista'");
         const trendingNames = trendingDB.map(r => r.title);
         const targetRiders = [];
 
-        // 1. INTENTAR CONSEGUIR EL RANKING GLOBAL
         try {
-            console.log("📡 Conectando con FirstCycling Ranking...");
-            const { data } = await axios.get('https://firstcycling.com/ranking.php', { headers: reqHeaders, timeout: 15000 });
-            const $ = cheerio.load(data);
+            console.log("📡 Conectando con FirstCycling Ranking (Proxy)...");
+            const html = await smartFetch('https://firstcycling.com/ranking.php');
+            const $ = cheerio.load(html);
             
             $('table tbody tr').each((index, element) => {
-                if (targetRiders.length >= 20) return false; // Límite bajado a 20 para ser menos sospechosos
+                if (targetRiders.length >= 20) return false; 
                 const riderLink = $(element).find('a[href*="rider.php"]');
                 if (riderLink.length > 0) {
                     let name = riderLink.text().trim();
@@ -133,43 +132,38 @@ async function updateRanking() {
             });
             console.log(`✅ Ranking obtenido: ${targetRiders.length} ciclistas.`);
         } catch (e) {
-            console.log("⚠️ ALERTA 403: Firewall bloqueó el ranking general. Activando Modo Emergencia (Solo ciclistas manuales).");
+            console.log("⚠️ Proxy falló en el ranking general. Activando Modo Emergencia (Solo ciclistas manuales).");
         }
 
-        // 2. AÑADIR CICLISTAS MANUALES (ESTADO DE FORMA)
         for (let tName of trendingNames) {
             if (!targetRiders.find(r => normalizeName(r.name) === normalizeName(tName))) {
                 const searchUrl = await searchRiderProfile(tName);
                 if (searchUrl) {
                     targetRiders.push({ name: tName, team: 'Pro Rider', points: 0, profileUrl: searchUrl });
-                    await delay(3000); // Pausa grande en búsquedas
+                    await delay(1500); 
                 }
             }
         }
 
         if (targetRiders.length === 0) {
-            console.log("❌ No hay ciclistas que procesar. Abortando misión para no gastar recursos.");
+            console.log("❌ No hay ciclistas que procesar. Abortando.");
             return;
         }
 
         console.log(`\n🔍 Procesando el calendario de ${targetRiders.length} ciclistas...`);
 
-        // 3. EXTRAER EL CALENDARIO DE CADA UNO
         for (let rider of targetRiders) {
             if (rider.profileUrl) {
                 rider.palmares = await fetchRiderResults(rider.profileUrl);
-                await delay(4000); // PAUSA VITAL DE 4 SEGUNDOS (Casi imposible de detectar como bot)
+                await delay(2000); 
             }
         }
 
-        // 4. GUARDADO EN BASE DE DATOS
-        if (targetRiders.length > 0) {
-            await db.query("DELETE FROM ranking"); 
-            for (const rider of targetRiders) {
-                await db.query("INSERT INTO ranking (name, team, points, palmares) VALUES (?, ?, ?, ?)", [rider.name, rider.team, rider.points, rider.palmares]);
-            }
-            console.log("\n✅ [VELO BOT] BASE DE DATOS ACTUALIZADA CON ÉXITO.");
+        await db.query("DELETE FROM ranking"); 
+        for (const rider of targetRiders) {
+            await db.query("INSERT INTO ranking (name, team, points, palmares) VALUES (?, ?, ?, ?)", [rider.name, rider.team, rider.points, rider.palmares]);
         }
+        console.log("\n✅ [VELO BOT] BASE DE DATOS ACTUALIZADA CON ÉXITO A TRAVÉS DEL PROXY.");
         
     } catch (error) { console.error("\n❌ Error Crítico Global:", error.message); }
 }
