@@ -8,20 +8,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* Barras de scroll personalizadas */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
-        .bg-grid-pattern { background-image: radial-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px); background-size: 20px 20px; }
         
-        /* Estilos vitales para el acordeón (desplegable) */
+        /* Fondos de Rejilla (Grids) */
+        .bg-grid-global { background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px); background-size: 24px 24px; }
+        .bg-grid-pattern { background-image: radial-gradient(rgba(34, 211, 238, 0.08) 1px, transparent 1px); background-size: 20px 20px; }
+        
+        /* Acordeones para el calendario */
         .accordion-content { transition: max-height 0.3s ease-in-out, padding 0.3s ease; max-height: 0; overflow: hidden; }
         .accordion-item.active .accordion-content { max-height: 1000px; padding-top: 0.5rem; padding-bottom: 0.5rem; }
         .accordion-item.active .accordion-icon { transform: rotate(180deg); }
     </style>
 </head>
-<body class="bg-[#050505] antialiased text-slate-300 pb-20 selection:bg-cyan-500/30 selection:text-cyan-200">
+<body class="bg-[#050505] bg-grid-global antialiased text-slate-300 pb-20 selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen">
 
-    <nav class="fixed top-0 w-full bg-black/80 backdrop-blur-md border-b border-zinc-800 z-50 px-4 py-4">
+    <nav class="fixed top-0 w-full bg-[#050505]/90 backdrop-blur-md border-b border-zinc-800 z-50 px-4 py-4">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
             <a href="index.html" class="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
                 <i class="fas fa-arrow-left"></i> Volver al Lab
@@ -31,7 +35,7 @@
     </nav>
 
     <main class="max-w-5xl mx-auto px-4 pt-28 pb-12">
-        <div class="relative bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 md:p-10 overflow-hidden shadow-2xl mb-8 flex flex-col md:flex-row items-center md:items-start gap-8">
+        <div class="relative bg-zinc-900/60 backdrop-blur-sm border border-zinc-800 rounded-3xl p-6 md:p-10 overflow-hidden shadow-2xl mb-8 flex flex-col md:flex-row items-center md:items-start gap-8">
             <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
             
             <div class="w-32 h-32 md:w-48 md:h-48 shrink-0 rounded-full overflow-hidden border-2 border-zinc-700 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-10 bg-zinc-800 flex items-center justify-center">
@@ -49,13 +53,13 @@
                             <p id="rider-team" class="text-base md:text-lg font-mono text-cyan-400 uppercase tracking-widest leading-none pt-1">Buscando equipo...</p>
                         </div>
                     </div>
-                    <div id="rider-trend" class="hidden px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 mt-4 md:mt-0"></div>
+                    <div id="rider-trend" class="hidden px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 mt-4 md:mt-0 shadow-lg"></div>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-8 border-t border-zinc-800/60 pt-6">
                     <div>
                         <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Puntos UCI</p>
-                        <p id="rider-points" class="text-2xl md:text-3xl font-black text-amber-500 leading-none">--</p>
+                        <p id="rider-points" class="text-2xl md:text-3xl font-black text-amber-500 leading-none drop-shadow-md">--</p>
                     </div>
                     <div class="md:border-l border-zinc-800 md:pl-6">
                         <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Ranking</p>
@@ -75,7 +79,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2">
-                <div class="bg-gradient-to-br from-zinc-900/80 to-[#050505] border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern h-[600px] flex flex-col">
+                <div class="bg-gradient-to-br from-zinc-900/90 to-[#050505] backdrop-blur-md border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern h-[600px] flex flex-col shadow-xl">
                     
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 border-b border-zinc-800/60 pb-4 shrink-0">
                         <div class="flex items-center gap-3">
@@ -83,25 +87,27 @@
                             <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Registro de <span class="text-cyan-400">Resultados</span></h2>
                         </div>
                         
-                        <div class="flex bg-zinc-950 border border-zinc-800 rounded-lg p-1" id="year-tabs">
-                            </div>
+                        <div class="flex bg-zinc-950 border border-zinc-800 rounded-lg p-1 shadow-inner" id="year-tabs"></div>
                     </div>
                     
                     <div id="palmares-container" class="flex-1 overflow-y-auto custom-scrollbar pr-3 pb-4 w-full flex flex-col gap-3">
                         <div class="flex flex-col items-center justify-center h-full w-full opacity-70">
-                            <p class="text-sm font-mono text-zinc-500 text-center italic">No hay resultados registrados.</p>
+                            <i class="fas fa-spinner fa-spin text-2xl text-cyan-500 mb-3"></i>
+                            <p class="text-sm font-mono text-zinc-500 text-center italic">Cargando servidor central...</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="lg:col-span-1">
-                <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 h-[600px] flex flex-col">
-                    <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3 shrink-0">
-                        <i class="fas fa-newspaper text-cyan-400"></i>
-                        <h2 class="text-base font-black text-white italic uppercase tracking-tight">Noticias <span class="text-cyan-400">Menciones</span></h2>
+                <div class="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-2xl p-6 h-[600px] flex flex-col shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3 shrink-0 relative z-10">
+                        <i class="fas fa-newspaper text-emerald-400"></i>
+                        <h2 class="text-base font-black text-white italic uppercase tracking-tight">Menciones en <span class="text-emerald-400">Noticias</span></h2>
                     </div>
-                    <div id="related-news" class="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-1">
+                    
+                    <div id="related-news" class="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-1 relative z-10">
                         <p class="text-xs text-zinc-500 animate-pulse font-mono">Buscando en el archivo...</p>
                     </div>
                 </div>
@@ -110,8 +116,10 @@
     </main>
 
     <script>
+        // VARIABLE GLOBAL DEL CALENDARIO
         window.riderCalendarioGlobal = null;
 
+        // FUNCIONES DE UTILIDAD
         function normalizeName(name) {
             if (!name) return '';
             return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -122,14 +130,15 @@
             return slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
         }
 
+        // SISTEMA DE COLORES PARA LOS PUESTOS
         function getBadgeHTML(pos) {
-            if (!pos) return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-zinc-600 bg-zinc-900 border border-zinc-800"><i class="fas fa-minus text-[10px]"></i></div>`;
+            if (!pos) return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-zinc-600 bg-zinc-900 border border-zinc-800 shadow-inner"><i class="fas fa-minus text-[10px]"></i></div>`;
             
-            let badgeColor = 'text-zinc-400 bg-zinc-800 border border-zinc-700'; 
+            let badgeColor = 'text-zinc-400 bg-zinc-800 border border-zinc-700 shadow-inner'; 
             let posClean = pos.trim().toUpperCase();
             
             if(posClean === '1') badgeColor = 'text-black bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] border-transparent';
-            else if(posClean === '2' || posClean === '3') badgeColor = 'text-black bg-zinc-300 border-transparent';
+            else if(posClean === '2' || posClean === '3') badgeColor = 'text-black bg-zinc-300 shadow-md border-transparent';
             else if(parseInt(posClean) && parseInt(posClean) <= 10) badgeColor = 'text-cyan-400 bg-cyan-950/50 border border-cyan-500/30';
             else if(['DNF', 'DNS', 'OTL', 'DSQ'].includes(posClean)) badgeColor = 'text-red-400 bg-red-950/50 border border-red-500/30';
 
@@ -138,11 +147,11 @@
             return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg font-black font-mono ${fontSize} ${badgeColor}">${posClean}${suffix}</div>`;
         }
 
-        // PINTA EL CALENDARIO CON DESPLEGABLES
+        // RENDERIZA LAS CARRERAS SEGÚN EL AÑO SELECCIONADO
         window.renderCalendario = function(year) {
             const tabs = document.querySelectorAll('.year-tab-btn');
             tabs.forEach(btn => {
-                if(btn.dataset.year === year) btn.className = 'year-tab-btn px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all bg-cyan-500/20 text-cyan-400';
+                if(btn.dataset.year === year) btn.className = 'year-tab-btn px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all bg-cyan-500/20 text-cyan-400 shadow-sm';
                 else btn.className = 'year-tab-btn px-4 py-1.5 text-xs font-bold font-mono rounded-md transition-all text-zinc-500 hover:text-zinc-300';
             });
 
@@ -150,7 +159,7 @@
             const races = window.riderCalendarioGlobal[year];
             
             if (!races || races.length === 0) {
-                container.innerHTML = `<p class="text-sm font-mono text-zinc-500 text-center italic mt-10">Sin datos en ${year}</p>`;
+                container.innerHTML = `<p class="text-sm font-mono text-zinc-500 text-center italic mt-10">Sin datos registrados en ${year}</p>`;
                 return;
             }
 
@@ -159,17 +168,17 @@
                 const hasStages = race.stages && race.stages.length > 0;
                 
                 html += `
-                <div class="accordion-item shrink-0 bg-zinc-950/50 border border-zinc-800 rounded-xl overflow-hidden hover:border-cyan-500/30 transition-colors">
+                <div class="accordion-item shrink-0 bg-zinc-950/50 border border-zinc-800/80 rounded-xl overflow-hidden hover:border-cyan-500/30 transition-colors shadow-sm">
                     <button onclick="this.parentElement.classList.toggle('active')" class="w-full flex items-center justify-between p-3 focus:outline-none">
                         <div class="flex items-center gap-3">
                             ${getBadgeHTML(race.gc)}
-                            <span class="text-sm md:text-base font-bold text-zinc-200 tracking-tight text-left">${race.raceName}</span>
+                            <span class="text-sm md:text-base font-bold text-zinc-200 tracking-tight text-left leading-snug">${race.raceName}</span>
                         </div>
-                        ${hasStages ? `<i class="fas fa-chevron-down text-zinc-600 accordion-icon transition-transform"></i>` : `<span class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest bg-zinc-900 px-2 py-1 rounded border border-zinc-800">1D</span>`}
+                        ${hasStages ? `<i class="fas fa-chevron-down text-zinc-500 accordion-icon transition-transform bg-zinc-900/50 w-6 h-6 rounded-full flex items-center justify-center border border-zinc-800"></i>` : `<span class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest bg-zinc-900 px-2 py-1 rounded border border-zinc-800">1D</span>`}
                     </button>
                     
                     ${hasStages ? `
-                    <div class="accordion-content bg-black/40 border-t border-zinc-800/50 px-3">
+                    <div class="accordion-content bg-black/60 border-t border-zinc-800/50 px-3">
                         <div class="flex flex-col gap-1.5 pb-2">
                             ${race.stages.map(stage => `
                                 <div class="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-zinc-900/50 transition-colors">
@@ -189,6 +198,7 @@
             container.innerHTML = html;
         };
 
+        // CARGA EL PERFIL PRINCIPAL AL ABRIR LA PÁGINA
         async function loadRiderProfile() {
             const urlParams = new URLSearchParams(window.location.search);
             const riderNameQuery = urlParams.get('rider');
@@ -200,6 +210,7 @@
             document.getElementById('rider-image').src = `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${getSlug(rawName)}.png`;
 
             try {
+                // 1. CARGAMOS DATOS DEL RANKING Y EQUIPOS
                 const response = await fetch('/api/home');
                 const data = await response.json();
 
@@ -218,11 +229,11 @@
                     document.getElementById('rider-rank').innerText = `#${riderRankIndex + 1}`;
                     document.getElementById('rider-team').innerText = riderData.team;
                     
-                    // AQUI OCURRE LA MAGIA: LEEMOS TU TEXTO Y LO AGRUPAMOS EN ACORDEONES
+                    // PROCESAMOS EL PALMARÉS MANUAL
                     if (riderData.palmares && typeof riderData.palmares === 'string' && riderData.palmares.includes('|')) {
                         try {
                             const lines = riderData.palmares.split('\n').filter(l => l.trim().length > 0);
-                            const yearMap = {}; // Organizaremos por: yearMap[AÑO][CARRERA]
+                            const yearMap = {}; 
                             
                             lines.forEach(line => {
                                 const parts = line.split('|').map(p => p.trim());
@@ -233,34 +244,31 @@
                                     
                                     if(!yearMap[y]) yearMap[y] = new Map();
 
-                                    // Usamos el " - " para separar Carrera principal de la Etapa/General
                                     let mainRace = rawRace;
                                     let subInfo = null;
                                     
+                                    // Separar carrera principal de la etapa usando el guion con espacios
                                     const splitIndex = rawRace.indexOf(' - ');
                                     if (splitIndex > -1) {
                                         mainRace = rawRace.substring(0, splitIndex).trim();
                                         subInfo = rawRace.substring(splitIndex + 3).trim();
                                     }
 
-                                    // Creamos la carrera si no existe ese año
                                     if (!yearMap[y].has(mainRace)) {
                                         yearMap[y].set(mainRace, { raceName: mainRace, gc: null, stages: [] });
                                     }
                                     
                                     const entry = yearMap[y].get(mainRace);
 
-                                    // Si no hay " - " (es de 1 día) o si es la General, le asignamos el puesto a la caja
+                                    // Determinar si es un resultado general o de etapa
                                     if (!subInfo || subInfo.toLowerCase() === 'general' || subInfo.toLowerCase() === 'gc') {
                                         entry.gc = p;
                                     } else {
-                                        // Si es etapa, va al desplegable
                                         entry.stages.push({ stage: subInfo, pos: p });
                                     }
                                 }
                             });
 
-                            // Convertimos el Map en un Array para que lo pinte renderCalendario()
                             const finalYearMap = {};
                             for (const [y, map] of Object.entries(yearMap)) {
                                 finalYearMap[y] = Array.from(map.values());
@@ -288,10 +296,13 @@
                     document.getElementById('rider-team').innerText = td ? td.subtitle : "Pro Rider";
                 }
 
+                // CRUZAR DATOS CON LA TABLA DE EQUIPOS
                 if (data.teams) {
                     for (const team of data.teams) {
-                        if (team.riders && Array.isArray(team.riders)) {
-                            const r = team.riders.find(x => normalizeName(x.name) === normalizedRawName || normalizeName(x.name).includes(normalizedRawName.split(' ').pop()));
+                        let rList = [];
+                        try { rList = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; } catch(e){}
+                        if (Array.isArray(rList)) {
+                            const r = rList.find(x => normalizeName(x.name) === normalizedRawName || normalizeName(x.name).includes(normalizedRawName.split(' ').pop()));
                             if (r) {
                                 nat = r.country; age = r.age; spec = r.type;
                                 if(!riderData) document.getElementById('rider-team').innerText = team.name;
@@ -302,6 +313,7 @@
                     }
                 }
 
+                // ACTUALIZAR INTERFAZ VISUAL
                 let natAgeText = nat || '';
                 if (age) natAgeText += ` <span class="text-zinc-500 text-xs font-mono ml-2 border border-zinc-700 bg-zinc-900/50 px-1.5 py-0.5 rounded">${age} años</span>`;
                 document.getElementById('rider-nat').innerHTML = natAgeText || '--';
@@ -313,8 +325,61 @@
                     document.getElementById('rider-jersey').src = jerseyUrl;
                 }
 
-            } catch (error) {}
+                // REVISAR ESTADO DE FORMA (TRENDING)
+                const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && normalizeName(t.title) === normalizedRawName);
+                if (trendData) {
+                    const val = trendData.value ? trendData.value.toLowerCase() : '';
+                    const isNegative = val.includes('-') || val.includes('baja') || val.includes('down') || val.includes('lesi');
+                    const trendBox = document.getElementById('rider-trend');
+                    trendBox.classList.remove('hidden');
+                    if (isNegative) {
+                        trendBox.className = "px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 bg-red-900/20 border-red-500/30 text-red-400 shadow-lg";
+                        trendBox.innerHTML = `<i class="fas fa-arrow-down mr-1"></i> ${trendData.value || 'BAJA / LESIÓN'}`;
+                    } else {
+                        trendBox.className = "px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 bg-emerald-900/20 border-emerald-500/30 text-emerald-400 shadow-lg";
+                        trendBox.innerHTML = `<i class="fas fa-fire mr-1"></i> ${trendData.value || 'EN FORMA'}`;
+                    }
+                }
+
+            } catch (error) {
+                console.error("Error cargando el perfil principal:", error);
+            }
+
+            // 2. EXTRACCIÓN DIRECTA DE NOTICIAS (Solución Anti-Bloqueos)
+            try {
+                const relatedNewsContainer = document.getElementById('related-news');
+                const newsRes = await fetch('/api/news');
+                const allNews = await newsRes.json();
+
+                if (allNews && allNews.length > 0) {
+                    // Extraemos el apellido de la URL para buscar menciones
+                    const lastName = normalizedRawName.split(' ').pop().toLowerCase();
+                    
+                    const mentionedNews = allNews.filter(n => {
+                        const fullText = (n.title + " " + (n.lead||"") + " " + (n.content||"")).toLowerCase();
+                        return fullText.includes(lastName); 
+                    });
+
+                    if (mentionedNews.length > 0) {
+                        relatedNewsContainer.innerHTML = mentionedNews.slice(0, 5).map(n => `
+                            <a href="noticias.html?article=${n.id}" class="block group border-b border-zinc-800/50 pb-4 last:border-0 last:pb-0">
+                                <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-1.5">${n.tag || 'News'} • ${n.date || ''}</span>
+                                <h4 class="text-sm font-bold text-zinc-300 group-hover:text-white transition-colors leading-snug">${n.title}</h4>
+                            </a>
+                        `).join('');
+                    } else {
+                        relatedNewsContainer.innerHTML = `<p class="text-xs text-zinc-500 font-mono mt-4">No hay menciones recientes en el archivo.</p>`;
+                    }
+                } else {
+                    relatedNewsContainer.innerHTML = `<p class="text-xs text-zinc-500 font-mono mt-4">La base de datos de noticias está vacía.</p>`;
+                }
+            } catch (newsError) {
+                console.error("Error extrayendo noticias:", newsError);
+                document.getElementById('related-news').innerHTML = `<p class="text-xs text-red-500 font-mono mt-4">Error conectando con el servidor de noticias.</p>`;
+            }
         }
+
+        // INICIAR AL CARGAR
         document.addEventListener('DOMContentLoaded', loadRiderProfile);
     </script>
 </body>
