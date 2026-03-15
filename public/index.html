@@ -123,7 +123,6 @@
             opacity: 1;
         }
 
-        /* Ajustes específicos para los modales en escritorio y textos largos */
         .truncate-team { max-width: 120px; }
         @media (min-width: 768px) { 
             .truncate-team { max-width: 250px; } 
@@ -195,7 +194,17 @@
                             <span class="text-slate-400">TIPO</span>
                             <span id="rcr-type" class="text-white font-bold">---</span>
                         </div>
-                    </div>
+
+                        <div id="telemetry-profile-container" class="mt-5 border-t border-slate-800/60 pt-5 hidden animate-fade-in-up">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-mountain text-cyan-400 text-[10px]"></i>
+                                <p class="text-[9px] text-slate-500 uppercase tracking-widest font-black">Perfil de la Etapa</p>
+                            </div>
+                            <div class="bg-[#0a0a0a] p-1.5 rounded-xl border border-slate-800/80">
+                                <img id="telemetry-profile-img" src="" alt="Altimetría" class="w-full h-auto rounded-lg cursor-pointer hover:opacity-70 transition-opacity border border-transparent hover:border-cyan-500/50" onclick="openProfileModal(this.src)">
+                            </div>
+                        </div>
+                        </div>
                 </div>
 
                 <div class="col-span-1 lg:col-span-2 bg-gradient-to-br from-amber-950/20 to-[#050505] rounded-2xl border border-amber-500/20 shadow-2xl p-6 relative overflow-hidden">
@@ -458,6 +467,13 @@
         </div>
     </div>
 
+    <div id="profile-modal" class="fixed inset-0 bg-black/95 hidden flex justify-center items-center z-[9999] p-4 backdrop-blur-md cursor-pointer transition-opacity duration-300" onclick="closeProfileModal()">
+        <button class="absolute top-6 right-6 text-white bg-slate-800/80 hover:bg-cyan-500 hover:text-black rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg z-10">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+        <img id="profile-modal-img" src="" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-[0_0_50px_rgba(6,182,212,0.15)] border border-slate-700" alt="Perfil Ampliado">
+    </div>
+
     <div id="timeline-tooltip" class="fixed hidden flex-col gap-1.5 z-[999] pointer-events-none transform -translate-x-1/2 -translate-y-full pb-3 transition-opacity duration-200 opacity-0 drop-shadow-2xl"></div>
     
     <script src="renderers.js?v=1"></script>
@@ -474,6 +490,18 @@
             document.getElementById(id).classList.remove('active');
             document.body.style.overflow = '';
         }
+        
+        // Funciones del Modal del Perfil (Altimetría)
+        function openProfileModal(imgSrc) {
+            document.getElementById('profile-modal-img').src = imgSrc;
+            document.getElementById('profile-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+            document.body.style.overflow = ''; 
+        }
 
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', function(e) {
@@ -484,6 +512,7 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-overlay.active').forEach(modal => closeModal(modal.id));
+                closeProfileModal(); // También cerramos el perfil de la etapa si está abierto
             }
         });
 
@@ -658,6 +687,16 @@
                     document.getElementById('rcr-km').innerText = (currentStage.km || '---') + ' km';
                     document.getElementById('rcr-elevation').innerText = (currentStage.gain || '---') + ' m+';
                     document.getElementById('rcr-type').innerText = currentStage.type || '---';
+                    
+                    // --- NUEVO: Lógica para mostrar la altimetría/perfil de la etapa ---
+                    const profileUrl = currentStage.profile || race.profile;
+                    if (profileUrl && profileUrl.trim() !== "") {
+                        document.getElementById('telemetry-profile-container').classList.remove('hidden');
+                        document.getElementById('telemetry-profile-img').src = profileUrl;
+                    } else {
+                        document.getElementById('telemetry-profile-container').classList.add('hidden');
+                    }
+                    // -------------------------------------------------------------------
                 }
 
                 if (detailsObj.tactical) {
@@ -765,7 +804,6 @@
             let ridersInForm = [];
             let ridersOutForm = [];
             
-            // 1. OBTENER SOLO LOS AÑADIDOS MANUALMENTE
             if (trendRes && trendRes.length > 0) {
                 trendRes.filter(t => t.tipo.toLowerCase() === 'ciclista').forEach(r => {
                     const val = r.value ? r.value.toLowerCase() : '';
@@ -781,13 +819,11 @@
                     else ridersInForm.push(riderObj);
                 });
 
-                // Tópicos (Hashtags) se siguen cargando normal
                 trendRes.filter(t => t.tipo.toLowerCase() === 'topic').forEach(t => {
                     topicsMap.set(t.title, { text: t.title, link: t.subtitle || 'noticias.html', score: 20 });
                 });
             }
 
-            // 2. ESCANEO AUTOMÁTICO SOLO PARA HASHTAGS
             const recentNews = newsRes.slice(0, 5);
             const textToScan = recentNews.map(n => (n.title + " " + (n.lead || n.excerpt || "")).toLowerCase()).join(' ');
 
@@ -807,7 +843,6 @@
                 });
             }
 
-            // Renderizar Hashtags
             const finalTopics = Array.from(topicsMap.values()).sort((a,b) => b.score - a.score).slice(0, 6);
             if(finalTopics.length > 0) {
                 document.getElementById('hot-topics-container').innerHTML = finalTopics.map(t => 
@@ -817,7 +852,6 @@
                 document.getElementById('hot-topics-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic">Analizando temporada...</p>`;
             }
 
-            // 3. RENDERIZADO DE CICLISTAS
             const generateRiderHTML = (r, isModal = false, index = null) => {
                 const imgUrl = getRiderImageUrl(r.name);
                 let avatarSize = isModal ? 'w-12 h-12' : 'w-10 h-10'; 
@@ -861,7 +895,6 @@
                 `;
             };
 
-            // RENDER EN PORTADA: Top 4 En Forma (Sin número)
             const topRidersFront = ridersInForm.slice(0, 4);
             if(topRidersFront.length > 0) {
                 document.getElementById('trending-riders-container').innerHTML = topRidersFront.map(r => generateRiderHTML(r, false)).join('');
@@ -869,7 +902,6 @@
                 document.getElementById('trending-riders-container').innerHTML = `<p class="text-[10px] text-zinc-500 italic px-2">Sin ciclistas destacados.</p>`;
             }
 
-            // RENDER EN EL MODAL (TODOS LOS REGISTRADOS, SIN SLICE)
             const modalInFormContainer = document.getElementById('modal-in-form-list');
             const modalOutFormContainer = document.getElementById('modal-out-form-list');
 
@@ -938,7 +970,6 @@
             
             const sorted = data.sort((a,b) => b.points - a.points);
             
-            // RENDERIZAR EN PORTADA (Top 5)
             const top5 = sorted.slice(0, 5);
             
             const generateRankingRow = (r, i) => {
@@ -964,7 +995,6 @@
 
             container.innerHTML = top5.map((r, i) => generateRankingRow(r, i)).join('');
 
-            // RENDERIZAR EN MODAL (TODOS, sin slice)
             if(modalContainer) {
                 modalContainer.innerHTML = sorted.map((r, i) => generateRankingRow(r, i)).join('');
             }
@@ -1050,7 +1080,6 @@
             });
 
             if (todayRaces.length > 0) {
-                // ACTUALIZACIÓN BANNER INFERIOR Y TEXTO SUPERIOR MULTI-CARRERA
                 const joinedNames = todayRaces.map(r => r.name).join(' <span class="text-zinc-500 font-bold mx-1">+</span> ');
                 const joinedBannerNames = todayRaces.map(r => r.name).join(' <span class="text-red-700/50 mx-1">•</span> ');
 
@@ -1066,7 +1095,6 @@
                     
                     document.getElementById('live-race-banner').classList.remove('hidden'); 
                     document.getElementById('live-race-name').innerHTML = joinedBannerNames;
-                    // Si hay varias, enviamos al calendario general. Si hay 1, enviamos directo.
                     document.getElementById('live-race-link').href = todayRaces.length > 1 ? 'calendario.html' : `calendario.html?race=${encodeURIComponent(todayRaces[0].name)}`;
                 } else {
                     badge.innerText = "HOY"; 
