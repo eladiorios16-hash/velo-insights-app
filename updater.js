@@ -10,31 +10,26 @@ function normalizeName(name) {
     return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
-// NUEVO MOTOR DE NAVEGACIÓN: Enmascara la IP de Railway usando un Proxy gratuito
 async function smartFetch(targetUrl) {
     try {
-        // Usamos AllOrigins para saltarnos el bloqueo 403 de Cloudflare/FirstCycling
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
         const { data } = await axios.get(proxyUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0' },
-            timeout: 20000 // Le damos más tiempo porque tiene que dar un salto extra
+            timeout: 20000 
         });
         return data;
     } catch (error) {
-        throw new Error(`Proxy bloqueado o timeout en: ${targetUrl}`);
+        throw new Error(`Proxy bloqueado o timeout`);
     }
 }
 
 async function searchRiderProfile(riderName) {
     try {
-        console.log(`   ├─ 🔎 Buscando a: ${riderName} (Vía Proxy)`);
+        console.log(`   ├─ 🔎 Buscando a: ${riderName}`);
         const html = await smartFetch(`https://firstcycling.com/rider.php?q=${encodeURIComponent(riderName)}`);
         const $ = cheerio.load(html);
         return $('table.ws_tb tbody tr').first().find('a[href*="rider.php"]').attr('href') || null;
-    } catch (e) { 
-        console.log(`   ├─ ⚠️ Búsqueda fallida para ${riderName}`);
-        return null; 
-    }
+    } catch (e) { return null; }
 }
 
 async function getYearResults(baseUrl, riderUrl, year) {
@@ -48,67 +43,92 @@ async function getYearResults(baseUrl, riderUrl, year) {
 
         $('tr').each((i, el) => {
             const row = $(el);
-            const raceLink = row.find('a[href*="race.php"]').first();
+            const raceLink = row.find('a[href*="race.php"]');
             
             if (raceLink.length > 0) {
-                const raceCell = raceLink.closest('td');
-                let fullText = raceCell.text().trim();
-                
-                fullText = fullText.replace(/\s*\|?\s*\d\.(UWT|Pro|1|2|Ncup|WC|CC|HC|NE)\b/ig, '').trim();
-                const hasFlag = raceCell.find('img').length > 0 || raceCell.find('.icon').length > 0;
-                
-                if (hasFlag && !fullText.includes('|')) {
-                    currentMainRace = fullText;
-                    if (!yearMap.has(currentMainRace)) yearMap.set(currentMainRace, { raceName: currentMainRace, gc: null, stages: [] });
-                }
-
                 let pos = row.find('td').eq(1).text().trim();
                 const isValidPos = pos && pos !== '-' && (/^\d+$/.test(pos) || ['DNF', 'DNS', 'OTL', 'DSQ'].includes(pos.toUpperCase()));
 
                 if (isValidPos) {
-                    if (!yearMap.has(currentMainRace)) yearMap.set(currentMainRace, { raceName: currentMainRace, gc: null, stages: [] });
+                    let fullRaceName = raceLink.closest('td').text().replace(/\s+/g, ' ').trim();
+                    let mainName = fullRaceName;
+                    let subInfo = null;
+
+                    // Separar el nombre de la carrera y el "extra"
+                    if (fullRaceName.includes('|')) {
+                        const parts = fullRaceName.split('|');
+                        mainName = parts[0].trim();
+                        subInfo = parts[1].trim();
+                    }
+
+                    // Comprobar si el "mainName" es solo una palabra suelta como "Overall" o "Points"
+                    let isClassification = /^(overall|general|gc|points|puntos|mountains|montaña|youth|jóvenes|kom)$/i.test(mainName);
+                    
+                    // Si NO es una clasificación suelta, actualizamos la carrera actual
+                    if (!isClassification && mainName !== '') {
+                        currentMainRace = mainName;
+                    }
+
+                    if (!yearMap.has(currentMainRace)) {
+                        yearMap.set(currentMainRace, { raceName: currentMainRace, gc: null, stages: [] });
+                    }
                     const entry = yearMap.get(currentMainRace);
 
-                    if (fullText.toLowerCase().includes('general') || fullText.toLowerCase().includes('gc') || fullText === currentMainRace) {
-                        entry.gc = pos;
+                    if (subInfo) {
+                        // Comprobar si el "extra" es una etapa real o solo basura UCI (como WCRR, 1.UWT)
+                        const isStageOrClass = /(stage|etapa|general|gc|overall|points|puntos|mountain|montaña|youth|jóvenes|prologue|prólogo|kom)/i.test(subInfo);
+                        
+                        if (isStageOrClass) {
+                            if (/(general|gc|overall)/i.test(subInfo)) {
+                                entry.gc = pos; // Es el resultado final
+                            } else {
+                                entry.stages.push({ stage: subInfo, pos: pos }); // Es una etapa
+                            }
+                        } else {
+                            // Como no tiene la palabra "etapa" ni "general", asumimos que es el código UCI de una clásica
+                            entry.gc = pos;
+                        }
                     } else {
-                        let stageName = fullText.includes('|') ? fullText.split('|')[1].trim() : fullText;
-                        entry.stages.push({ stage: stageName, pos: pos });
+                        // Si no hay "extra" (|), comprobamos si era una palabra suelta
+                        if (isClassification) {
+                            if (/(general|gc|overall)/i.test(mainName)) {
+                                entry.gc = pos;
+                            } else {
+                                entry.stages.push({ stage: mainName, pos: pos }); // Puntos, Montaña, etc.
+                            }
+                        } else {
+                            entry.gc = pos; // Es una clásica sin código
+                        }
                     }
                 }
             }
         });
 
+        // Limpiar
         return Array.from(yearMap.values()).filter(r => r.gc || r.stages.length > 0);
-    } catch (e) {
-        console.log(`      ⚠️ Error en ${year}: ${e.message}`);
-        return [];
-    }
+    } catch (e) { return []; }
 }
 
 async function fetchRiderResults(riderUrl) {
     const baseUrl = 'https://firstcycling.com/';
     console.log(`   └─ 🕵️‍♂️ Extrayendo: ${riderUrl}`);
-    
     const data2026 = await getYearResults(baseUrl, riderUrl, 2026);
     await delay(1000); 
     const data2025 = await getYearResults(baseUrl, riderUrl, 2025);
-
-    const calendarioFull = { "2026": data2026, "2025": data2025 };
     const total = data2026.length + data2025.length;
-    console.log(`   └─ 📊 Misión OK: ${total} carreras extraídas.`);
-    return total > 0 ? JSON.stringify(calendarioFull) : null;
+    console.log(`   └─ 📊 OK: ${total} carreras agrupadas limpias.`);
+    return total > 0 ? JSON.stringify({ "2026": data2026, "2025": data2025 }) : null;
 }
 
 async function updateRanking() {
-    console.log("\n🚀 [VELO BOT] INICIANDO ESCÁNER VÍA TÚNEL PROXY");
+    console.log("\n🚀 [VELO BOT] INICIANDO ESCÁNER DE DATOS LIMPIOS");
     try {
         const [trendingDB] = await db.query("SELECT title FROM trending WHERE tipo = 'ciclista'");
         const trendingNames = trendingDB.map(r => r.title);
         const targetRiders = [];
 
         try {
-            console.log("📡 Conectando con FirstCycling Ranking (Proxy)...");
+            console.log("📡 Conectando con FirstCycling...");
             const html = await smartFetch('https://firstcycling.com/ranking.php');
             const $ = cheerio.load(html);
             
@@ -121,7 +141,6 @@ async function updateRanking() {
                     const teamLink = $(element).find('a[href*="team.php"]');
                     const team = teamLink.length > 0 ? teamLink.text().trim() : 'Independiente';
                     const pointsStr = $(element).find('td').last().text().trim().replace(/[\.,\s]/g, '');
-                    
                     if (name.match(/^[A-ZÁÉÍÓÚÑÄËÏÖÜ]+ [A-Z]/)) { 
                         const parts = name.split(' ');
                         const lastName = parts.shift();
@@ -130,10 +149,7 @@ async function updateRanking() {
                     targetRiders.push({ name, team, points: parseInt(pointsStr) || 0, profileUrl });
                 }
             });
-            console.log(`✅ Ranking obtenido: ${targetRiders.length} ciclistas.`);
-        } catch (e) {
-            console.log("⚠️ Proxy falló en el ranking general. Activando Modo Emergencia (Solo ciclistas manuales).");
-        }
+        } catch (e) { console.log("⚠️ Falló ranking general. Modo Emergencia."); }
 
         for (let tName of trendingNames) {
             if (!targetRiders.find(r => normalizeName(r.name) === normalizeName(tName))) {
@@ -145,11 +161,7 @@ async function updateRanking() {
             }
         }
 
-        if (targetRiders.length === 0) {
-            console.log("❌ No hay ciclistas que procesar. Abortando.");
-            return;
-        }
-
+        if (targetRiders.length === 0) return;
         console.log(`\n🔍 Procesando el calendario de ${targetRiders.length} ciclistas...`);
 
         for (let rider of targetRiders) {
@@ -163,7 +175,7 @@ async function updateRanking() {
         for (const rider of targetRiders) {
             await db.query("INSERT INTO ranking (name, team, points, palmares) VALUES (?, ?, ?, ?)", [rider.name, rider.team, rider.points, rider.palmares]);
         }
-        console.log("\n✅ [VELO BOT] BASE DE DATOS ACTUALIZADA CON ÉXITO A TRAVÉS DEL PROXY.");
+        console.log("\n✅ [VELO BOT] BASE DE DATOS ACTUALIZADA CON ÉXITO.");
         
     } catch (error) { console.error("\n❌ Error Crítico Global:", error.message); }
 }
