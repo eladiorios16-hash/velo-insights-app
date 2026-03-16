@@ -90,9 +90,8 @@
 
                 <div id="rider-stats-container" class="hidden mt-8 pt-6 border-t border-zinc-800/60 w-full">
                     <p class="text-xs text-zinc-400 uppercase tracking-widest font-black mb-5"><i class="fas fa-sliders-h mr-2 text-cyan-500"></i> Atributos de Rendimiento</p>
-                    
                     <div id="rider-stats-flex" class="flex flex-col md:flex-row items-center md:items-stretch gap-8 md:gap-10">
-                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -139,6 +138,32 @@
     <script>
         window.riderCalendarioGlobal = null;
 
+        // 1. MEJORA: Formateador Inteligente de Nombres
+        function formatDisplayRiderName(name) {
+            if (!name) return "Cargando...";
+            let words = name.trim().split(/\s+/);
+            let upperWords = [];
+            let normalWords = [];
+
+            words.forEach(w => {
+                // Detecta si la palabra está toda en mayúsculas (ej: POGACAR)
+                if (w === w.toUpperCase() && w.length > 1 && !/\d/.test(w)) {
+                    upperWords.push(w);
+                } else {
+                    normalWords.push(w);
+                }
+            });
+
+            let finalName = name;
+            // Si hay mezcla de MAYÚSCULAS y Normales, lo invierte (APELLIDO Nombre -> Nombre Apellido)
+            if (upperWords.length > 0 && normalWords.length > 0) {
+                finalName = normalWords.join(' ') + ' ' + upperWords.join(' ');
+            }
+
+            // Lo convierte a Title Case (Primera letra mayúscula, resto minúscula)
+            return finalName.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+        }
+
         function normalizeName(name) {
             if (!name) return '';
             return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -164,8 +189,11 @@
             return slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
         }
 
+        // 2. MEJORA: Bandera a cuadros en lugar de guion gris
         function getBadgeHTML(pos) {
-            if (!pos) return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-zinc-600 bg-zinc-900/80 border border-zinc-800 shadow-inner"><i class="fas fa-minus text-[10px]"></i></div>`;
+            if (!pos || pos === '-' || pos.trim() === '') {
+                return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-zinc-600 bg-zinc-900/80 border border-zinc-800 shadow-inner"><i class="fas fa-flag-checkered text-[12px] opacity-60"></i></div>`;
+            }
             
             let badgeColor = 'text-zinc-400 bg-zinc-800/80 border border-zinc-700 shadow-inner'; 
             let posClean = pos.trim().toUpperCase();
@@ -226,21 +254,18 @@
                                 let stageText = stage.stage;
                                 let stageLower = stageText.toLowerCase();
                                 
-                                // Iconos Inteligentes
                                 let iconHTML = '<i class="fas fa-road text-zinc-600"></i>';
                                 if (stageLower.includes('montaña') || stageLower.includes('mountain') || stageLower.includes('alto')) iconHTML = '<i class="fas fa-mountain text-rose-500 drop-shadow-[0_0_5px_rgba(244,63,94,0.5)]"></i>';
                                 else if (stageLower.includes('crono') || stageLower.includes('tt') || stageLower.includes('time trial')) iconHTML = '<i class="fas fa-stopwatch text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]"></i>';
                                 else if (stageLower.includes('media') || stageLower.includes('colinas')) iconHTML = '<i class="fas fa-hill-rockslide text-amber-500 drop-shadow-[0_0_5px_rgba(245,158,11,0.5)]"></i>';
                                 else if (stageLower.includes('llano') || stageLower.includes('flat')) iconHTML = '<i class="fas fa-road text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]"></i>';
 
-                                // Colores del Timeline según posición
                                 let posNum = parseInt(stage.pos);
                                 let dotClass = 'bg-zinc-600 ring-black';
                                 if (posNum === 1) dotClass = 'bg-amber-400 ring-amber-900/50 shadow-[0_0_8px_rgba(251,191,36,0.8)]';
                                 else if (posNum === 2 || posNum === 3) dotClass = 'bg-zinc-300 ring-zinc-700 shadow-[0_0_5px_rgba(212,212,216,0.5)]';
                                 else if (posNum <= 10) dotClass = 'bg-cyan-500 ring-cyan-900/50 shadow-[0_0_5px_rgba(6,182,212,0.5)]';
 
-                                // Extraer Kilómetros y Desnivel
                                 let kmMatch = stageText.match(/(\d+(?:\.\d+)?)\s*km/i);
                                 let mMatch = stageText.match(/(\d+)\s*m\s*desnivel/i) || stageText.match(/-\s*(\d+)\s*m/i) || stageText.match(/(\d{2,5})\s*m/i);
                                 
@@ -248,7 +273,6 @@
                                 if (kmMatch) tagsHTML += `<span class="bg-zinc-800/80 border border-zinc-700 text-zinc-200 text-[10px] sm:text-xs px-2 py-0.5 rounded font-mono shadow-sm font-bold">${kmMatch[1]} KM</span>`;
                                 if (mMatch) tagsHTML += `<span class="bg-zinc-800/80 border border-zinc-700 text-zinc-200 text-[10px] sm:text-xs px-2 py-0.5 rounded font-mono shadow-sm font-bold"><i class="fas fa-arrow-trend-up text-zinc-400 mr-1"></i>${mMatch[1]} M</span>`;
 
-                                // Limpieza Extrema del Título
                                 let cleanTitle = stageText;
                                 if (kmMatch) cleanTitle = cleanTitle.replace(kmMatch[0], '');
                                 if (mMatch) cleanTitle = cleanTitle.replace(mMatch[0], '');
@@ -293,7 +317,11 @@
 
             const rawName = decodeURIComponent(riderNameQuery);
             const normalizedRawName = normalizeName(rawName);
-            document.getElementById('rider-name').innerText = rawName;
+            
+            // Aplicamos el parseo inteligente del nombre aquí
+            const formattedName = formatDisplayRiderName(rawName);
+            document.getElementById('rider-name').innerText = formattedName;
+            
             document.getElementById('rider-image').src = `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${getSlug(rawName)}.png`;
 
             try {
@@ -451,6 +479,7 @@
                         const percentage = Math.min(100, Math.max(0, val));
                         const color = getColorForStat(val); 
 
+                        // 3. MEJORA: Ancho inicial 0 para la animación (w-0)
                         barsHtml += `
                             <div class="flex flex-col gap-1.5 md:gap-2">
                                 <div class="flex justify-between text-[10px] md:text-xs font-bold uppercase tracking-widest text-zinc-400">
@@ -458,7 +487,7 @@
                                     <span class="text-white font-black">${val}</span>
                                 </div>
                                 <div class="h-2 md:h-2.5 w-full bg-zinc-800/80 rounded-full overflow-hidden border border-zinc-700/50">
-                                    <div class="h-full ${color.bg} rounded-full transition-all duration-1000" style="width: ${percentage}%"></div>
+                                    <div class="h-full ${color.bg} rounded-full transition-all duration-[1500ms] ease-out w-0" data-width="${percentage}%"></div>
                                 </div>
                             </div>
                         `;
@@ -467,6 +496,15 @@
 
                     statsFlex.innerHTML = globalHtml + barsHtml;
                     statsContainer.classList.remove('hidden');
+
+                    // 4. MEJORA: Disparador de la animación de llenado de las barras
+                    setTimeout(() => {
+                        document.querySelectorAll('#rider-stats-grid .h-full, #rider-stats-flex .h-full').forEach(bar => {
+                            if (bar.hasAttribute('data-width')) {
+                                bar.style.width = bar.getAttribute('data-width');
+                            }
+                        });
+                    }, 100);
                 }
 
                 const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && isSameRider(t.title, rawName));
