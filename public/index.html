@@ -123,6 +123,7 @@
             opacity: 1;
         }
 
+        /* Ajustes específicos para los modales en escritorio y textos largos */
         .truncate-team { max-width: 120px; }
         @media (min-width: 768px) { 
             .truncate-team { max-width: 250px; } 
@@ -227,9 +228,8 @@
             </div>
             
             <div id="latest-news-container" class="w-full">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
-                    <div class="md:col-span-2 h-64 bg-zinc-900 rounded-2xl border border-zinc-800/50"></div>
-                    <div class="col-span-1 h-64 bg-zinc-900 rounded-2xl border border-zinc-800/50"></div>
+                <div class="h-64 bg-zinc-900/50 rounded-2xl animate-pulse flex items-center justify-center border border-zinc-800/50">
+                    <span class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Conectando con el Lab...</span>
                 </div>
             </div>
         </section>
@@ -478,7 +478,8 @@
 
     <div id="timeline-tooltip" class="fixed hidden flex-col gap-1.5 z-[999] pointer-events-none transform -translate-x-1/2 -translate-y-full pb-3 transition-opacity duration-200 opacity-0 drop-shadow-2xl"></div>
     
-    <script src="layout.js?v=7.2"></script>
+    <script src="renderers.js?v=1"></script>
+    <script src="layout.js?v=6.1"></script>
     
     <script>
         // Lógica de Modales
@@ -513,9 +514,11 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-overlay.active').forEach(modal => closeModal(modal.id));
-                closeProfileModal();
+                closeProfileModal(); // También cerramos el perfil de la etapa si está abierto
             }
         });
+
+        // --------------------------------------------------------
 
         const slider = document.getElementById('level-slider');
         const sliderContainer = document.getElementById('slider-container');
@@ -794,49 +797,6 @@
             }
 
             if(data.trending) renderTrending(data.trending, data.teams || [], data.news || [], data.calendar || []);
-        }
-        
-        // FUNCIÓN AÑADIDA Y DISEÑADA (Solución al Error 1)
-        function renderNews(news) {
-            const container = document.getElementById('latest-news-container');
-            if (!news || news.length === 0) {
-                container.innerHTML = '<p class="text-zinc-500 font-mono text-sm py-10">No hay noticias en el servidor.</p>';
-                return;
-            }
-
-            const topNews = news.slice(0, 3);
-            let html = '<div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in-up">';
-            
-            topNews.forEach((n, index) => {
-                const isMain = index === 0;
-                const cardClass = isMain ? 'md:col-span-2' : 'col-span-1';
-                const imgClass = isMain ? 'aspect-[16/9] md:aspect-[21/9]' : 'aspect-[16/9]';
-                const titleClass = isMain ? 'text-2xl md:text-3xl' : 'text-lg';
-                
-                // Generar slug para URL amigable
-                let slug = n.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-                
-                html += `
-                <a href="noticias.html?article=${n.id}" class="${cardClass} group block relative bg-zinc-900/50 rounded-2xl overflow-hidden border border-zinc-800/80 hover:border-cyan-500/50 transition-all shadow-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col h-full">
-                    <div class="w-full ${imgClass} overflow-hidden relative border-b border-zinc-800/50">
-                        <img src="${n.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" loading="lazy">
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent opacity-90"></div>
-                        <div class="absolute top-4 left-4 z-10">
-                            <span class="bg-cyan-500 text-black text-[10px] font-black px-2.5 py-1 rounded uppercase tracking-widest shadow-lg">${n.tag || 'INFO'}</span>
-                        </div>
-                    </div>
-                    <div class="p-5 md:p-6 flex-1 flex flex-col justify-start bg-gradient-to-b from-transparent to-black/50 -mt-12 relative z-20">
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-[10px] font-mono font-bold text-cyan-400 tracking-widest uppercase">${n.date || 'HOY'}</span>
-                        </div>
-                        <h3 class="${titleClass} font-black italic uppercase leading-[1.05] text-white group-hover:text-cyan-400 transition-colors tracking-tighter mb-3">${n.title}</h3>
-                        ${isMain && n.lead ? `<p class="text-sm md:text-base text-zinc-400 line-clamp-2 md:line-clamp-3 leading-relaxed font-medium">${n.lead}</p>` : ''}
-                    </div>
-                </a>`;
-            });
-            
-            html += '</div>';
-            container.innerHTML = html;
         }
 
         function renderTrending(trendRes, teamsRes, newsRes, calRes) {
