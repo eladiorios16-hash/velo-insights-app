@@ -107,10 +107,11 @@
         let isEditing = false;
         let editId = null;
 
+        // MODIFICADO: Plantilla de Equipos con el formato Biométrico y OVR completo
         const templates = {
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
             calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
-            equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: '[]' },
+            equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: JSON.stringify([{ name: "Nombre Ciclista", age: 25, country: "ESP", type: "Todoterreno", height: "1.75m", weight: "65kg", stats: { mnt: 80, spr: 60, tt: 70, lla: 75, res: 80, rec: 80, ovr: 80 } }], null, 4) },
             glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
             trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' },
             ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0, palmares: '2026 | 1 | Tour de Francia - General\n2026 | 2 | Milán-San Remo' }
@@ -309,7 +310,7 @@
             }
 
             const keys = Object.keys(data[0]);
-            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight', 'tactical_data', 'palmares']; // Escondemos el palmares en la vista general
+            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight', 'tactical_data', 'palmares'];
             const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
 
             let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl animate-fade-in-up"><table id="dataTable" class="w-full text-left text-sm text-slate-300 whitespace-nowrap">
@@ -441,7 +442,7 @@
             document.getElementById('modal-title').innerHTML = '<span class="text-emerald-400 text-xl mr-2">+</span> Añadir Nuevo';
             buildForm(templates[currentTable] || {});
             document.getElementById('modal').classList.remove('hidden');
-            document.body.classList.add('overflow-hidden'); // Bloquea el scroll del fondo
+            document.body.classList.add('overflow-hidden');
         }
 
         function openEditModal(id) {
@@ -450,20 +451,18 @@
             document.getElementById('modal-title').innerHTML = '<span class="text-blue-400 text-xl mr-2">✎</span> Editar Elemento';
             buildForm(item);
             document.getElementById('modal').classList.remove('hidden');
-            document.body.classList.add('overflow-hidden'); // Bloquea el scroll del fondo
+            document.body.classList.add('overflow-hidden');
         }
 
-        // --- SISTEMA DE SUBIDA A CLOUDINARY DESDE EL ADMIN ---
-    async function uploadToCloudinary(input, inputTargetId) {
+        async function uploadToCloudinary(input, inputTargetId) {
             const file = input.files[0];
             if (!file) return;
 
-            // NUEVO: Preguntar por la carpeta
             let sugerencia = currentTable === 'noticias' ? 'noticias/marzo' : 'general';
             const folderName = prompt("¿En qué carpeta de Cloudinary quieres guardarla? (Ej: carreras/paris-niza)", sugerencia);
             
             if (folderName === null) {
-                input.value = ""; // Si le das a cancelar, aborta la subida
+                input.value = ""; 
                 return;
             }
 
@@ -478,7 +477,7 @@
 
             const formData = new FormData();
             formData.append('imagen', file);
-            formData.append('folder', folderName); // Enviamos el nombre de la carpeta al servidor
+            formData.append('folder', folderName); 
 
             try {
                 const res = await fetch('/api/admin/upload', {
@@ -505,7 +504,38 @@
                 setTimeout(() => statusMsg.classList.add('hidden'), 5000);
             }
         }
-        // -----------------------------------------------------
+
+        // --- FUNCIÓN MÁGICA PARA INYECTAR CICLISTAS CON FORMATO ---
+        function insertRiderTemplate() {
+            const ta = document.getElementById('riders-textarea');
+            let currentStr = ta.value.trim();
+            const templateObj = {
+                "name": "Nuevo Ciclista",
+                "age": 25,
+                "country": "ESP",
+                "type": "Todoterreno",
+                "height": "1.75m",
+                "weight": "65kg",
+                "stats": {
+                    "mnt": 80,
+                    "spr": 60,
+                    "tt": 70,
+                    "lla": 70,
+                    "res": 80,
+                    "rec": 80,
+                    "ovr": 80
+                }
+            };
+            
+            try {
+                let arr = JSON.parse(currentStr || "[]");
+                if (!Array.isArray(arr)) arr = [];
+                arr.push(templateObj);
+                ta.value = JSON.stringify(arr, null, 4);
+            } catch (e) {
+                alert("⚠️ El código actual tiene un error de sintaxis JSON. Bórralo para empezar de cero o arréglalo antes de inyectar uno nuevo.");
+            }
+        }
 
         function buildForm(data) {
             const form = document.getElementById('dynamicForm');
@@ -524,7 +554,6 @@
                 
                 let inputHtml = '';
                 
-                // MÓDULO ESPECIAL PARA IMÁGENES (Noticias, Equipos, Calendario)
                 if (key === 'image' || key === 'jersey' || key === 'profile') {
                     const uniqueId = `input-${key}`;
                     inputHtml = `
@@ -545,20 +574,20 @@
                     continue;
                 }
 
-                // AQUI ESTÁ LA MAGIA: HEMOS AÑADIDO 'palmares' A LA LISTA DE TEXTAREAS
                 let input;
                 let isJsonText = (typeof value === 'string' && (value.trim().startsWith('{') || value.trim().startsWith('[')));
 
                 if (['content', 'riders', 'details', 'definition', 'def', 'insight', 'tactical', 'tactical_data', 'palmares'].includes(key) || typeof value === 'object' || isJsonText) {
                     input = document.createElement('textarea');
-                    // Le damos 8 filas por defecto al palmarés (y 15 a otros contenidos largos)
                     input.rows = key === 'insight' ? 3 : (['details', 'riders', 'content', 'tactical', 'tactical_data'].includes(key) ? 15 : 8); 
                     input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm leading-relaxed";
+                    
+                    // Identificador especial para inyectar ciclistas
+                    if (key === 'riders') input.id = 'riders-textarea';
                     
                     if (typeof value === 'object' && value !== null) {
                         input.value = JSON.stringify(value, null, 4);
                     } else if (typeof value === 'string') {
-                        // Intentamos formatear JSON, si falla (como nuestro palmarés en texto), lo dejamos tal cual
                         try {
                             const parsed = JSON.parse(value);
                             input.value = JSON.stringify(parsed, null, 4);
@@ -568,6 +597,23 @@
                     } else {
                         input.value = value || '';
                     }
+                    
+                    input.name = key;
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(input);
+
+                    // MODIFICADO: Añadimos el botón de "Insertar Ciclista" justo debajo del campo 'riders'
+                    if (key === 'riders') {
+                        const helper = document.createElement('div');
+                        helper.innerHTML = `
+                            <button type="button" onclick="insertRiderTemplate()" class="mt-3 text-[10px] bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-lg border border-emerald-500/30 hover:bg-emerald-500 hover:text-black transition-colors font-bold tracking-widest uppercase flex items-center gap-2 shadow-sm active:scale-95">
+                                <i class="fas fa-user-plus"></i> Añadir Ciclista con Biometría
+                            </button>`;
+                        wrapper.appendChild(helper);
+                    }
+                    
+                    form.appendChild(wrapper);
+                    continue;
                 } 
                 else if (key === 'tag' || key === 'status' || key === 'isHero') {
                     input = document.createElement('select');
@@ -686,7 +732,7 @@
 
         function closeModal() { 
             document.getElementById('modal').classList.add('hidden'); 
-            document.body.classList.remove('overflow-hidden'); // Desbloquea el scroll del fondo
+            document.body.classList.remove('overflow-hidden'); 
         }
 
         async function saveData() {
