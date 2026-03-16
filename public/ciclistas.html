@@ -44,91 +44,122 @@
     </nav>
 
     <main class="max-w-5xl mx-auto px-4 pt-28 pb-12">
-        <div class="relative bg-zinc-900/60 backdrop-blur-sm border border-zinc-800 rounded-3xl p-6 md:p-8 overflow-hidden shadow-2xl mb-8 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            
-            <div class="w-24 h-24 md:w-36 md:h-36 shrink-0 rounded-full overflow-hidden border-2 border-zinc-700 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-10 bg-zinc-800 flex items-center justify-center">
-                <img id="rider-image" src="" alt="Rider" class="w-full h-full object-cover object-top" onerror="this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';">
-            </div>
-
-            <div class="relative z-10 text-center md:text-left flex-1 w-full mt-2 md:mt-0">
-                <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2">
-                    <div>
-                        <h1 id="rider-name" class="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter italic leading-none mb-2">Cargando...</h1>
-                        <div class="flex items-center justify-center md:justify-start gap-4 mt-3">
-                            <div id="rider-jersey-container" class="hidden shrink-0 w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
-                                <img id="rider-jersey" src="" alt="Jersey" class="w-full h-full object-contain drop-shadow-md">
-                            </div>
-                            <p id="rider-team" class="text-sm md:text-lg font-mono text-cyan-400 uppercase tracking-widest leading-none pt-0.5">Buscando equipo...</p>
+        
+        <div id="skeleton-loader" class="animate-pulse w-full mb-8">
+            <div class="bg-zinc-900/60 border border-zinc-800 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 shadow-2xl">
+                <div class="w-24 h-24 md:w-36 md:h-36 rounded-full bg-zinc-800 shrink-0"></div>
+                <div class="flex-1 w-full mt-2 md:mt-0">
+                    <div class="h-10 md:h-12 bg-zinc-800 rounded-xl w-3/4 mx-auto md:mx-0 mb-4"></div>
+                    <div class="h-6 bg-zinc-800 rounded-lg w-1/2 mx-auto md:mx-0 mb-8"></div>
+                    <div class="flex flex-wrap justify-center md:justify-start gap-6">
+                        <div class="h-12 bg-zinc-800 rounded-xl w-24"></div>
+                        <div class="h-12 bg-zinc-800 rounded-xl w-24"></div>
+                        <div class="h-12 bg-zinc-800 rounded-xl w-24"></div>
+                        <div class="h-12 bg-zinc-800 rounded-xl w-24"></div>
+                    </div>
+                    <div class="mt-8 border-t border-zinc-800 pt-6 flex gap-6">
+                        <div class="h-24 w-24 bg-zinc-800 rounded-full shrink-0 hidden md:block"></div>
+                        <div class="flex-1 space-y-4">
+                            <div class="h-3 bg-zinc-800 rounded w-full"></div>
+                            <div class="h-3 bg-zinc-800 rounded w-5/6"></div>
+                            <div class="h-3 bg-zinc-800 rounded w-4/6"></div>
                         </div>
                     </div>
-                    <div id="rider-trend" class="hidden px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 mt-2 md:mt-0 shadow-lg"></div>
                 </div>
-
-                <div class="flex flex-wrap items-end justify-center md:justify-start gap-x-5 md:gap-x-8 gap-y-4 mt-6 border-t border-zinc-800/60 pt-5">
-                    <div>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Puntos UCI</p>
-                        <p id="rider-points" class="text-xl md:text-2xl font-black text-amber-500 leading-none drop-shadow-md">--</p>
-                    </div>
-                    <div>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Ranking</p>
-                        <p id="rider-rank" class="text-xl md:text-2xl font-black text-white leading-none">--</p>
-                    </div>
-                    <div>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">País / Edad</p>
-                        <p id="rider-nat" class="text-sm md:text-base font-bold text-zinc-200 leading-none mt-1">--</p>
-                    </div>
-                    <div>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Especialidad</p>
-                        <p id="rider-spec" class="text-sm md:text-base font-bold text-zinc-200 leading-none mt-1">--</p>
-                    </div>
-                    <div>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Físico</p>
-                        <p id="rider-bio" class="text-sm md:text-base font-bold text-zinc-200 leading-none mt-1">--</p>
-                    </div>
-                </div>
-
-                <div id="rider-stats-container" class="hidden mt-8 pt-6 border-t border-zinc-800/60 w-full">
-                    <p class="text-xs text-zinc-400 uppercase tracking-widest font-black mb-5"><i class="fas fa-sliders-h mr-2 text-cyan-500"></i> Atributos de Rendimiento</p>
-                    <div id="rider-stats-flex" class="flex flex-col md:flex-row items-center md:items-stretch gap-8 md:gap-10">
-                    </div>
-                </div>
-
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2">
-                <div class="bg-gradient-to-br from-zinc-900/90 to-[#050505] backdrop-blur-md border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern h-[600px] flex flex-col shadow-xl">
-                    
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 border-b border-zinc-800/60 pb-4 shrink-0">
-                        <div class="flex items-center gap-3">
-                            <i class="fas fa-chart-line text-cyan-400"></i>
-                            <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Registro de <span class="text-cyan-400">Resultados</span></h2>
+        <div id="real-profile" class="hidden opacity-0 transition-opacity duration-700">
+            <div class="relative bg-zinc-900/60 backdrop-blur-sm border border-zinc-800 rounded-3xl p-6 md:p-8 overflow-hidden shadow-2xl mb-8 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <button onclick="shareProfile()" class="absolute top-4 right-4 md:top-6 md:right-6 bg-zinc-800/80 hover:bg-cyan-500 hover:text-black text-zinc-400 p-2.5 rounded-xl transition-all shadow-lg flex items-center gap-2 text-xs font-bold uppercase tracking-widest border border-zinc-700 hover:border-cyan-400 group z-20">
+                    <i class="fas fa-share-alt group-hover:animate-bounce"></i> <span class="hidden md:inline" id="share-text">Compartir</span>
+                </button>
+
+                <div class="w-24 h-24 md:w-36 md:h-36 shrink-0 rounded-full overflow-hidden border-2 border-zinc-700 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-10 bg-zinc-800 flex items-center justify-center">
+                    <img id="rider-image" src="" alt="Rider" class="w-full h-full object-cover object-top" onerror="this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';">
+                </div>
+
+                <div class="relative z-10 text-center md:text-left flex-1 w-full mt-2 md:mt-0">
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2 pr-0 md:pr-24">
+                        <div>
+                            <h1 id="rider-name" class="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter italic leading-none mb-2">Cargando...</h1>
+                            <div class="flex items-center justify-center md:justify-start gap-4 mt-3">
+                                <div id="rider-jersey-container" class="hidden shrink-0 w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
+                                    <img id="rider-jersey" src="" alt="Jersey" class="w-full h-full object-contain drop-shadow-md">
+                                </div>
+                                <p id="rider-team" class="text-sm md:text-lg font-mono text-cyan-400 uppercase tracking-widest leading-none pt-0.5">Buscando equipo...</p>
+                            </div>
                         </div>
-                        
-                        <div class="flex bg-zinc-950 border border-zinc-800 rounded-lg p-1 shadow-inner" id="year-tabs"></div>
+                        <div id="rider-trend" class="hidden px-3 py-1.5 rounded-lg border font-mono text-xs font-bold uppercase tracking-widest shrink-0 mt-2 md:mt-0 shadow-lg"></div>
                     </div>
-                    
-                    <div id="palmares-container" class="flex-1 overflow-y-auto custom-scrollbar pr-3 pb-4 w-full flex flex-col gap-3">
-                        <div class="flex flex-col items-center justify-center h-full w-full opacity-70">
-                            <i class="fas fa-spinner fa-spin text-2xl text-cyan-500 mb-3"></i>
-                            <p class="text-sm font-mono text-zinc-500 text-center italic">Cargando servidor central...</p>
+
+                    <div class="flex flex-wrap items-end justify-center md:justify-start gap-x-5 md:gap-x-8 gap-y-4 mt-6 border-t border-zinc-800/60 pt-5">
+                        <div>
+                            <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Puntos UCI</p>
+                            <p id="rider-points" class="text-xl md:text-2xl font-black text-amber-500 leading-none drop-shadow-md">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Ranking</p>
+                            <p id="rider-rank" class="text-xl md:text-2xl font-black text-white leading-none">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">País / Edad</p>
+                            <p id="rider-nat" class="text-sm md:text-base font-bold text-zinc-200 leading-none mt-1 flex items-center gap-1">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Especialidad</p>
+                            <p id="rider-spec" class="text-sm md:text-base font-bold text-zinc-200 leading-none mt-1">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-black mb-1">Físico</p>
+                            <p id="rider-bio" class="text-sm md:text-base font-bold text-zinc-200 leading-none mt-1">--</p>
                         </div>
                     </div>
+
+                    <div id="rider-stats-container" class="hidden mt-8 pt-6 border-t border-zinc-800/60 w-full">
+                        <p class="text-xs text-zinc-400 uppercase tracking-widest font-black mb-5"><i class="fas fa-sliders-h mr-2 text-cyan-500"></i> Atributos de Rendimiento</p>
+                        <div id="rider-stats-flex" class="flex flex-col md:flex-row items-center md:items-stretch gap-8 md:gap-10">
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            <div class="lg:col-span-1">
-                <div class="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-2xl p-6 h-[600px] flex flex-col shadow-xl relative overflow-hidden">
-                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
-                    <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3 shrink-0 relative z-10">
-                        <i class="fas fa-newspaper text-emerald-400"></i>
-                        <h2 class="text-base font-black text-white italic uppercase tracking-tight">Menciones en <span class="text-emerald-400">Noticias</span></h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="bg-gradient-to-br from-zinc-900/90 to-[#050505] backdrop-blur-md border border-zinc-800 rounded-2xl p-6 relative overflow-hidden bg-grid-pattern h-[600px] flex flex-col shadow-xl">
+                        
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 border-b border-zinc-800/60 pb-4 shrink-0">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-chart-line text-cyan-400"></i>
+                                <h2 class="text-lg font-black text-white italic uppercase tracking-tight">Registro de <span class="text-cyan-400">Resultados</span></h2>
+                            </div>
+                            
+                            <div class="flex bg-zinc-950 border border-zinc-800 rounded-lg p-1 shadow-inner" id="year-tabs"></div>
+                        </div>
+                        
+                        <div id="palmares-container" class="flex-1 overflow-y-auto custom-scrollbar pr-3 pb-4 w-full flex flex-col gap-3">
+                            <div class="flex flex-col items-center justify-center h-full w-full opacity-70">
+                                <i class="fas fa-spinner fa-spin text-2xl text-cyan-500 mb-3"></i>
+                                <p class="text-sm font-mono text-zinc-500 text-center italic">Cargando servidor central...</p>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div id="related-news" class="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-1 relative z-10">
-                        <p class="text-xs text-zinc-500 animate-pulse font-mono">Buscando en el archivo...</p>
+                </div>
+
+                <div class="lg:col-span-1">
+                    <div class="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-2xl p-6 h-[600px] flex flex-col shadow-xl relative overflow-hidden">
+                        <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="flex items-center gap-3 mb-6 border-b border-zinc-800/60 pb-3 shrink-0 relative z-10">
+                            <i class="fas fa-newspaper text-emerald-400"></i>
+                            <h2 class="text-base font-black text-white italic uppercase tracking-tight">Menciones en <span class="text-emerald-400">Noticias</span></h2>
+                        </div>
+                        
+                        <div id="related-news" class="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-1 relative z-10">
+                            <p class="text-xs text-zinc-500 animate-pulse font-mono">Buscando en el archivo...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -138,7 +169,30 @@
     <script>
         window.riderCalendarioGlobal = null;
 
-        // 1. MEJORA: Formateador Inteligente de Nombres
+        // DICCIONARIO DE BANDERAS
+        const flagMap = {
+            'ESP': '🇪🇸', 'COL': '🇨🇴', 'SLO': '🇸🇮', 'BEL': '🇧🇪', 'FRA': '🇫🇷',
+            'ITA': '🇮🇹', 'GBR': '🇬🇧', 'NED': '🇳🇱', 'DEN': '🇩🇰', 'USA': '🇺🇸',
+            'AUS': '🇦🇺', 'SUI': '🇨🇭', 'GER': '🇩🇪', 'POR': '🇵🇹', 'ECU': '🇪🇨', 
+            'NOR': '🇳🇴', 'AUT': '🇦🇹', 'IRL': '🇮🇪', 'CAN': '🇨🇦', 'NZL': '🇳🇿', 
+            'RSA': '🇿🇦', 'ERI': '🇪🇷', 'KAZ': '🇰🇿', 'POL': '🇵🇱', 'CZE': '🇨🇿', 
+            'LAT': '🇱🇻', 'LUX': '🇱🇺', 'SVK': '🇸🇰'
+        };
+
+        function getFlag(code) { return flagMap[code.toUpperCase()] || '🏳️'; }
+
+        // FUNCION BOTÓN COMPARTIR
+        function shareProfile() {
+            // Reemplaza por la ruta amigable si la implementamos luego, por ahora copia la URL actual
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                const textSpan = document.getElementById('share-text');
+                const origText = textSpan.innerText;
+                textSpan.innerText = '¡Copiado!';
+                setTimeout(() => textSpan.innerText = origText, 2500);
+            });
+        }
+
         function formatDisplayRiderName(name) {
             if (!name) return "Cargando...";
             let words = name.trim().split(/\s+/);
@@ -146,7 +200,6 @@
             let normalWords = [];
 
             words.forEach(w => {
-                // Detecta si la palabra está toda en mayúsculas (ej: POGACAR)
                 if (w === w.toUpperCase() && w.length > 1 && !/\d/.test(w)) {
                     upperWords.push(w);
                 } else {
@@ -155,12 +208,9 @@
             });
 
             let finalName = name;
-            // Si hay mezcla de MAYÚSCULAS y Normales, lo invierte (APELLIDO Nombre -> Nombre Apellido)
             if (upperWords.length > 0 && normalWords.length > 0) {
                 finalName = normalWords.join(' ') + ' ' + upperWords.join(' ');
             }
-
-            // Lo convierte a Title Case (Primera letra mayúscula, resto minúscula)
             return finalName.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
         }
 
@@ -189,7 +239,6 @@
             return slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
         }
 
-        // 2. MEJORA: Bandera a cuadros en lugar de guion gris
         function getBadgeHTML(pos) {
             if (!pos || pos === '-' || pos.trim() === '') {
                 return `<div class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-zinc-600 bg-zinc-900/80 border border-zinc-800 shadow-inner"><i class="fas fa-flag-checkered text-[12px] opacity-60"></i></div>`;
@@ -313,12 +362,15 @@
         async function loadRiderProfile() {
             const urlParams = new URLSearchParams(window.location.search);
             const riderNameQuery = urlParams.get('rider');
-            if (!riderNameQuery) return;
+            if (!riderNameQuery) {
+                // Si alguien entra a ciclistas.html sin nombre, redirigir a inicio o mostrar error
+                document.getElementById('skeleton-loader').innerHTML = '<p class="text-center text-white p-20">Ciclista no especificado.</p>';
+                return;
+            }
 
             const rawName = decodeURIComponent(riderNameQuery);
             const normalizedRawName = normalizeName(rawName);
             
-            // Aplicamos el parseo inteligente del nombre aquí
             const formattedName = formatDisplayRiderName(rawName);
             document.getElementById('rider-name').innerText = formattedName;
             
@@ -441,7 +493,8 @@
                     }
                 }
 
-                let natAgeText = nat || '--';
+                // Renderizamos Nacionalidad y Edad con Banderas Mágicas
+                let natAgeText = nat ? `<span class="text-xl">${getFlag(nat)}</span> ${nat}` : '--';
                 if (age) natAgeText += ` <span class="text-zinc-500 text-xs font-mono ml-2 border border-zinc-700 bg-zinc-900/50 px-1.5 py-0.5 rounded">${age} años</span>`;
                 document.getElementById('rider-nat').innerHTML = natAgeText;
                 document.getElementById('rider-spec').innerText = spec || '--';
@@ -479,7 +532,6 @@
                         const percentage = Math.min(100, Math.max(0, val));
                         const color = getColorForStat(val); 
 
-                        // 3. MEJORA: Ancho inicial 0 para la animación (w-0)
                         barsHtml += `
                             <div class="flex flex-col gap-1.5 md:gap-2">
                                 <div class="flex justify-between text-[10px] md:text-xs font-bold uppercase tracking-widest text-zinc-400">
@@ -496,15 +548,6 @@
 
                     statsFlex.innerHTML = globalHtml + barsHtml;
                     statsContainer.classList.remove('hidden');
-
-                    // 4. MEJORA: Disparador de la animación de llenado de las barras
-                    setTimeout(() => {
-                        document.querySelectorAll('#rider-stats-grid .h-full, #rider-stats-flex .h-full').forEach(bar => {
-                            if (bar.hasAttribute('data-width')) {
-                                bar.style.width = bar.getAttribute('data-width');
-                            }
-                        });
-                    }, 100);
                 }
 
                 const trendData = data.trending.find(t => t.tipo.toLowerCase() === 'ciclista' && isSameRider(t.title, rawName));
@@ -565,6 +608,23 @@
                 console.error("Error extrayendo noticias:", newsError);
                 document.getElementById('related-news').innerHTML = `<p class="text-xs text-red-500 font-mono mt-4">Error conectando con el servidor de noticias.</p>`;
             }
+
+            // APAGAMOS EL SKELETON Y MOSTRAMOS EL PERFIL REAL
+            document.getElementById('skeleton-loader').classList.add('hidden');
+            const realProfile = document.getElementById('real-profile');
+            realProfile.classList.remove('hidden');
+            
+            // Un pequeño delay para que el navegador renderice y aplique la opacidad
+            setTimeout(() => {
+                realProfile.classList.remove('opacity-0');
+                
+                // Disparamos la animación de las barras
+                document.querySelectorAll('#rider-stats-grid .h-full, #rider-stats-flex .h-full').forEach(bar => {
+                    if (bar.hasAttribute('data-width')) {
+                        bar.style.width = bar.getAttribute('data-width');
+                    }
+                });
+            }, 50);
         }
 
         document.addEventListener('DOMContentLoaded', loadRiderProfile);
