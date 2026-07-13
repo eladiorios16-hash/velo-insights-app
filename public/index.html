@@ -675,28 +675,43 @@
                     
                     const diffTime = today.getTime() - startDate.getTime();
                     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
-                    
+
                     const stageIndex = Math.max(0, Math.min(diffDays, detailsObj.stages.length - 1));
                     const currentStage = detailsObj.stages[stageIndex];
 
+                    // CORRECCIÓN: Usar diffDays para calcular la fecha actual correctamente
                     const stageDate = new Date(startDate);
-                    stageDate.setDate(startDate.getDate() + stageIndex);
+                    stageDate.setDate(startDate.getDate() + diffDays); 
                     const formattedDate = stageDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }).toUpperCase();
 
                     const isStageRace = detailsObj.stages.length > 1;
-                    document.getElementById('rcr-stage-label').innerText = isStageRace ? `ETAPA ${currentStage.n || (stageIndex + 1)}` : 'FECHA';
-                    document.getElementById('rcr-date').innerText = formattedDate;
 
-                    document.getElementById('rcr-km').innerText = (currentStage.km || '---') + ' km';
-                    document.getElementById('rcr-elevation').innerText = (currentStage.gain || '---') + ' m+';
-                    document.getElementById('rcr-type').innerText = currentStage.type || '---';
-                    
-                    const profileUrl = currentStage.image || currentStage.profile || race.image || race.profile;
-                    if (profileUrl && profileUrl.trim() !== "") {
-                        document.getElementById('telemetry-profile-container').classList.remove('hidden');
-                        document.getElementById('telemetry-profile-img').src = profileUrl;
-                    } else {
+                    // NUEVO: Verificamos si el backend nos marca este objeto como día de descanso
+                    const isRestDay = currentStage.type && currentStage.type.toLowerCase().includes('descanso');
+
+                    if (isRestDay) {
+                        // Renderizado especial para el día de descanso
+                        document.getElementById('rcr-stage-label').innerText = 'JORNADA';
+                        document.getElementById('rcr-date').innerText = formattedDate;
+                        document.getElementById('rcr-km').innerText = '--- km';
+                        document.getElementById('rcr-elevation').innerText = '--- m+';
+                        document.getElementById('rcr-type').innerText = 'DÍA DE DESCANSO';
                         document.getElementById('telemetry-profile-container').classList.add('hidden');
+                    } else {
+                        // Renderizado normal de etapa
+                        document.getElementById('rcr-stage-label').innerText = isStageRace ? `ETAPA ${currentStage.n || (stageIndex + 1)}` : 'FECHA';
+                        document.getElementById('rcr-date').innerText = formattedDate;
+                        document.getElementById('rcr-km').innerText = (currentStage.km || '---') + ' km';
+                        document.getElementById('rcr-elevation').innerText = (currentStage.gain || '---') + ' m+';
+                        document.getElementById('rcr-type').innerText = currentStage.type || '---';
+                        
+                        const profileUrl = currentStage.image || currentStage.profile || race.image || race.profile;
+                        if (profileUrl && profileUrl.trim() !== "") {
+                            document.getElementById('telemetry-profile-container').classList.remove('hidden');
+                            document.getElementById('telemetry-profile-img').src = profileUrl;
+                        } else {
+                            document.getElementById('telemetry-profile-container').classList.add('hidden');
+                        }
                     }
                 }
 
