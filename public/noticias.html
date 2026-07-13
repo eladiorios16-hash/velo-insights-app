@@ -75,11 +75,14 @@
         .modal-hidden { opacity: 0; pointer-events: none; }
         .modal-visible { opacity: 1; pointer-events: auto; }
         
-        .filter-btn { opacity: 0.5; transition: all 0.3s ease; flex-shrink: 0; }
-        .filter-btn:hover { opacity: 1; }
-        .filter-btn.active { opacity: 1; box-shadow: 0 0 15px rgba(255,255,255,0.1); transform: scale(1.05); border-color: currentColor; }
-        .filter-btn-desktop { transition: all 0.3s ease; }
-        .filter-btn-desktop.active { background-color: rgba(255,255,255,0.05); color: white; border-color: #22d3ee; border-left-width: 4px; }
+        /* Ocultar barra horizontal para carruseles, estilo nativo fluido */
+        .hub-carousel {
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .hub-carousel::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-[#050505] antialiased pb-20 overflow-x-hidden selection:bg-cyan-500/30">
@@ -93,7 +96,7 @@
         <p class="text-zinc-500 max-w-lg font-medium text-xs md:text-base mx-auto md:mx-0 mb-8">Archivo profundo de análisis técnico. No cubrimos rumores, cubrimos vatios.</p>
         
         <div class="max-w-xl relative group px-2 md:px-0">
-            <input type="text" id="news-search" placeholder="BUSCAR NOTICIAS..." 
+            <input type="text" id="news-search" placeholder="BUSCAR ARTÍCULOS O CARRERAS..." 
                    class="w-full bg-zinc-900/80 border border-zinc-800 rounded-full py-3 md:py-4 px-6 text-white outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(34,211,238,0.1)] transition-all uppercase font-bold tracking-wider text-xs md:text-sm placeholder-zinc-600">
             <div class="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-cyan-500 transition-colors hidden md:block">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -101,16 +104,8 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 mb-20">
-        <div class="lg:hidden col-span-1 overflow-x-auto pb-4 custom-scrollbar flex gap-3 relative z-30 py-3 -mx-4 px-4 border-b border-zinc-800/50" id="mobile-filters"></div>
-        <div class="col-span-1 lg:col-span-2 pt-4 lg:pt-0">
-            <div id="news-feed"></div>
-            <div id="load-more-container" class="mt-12 text-center"></div>
-        </div>
-        <aside class="hidden lg:block sticky top-32 h-fit reveal-on-scroll">
-            <h4 class="text-[10px] font-black uppercase text-zinc-500 mb-6 tracking-widest border-l-2 border-cyan-500 pl-3">Filtrar por Tema</h4>
-            <div class="flex flex-col gap-2" id="desktop-filters"></div>
-        </aside>
+    <main class="max-w-7xl mx-auto px-4 md:px-6 mb-20 w-full">
+        <div id="news-feed" class="w-full"></div>
     </main>
 
     <div id="article-modal" class="fixed inset-0 z-[200] bg-black/95 modal-hidden backdrop-blur-md overflow-y-auto modal-scroll">
@@ -139,11 +134,8 @@
 
         let allNews = [];
         let allGlossary = []; 
-        let currentTag = 'ALL';
-        let visibleCount = 5; 
         
         const feed = document.getElementById('news-feed');
-        const loadMoreContainer = document.getElementById('load-more-container');
         const modal = document.getElementById('article-modal');
         const modalContent = document.getElementById('modal-content');
         const searchInput = document.getElementById('news-search');
@@ -151,13 +143,12 @@
         const progressContainer = document.getElementById('reading-progress-container');
 
         const TAG_COLORS = {
-            'TECH LAB': { mobile: 'bg-emerald-900/30 border-emerald-500/30 text-emerald-500', bg: 'bg-emerald-500', text: 'text-black', hover: 'hover:border-emerald-500' },
-            'AERO LAB': { mobile: 'bg-pink-900/30 border-pink-500/30 text-pink-500', bg: 'bg-pink-500', text: 'text-white', hover: 'hover:border-pink-500' },
-            'DATA ANALYSIS': { mobile: 'bg-violet-900/30 border-violet-500/30 text-violet-500', bg: 'bg-violet-500', text: 'text-white', hover: 'hover:border-violet-500' },
-            'RACE REPORT': { mobile: 'bg-cyan-900/30 border-cyan-500/30 text-cyan-500', bg: 'bg-cyan-500', text: 'text-black', hover: 'hover:border-cyan-500' },
-            'PREVIA': { mobile: 'bg-yellow-900/30 border-yellow-500/30 text-yellow-500', bg: 'bg-yellow-500', text: 'text-black', hover: 'hover:border-yellow-500' },
-            'ALL': { filter: 'bg-zinc-800 border-zinc-700 text-white' },
-            'DEFAULT': { mobile: 'bg-zinc-800 border-zinc-700 text-white', bg: 'bg-zinc-700', text: 'text-white', hover: 'hover:border-zinc-500' }
+            'TECH LAB': { bg: 'bg-emerald-500', text: 'text-black', shadow: 'shadow-emerald-500/20' },
+            'AERO LAB': { bg: 'bg-pink-500', text: 'text-white', shadow: 'shadow-pink-500/20' },
+            'DATA ANALYSIS': { bg: 'bg-violet-500', text: 'text-white', shadow: 'shadow-violet-500/20' },
+            'RACE REPORT': { bg: 'bg-cyan-500', text: 'text-black', shadow: 'shadow-cyan-500/20' },
+            'PREVIA': { bg: 'bg-yellow-500', text: 'text-black', shadow: 'shadow-yellow-500/20' },
+            'DEFAULT': { bg: 'bg-zinc-700', text: 'text-white', shadow: 'shadow-zinc-700/20' }
         };
 
         function getReadingTime(htmlContent) {
@@ -181,17 +172,6 @@
                     <div class="flex gap-2 mb-3"><div class="h-3 w-16 bg-zinc-800 rounded"></div><div class="h-3 w-20 bg-zinc-800 rounded"></div></div>
                     <div class="h-10 w-3/4 bg-zinc-800 rounded-xl mb-3"></div>
                     <div class="h-4 w-full bg-zinc-800 rounded mb-2"></div>
-                    <div class="h-4 w-5/6 bg-zinc-800 rounded"></div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 animate-pulse">
-                    ${[1, 2, 3, 4].map(() => `
-                        <div>
-                            <div class="aspect-[16/9] w-full bg-zinc-800 mb-4 rounded-2xl"></div>
-                            <div class="h-3 w-24 bg-zinc-800 rounded mb-3"></div>
-                            <div class="h-6 w-full bg-zinc-800 rounded-lg mb-2"></div>
-                            <div class="h-6 w-2/3 bg-zinc-800 rounded-lg"></div>
-                        </div>
-                    `).join('')}
                 </div>
             `;
         }
@@ -209,8 +189,7 @@
                     const data = await resNews.json();
                     if (data && data.length > 0) {
                         allNews = data.sort((a, b) => b.id - a.id); 
-                        generateFilters(); 
-                        renderFeed();
+                        renderHubs();
                         
                         let articleId = new URLSearchParams(window.location.search).get('article');
                         if (!articleId && window.location.pathname.startsWith('/noticia/')) {
@@ -232,130 +211,140 @@
             }
         }
 
-        function generateFilters() {
-            const mobileContainer = document.getElementById('mobile-filters');
-            const desktopContainer = document.getElementById('desktop-filters');
-            const tags = new Set();
-            allNews.forEach(n => { if(n.tag) tags.add(n.tag.toUpperCase()); });
+        searchInput.addEventListener('input', () => { renderHubs(); });
+
+        function buildVerticalCard(news) {
+            const tagData = TAG_COLORS[(news.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+            const readTime = getReadingTime(news.content);
+            const slug = generateSlug(news.title);
+            const newsUrl = `/noticia/${news.id}/${slug}`;
             
-            let mobHtml = `<button onclick="filterByTag('ALL')" class="filter-btn active whitespace-nowrap px-5 py-2 rounded-full border text-[10px] font-bold uppercase transition-transform active:scale-95 bg-zinc-800 border-zinc-700 text-white shadow-lg">Todos</button>`;
-            let deskHtml = `<button onclick="filterByTag('ALL')" class="filter-btn-desktop active text-left px-4 py-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 hover:text-white transition-all">Todos los artículos</button>`;
-            
-            Array.from(tags).sort().forEach(tag => {
-                const style = TAG_COLORS[tag] || TAG_COLORS['DEFAULT'];
-                mobHtml += `<button onclick="filterByTag('${tag}')" class="filter-btn whitespace-nowrap px-5 py-2 rounded-full border text-[10px] font-bold uppercase transition-transform active:scale-95 ${style.mobile}">${tag}</button>`;
-                deskHtml += `<button onclick="filterByTag('${tag}')" class="filter-btn-desktop text-left px-4 py-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 hover:text-white ${style.hover} transition-all">${tag}</button>`;
-            });
-            mobileContainer.innerHTML = mobHtml; desktopContainer.innerHTML = deskHtml;
+            return `
+                <a href="${newsUrl}" onclick="event.preventDefault(); openArticle('${news.id}')" class="block group cursor-pointer snap-start shrink-0 w-[85vw] md:w-[320px] lg:w-[350px] bg-zinc-900/30 border border-zinc-800/80 rounded-2xl overflow-hidden hover:border-cyan-500/50 hover:bg-zinc-900/80 transition-all flex flex-col h-full shadow-lg hover:shadow-cyan-500/5">
+                    <div class="aspect-[16/9] w-full overflow-hidden relative border-b border-zinc-800/50">
+                        <img src="${news.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
+                        <div class="absolute top-3 left-3"><span class="px-2.5 py-1 ${tagData.bg} ${tagData.text} text-[8px] font-black uppercase rounded shadow-lg tracking-widest">${news.tag || 'INFO'}</span></div>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 mb-3 flex-wrap">
+                            <span class="text-[10px] font-mono font-bold text-zinc-500 tracking-widest uppercase">${news.date || 'HOY'}</span>
+                            <span class="w-1 h-1 bg-zinc-800 rounded-full"></span>
+                            <span class="text-[10px] font-mono font-bold text-zinc-600 tracking-widest uppercase"><i class="fas fa-stopwatch opacity-70 mr-0.5"></i> ${readTime} MIN</span>
+                        </div>
+                        <h3 class="text-lg font-black italic text-white uppercase leading-[1.15] group-hover:text-cyan-400 transition-colors tracking-tighter mb-3">${news.title}</h3>
+                        <p class="text-zinc-500 text-xs leading-relaxed line-clamp-2 mt-auto">${news.lead || ''}</p>
+                    </div>
+                </a>
+            `;
         }
 
-        window.filterByTag = (tag) => {
-            currentTag = tag; visibleCount = 5; 
-            document.querySelectorAll('.filter-btn, .filter-btn-desktop').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.innerText.toUpperCase() === tag || (tag === 'ALL' && btn.innerText.toUpperCase().includes('TODO'))) btn.classList.add('active');
-            });
-            renderFeed();
-        };
+        function renderHero(hero) {
+            const heroTag = TAG_COLORS[(hero.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
+            const readTime = getReadingTime(hero.content);
+            const techLevel = getTechnicalLevel(readTime);
+            const slug = generateSlug(hero.title);
+            const heroUrl = `/noticia/${hero.id}/${slug}`;
+            
+            const vatiosPill = hero.vatios ? `<span class="bg-black/60 backdrop-blur border border-zinc-700/50 text-cyan-400 px-3 py-1.5 rounded-lg shadow-xl font-mono text-[10px] font-black uppercase flex items-center gap-1.5"><i class="fas fa-bolt text-amber-400"></i> ${hero.vatios} W/kg</span>` : '';
+            
+            return `
+                <a href="${heroUrl}" onclick="event.preventDefault(); openArticle('${hero.id}')" class="block group cursor-pointer border-b border-zinc-900/80 pb-12 mb-8 transition-all fade-in-up relative">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+                        <h3 class="text-sm font-bold text-zinc-400 uppercase tracking-widest">Última Hora</h3>
+                    </div>
+                    <div class="w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden rounded-2xl md:rounded-[2rem] mb-6 bg-zinc-900 relative shadow-xl border border-transparent group-hover:border-zinc-800 transition-colors">
+                        <img src="${hero.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
+                        
+                        <div class="absolute top-4 left-4 md:top-6 md:left-6 flex flex-col gap-2">
+                            <span class="px-3.5 py-1.5 ${heroTag.bg} ${heroTag.text} text-[10px] md:text-xs font-black uppercase rounded shadow-2xl tracking-widest self-start">${hero.tag || 'INFO'}</span>
+                        </div>
+                        
+                        <div class="absolute bottom-4 right-4 md:bottom-6 md:right-6">
+                            ${vatiosPill}
+                        </div>
+                    </div>
+                    <div class="px-2 md:px-4">
+                        <div class="flex items-center flex-wrap gap-2 md:gap-3 mb-3">
+                            <span class="text-[10px] md:text-[11px] font-mono font-bold text-cyan-400 tracking-widest uppercase">${hero.date || 'HOY'}</span>
+                            <span class="w-1 h-1 bg-zinc-700 rounded-full hidden md:block"></span>
+                            <span class="text-[10px] md:text-[11px] font-mono font-bold text-zinc-500 tracking-widest uppercase flex items-center gap-1"><i class="fas fa-stopwatch opacity-70"></i> ${readTime} MIN LECTURA</span>
+                            <span class="w-1 h-1 bg-zinc-700 rounded-full hidden md:block"></span>
+                            <span class="text-[10px] md:text-[11px] font-mono font-bold text-zinc-500 tracking-widest uppercase flex items-center gap-1"><i class="fas fa-brain opacity-70"></i> Nivel: ${techLevel}</span>
+                        </div>
+                        <h2 class="text-3xl md:text-5xl lg:text-6xl font-black italic uppercase leading-[1.05] mb-4 group-hover:text-cyan-400 transition-colors tracking-tighter text-white drop-shadow-sm">${hero.title}</h2>
+                        <p class="text-zinc-400 text-sm md:text-lg leading-relaxed max-w-4xl">${hero.lead || ''}</p>
+                    </div>
+                </a>
+            `;
+        }
 
-        window.loadMore = () => { visibleCount += 4; renderFeed(); };
-        searchInput.addEventListener('input', () => { visibleCount = 5; renderFeed(); });
-
-        function renderFeed() {
+        function renderHubs() {
             const searchTerm = searchInput.value.toLowerCase().trim();
-            let filteredNews = allNews.filter(n => {
-                const matchesTag = currentTag === 'ALL' || (n.tag || '').toUpperCase() === currentTag;
-                const matchesSearch = n.title.toLowerCase().includes(searchTerm) || (n.lead && n.lead.toLowerCase().includes(searchTerm));
-                return matchesTag && matchesSearch;
-            });
 
-            if (filteredNews.length === 0) {
-                feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono uppercase text-xs">Sin resultados.</p>`;
-                loadMoreContainer.innerHTML = ''; return;
+            // MODO BÚSQUEDA (Cuadrícula Clásica)
+            if (searchTerm !== '') {
+                const filtered = allNews.filter(n => n.title.toLowerCase().includes(searchTerm) || (n.lead && n.lead.toLowerCase().includes(searchTerm)) || (n.tag && n.tag.toLowerCase().includes(searchTerm)));
+                
+                if (filtered.length === 0) {
+                    feed.innerHTML = `<p class="text-zinc-500 text-center py-20 font-mono uppercase text-xs">Sin resultados para tu búsqueda.</p>`;
+                    return;
+                }
+                
+                let html = `<div class="mb-6"><h3 class="text-lg font-heading italic text-white uppercase border-b border-zinc-800 pb-3">Resultados de búsqueda</h3></div>`;
+                html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">`;
+                filtered.forEach(news => { html += buildVerticalCard(news); });
+                html += `</div>`;
+                feed.innerHTML = html;
+                return;
             }
 
-            const newsToRender = filteredNews.slice(0, visibleCount);
-            const hero = newsToRender[0];
-            const rest = newsToRender.slice(1);
+            // MODO NAVEGACIÓN HUBS TEMÁTICOS
+            if (allNews.length === 0) return;
 
-            let html = '';
-            if (hero) {
-                const heroTag = TAG_COLORS[(hero.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
-                const readTime = getReadingTime(hero.content);
-                const techLevel = getTechnicalLevel(readTime);
-                const slug = generateSlug(hero.title);
-                const heroUrl = `/noticia/${hero.id}/${slug}`;
-                
-                // Extrae un dato de vatios si existe (simulado para el diseño, si tienes el campo vatios úsalo)
-                const vatiosPill = hero.vatios ? `<span class="bg-black/60 backdrop-blur border border-zinc-700/50 text-cyan-400 px-3 py-1.5 rounded-lg shadow-xl font-mono text-[10px] font-black uppercase flex items-center gap-1.5"><i class="fas fa-bolt text-amber-400"></i> ${hero.vatios} W/kg</span>` : '';
+            const hero = allNews[0];
+            const rest = allNews.slice(1);
+
+            // Agrupar el resto por Etiquetas (Tags)
+            const groups = {};
+            rest.forEach(news => {
+                const tag = (news.tag || 'ACTUALIDAD').toUpperCase();
+                if (!groups[tag]) groups[tag] = [];
+                groups[tag].push(news);
+            });
+
+            let html = renderHero(hero);
+
+            // Orden de prioridad para los bloques
+            const priorityTags = ['RACE REPORT', 'TECH LAB', 'DATA ANALYSIS', 'PREVIA'];
+            const sortedTags = Object.keys(groups).sort((a, b) => {
+                let idxA = priorityTags.indexOf(a); let idxB = priorityTags.indexOf(b);
+                if (idxA === -1) idxA = 99; if (idxB === -1) idxB = 99;
+                return idxA - idxB;
+            });
+
+            sortedTags.forEach(tag => {
+                const tagData = TAG_COLORS[tag] || TAG_COLORS['DEFAULT'];
+                const articles = groups[tag];
                 
                 html += `
-                    <a href="${heroUrl}" onclick="event.preventDefault(); openArticle('${hero.id}')" class="block group cursor-pointer border-b border-zinc-900/80 pb-10 mb-10 transition-all fade-in-up relative">
-                        <div class="w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden rounded-2xl md:rounded-[2rem] mb-5 bg-zinc-900 relative shadow-xl border border-transparent group-hover:border-zinc-800 transition-colors">
-                            <img src="${hero.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
-                            
-                            <div class="absolute top-4 left-4 md:top-6 md:left-6 flex flex-col gap-2">
-                                <span class="px-3.5 py-1.5 ${heroTag.bg} ${heroTag.text} text-[10px] md:text-xs font-black uppercase rounded shadow-2xl tracking-widest self-start">${hero.tag || 'INFO'}</span>
-                            </div>
-                            
-                            <div class="absolute bottom-4 right-4 md:bottom-6 md:right-6">
-                                ${vatiosPill}
-                            </div>
+                    <div class="mb-14 fade-in-up relative">
+                        <div class="flex items-center gap-4 mb-6 border-b border-zinc-800/80 pb-3 px-2">
+                            <span class="w-4 h-4 rounded shadow-lg flex-shrink-0 ${tagData.bg} ${tagData.shadow}"></span>
+                            <h3 class="text-2xl md:text-3xl font-heading italic uppercase text-white tracking-tighter">${tag} <span class="text-zinc-700 font-sans font-light opacity-50 ml-2">(${articles.length})</span></h3>
                         </div>
-                        <div class="px-2">
-                            <div class="flex items-center flex-wrap gap-2 md:gap-3 mb-3">
-                                <span class="text-[10px] md:text-[11px] font-mono font-bold text-cyan-400 tracking-widest uppercase">${hero.date || 'HOY'}</span>
-                                <span class="w-1 h-1 bg-zinc-700 rounded-full hidden md:block"></span>
-                                <span class="text-[10px] md:text-[11px] font-mono font-bold text-zinc-500 tracking-widest uppercase flex items-center gap-1"><i class="fas fa-stopwatch opacity-70"></i> ${readTime} MIN LECTURA</span>
-                                <span class="w-1 h-1 bg-zinc-700 rounded-full hidden md:block"></span>
-                                <span class="text-[10px] md:text-[11px] font-mono font-bold text-zinc-500 tracking-widest uppercase flex items-center gap-1"><i class="fas fa-brain opacity-70"></i> Nivel: ${techLevel}</span>
-                            </div>
-                            <h2 class="text-2xl md:text-4xl font-black italic uppercase leading-[1.05] mb-3 group-hover:text-cyan-400 transition-colors tracking-tighter text-white drop-shadow-sm">${hero.title}</h2>
-                            <p class="text-zinc-400 text-sm md:text-lg leading-relaxed line-clamp-2 md:line-clamp-3">${hero.lead || ''}</p>
-                        </div>
-                    </a>
+                        <div class="flex overflow-x-auto hub-carousel gap-6 pb-6 px-2 snap-x snap-mandatory">
                 `;
-            }
+                articles.forEach(news => { html += buildVerticalCard(news); });
+                html += `</div></div>`;
+            });
 
-            if (rest.length > 0) {
-                html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">`;
-                html += rest.map((news, idx) => {
-                    const tagClass = TAG_COLORS[(news.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
-                    const readTime = getReadingTime(news.content);
-                    const techLevel = getTechnicalLevel(readTime);
-                    const slug = generateSlug(news.title);
-                    const newsUrl = `/noticia/${news.id}/${slug}`;
-                    
-                    return `
-                        <a href="${newsUrl}" onclick="event.preventDefault(); openArticle('${news.id}')" class="block group cursor-pointer transition-all fade-in-up flex flex-col" style="animation-delay: ${(idx + 1) * 0.1}s">
-                            <div class="aspect-[16/9] w-full overflow-hidden rounded-2xl mb-4 bg-zinc-900 relative shadow-lg border border-transparent group-hover:border-zinc-800 transition-colors">
-                                <img src="${news.image || 'assets/placeholder.jpg'}" loading="lazy" class="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
-                                <div class="absolute bottom-3 left-3"><span class="px-2.5 py-1 ${tagClass.bg} ${tagClass.text} text-[8px] font-black uppercase rounded shadow-lg tracking-widest">${news.tag || 'INFO'}</span></div>
-                            </div>
-                            <div class="px-1 flex-1 flex flex-col">
-                                <div class="flex items-center gap-2 mb-2 flex-wrap">
-                                    <span class="text-[10px] font-mono font-bold text-zinc-500 tracking-widest uppercase">${news.date || 'HOY'}</span>
-                                    <span class="w-1 h-1 bg-zinc-800 rounded-full"></span>
-                                    <span class="text-[10px] font-mono font-bold text-zinc-600 tracking-widest uppercase"><i class="fas fa-stopwatch opacity-70 mr-0.5"></i> ${readTime} MIN</span>
-                                </div>
-                                <h3 class="text-xl font-black italic text-white uppercase leading-[1.05] group-hover:text-cyan-400 transition-colors tracking-tighter mb-2">${news.title}</h3>
-                            </div>
-                        </a>
-                    `;
-                }).join('');
-                html += `</div>`;
-            }
             feed.innerHTML = html;
-
-            if (filteredNews.length > visibleCount) {
-                loadMoreContainer.innerHTML = `<button onclick="loadMore()" class="group inline-flex items-center gap-3 px-8 py-4 rounded-full border border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 hover:border-cyan-500 transition-all text-zinc-300 hover:text-white text-xs font-bold uppercase tracking-widest active:scale-95 shadow-xl">Cargar más archivo</button>`;
-            } else loadMoreContainer.innerHTML = '';
         }
 
         function getRecommendations(currentArticle) {
             let availableNews = allNews.filter(n => n.id != currentArticle.id);
             let recommendations = [];
-
             if (availableNews.length === 0) return recommendations;
 
             let relatedIndex = availableNews.findIndex(n => (n.tag || '').toUpperCase() === (currentArticle.tag || '').toUpperCase());
@@ -376,7 +365,6 @@
                 recommendations.push(availableNews[0]);
                 availableNews.splice(0, 1);
             }
-
             return recommendations;
         }
 
@@ -393,12 +381,10 @@
             const tagData = TAG_COLORS[(article.tag || '').toUpperCase()] || TAG_COLORS['DEFAULT'];
             const readTime = getReadingTime(article.content);
             const techLevel = getTechnicalLevel(readTime);
-            
             const processedContent = interceptCloudinaryImages(article.content);
-
             const recommendedArticles = getRecommendations(article);
-            let recommendationHTML = '';
             
+            let recommendationHTML = '';
             if (recommendedArticles.length > 0) {
                 recommendationHTML = `
                     <div class="mt-16 md:mt-24 pt-10 border-t border-zinc-900">
