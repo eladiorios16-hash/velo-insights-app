@@ -433,11 +433,13 @@
                 `;
             }
 
-            modalContent.innerHTML = `
-                <div class="h-[30vh] md:h-[50vh] w-full relative border-b border-zinc-900">
-                    <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover grayscale opacity-90">
+          modalContent.innerHTML = `
+                <!-- IMAGEN CORREGIDA: Proporción natural y object-top -->
+                <div class="w-full aspect-[4/3] md:aspect-[16/9] lg:aspect-[21/9] relative border-b border-zinc-900 bg-zinc-900">
+                    <img src="${article.image || 'assets/placeholder.jpg'}" class="w-full h-full object-cover object-top grayscale opacity-90">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
                 </div>
+                
                 <div class="p-6 md:p-20 pt-8 md:pt-12">
                     <div class="max-w-3xl mx-auto">
                         <div class="mb-8 md:mb-12 border-b border-zinc-900 pb-8">
