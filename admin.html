@@ -536,7 +536,6 @@
                 const label = document.createElement('label');
                 label.className = "block text-[10px] md:text-xs uppercase text-emerald-500 font-bold mb-2 tracking-widest";
                 
-                // Añadir indicador opcional para ranking
                 let labelText = key;
                 if (currentTable === 'ranking' && key === 'points') {
                     labelText += ' <span class="text-slate-500 font-normal normal-case">(Automático / Opcional)</span>';
@@ -664,7 +663,6 @@
                     input.type = (key === 'dateISO' || key === 'endDateISO') ? 'date' : 'text';
                     input.className = "input-dark w-full rounded-lg p-3 text-sm";
                     
-                    // CORRECCIÓN FECHAS: Formatear la fecha para que el input type="date" la reconozca
                     let dateVal = value || '';
                     if ((key === 'dateISO' || key === 'endDateISO') && dateVal.includes('T')) {
                         dateVal = dateVal.split('T')[0];
@@ -734,13 +732,10 @@
             const dataObj = {};
             
             for (let [key, value] of formData.entries()) {
-                // Relajar el envío: Solo mandamos si tiene valor, para no borrar campos automáticos
-                if (value !== '' || key === 'winner') {
-                    if (key === 'points') {
-                        dataObj[key] = parseInt(value) || 0;
-                    } else {
-                        dataObj[key] = value;
-                    }
+                if (key === 'points') {
+                    dataObj[key] = value !== '' ? parseInt(value) : 0;
+                } else {
+                    dataObj[key] = value;
                 }
             }
 
