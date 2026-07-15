@@ -107,14 +107,13 @@
         let isEditing = false;
         let editId = null;
 
-        // Plantilla de Equipos con el formato Biométrico y OVR completo
         const templates = {
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
             calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
             equipos: { name: 'Equipo', code: 'COD', country: '🏳️', jersey: 'assets/equipos/default.png', riders: JSON.stringify([{ name: "Nombre Ciclista", age: 25, country: "ESP", type: "Todoterreno", height: "1.75m", weight: "65kg", stats: { mnt: 80, spr: 60, tt: 70, lla: 75, res: 80, rec: 80, ovr: 80 } }], null, 4) },
             glosario: { term: 'Término', cat: 'Categoría', def: 'Definición...', insight: 'Añade un dato curioso o ejemplo...' },
             trending: { tipo: 'ciclista', title: 'Nombre o #Hashtag', subtitle: 'Equipo o URL', value: '+HOT' },
-            ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: 0, palmares: '2026 | 1 | Tour de Francia - General\n2026 | 2 | Milán-San Remo' }
+            ranking: { name: 'Nombre del Ciclista', team: 'Equipo (ej. UAE Team Emirates)', points: '', palmares: '2026 | 1 | Tour de Francia - General\n2026 | 2 | Milán-San Remo' }
         };
 
         async function fetchGlobalTeams() {
@@ -260,7 +259,7 @@
                     }, 100);
                 } else {
                     const err = await res.json();
-                    alert("Error IA: " + (err.error || "Asegúrate de haber puesto tu API Key en server.js"));
+                    alert("Error IA: " + (err.error || "Revisa la configuración"));
                 }
             } catch(e) {
                 alert("Error de conexión con el servidor IA: " + e.message);
@@ -279,7 +278,6 @@
             window.getSelection().removeAllRanges();
             alert("✅ ¡HTML copiado al portapapeles! Listo para pegarse en una noticia.");
         }
-
 
         function renderUI(data) {
             const container = document.getElementById('content-area');
@@ -423,9 +421,9 @@
                 }
 
                 if (addedCount > 0) {
-                    alert(`✅ Proceso completado: Se han inyectado ${addedCount} nuevas tendencias basadas en el contexto de tus noticias.`);
+                    alert(`✅ Proceso completado: Se han inyectado ${addedCount} nuevas tendencias.`);
                 } else {
-                    alert("ℹ️ Todo está al día. No se detectaron tendencias nuevas que no estuvieran ya en la tabla.");
+                    alert("ℹ️ Todo está al día. No se detectaron tendencias nuevas.");
                 }
                 
                 loadTable('trending');
@@ -457,7 +455,7 @@
             if (!file) return;
 
             let sugerencia = currentTable === 'noticias' ? 'noticias/marzo' : 'general';
-            const folderName = prompt("¿En qué carpeta de Cloudinary quieres guardarla? (Ej: carreras/paris-niza)", sugerencia);
+            const folderName = prompt("¿En qué carpeta de Cloudinary quieres guardarla?", sugerencia);
             
             if (folderName === null) {
                 input.value = ""; 
@@ -501,7 +499,6 @@
             }
         }
 
-        // --- FUNCIÓN MÁGICA PARA INYECTAR CICLISTAS CON FORMATO ---
         function insertRiderTemplate() {
             const ta = document.getElementById('riders-textarea');
             let currentStr = ta.value.trim();
@@ -512,15 +509,7 @@
                 "type": "Todoterreno",
                 "height": "1.75m",
                 "weight": "65kg",
-                "stats": {
-                    "mnt": 80,
-                    "spr": 60,
-                    "tt": 70,
-                    "lla": 70,
-                    "res": 80,
-                    "rec": 80,
-                    "ovr": 80
-                }
+                "stats": { "mnt": 80, "spr": 60, "tt": 70, "lla": 70, "res": 80, "rec": 80, "ovr": 80 }
             };
             
             try {
@@ -529,7 +518,7 @@
                 arr.push(templateObj);
                 ta.value = JSON.stringify(arr, null, 4);
             } catch (e) {
-                alert("⚠️ El código actual tiene un error de sintaxis JSON. Bórralo para empezar de cero o arréglalo antes de inyectar uno nuevo.");
+                alert("⚠️ El código actual tiene un error de sintaxis JSON.");
             }
         }
 
@@ -546,7 +535,13 @@
                 wrapper.id = `wrapper-${key}`;
                 const label = document.createElement('label');
                 label.className = "block text-[10px] md:text-xs uppercase text-emerald-500 font-bold mb-2 tracking-widest";
-                label.innerText = key;
+                
+                // Añadir indicador opcional para ranking
+                let labelText = key;
+                if (currentTable === 'ranking' && key === 'points') {
+                    labelText += ' <span class="text-slate-500 font-normal normal-case">(Automático / Opcional)</span>';
+                }
+                label.innerHTML = labelText;
                 
                 let inputHtml = '';
                 
@@ -578,7 +573,6 @@
                     input.rows = key === 'insight' ? 3 : (['details', 'riders', 'content', 'tactical', 'tactical_data'].includes(key) ? 15 : 8); 
                     input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm leading-relaxed";
                     
-                    // Identificador especial para inyectar ciclistas
                     if (key === 'riders') input.id = 'riders-textarea';
                     
                     if (typeof value === 'object' && value !== null) {
@@ -598,12 +592,11 @@
                     wrapper.appendChild(label);
                     wrapper.appendChild(input);
 
-                    // Añadimos el botón de "Insertar Ciclista" justo debajo del campo 'riders'
                     if (key === 'riders') {
                         const helper = document.createElement('div');
                         helper.innerHTML = `
                             <button type="button" onclick="insertRiderTemplate()" class="mt-3 text-[10px] bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-lg border border-emerald-500/30 hover:bg-emerald-500 hover:text-black transition-colors font-bold tracking-widest uppercase flex items-center gap-2 shadow-sm active:scale-95">
-                                <i class="fas fa-user-plus"></i> Añadir Ciclista con Biometría
+                                <i class="fas fa-user-plus"></i> Añadir Ciclista
                             </button>`;
                         wrapper.appendChild(helper);
                     }
@@ -629,7 +622,6 @@
                     }
                 } 
                 else if (currentTable === 'trending' && key === 'subtitle' && isTrendingRider) {
-                    label.innerText = 'EQUIPO DEL CICLISTA';
                     input = document.createElement('select');
                     input.className = "input-dark w-full rounded-lg p-3 font-bold text-cyan-400 text-sm";
                     input.id = 'select-trending-team';
@@ -647,7 +639,6 @@
 
                     input.addEventListener('change', (e) => { populateRidersDropdown(e.target.value); });
                 } else if (currentTable === 'trending' && key === 'title' && isTrendingRider) {
-                    label.innerText = 'NOMBRE DEL CICLISTA';
                     input = document.createElement('select');
                     input.className = "input-dark w-full rounded-lg p-3 font-bold text-white text-sm";
                     input.id = 'select-trending-rider';
@@ -672,7 +663,13 @@
                     input = document.createElement('input');
                     input.type = (key === 'dateISO' || key === 'endDateISO') ? 'date' : 'text';
                     input.className = "input-dark w-full rounded-lg p-3 text-sm";
-                    input.value = value || '';
+                    
+                    // CORRECCIÓN FECHAS: Formatear la fecha para que el input type="date" la reconozca
+                    let dateVal = value || '';
+                    if ((key === 'dateISO' || key === 'endDateISO') && dateVal.includes('T')) {
+                        dateVal = dateVal.split('T')[0];
+                    }
+                    input.value = dateVal;
                 }
                 
                 input.name = key;
@@ -737,10 +734,14 @@
             const dataObj = {};
             
             for (let [key, value] of formData.entries()) {
-                if (key === 'points') {
-                    value = parseInt(value) || 0;
+                // Relajar el envío: Solo mandamos si tiene valor, para no borrar campos automáticos
+                if (value !== '' || key === 'winner') {
+                    if (key === 'points') {
+                        dataObj[key] = parseInt(value) || 0;
+                    } else {
+                        dataObj[key] = value;
+                    }
                 }
-                dataObj[key] = value;
             }
 
             let url = isEditing ? `/api/admin/${currentTable}/${editId}` : `/api/admin/create/${currentTable}`;
