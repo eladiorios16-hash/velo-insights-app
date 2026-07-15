@@ -11,6 +11,7 @@
         .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .modal-glass { background: #1e293b; border: 1px solid #475569; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
         
+        /* Mejoras en el Scroll para el menú móvil */
         ::-webkit-scrollbar { width: 8px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -31,7 +32,8 @@
     <header class="flex justify-between items-center mb-8 px-2">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-black text-xl shadow-lg shadow-emerald-500/20">V</div>
-            <h1 class="text-xl md:text-2xl font-bold text-white tracking-tight">VELO <span class="text-emerald-400">ADMIN</span></h1>
+            <!-- He cambiado el título a V2 para verificar que el caché se ha limpiado -->
+            <h1 class="text-xl md:text-2xl font-bold text-white tracking-tight">VELO <span class="text-emerald-400">ADMIN V2</span></h1>
         </div>
         <button onclick="logout()" class="text-slate-400 hover:text-red-400 transition text-sm font-semibold flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700">
             <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Cerrar Sesión</span>
@@ -57,6 +59,7 @@
                     <i class="fas fa-database text-3xl text-emerald-400"></i>
                 </div>
                 <h2 class="text-3xl md:text-5xl font-black text-white tracking-tight mb-4 italic uppercase">Command <span class="text-emerald-500">Center</span></h2>
+                <p class="text-slate-400 text-base md:text-lg max-w-2xl mx-auto">Bienvenido al motor de Velo Insights. Selecciona un módulo en la barra superior para gestionar el contenido o inicia el Copilot para generar artículos de alto rendimiento.</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -64,16 +67,19 @@
                     <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -mr-10 -mt-10 transition-all group-hover:bg-emerald-500/10"></div>
                     <i class="fas fa-newspaper text-emerald-400 text-2xl mb-4"></i>
                     <h3 class="text-lg font-bold text-white mb-2 uppercase tracking-widest">Noticias & Journal</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Gestiona los artículos, reportajes y análisis técnicos de la portada.</p>
                 </div>
                 <div onclick="openCopilot()" class="bg-indigo-900/20 hover:bg-indigo-900/40 border border-indigo-500/20 hover:border-indigo-500/50 rounded-2xl p-6 cursor-pointer transition-all hover:-translate-y-1 group relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -mr-10 -mt-10 transition-all group-hover:bg-indigo-500/20"></div>
                     <i class="fas fa-robot text-indigo-400 text-2xl mb-4"></i>
                     <h3 class="text-lg font-bold text-white mb-2 uppercase tracking-widest">Copilot IA Engine</h3>
+                    <p class="text-xs text-indigo-300/70 leading-relaxed">Asistente de redacción inteligente. Genera artículos formateados en segundos.</p>
                 </div>
                 <div onclick="loadTable('calendario')" class="bg-slate-800/40 hover:bg-slate-800 border border-slate-700 hover:border-blue-500/50 rounded-2xl p-6 cursor-pointer transition-all hover:-translate-y-1 group relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl -mr-10 -mt-10 transition-all group-hover:bg-blue-500/10"></div>
                     <i class="fas fa-calendar-alt text-blue-400 text-2xl mb-4"></i>
                     <h3 class="text-lg font-bold text-white mb-2 uppercase tracking-widest">Calendario WT</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Actualiza carreras, fechas, ganadores y perfiles de etapa.</p>
                 </div>
             </div>
         </div>
@@ -102,6 +108,14 @@
         let isEditing = false;
         let editId = null;
 
+        // DICCIONARIO DE EMOJIS UNIVERSAL
+        const COUNTRY_FLAGS = {
+            'ES': '🇪🇸', 'FR': '🇫🇷', 'BE': '🇧🇪', 'IT': '🇮🇹', 'SI': '🇸🇮', 'KZ': '🇰🇿',
+            'BH': '🇧🇭', 'GB': '🇬🇧', 'NL': '🇳🇱', 'DK': '🇩🇰', 'DE': '🇩🇪', 'CO': '🇨🇴',
+            'AU': '🇦🇺', 'US': '🇺🇸', 'PT': '🇵🇹', 'CH': '🇨🇭', 'EC': '🇪🇨', 'AT': '🇦🇹',
+            'NO': '🇳🇴', 'IE': '🇮🇪', 'PL': '🇵🇱'
+        };
+
         const templates = {
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
             calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
@@ -114,7 +128,9 @@
         async function fetchGlobalTeams() {
             try {
                 const res = await fetch('/api/teams');
-                if(res.ok) { globalTeamsData = await res.json(); }
+                if(res.ok) {
+                    globalTeamsData = await res.json();
+                }
             } catch (e) { console.error("Error cargando equipos", e); }
         }
         fetchGlobalTeams();
@@ -180,32 +196,39 @@
                             <span class="w-3 h-8 bg-indigo-500 rounded-sm transform skew-x-[-15deg]"></span> 
                             Velo Copilot <span class="bg-indigo-500/20 text-indigo-400 text-xs px-2 py-1 rounded not-italic tracking-widest ml-2 border border-indigo-500/30">AI ENGINE</span>
                         </h2>
+                        <p class="text-slate-400 mt-2 text-sm">El motor de Inteligencia Artificial conectado a la redacción de Velo Insights.</p>
                     </div>
                     
                     <div class="bg-slate-800/40 border border-slate-700 rounded-2xl p-6 shadow-2xl backdrop-blur-sm mb-8">
                         <div class="grid grid-cols-1 gap-6">
                             <div>
-                                <label class="block text-[10px] uppercase text-indigo-400 font-bold mb-2 tracking-widest">TIPO DE GENERACIÓN</label>
+                                <label class="block text-[10px] uppercase text-indigo-400 font-bold mb-2 tracking-widest"><i class="fas fa-layer-group mr-1"></i> TIPO DE GENERACIÓN</label>
                                 <select id="ai-type" class="input-dark w-full rounded-lg p-3 font-bold text-white text-sm">
-                                    <option value="article">📝 Artículo Completo</option>
-                                    <option value="telemetry">⚡ Solo Caja Neón</option>
+                                    <option value="article">📝 Artículo Completo (Estructura HTML Velo)</option>
+                                    <option value="telemetry">⚡ Solo Caja Neón (Telemetry Insight)</option>
                                 </select>
                             </div>
+
                             <div>
-                                <label class="block text-[10px] uppercase text-indigo-400 font-bold mb-2 tracking-widest">INSTRUCCIONES (PROMPT)</label>
-                                <textarea id="ai-prompt" rows="5" class="input-dark w-full rounded-lg p-4 text-sm" placeholder="Instrucciones..."></textarea>
+                                <label class="block text-[10px] uppercase text-indigo-400 font-bold mb-2 tracking-widest"><i class="fas fa-terminal mr-1"></i> INSTRUCCIONES (PROMPT)</label>
+                                <textarea id="ai-prompt" rows="5" class="input-dark w-full rounded-lg p-4 text-sm leading-relaxed" placeholder="Ej: Redacta un análisis técnico sobre la victoria de Pogacar en Strade Bianche 2026. Menciona que atacó a 81km de meta empujando 6.5 W/kg en el sector de Sante Marie..."></textarea>
                             </div>
-                            <button onclick="generateAI()" id="btn-generate-ai" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-4 rounded-xl font-bold transition-all w-full text-sm">
-                                INICIAR SECUENCIA DE REDACCIÓN
+
+                            <button onclick="generateAI()" id="btn-generate-ai" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-4 rounded-xl font-bold flex justify-center items-center gap-3 shadow-[0_0_20px_rgba(79,70,229,0.4)] transition-all active:scale-95 w-full uppercase tracking-widest text-sm">
+                                <i class="fas fa-bolt"></i> INICIAR SECUENCIA DE REDACCIÓN
                             </button>
                         </div>
                     </div>
 
                     <div id="ai-result-container" class="hidden animate-fade-in">
+                        <div class="flex justify-between items-end mb-2 px-1">
+                            <label class="block text-[10px] uppercase text-emerald-400 font-bold tracking-widest"><i class="fas fa-code mr-1"></i> RESULTADO HTML (LISTO PARA PEGAR)</label>
+                            <span class="text-xs text-slate-500 font-mono" id="ai-status">Completado</span>
+                        </div>
                         <div class="relative group">
-                            <textarea id="ai-result" rows="15" class="input-dark w-full rounded-2xl p-5 font-mono text-sm border-emerald-500/30 bg-[#090f1a]"></textarea>
-                            <button onclick="copyAIResult()" class="absolute top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-emerald-500 hover:text-black shadow-lg font-bold text-xs uppercase tracking-widest">
-                                Copiar
+                            <textarea id="ai-result" rows="15" class="input-dark w-full rounded-2xl p-5 font-mono text-sm leading-relaxed border-emerald-500/30 bg-[#090f1a] focus:border-emerald-500"></textarea>
+                            <button onclick="copyAIResult()" class="absolute top-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-emerald-500 hover:text-black transition shadow-lg flex items-center gap-2 font-bold text-xs uppercase tracking-widest">
+                                <i class="fas fa-copy"></i> Copiar
                             </button>
                         </div>
                     </div>
@@ -222,8 +245,11 @@
 
             if(!prompt.trim()) { alert("Por favor, dale instrucciones al Copilot."); return; }
 
-            btn.innerHTML = 'PROCESANDO...';
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> PROCESANDO DATOS IA...';
             btn.disabled = true;
+            btn.classList.replace('bg-indigo-600', 'bg-slate-700');
+            btn.classList.add('cursor-not-allowed', 'opacity-80');
+            resultContainer.classList.add('hidden');
 
             try {
                 const res = await fetch('/api/admin/copilot', {
@@ -236,23 +262,30 @@
                     const data = await res.json();
                     resultArea.value = data.result;
                     resultContainer.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
                 } else {
                     const err = await res.json();
                     alert("Error IA: " + (err.error || "Revisa la configuración"));
                 }
             } catch(e) {
-                alert("Error de conexión con el servidor IA");
+                alert("Error de conexión con el servidor IA: " + e.message);
             }
 
-            btn.innerHTML = 'INICIAR SECUENCIA DE REDACCIÓN';
+            btn.innerHTML = '<i class="fas fa-bolt"></i> INICIAR SECUENCIA DE REDACCIÓN';
             btn.disabled = false;
+            btn.classList.replace('bg-slate-700', 'bg-indigo-600');
+            btn.classList.remove('cursor-not-allowed', 'opacity-80');
         }
 
         function copyAIResult() {
             const resultArea = document.getElementById('ai-result');
             resultArea.select();
             document.execCommand('copy');
-            alert("✅ ¡Copiado!");
+            window.getSelection().removeAllRanges();
+            alert("✅ ¡HTML copiado al portapapeles! Listo para pegarse en una noticia.");
         }
 
         function renderUI(data) {
@@ -302,30 +335,31 @@
                 tableHtml += `<tr class="hover:bg-slate-800/60 transition group">`;
                 displayCols.forEach(col => {
                     let val = row[col];
-                    let isHtmlInjection = false; // Bandera para evitar que el truncador rompa el código
+                    let isHtmlInjection = false;
                     
-                    // --- BANDERAS DEFINITIVAS ---
-                    if (col.toLowerCase().trim() === 'country' && val) {
-                        const codeText = val.toString().replace(/[^a-zA-Z]/g, '').trim().toLowerCase();
-                        if (codeText.length >= 2 && codeText.length <= 3) {
-                            val = `<div class="flex items-center gap-2"><img src="https://flagcdn.com/24x18/${codeText}.png" class="w-6 h-4 border border-slate-700/50 rounded-sm shadow-sm" alt="${codeText}"><span class="font-bold uppercase">${codeText}</span></div>`;
+                    // --- MAGIA BANDERAS UNIVERSAL (EMOJIS) ---
+                    // No importa cómo se llame la columna, si el texto es "ES" o "FR", pondrá la bandera.
+                    if (typeof val === 'string' && val.trim().length === 2) {
+                        let cleanCode = val.trim().toUpperCase();
+                        if (COUNTRY_FLAGS[cleanCode]) {
+                            val = `<span class="text-xl mr-2">${COUNTRY_FLAGS[cleanCode]}</span><span class="font-bold">${cleanCode}</span>`;
                             isHtmlInjection = true;
                         }
                     }
-                    // -----------------------------
+                    // -----------------------------------------
+                    
                     else if (col === 'isHero') { val = val == 1 ? '<span class="text-yellow-400">★ SÍ</span>' : '<span class="text-slate-600">No</span>'; isHtmlInjection = true; }
                     else if (col === 'tipo' && currentTable === 'trending') { val = val === 'ciclista' ? '<span class="text-emerald-400 font-bold">🚴‍♂️ CICLISTA</span>' : '<span class="text-cyan-400 font-bold"># TOPIC</span>'; isHtmlInjection = true; }
                     else if (col === 'points' && currentTable === 'ranking') { val = `<span class="text-amber-400 font-bold text-base">${val} PTS</span>`; isHtmlInjection = true; }
                     else if (typeof val === 'string' && val.startsWith('assets/')) { val = `<img src="${val}" class="w-10 h-10 object-cover rounded-md border border-slate-700">`; isHtmlInjection = true; }
                     
-                    // Solo recorta si NO es código HTML generado por nosotros
+                    // Evitamos romper el HTML
                     if (typeof val === 'string' && val.length > 50 && !isHtmlInjection) {
                         val = val.substring(0, 50) + '...';
                     }
                     
                     tableHtml += `<td class="p-4 font-medium">${val || '-'}</td>`;
                 });
-                
                 tableHtml += `<td class="p-4 text-right">
                     <div class="flex justify-end gap-2">
                         <button onclick='openEditModal(${row.id})' class="bg-blue-500/10 text-blue-400 p-2 rounded-lg hover:bg-blue-500 hover:text-white transition"><i class="fas fa-pen"></i></button>
@@ -337,7 +371,7 @@
         }
 
         async function autoGenerateTrending() {
-            if(!confirm("¿Analizar últimas noticias y generar Trending Topics automáticamente?")) return;
+            if(!confirm("Esto analizará tus últimas noticias y extraerá automáticamente carreras y términos técnicos para guardarlos como Trending Topics. ¿Deseas continuar?")) return;
             
             try {
                 const [newsRes, teamsRes, calRes, glosRes] = await Promise.all([
@@ -353,20 +387,30 @@
                 let potentialTopics = [];
                 calRes.forEach(r => {
                     if (recentText.includes(r.name.toLowerCase())) {
-                        potentialTopics.push({ text: '#' + r.name.replace(/\s+/g, ''), link: `calendario.html?race=${encodeURIComponent(r.name)}`, count: recentText.split(r.name.toLowerCase()).length - 1 });
+                        potentialTopics.push({ 
+                            text: '#' + r.name.replace(/\s+/g, ''), 
+                            link: `calendario.html?race=${encodeURIComponent(r.name)}`,
+                            count: recentText.split(r.name.toLowerCase()).length - 1 
+                        });
                     }
                 });
 
                 glosRes.forEach(g => {
                     if (recentText.includes(g.term.toLowerCase())) {
-                        potentialTopics.push({ text: '#' + g.term.replace(/\s+/g, ''), link: `glosario.html?term=${encodeURIComponent(g.term)}`, count: recentText.split(g.term.toLowerCase()).length - 1 });
+                        potentialTopics.push({ 
+                            text: '#' + g.term.replace(/\s+/g, ''), 
+                            link: `glosario.html?term=${encodeURIComponent(g.term)}`,
+                            count: recentText.split(g.term.toLowerCase()).length - 1 
+                        });
                     }
                 });
 
                 potentialTopics.sort((a, b) => b.count - a.count);
                 const topTopics = potentialTopics.slice(0, 4);
 
-                topTopics.forEach(t => { newTrends.push({ tipo: 'topic', title: t.text, subtitle: t.link, value: '' }); });
+                topTopics.forEach(t => {
+                    newTrends.push({ tipo: 'topic', title: t.text, subtitle: t.link, value: '' });
+                });
 
                 const allProRiders = [];
                 teamsRes.forEach(team => {
@@ -383,19 +427,36 @@
                     }
                 });
 
-                if(newTrends.length === 0) { alert("⚠️ No se detectaron tendencias."); return; }
+                if(newTrends.length === 0) {
+                    alert("⚠️ No se encontraron carreras ni términos del glosario en las últimas noticias.");
+                    return;
+                }
 
                 let addedCount = 0;
+                
                 for (const trend of newTrends) {
-                    if (!currentData.find(d => d.title === trend.title)) {
-                        await fetch(`/api/admin/create/trending`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(trend) });
+                    const exists = currentData.find(d => d.title === trend.title);
+                    if (!exists) {
+                        await fetch(`/api/admin/create/trending`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(trend)
+                        });
                         addedCount++;
                     }
                 }
 
-                alert(`✅ Se inyectaron ${addedCount} nuevas tendencias.`);
+                if (addedCount > 0) {
+                    alert(`✅ Proceso completado: Se han inyectado ${addedCount} nuevas tendencias.`);
+                } else {
+                    alert("ℹ️ Todo está al día. No se detectaron tendencias nuevas.");
+                }
+                
                 loadTable('trending');
-            } catch (e) { alert("❌ Error: " + e.message); }
+
+            } catch (e) {
+                alert("❌ Error generando tendencias: " + e.message);
+            }
         }
 
         function openCreateModal() {
@@ -419,139 +480,316 @@
             const file = input.files[0];
             if (!file) return;
 
-            const folderName = prompt("Carpeta de Cloudinary:", currentTable === 'noticias' ? 'noticias/marzo' : 'general');
-            if (folderName === null) { input.value = ""; return; }
+            let sugerencia = currentTable === 'noticias' ? 'noticias/marzo' : 'general';
+            const folderName = prompt("¿En qué carpeta de Cloudinary quieres guardarla?", sugerencia);
+            
+            if (folderName === null) {
+                input.value = ""; 
+                return;
+            }
 
             const statusMsg = document.getElementById(`upload-status-${inputTargetId}`);
-            statusMsg.innerText = "⏳ Subiendo...";
-            statusMsg.classList.remove('hidden');
+            const btnUI = document.getElementById(`upload-btn-${inputTargetId}`);
+            
+            statusMsg.innerText = "⏳ Subiendo foto a la carpeta: " + folderName + "...";
+            statusMsg.classList.remove('hidden', 'text-emerald-400', 'text-red-400');
+            statusMsg.classList.add('text-cyan-400');
+            btnUI.classList.add('opacity-50');
 
             const formData = new FormData();
-            formData.append('imagen', file); formData.append('folder', folderName); 
+            formData.append('imagen', file);
+            formData.append('folder', folderName); 
 
             try {
-                const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+                const res = await fetch('/api/admin/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
                 const data = await res.json();
+                
                 if (data.success) {
                     document.getElementById(inputTargetId).value = data.url;
-                    statusMsg.innerText = "✅ Subida con éxito";
-                } else throw new Error();
-            } catch (error) { statusMsg.innerText = "❌ Error al subir"; } 
-            finally { setTimeout(() => statusMsg.classList.add('hidden'), 3000); }
+                    statusMsg.innerText = "✅ ¡Subida con éxito!";
+                    statusMsg.classList.replace('text-cyan-400', 'text-emerald-400');
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                statusMsg.innerText = "❌ Error: " + error.message;
+                statusMsg.classList.replace('text-cyan-400', 'text-red-400');
+            } finally {
+                btnUI.classList.remove('opacity-50');
+                input.value = ""; 
+                setTimeout(() => statusMsg.classList.add('hidden'), 5000);
+            }
         }
 
         function insertRiderTemplate() {
             const ta = document.getElementById('riders-textarea');
+            let currentStr = ta.value.trim();
+            const templateObj = {
+                "name": "Nuevo Ciclista",
+                "age": 25,
+                "country": "ESP",
+                "type": "Todoterreno",
+                "height": "1.75m",
+                "weight": "65kg",
+                "stats": { "mnt": 80, "spr": 60, "tt": 70, "lla": 70, "res": 80, "rec": 80, "ovr": 80 }
+            };
+            
             try {
-                let arr = JSON.parse(ta.value || "[]");
-                arr.push({ "name": "Nuevo Ciclista", "age": 25, "country": "ESP", "stats": { "mnt": 80, "spr": 60, "tt": 70, "lla": 70, "res": 80, "rec": 80, "ovr": 80 } });
+                let arr = JSON.parse(currentStr || "[]");
+                if (!Array.isArray(arr)) arr = [];
+                arr.push(templateObj);
                 ta.value = JSON.stringify(arr, null, 4);
-            } catch (e) { alert("Error de sintaxis JSON."); }
+            } catch (e) {
+                alert("⚠️ El código actual tiene un error de sintaxis JSON.");
+            }
         }
 
         function buildForm(data) {
-            const form = document.getElementById('dynamicForm'); form.innerHTML = '';
+            const form = document.getElementById('dynamicForm');
+            form.innerHTML = '';
+            
             let isTrendingRider = currentTable === 'trending' && (data.tipo === 'ciclista' || !data.tipo);
             
             for (const [key, value] of Object.entries(data)) {
                 if (key === 'id') continue;
+                
                 const wrapper = document.createElement('div');
-                let labelText = key;
-                if (currentTable === 'ranking' && key === 'points') labelText += ' (Automático / Opcional)';
+                wrapper.id = `wrapper-${key}`;
                 const label = document.createElement('label');
                 label.className = "block text-[10px] md:text-xs uppercase text-emerald-500 font-bold mb-2 tracking-widest";
+                
+                let labelText = key;
+                if (currentTable === 'ranking' && key === 'points') {
+                    labelText += ' <span class="text-slate-500 font-normal normal-case">(Automático / Opcional)</span>';
+                }
                 label.innerHTML = labelText;
                 
-                let input;
+                let inputHtml = '';
+                
                 if (key === 'image' || key === 'jersey' || key === 'profile') {
-                    const uId = `input-${key}`;
-                    wrapper.innerHTML = label.outerHTML + `
-                    <div class="flex gap-3"><input type="text" id="${uId}" name="${key}" value="${value || ''}" class="input-dark w-full rounded-lg p-3 text-sm flex-1">
-                    <div class="relative shrink-0"><input type="file" accept="image/*" onchange="uploadToCloudinary(this, '${uId}')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"><button type="button" class="bg-cyan-600 hover:bg-cyan-500 text-black font-black text-[10px] px-4 py-3.5 rounded-xl shadow-lg">Subir</button></div></div><p id="upload-status-${uId}" class="text-[10px] mt-2 hidden text-cyan-400"></p>`;
-                    form.appendChild(wrapper); continue;
+                    const uniqueId = `input-${key}`;
+                    inputHtml = `
+                    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                        <input type="text" id="${uniqueId}" name="${key}" value="${value || ''}" class="input-dark w-full rounded-lg p-3 text-sm flex-1" placeholder="URL de la imagen...">
+                        
+                        <div class="relative shrink-0">
+                            <input type="file" accept="image/*" onchange="uploadToCloudinary(this, '${uniqueId}')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <button type="button" id="upload-btn-${uniqueId}" class="bg-cyan-600 hover:bg-cyan-500 text-black font-black uppercase text-[10px] tracking-widest px-4 py-3.5 rounded-xl transition-colors flex items-center gap-2 shadow-lg">
+                                <i class="fas fa-cloud-upload-alt"></i> Subir Nube
+                            </button>
+                        </div>
+                    </div>
+                    <p id="upload-status-${uniqueId}" class="text-[10px] mt-2 hidden animate-pulse"></p>
+                    `;
+                    wrapper.innerHTML = label.outerHTML + inputHtml;
+                    form.appendChild(wrapper);
+                    continue;
                 }
 
-                if (['content', 'riders', 'details', 'definition', 'def', 'insight', 'tactical', 'tactical_data', 'palmares'].includes(key)) {
+                let input;
+                let isJsonText = (typeof value === 'string' && (value.trim().startsWith('{') || value.trim().startsWith('[')));
+
+                if (['content', 'riders', 'details', 'definition', 'def', 'insight', 'tactical', 'tactical_data', 'palmares'].includes(key) || typeof value === 'object' || isJsonText) {
                     input = document.createElement('textarea');
-                    input.rows = key === 'insight' ? 3 : (['details', 'riders', 'content', 'tactical_data'].includes(key) ? 15 : 8); 
+                    input.rows = key === 'insight' ? 3 : (['details', 'riders', 'content', 'tactical', 'tactical_data'].includes(key) ? 15 : 8); 
                     input.className = "input-dark w-full rounded-lg p-3 font-mono text-sm leading-relaxed";
+                    
                     if (key === 'riders') input.id = 'riders-textarea';
-                    input.value = typeof value === 'object' ? JSON.stringify(value, null, 4) : (value || '');
-                    input.name = key; wrapper.appendChild(label); wrapper.appendChild(input);
-                    if (key === 'riders') {
-                        const h = document.createElement('div'); h.innerHTML = `<button type="button" onclick="insertRiderTemplate()" class="mt-3 text-[10px] bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-lg border border-emerald-500/30">+ Añadir Ciclista</button>`;
-                        wrapper.appendChild(h);
-                    }
-                    form.appendChild(wrapper); continue;
-                } 
-                else if (key === 'tag' || key === 'status' || key === 'isHero' || key === 'tipo') {
-                    input = document.createElement('select'); input.className = "input-dark w-full rounded-lg p-3 text-sm";
-                    let opts = [];
-                    if(key==='tag') opts = ['GENERAL', 'RACE REPORT', 'TECH LAB', 'AERO LAB', 'DATA ANALYSIS'];
-                    if(key==='status') opts = ['Upcoming', 'Live', 'Finished'];
-                    if(key==='tipo') opts = ['ciclista', 'topic'];
-                    if(key==='isHero') {
-                        input.innerHTML = `<option value="0" ${value==0?'selected':''}>No</option><option value="1" ${value==1?'selected':''}>SÍ</option>`;
+                    
+                    if (typeof value === 'object' && value !== null) {
+                        input.value = JSON.stringify(value, null, 4);
+                    } else if (typeof value === 'string') {
+                        try {
+                            const parsed = JSON.parse(value);
+                            input.value = JSON.stringify(parsed, null, 4);
+                        } catch(e) {
+                            input.value = value;
+                        }
                     } else {
-                        opts.forEach(o => input.innerHTML += `<option value="${o}" ${value===o?'selected':''}>${o.toUpperCase()}</option>`);
+                        input.value = value || '';
                     }
-                    if(key==='tipo') input.addEventListener('change', () => rebuildTrendingFields(data));
+                    
+                    input.name = key;
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(input);
+
+                    if (key === 'riders') {
+                        const helper = document.createElement('div');
+                        helper.innerHTML = `
+                            <button type="button" onclick="insertRiderTemplate()" class="mt-3 text-[10px] bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-lg border border-emerald-500/30 hover:bg-emerald-500 hover:text-black transition-colors font-bold tracking-widest uppercase flex items-center gap-2 shadow-sm active:scale-95">
+                                <i class="fas fa-user-plus"></i> Añadir Ciclista
+                            </button>`;
+                        wrapper.appendChild(helper);
+                    }
+                    
+                    form.appendChild(wrapper);
+                    continue;
+                } 
+                else if (key === 'tag' || key === 'status' || key === 'isHero') {
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3 text-sm";
+                    let opts = [];
+                    if(key==='tag') opts = ['GENERAL', 'RACE REPORT', 'TECH LAB', 'AERO LAB', 'DATA ANALYSIS', 'PREVIA'];
+                    if(key==='status') opts = ['Upcoming', 'Live', 'Finished'];
+                    if(key==='isHero') {
+                        const op1 = document.createElement('option'); op1.value="0"; op1.innerText="No"; if(value==0) op1.selected=true;
+                        const op2 = document.createElement('option'); op2.value="1"; op2.innerText="SÍ (Hero)"; if(value==1) op2.selected=true;
+                        input.appendChild(op1); input.appendChild(op2);
+                    } else {
+                        opts.forEach(o => {
+                            const el = document.createElement('option'); el.value=o; el.innerText=o; if(value===o) el.selected=true;
+                            input.appendChild(el);
+                        });
+                    }
                 } 
                 else if (currentTable === 'trending' && key === 'subtitle' && isTrendingRider) {
-                    input = document.createElement('select'); input.className = "input-dark w-full rounded-lg p-3 text-cyan-400 text-sm"; input.id = 'select-trending-team';
-                    input.innerHTML = '<option value="">Selecciona un equipo...</option>';
-                    globalTeamsData.forEach(t => input.innerHTML += `<option value="${t.name}" ${value===t.name?'selected':''}>${t.name}</option>`);
-                    input.addEventListener('change', (e) => populateRidersDropdown(e.target.value));
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3 font-bold text-cyan-400 text-sm";
+                    input.id = 'select-trending-team';
+                    
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = ""; defaultOpt.innerText = "Selecciona un equipo...";
+                    input.appendChild(defaultOpt);
+
+                    globalTeamsData.forEach(team => {
+                        const opt = document.createElement('option');
+                        opt.value = team.name; opt.innerText = team.name;
+                        if (value === team.name) opt.selected = true;
+                        input.appendChild(opt);
+                    });
+
+                    input.addEventListener('change', (e) => { populateRidersDropdown(e.target.value); });
                 } else if (currentTable === 'trending' && key === 'title' && isTrendingRider) {
-                    input = document.createElement('select'); input.className = "input-dark w-full rounded-lg p-3 text-white text-sm"; input.id = 'select-trending-rider';
-                    input.innerHTML = `<option value="${value||''}">${value||'Selecciona equipo...'}</option>`;
-                } 
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3 font-bold text-white text-sm";
+                    input.id = 'select-trending-rider';
+                    
+                    const opt = document.createElement('option');
+                    opt.value = value || ""; opt.innerText = value || "Selecciona equipo primero...";
+                    input.appendChild(opt);
+                } else if (key === 'tipo') {
+                    input = document.createElement('select');
+                    input.className = "input-dark w-full rounded-lg p-3 text-sm";
+                    ['ciclista', 'topic'].forEach(opt => {
+                        const el = document.createElement('option');
+                        el.value = opt; el.innerText = opt.toUpperCase();
+                        if (value === opt) el.selected = true;
+                        input.appendChild(el);
+                    });
+                    input.addEventListener('change', (e) => {
+                        if (currentTable === 'trending') rebuildTrendingFields(data);
+                    });
+                }
                 else {
                     input = document.createElement('input');
-                    input.type = (key.includes('date') || key.includes('ISO')) ? 'date' : 'text';
+                    input.type = (key === 'dateISO' || key === 'endDateISO') ? 'date' : 'text';
                     input.className = "input-dark w-full rounded-lg p-3 text-sm";
-                    input.value = (key.includes('ISO') && value) ? value.split('T')[0] : (value || '');
+                    
+                    let dateVal = value || '';
+                    if ((key === 'dateISO' || key === 'endDateISO') && dateVal.includes('T')) {
+                        dateVal = dateVal.split('T')[0];
+                    }
+                    input.value = dateVal;
                 }
                 
-                input.name = key; wrapper.appendChild(label); wrapper.appendChild(input); form.appendChild(wrapper);
+                input.name = key;
+                wrapper.appendChild(label);
+                wrapper.appendChild(input);
+                form.appendChild(wrapper);
             }
-            if (isTrendingRider && data.subtitle && data.title) setTimeout(() => populateRidersDropdown(data.subtitle, data.title), 50);
+
+            if (isTrendingRider && data.subtitle && data.title) {
+                setTimeout(() => populateRidersDropdown(data.subtitle, data.title), 50);
+            }
         }
 
         function rebuildTrendingFields(data) {
-            const isEditingMem = isEditing, editIdMem = editId;
-            const currentDataObj = Object.fromEntries(new FormData(document.getElementById('dynamicForm')).entries());
-            buildForm(currentDataObj); isEditing = isEditingMem; editId = editIdMem;
+            const isEditingMem = isEditing;
+            const editIdMem = editId;
+            const form = document.getElementById('dynamicForm');
+            const currentDataObj = {};
+            new FormData(form).forEach((value, key) => currentDataObj[key] = value);
+            buildForm(currentDataObj);
+            isEditing = isEditingMem;
+            editId = editIdMem;
         }
 
         function populateRidersDropdown(teamName, selectedRider = null) {
-            const riderSelect = document.getElementById('select-trending-rider'); if (!riderSelect) return;
+            const riderSelect = document.getElementById('select-trending-rider');
+            if (!riderSelect) return;
             riderSelect.innerHTML = '';
             const team = globalTeamsData.find(t => t.name === teamName);
+            
             if (team && team.riders) {
-                let riders = []; try { riders = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; } catch(e){}
-                if(Array.isArray(riders)) riders.forEach(r => riderSelect.innerHTML += `<option value="${r.name}" ${r.name===selectedRider?'selected':''}>${r.name}</option>`);
+                let riders = [];
+                try { 
+                    riders = typeof team.riders === 'string' ? JSON.parse(team.riders) : team.riders; 
+                    if(typeof riders === 'string') riders = JSON.parse(riders);
+                } catch(e){}
+                
+                if(Array.isArray(riders)) {
+                    riders.sort((a,b) => a.name.localeCompare(b.name)).forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r.name; opt.innerText = r.name;
+                        if (r.name === selectedRider) opt.selected = true;
+                        riderSelect.appendChild(opt);
+                    });
+                }
             }
-            if(riderSelect.options.length === 0) riderSelect.innerHTML = '<option value="">Sin ciclistas...</option>';
+            if(riderSelect.options.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = ""; opt.innerText = "Sin ciclistas...";
+                riderSelect.appendChild(opt);
+            }
         }
 
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }
+        function closeModal() { 
+            document.getElementById('modal').classList.add('hidden'); 
+            document.body.classList.remove('overflow-hidden'); 
+        }
 
         async function saveData() {
-            const dataObj = Object.fromEntries(new FormData(document.getElementById('dynamicForm')).entries());
-            if (dataObj.points) dataObj.points = parseInt(dataObj.points);
+            const form = document.getElementById('dynamicForm');
+            const formData = new FormData(form);
+            const dataObj = {};
+            
+            for (let [key, value] of formData.entries()) {
+                if (key === 'points') {
+                    dataObj[key] = value !== '' ? parseInt(value) : 0;
+                } else {
+                    dataObj[key] = value;
+                }
+            }
+
+            let url = isEditing ? `/api/admin/${currentTable}/${editId}` : `/api/admin/create/${currentTable}`;
+            let method = isEditing ? 'PUT' : 'POST';
+
             try {
-                const res = await fetch(isEditing ? `/api/admin/${currentTable}/${editId}` : `/api/admin/create/${currentTable}`, {
-                    method: isEditing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataObj)
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataObj)
                 });
-                if (res.ok) { closeModal(); loadTable(currentTable); if (currentTable === 'equipos') fetchGlobalTeams(); }
-                else alert("❌ Error");
-            } catch (e) { alert("Error de red"); }
+                if (res.ok) { 
+                    closeModal(); 
+                    loadTable(currentTable); 
+                    if (currentTable === 'equipos') fetchGlobalTeams();
+                    alert("✅ Guardado con éxito"); 
+                }
+                else { const err = await res.json(); alert("❌ Error: " + JSON.stringify(err)); }
+            } catch (e) { alert("Error de red: " + e.message); }
         }
 
         async function deleteItem(id) {
-            if(!confirm("⚠️ ¿Estás seguro?")) return;
-            await fetch(`/api/admin/${currentTable}/${id}`, { method: 'DELETE' }); loadTable(currentTable);
+            if(!confirm("⚠️ ¿Estás seguro de borrar esto?")) return;
+            try {
+                await fetch(`/api/admin/${currentTable}/${id}`, { method: 'DELETE' });
+                loadTable(currentTable);
+            } catch(e) { alert("Error borrando"); }
         }
 
         function logout() { window.location.href = "https://logout:logout@" + window.location.host; }
