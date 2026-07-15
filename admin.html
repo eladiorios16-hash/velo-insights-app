@@ -327,12 +327,15 @@
                 displayCols.forEach(col => {
                     let val = row[col];
                     
-                    // --- BANDERAS CON IMÁGENES SVG (ARREGLO PARA PC) ---
-                    if (col === 'country' && val && val.toString().trim().length <= 3) {
-                        const code = val.toString().trim().toLowerCase();
-                        val = `<img src="https://flagcdn.com/24x18/${code}.png" class="inline-block w-6 h-4 mr-2 border border-slate-700/50 rounded-sm shadow-sm" alt="${code}"> <span class="font-bold">${val}</span>`;
+                    // --- MAGIA BANDERAS (A PRUEBA DE MAYÚSCULAS/MINÚSCULAS Y BASURA EN DB) ---
+                    if (col.toLowerCase().trim() === 'country' && val) {
+                        // Limpia el valor dejando solo las letras del país (ej. " KZ " o "🇪🇸 ES" -> "kz", "es")
+                        const codeText = val.toString().replace(/[^a-zA-Z]/g, '').trim().toLowerCase();
+                        if (codeText.length >= 2 && codeText.length <= 3) {
+                            val = `<div class="flex items-center gap-2"><img src="https://flagcdn.com/24x18/${codeText}.png" class="w-6 h-4 border border-slate-700/50 rounded-sm shadow-sm" alt="${codeText}"><span class="font-bold uppercase">${codeText}</span></div>`;
+                        }
                     }
-                    // ---------------------------------------------------
+                    // -------------------------------------------------------------------------
                     
                     else if (col === 'isHero') val = val == 1 ? '<span class="text-yellow-400">★ SÍ</span>' : '<span class="text-slate-600">No</span>';
                     else if (col === 'tipo' && currentTable === 'trending') val = val === 'ciclista' ? '<span class="text-emerald-400 font-bold">🚴‍♂️ CICLISTA</span>' : '<span class="text-cyan-400 font-bold"># TOPIC</span>';
