@@ -107,7 +107,6 @@
         let isEditing = false;
         let editId = null;
 
-        // Plantillas
         const templates = {
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
             calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
@@ -328,12 +327,12 @@
                 displayCols.forEach(col => {
                     let val = row[col];
                     
-                    // --- BANDERAS CON IMÁGENES SVG (Adiós problemas de emojis en PC) ---
-                    if (col === 'country' && val && val.length <= 3) {
-                        const code = val.toLowerCase();
-                        val = `<img src="https://flagcdn.com/24x18/${code}.png" class="inline-block w-6 h-4 mr-2 border border-slate-700/50 rounded-sm shadow-sm" alt="${val}"> <span class="font-bold">${val}</span>`;
+                    // --- BANDERAS CON IMÁGENES SVG (ARREGLO PARA PC) ---
+                    if (col === 'country' && val && val.toString().trim().length <= 3) {
+                        const code = val.toString().trim().toLowerCase();
+                        val = `<img src="https://flagcdn.com/24x18/${code}.png" class="inline-block w-6 h-4 mr-2 border border-slate-700/50 rounded-sm shadow-sm" alt="${code}"> <span class="font-bold">${val}</span>`;
                     }
-                    // ------------------------------------------------------------------
+                    // ---------------------------------------------------
                     
                     else if (col === 'isHero') val = val == 1 ? '<span class="text-yellow-400">★ SÍ</span>' : '<span class="text-slate-600">No</span>';
                     else if (col === 'tipo' && currentTable === 'trending') val = val === 'ciclista' ? '<span class="text-emerald-400 font-bold">🚴‍♂️ CICLISTA</span>' : '<span class="text-cyan-400 font-bold"># TOPIC</span>';
