@@ -107,7 +107,7 @@
         let isEditing = false;
         let editId = null;
 
-        // MODIFICADO: Plantilla de Equipos con el formato Biométrico y OVR completo
+        // Plantilla de Equipos con el formato Biométrico y OVR completo
         const templates = {
             noticias: { title: 'Título', date: 'DD MMM AAAA', tag: 'GENERAL', image: 'assets/placeholder.jpg', lead: 'Lead...', content: '<p>HTML</p>', isHero: 0 },
             calendario: { name: 'Nombre', status: 'Upcoming', date: 'Texto Fecha', dateISO: '2026-01-01', endDateISO: '2026-01-01', category: 'WT', details: '{}', winner: null },
@@ -244,10 +244,9 @@
             resultContainer.classList.add('hidden');
 
             try {
-                const authHeader = 'Basic ' + btoa('admin:velo2026');
                 const res = await fetch('/api/admin/copilot', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt, type })
                 });
 
@@ -409,7 +408,6 @@
                     return;
                 }
 
-                const authHeader = 'Basic ' + btoa('admin:velo2026');
                 let addedCount = 0;
                 
                 for (const trend of newTrends) {
@@ -417,7 +415,7 @@
                     if (!exists) {
                         await fetch(`/api/admin/create/trending`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(trend)
                         });
                         addedCount++;
@@ -466,7 +464,6 @@
                 return;
             }
 
-            const authHeader = 'Basic ' + btoa('admin:velo2026');
             const statusMsg = document.getElementById(`upload-status-${inputTargetId}`);
             const btnUI = document.getElementById(`upload-btn-${inputTargetId}`);
             
@@ -482,7 +479,6 @@
             try {
                 const res = await fetch('/api/admin/upload', {
                     method: 'POST',
-                    headers: { 'Authorization': authHeader },
                     body: formData
                 });
                 
@@ -602,7 +598,7 @@
                     wrapper.appendChild(label);
                     wrapper.appendChild(input);
 
-                    // MODIFICADO: Añadimos el botón de "Insertar Ciclista" justo debajo del campo 'riders'
+                    // Añadimos el botón de "Insertar Ciclista" justo debajo del campo 'riders'
                     if (key === 'riders') {
                         const helper = document.createElement('div');
                         helper.innerHTML = `
@@ -747,14 +743,13 @@
                 dataObj[key] = value;
             }
 
-            const authHeader = 'Basic ' + btoa('admin:velo2026');
             let url = isEditing ? `/api/admin/${currentTable}/${editId}` : `/api/admin/create/${currentTable}`;
             let method = isEditing ? 'PUT' : 'POST';
 
             try {
                 const res = await fetch(url, {
                     method: method,
-                    headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dataObj)
                 });
                 if (res.ok) { 
@@ -769,9 +764,8 @@
 
         async function deleteItem(id) {
             if(!confirm("⚠️ ¿Estás seguro de borrar esto?")) return;
-            const authHeader = 'Basic ' + btoa('admin:velo2026');
             try {
-                await fetch(`/api/admin/${currentTable}/${id}`, { method: 'DELETE', headers: { 'Authorization': authHeader } });
+                await fetch(`/api/admin/${currentTable}/${id}`, { method: 'DELETE' });
                 loadTable(currentTable);
             } catch(e) { alert("Error borrando"); }
         }
