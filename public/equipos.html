@@ -482,8 +482,13 @@
             const counter = document.getElementById('team-counter');
             if(counter) {
                 counter.innerText = `${myFantasyTeam.length}/8`;
-                if(myFantasyTeam.length === 8) counter.classList.replace('bg-black/50', 'bg-pink-500 text-black');
-                else counter.classList.replace('bg-pink-500', 'bg-black/50 text-white');
+                if(myFantasyTeam.length === 8) {
+                    counter.classList.remove('bg-black/50', 'text-white');
+                    counter.classList.add('bg-pink-500', 'text-black');
+                } else {
+                    counter.classList.remove('bg-pink-500', 'text-black');
+                    counter.classList.add('bg-black/50', 'text-white');
+                }
             }
         }
 
@@ -673,7 +678,7 @@
 
         function filterTeams(type) {
             currentFilter = 'all';
-            document.getElementById('btn-favs').classList.remove('active', 'bg-zinc-800', 'text-yellow-500');
+            document.getElementById('btn-favs').classList.remove('active', 'bg-zinc-800', 'text-white');
             document.getElementById('btn-favs').classList.add('text-zinc-500');
             
             document.getElementById('btn-team').classList.remove('text-emerald-400', 'border-emerald-500/50', 'bg-emerald-500/10');
@@ -690,18 +695,15 @@
 
         Chart.register(ChartDataLabels);
 
-        // AQUÍ ESTABA EL BUG INVISIBLE - AHORA PARCHEADO
         async function fetchTeams() {
             container.innerHTML = `<div class="col-span-full text-center py-20 animate-pulse text-zinc-500 text-xs font-bold uppercase">Cargando equipos...</div>`;
             try {
                 const response = await fetch('/api/teams');
                 
-                // 1. Verificamos si el servidor responde con error HTTP
                 if (!response.ok) throw new Error(`El servidor devolvió un error ${response.status}`);
                 
                 let data = await response.json();
                 
-                // 2. Verificamos que los datos sean realmente una lista (Array)
                 if (!Array.isArray(data)) throw new Error("La API no devolvió una lista válida.");
                 
                 allTeams = data.map(team => {
@@ -736,10 +738,10 @@
                 
             } catch (error) { 
                 console.error("Error técnico completo:", error);
-                // 3. AHORA IMPRIMIMOS EL ERROR REAL EN PANTALLA PARA VER QUÉ PASA
                 container.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 font-bold text-xs uppercase border border-red-900/50 rounded-2xl bg-red-900/10">Fallo detectado: ${error.message}</div>`; 
             }
         }
+
         function renderTeams(items) {
             if(items.length === 0 && currentFilter !== 'favs' && currentFilter !== 'team') { 
                 document.getElementById('no-results').classList.remove('hidden'); 
