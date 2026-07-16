@@ -113,7 +113,7 @@
             transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .accordion-content.open {
-            max-height: 300px; /* Ampliado para que quepa el botón de añadir a equipo */
+            max-height: 300px; 
         }
         .accordion-icon {
             transition: transform 0.3s ease;
@@ -690,20 +690,38 @@
 
         Chart.register(ChartDataLabels);
 
+        // AQUÍ ESTABA EL BUG INVISIBLE - AHORA PARCHEADO
         async function fetchTeams() {
             container.innerHTML = `<div class="col-span-full text-center py-20 animate-pulse text-zinc-500 text-xs font-bold uppercase">Cargando equipos...</div>`;
             try {
                 const response = await fetch('/api/teams');
                 if (response.ok) {
                     let data = await response.json();
-                    allTeams = data.map(team => ({
-                        ...team,
-                        riders: team.riders.map(rider => {
-                            let stats = rider.stats;
-                            if (typeof stats === 'string') { try { stats = JSON.parse(stats); } catch(e) { stats = {}; } }
-                            return { ...rider, stats: { mnt: Number(stats?.mnt)||0, spr: Number(stats?.spr)||0, tt: Number(stats?.tt)||0, lla: Number(stats?.lla)||0, res: Number(stats?.res)||0, rec: Number(stats?.rec)||0, ovr: Number(stats?.ovr)||0 }};
-                        })
-                    }));
+                    
+                    allTeams = data.map(team => {
+                        let parsedRiders = [];
+                        try {
+                            // Esta línea salva todo el código leyendo bien la base de datos
+                            parsedRiders = typeof team.riders === 'string' ? JSON.parse(team.riders) : (team.riders || []);
+                        } catch(e) {
+                            console.warn('No se pudieron procesar los ciclistas del equipo', team.name);
+                        }
+                        
+                        return {
+                            ...team,
+                            riders: parsedRiders.map(rider => {
+                                let stats = rider.stats;
+                                if (typeof stats === 'string') { try { stats = JSON.parse(stats); } catch(e) { stats = {}; } }
+                                return { 
+                                    ...rider, 
+                                    stats: { 
+                                        mnt: Number(stats?.mnt)||0, spr: Number(stats?.spr)||0, tt: Number(stats?.tt)||0, 
+                                        lla: Number(stats?.lla)||0, res: Number(stats?.res)||0, rec: Number(stats?.rec)||0, ovr: Number(stats?.ovr)||0 
+                                    }
+                                };
+                            })
+                        };
+                    });
                     
                     updateTeamCounter();
                     
