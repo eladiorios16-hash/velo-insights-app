@@ -485,6 +485,13 @@
             return `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${slug}.png`;
         }
 
+        // --- BANDERAS COMO IMAGEN (los emoji de bandera no se ven en Windows/PC) ---
+        function getFlagImg(countryCode, extraClass = '') {
+            if (!countryCode) return '';
+            const code = countryCode.toLowerCase().trim();
+            return `<img src="https://flagcdn.com/24x18/${code}.png" srcset="https://flagcdn.com/48x36/${code}.png 2x" width="18" height="13" alt="${countryCode}" class="inline-block rounded-[2px] object-cover shadow-sm shrink-0 ${extraClass}" onerror="this.style.display='none'">`;
+        }
+
         // --- COLOR DEL OVR SEGÚN NIVEL (estilo "carta") ---
         function getOvrTierStyle(ovr) {
             if (ovr >= 95) return 'text-amber-400 drop-shadow-[0_0_14px_rgba(251,191,36,0.7)]';
@@ -575,24 +582,27 @@
 
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full";
             
+            const sortedTeam = [...myFantasyTeam].sort((a, b) => (b.stats.ovr || 0) - (a.stats.ovr || 0));
+
             let html = '';
-            myFantasyTeam.forEach(rider => {
+            sortedTeam.forEach((rider, index) => {
                 const foto = getRiderImageUrl(rider.name);
                 const riderStr = JSON.stringify(rider).replace(/"/g, '&quot;');
-                const flag = COUNTRY_FLAGS[rider.country] || rider.country;
+                const flag = getFlagImg(rider.country);
 
                 html += `
                 <div class="bg-[#060a13] border border-slate-800 rounded-2xl p-5 relative group hover:border-pink-500/50 transition-all shadow-lg animate-fade-in-up">
+                    <span class="absolute top-3 left-3 text-[10px] font-mono font-black text-zinc-600 bg-black/50 rounded-full w-6 h-6 flex items-center justify-center border border-slate-800">${index + 1}</span>
                     <button onclick="toggleFantasyTeam('${riderStr}')" class="absolute top-3 right-3 text-slate-600 hover:text-red-500 transition-colors bg-black/50 rounded-full w-6 h-6 flex items-center justify-center">
                         <i class="fas fa-times text-xs"></i>
                     </button>
                     
-                    <div class="flex items-center gap-4 mb-4">
+                    <div class="flex items-center gap-4 mb-4 mt-4">
                         <img src="${foto}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${rider.name}" class="w-16 h-16 rounded-full object-cover border border-slate-700 group-hover:border-pink-500 transition-colors bg-zinc-900">
                         <div class="flex flex-col min-w-0">
                             <h4 class="font-black text-white text-xs md:text-sm uppercase tracking-wider truncate">${rider.name}</h4>
                             <div class="flex items-center gap-1.5 mt-1">
-                                <span class="text-sm">${flag}</span>
+                                ${flag}
                                 <span class="spec-badge ${rider.typeClass || 'spec-gc'}">${rider.type || 'PRO'}</span>
                             </div>
                         </div>
@@ -668,7 +678,7 @@
                     <div class="flex justify-between items-start ml-2 mb-3">
                         <div class="flex flex-col min-w-0">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-sm">${rider.country}</span>
+                                ${getFlagImg(rider.country)}
                                 <span class="text-[9px] font-black uppercase bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">${rider.teamCode}</span>
                             </div>
                             <h4 class="text-sm md:text-base font-bold text-white uppercase tracking-tight truncate">${rider.name}</h4>
@@ -942,7 +952,7 @@
                             </button>
 
                             <span class="text-[10px] font-mono text-zinc-600 font-bold w-4 shrink-0 text-center" aria-hidden="true">${index + 1}</span>
-                            <span class="text-sm w-6 text-center shrink-0" aria-hidden="true">${COUNTRY_FLAGS[rider.country] || rider.country}</span>
+                            <span class="w-6 flex items-center justify-center shrink-0" aria-hidden="true">${getFlagImg(rider.country)}</span>
                             
                             <div class="flex flex-col min-w-0">
                                 <h4 class="text-zinc-300 font-bold uppercase text-xs md:text-sm tracking-tight group-hover:text-white transition-colors truncate">${rider.name}</h4>
