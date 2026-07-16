@@ -368,6 +368,19 @@
         const modalJerseyMobile = document.getElementById('modal-jersey-mobile');
         const modalJerseyDesktop = document.getElementById('modal-jersey-desktop');
         const modalRoster = document.getElementById('modal-roster');
+
+        // --- ACCESIBILIDAD: las tarjetas de equipo son un <div role="button" tabindex="0">,
+        // así que necesitan gestionar Enter/Espacio a mano (un <button> nativo ya lo haría solo).
+        // Un único listener delegado en el contenedor: sigue funcionando aunque las tarjetas
+        // se regeneren con cada filtro/búsqueda, sin tener que engancharlo una a una.
+        container.addEventListener('keydown', (e) => {
+            const card = e.target.closest('.team-card');
+            if (!card) return;
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                card.click();
+            }
+        });
         
         let allTeams = [];
         let radarChartInstance = null;
@@ -408,6 +421,18 @@
             'UXM': { bike: 'Ridley', group: 'Shimano', color: '#ef4444' },
             'NSN': { bike: 'Factor', group: 'Shimano', color: '#10b981' },
             'DEFAULT': { bike: 'Team Bike', group: 'Components', color: '#22d3ee' }
+        };
+
+        // --- ROLES DE MI EQUIPO (personalizable por el usuario) ---
+        // Solo puede haber un "lider" a la vez (se controla en setRiderRole); el resto de roles
+        // se pueden repetir libremente, igual que en un equipo real.
+        const FANTASY_ROLES = {
+            lider:    { label: 'Líder',        icon: 'fa-crown',       badge: 'bg-amber-500 text-black border-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.5)]',  text: 'text-amber-400' },
+            colider:  { label: 'Colíder',       icon: 'fa-star',        badge: 'bg-cyan-500 text-black border-cyan-300',   text: 'text-cyan-400' },
+            rodador:  { label: 'Rodador',       icon: 'fa-road',        badge: 'bg-blue-500 text-black border-blue-300',   text: 'text-blue-400' },
+            sprinter: { label: 'Sprinter',      icon: 'fa-bolt',        badge: 'bg-emerald-500 text-black border-emerald-300', text: 'text-emerald-400' },
+            libre:    { label: 'Hombre Libre',  icon: 'fa-shoe-prints', badge: 'bg-purple-500 text-black border-purple-300', text: 'text-purple-400' },
+            gregario: { label: 'Gregario',      icon: 'fa-shield-alt',  badge: 'bg-zinc-700 text-zinc-300 border-zinc-600', text: 'text-zinc-400' }
         };
 
         // --- FAVORITOS ---
@@ -535,6 +560,63 @@
             }).join('');
         }
 
+        // --- ARQUITECTURA: tarjeta de ciclista reutilizable (Favoritos + Mi Equipo) ---
+        // Antes esta tarjeta (foto, bandera, badge, 6 stats, OVR) estaba duplicada en las dos vistas.
+        // Cada vista solo aporta las piezas que le son propias vía "opts":
+        //   cardClass, imgBorderClass  - estilo del contenedor exterior y del borde de la foto
+        //   sideBar        - HTML decorativo pegado al borde (franja de color del equipo en Favoritos)
+        //   cornerBadge    - HTML de la esquina superior izquierda (dorsal, corona de líder...)
+        //   removeAction   - HTML de la esquina superior derecha (quitar de favoritos / del equipo)
+        //   headerExtra    - línea pequeña encima del nombre (código de equipo, rol...)
+        //   statsLabelClass / statsValueClass - estilo del bloque de 6 estadísticas
+        //   footerExtra    - controles bajo las estadísticas (selector de rol, flechas de orden...)
+        //                    si se define, el OVR pasa de esquina flotante a formar parte de esa fila
+        //   ovrSize        - tamaño del número OVR
+        function renderRiderCard(rider, opts = {}) {
+            const cardClass = opts.cardClass || 'bg-[#060a13] border border-slate-800 rounded-2xl p-5 relative group hover:border-pink-500/50 transition-all shadow-lg';
+            const imgBorderClass = opts.imgBorderClass || 'border-slate-700';
+            const sideBar = opts.sideBar || '';
+            const cornerBadge = opts.cornerBadge || '';
+            const removeAction = opts.removeAction || '';
+            const headerExtra = opts.headerExtra || '';
+            const statsLabelClass = opts.statsLabelClass || 'block text-[7px] uppercase tracking-wider mb-0.5';
+            const statsValueClass = opts.statsValueClass || 'text-zinc-200 font-bold';
+            const footerExtra = opts.footerExtra || '';
+            const ovrSize = opts.ovrSize || 'text-2xl md:text-3xl';
+
+            const foto = getRiderImageUrl(rider.name);
+            const flag = getFlagImg(rider.country);
+            const ovrBlock = `<span class="${ovrSize} font-black italic ${getOvrTierStyle(rider.stats.ovr)} leading-none">${rider.stats.ovr}</span><span class="text-[8px] text-pink-500 font-black tracking-widest ml-1 mb-1">OVR</span>`;
+
+            return `
+            <div class="${cardClass}">
+                ${sideBar}
+                ${cornerBadge}
+                ${removeAction}
+                <div class="flex items-center gap-4 mb-2 ${cornerBadge ? 'mt-4' : ''}">
+                    <img src="${escapeHtml(foto)}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${escapeHtml(rider.name)}" class="w-16 h-16 rounded-full object-cover border ${imgBorderClass} group-hover:border-pink-500 transition-colors bg-zinc-900">
+                    <div class="flex flex-col min-w-0">
+                        ${headerExtra}
+                        <h4 class="font-black text-white text-xs md:text-sm uppercase tracking-wider truncate">${escapeHtml(rider.name)}</h4>
+                        <div class="flex items-center gap-1.5 mt-1">
+                            ${flag}
+                            <span class="spec-badge ${escapeHtml(rider.typeClass || 'spec-gc')}">${escapeHtml(rider.type || 'PRO')}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-6 gap-1 text-center bg-black p-2 rounded-xl border border-slate-800/80 mt-3 ${footerExtra ? 'mb-3' : 'mb-8'}">
+                    ${renderStatsCells(rider.stats, statsLabelClass, statsValueClass)}
+                </div>
+
+                ${footerExtra
+                    ? `<div class="flex items-center justify-between gap-2 flex-wrap">${footerExtra}<div class="flex items-end shrink-0 ml-auto">${ovrBlock}</div></div>`
+                    : `<div class="absolute bottom-3 right-4 flex items-end">${ovrBlock}</div>`
+                }
+            </div>
+            `;
+        }
+
         // --- LÓGICA FANTASY TEAM ---
        function updateTeamCounter() {
             const counter = document.getElementById('team-counter');
@@ -567,6 +649,10 @@
                     alert("⚠️ Límite de 8 ciclistas alcanzado. Elimina a uno antes de añadir otro.");
                     return;
                 }
+                // Si aún no hay líder en el equipo, el primero en llegar lo es por defecto
+                // (el usuario puede cambiarlo luego con el selector de rol)
+                const hasLeader = myFantasyTeam.some(r => r.role === 'lider');
+                rider.role = hasLeader ? 'gregario' : 'lider';
                 myFantasyTeam.push(rider);
                 showToast(`🔥 ${rider.name} fichado para tu equipo!`);
             }
@@ -588,6 +674,39 @@
                     }
                 }
             }
+        };
+
+        // Cambia el rol de un ciclista de Mi Equipo. Solo puede haber un "líder" a la vez:
+        // si se asigna a otro, el anterior pasa automáticamente a gregario.
+        window.setRiderRole = function(selectEl) {
+            const riderName = selectEl.dataset.riderName;
+            const newRole = selectEl.value;
+            const rider = myFantasyTeam.find(r => r.name === riderName);
+            if (!rider) return;
+
+            if (newRole === 'lider') {
+                myFantasyTeam.forEach(r => { if (r.role === 'lider' && r.name !== riderName) r.role = 'gregario'; });
+            }
+            rider.role = newRole;
+
+            localStorage.setItem('velo_fantasy_team', JSON.stringify(myFantasyTeam));
+            renderMyTeamView();
+        };
+
+        // Reordena manualmente la plantilla (mueve un ciclista una posición arriba o abajo).
+        // Recibe el botón (this): igual que en toggleFavorite/toggleFantasyTeam, evita
+        // pasar un nombre de ciclista directamente dentro del string del onclick.
+        window.moveRiderInTeam = function(el) {
+            const riderName = el.dataset.riderName;
+            const direction = parseInt(el.dataset.direction, 10);
+            const index = myFantasyTeam.findIndex(r => r.name === riderName);
+            const newIndex = index + direction;
+            if (index === -1 || newIndex < 0 || newIndex >= myFantasyTeam.length) return;
+
+            [myFantasyTeam[index], myFantasyTeam[newIndex]] = [myFantasyTeam[newIndex], myFantasyTeam[index]];
+
+            localStorage.setItem('velo_fantasy_team', JSON.stringify(myFantasyTeam));
+            renderMyTeamView();
         };
 
         window.renderMyTeamView = function() {
@@ -619,9 +738,11 @@
 
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full";
             
-            const sortedTeam = [...myFantasyTeam].sort((a, b) => (b.stats.ovr || 0) - (a.stats.ovr || 0));
-            const avgOvr = Math.round(sortedTeam.reduce((acc, r) => acc + (r.stats.ovr || 0), 0) / sortedTeam.length);
-            const captain = sortedTeam[0];
+            // El orden ya no es automático por media: es el orden guardado (el usuario lo controla
+            // con las flechas ▲▼ de cada tarjeta). El "líder" tampoco es el de mejor media:
+            // es quien el usuario haya marcado como tal con el selector de rol.
+            const avgOvr = Math.round(myFantasyTeam.reduce((acc, r) => acc + (r.stats.ovr || 0), 0) / myFantasyTeam.length);
+            const leader = myFantasyTeam.find(r => r.role === 'lider');
 
             let html = `
             <div class="col-span-full bg-gradient-to-r from-pink-950/30 via-black to-black border border-pink-900/40 rounded-2xl p-5 md:p-6 mb-1 relative overflow-hidden">
@@ -631,7 +752,7 @@
                         <p class="text-[9px] font-black uppercase tracking-[0.3em] text-pink-500 mb-1">Plantilla Titular</p>
                         <h2 class="text-2xl md:text-3xl font-heading text-white italic uppercase tracking-tighter leading-none">Mi Equipo <span class="text-zinc-600">// Tour de France</span></h2>
                         <p class="text-[11px] text-zinc-400 font-bold uppercase tracking-widest mt-2 flex items-center gap-1.5">
-                            <i class="fas fa-crown text-amber-400"></i> Capitán: <span class="text-white">${escapeHtml(captain.name)}</span>
+                            <i class="fas fa-crown text-amber-400"></i> Líder: <span class="text-white">${leader ? escapeHtml(leader.name) : 'Sin asignar'}</span>
                         </p>
                     </div>
                     <div class="flex items-center gap-3 shrink-0">
@@ -640,7 +761,7 @@
                             <span class="block text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Media Equipo</span>
                         </div>
                         <div class="bg-black/60 border border-zinc-800 rounded-xl px-4 py-2 text-center">
-                            <span class="block text-2xl font-black italic text-white leading-none">${sortedTeam.length}<span class="text-zinc-600 text-sm">/8</span></span>
+                            <span class="block text-2xl font-black italic text-white leading-none">${myFantasyTeam.length}<span class="text-zinc-600 text-sm">/8</span></span>
                             <span class="block text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Dorsales</span>
                         </div>
                     </div>
@@ -648,50 +769,44 @@
             </div>
             `;
 
-            sortedTeam.forEach((rider, index) => {
-                const foto = getRiderImageUrl(rider.name);
+            myFantasyTeam.forEach((rider, index) => {
                 const riderJson = escapeHtml(JSON.stringify(rider));
-                const flag = getFlagImg(rider.country);
-                const isCaptain = index === 0;
+                const role = FANTASY_ROLES[rider.role] || FANTASY_ROLES.gregario;
+                const isLeader = rider.role === 'lider';
 
-                const cardBorder = isCaptain ? 'border-amber-500/50 hover:border-amber-400' : 'border-slate-800 hover:border-pink-500/50';
-                const cardGlow = isCaptain ? 'shadow-[0_0_25px_rgba(251,191,36,0.15)]' : 'shadow-lg';
-                const roleLabel = isCaptain ? 'CAPITÁN' : `GREGARIO Nº${index + 1}`;
-                const roleColor = isCaptain ? 'text-amber-400' : 'text-zinc-600';
-
-                const bibBadge = isCaptain
-                    ? `<span class="absolute top-3 left-3 flex items-center justify-center w-7 h-7 rounded-full bg-amber-500 text-black border border-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.5)]" aria-label="Capitán"><i class="fas fa-crown text-[10px]"></i></span>`
+                const cornerBadge = isLeader
+                    ? `<span class="absolute top-3 left-3 flex items-center justify-center w-7 h-7 rounded-full ${role.badge}" aria-label="Líder"><i class="fas ${role.icon} text-[10px]"></i></span>`
                     : `<span class="absolute top-3 left-3 text-[10px] font-mono font-black text-zinc-500 bg-black/60 rounded-full w-7 h-7 flex items-center justify-center border border-slate-800">${index + 1}</span>`;
 
-                html += `
-                <div class="bg-[#060a13] border ${cardBorder} rounded-2xl p-5 relative group transition-all ${cardGlow} animate-fade-in-up">
-                    ${bibBadge}
-                    <button data-rider="${riderJson}" onclick="toggleFantasyTeam(this)" class="absolute top-3 right-3 text-slate-600 hover:text-red-500 transition-colors bg-black/50 rounded-full w-6 h-6 flex items-center justify-center" aria-label="Quitar de tu equipo">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                    
-                    <div class="flex items-center gap-4 mb-2 mt-4">
-                        <img src="${escapeHtml(foto)}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${escapeHtml(rider.name)}" class="w-16 h-16 rounded-full object-cover border ${isCaptain ? 'border-amber-500/60' : 'border-slate-700'} group-hover:border-pink-500 transition-colors bg-zinc-900">
-                        <div class="flex flex-col min-w-0">
-                            <span class="text-[8px] font-black uppercase tracking-widest ${roleColor}">${roleLabel}</span>
-                            <h4 class="font-black text-white text-xs md:text-sm uppercase tracking-wider truncate">${escapeHtml(rider.name)}</h4>
-                            <div class="flex items-center gap-1.5 mt-1">
-                                ${flag}
-                                <span class="spec-badge ${escapeHtml(rider.typeClass || 'spec-gc')}">${escapeHtml(rider.type || 'PRO')}</span>
-                            </div>
-                        </div>
-                    </div>
+                const removeAction = `<button data-rider="${riderJson}" onclick="toggleFantasyTeam(this)" class="absolute top-3 right-3 text-slate-600 hover:text-red-500 transition-colors bg-black/50 rounded-full w-6 h-6 flex items-center justify-center" aria-label="Quitar de tu equipo"><i class="fas fa-times text-xs"></i></button>`;
 
-                    <div class="grid grid-cols-6 gap-1 text-center bg-black p-2 rounded-xl border border-slate-800/80 mb-8 mt-3">
-                        ${renderStatsCells(rider.stats, 'text-[7px] text-pink-500 font-black tracking-widest block', 'text-xs text-white font-mono')}
+                const headerExtra = `<span class="text-[8px] font-black uppercase tracking-widest ${role.text}">${role.label}</span>`;
+
+                const roleOptions = Object.entries(FANTASY_ROLES).map(([key, r]) =>
+                    `<option value="${key}" ${rider.role === key ? 'selected' : ''}>${r.label}</option>`
+                ).join('');
+
+                const footerExtra = `
+                    <div class="flex items-center gap-1.5">
+                        <select data-rider-name="${escapeHtml(rider.name)}" onchange="setRiderRole(this)" class="bg-black border border-zinc-800 text-white text-[9px] font-bold uppercase rounded-lg pl-2 pr-1 py-1.5 outline-none focus:border-pink-500 max-w-[92px]" aria-label="Rol de ${escapeHtml(rider.name)}">
+                            ${roleOptions}
+                        </select>
+                        <button data-rider-name="${escapeHtml(rider.name)}" data-direction="-1" onclick="moveRiderInTeam(this)" ${index === 0 ? 'disabled' : ''} class="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 disabled:opacity-30 disabled:pointer-events-none transition-colors" aria-label="Subir posición"><i class="fas fa-chevron-up text-[10px]"></i></button>
+                        <button data-rider-name="${escapeHtml(rider.name)}" data-direction="1" onclick="moveRiderInTeam(this)" ${index === myFantasyTeam.length - 1 ? 'disabled' : ''} class="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 disabled:opacity-30 disabled:pointer-events-none transition-colors" aria-label="Bajar posición"><i class="fas fa-chevron-down text-[10px]"></i></button>
                     </div>
-                    
-                    <div class="absolute bottom-3 right-4 flex items-end">
-                        <span class="text-3xl font-black italic ${getOvrTierStyle(rider.stats.ovr)} leading-none">${rider.stats.ovr}</span>
-                        <span class="text-[8px] text-pink-500 font-black tracking-widest ml-1 mb-1">OVR</span>
-                    </div>
-                </div>
                 `;
+
+                html += renderRiderCard(rider, {
+                    cardClass: `bg-[#060a13] border ${isLeader ? 'border-amber-500/50 hover:border-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.15)]' : 'border-slate-800 hover:border-pink-500/50 shadow-lg'} rounded-2xl p-5 relative group transition-all animate-fade-in-up`,
+                    imgBorderClass: isLeader ? 'border-amber-500/60' : 'border-slate-700',
+                    cornerBadge,
+                    removeAction,
+                    headerExtra,
+                    statsLabelClass: 'text-[7px] text-pink-500 font-black tracking-widest block',
+                    statsValueClass: 'text-xs text-white font-mono',
+                    footerExtra,
+                    ovrSize: 'text-2xl'
+                });
             });
 
             container.innerHTML = html;
@@ -736,39 +851,15 @@
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6";
 
             container.innerHTML = favoriteRiders.map(rider => {
-                let ovrColor = 'text-white';
-                if(rider.stats.ovr >= 90) ovrColor = 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]';
-                else if(rider.stats.ovr >= 85) ovrColor = 'text-cyan-400';
-
-                return `
-                <div class="glass bg-zinc-950/80 p-4 rounded-2xl border border-zinc-800 flex flex-col group hover:border-zinc-600 transition-colors relative overflow-hidden">
-                    <div class="absolute left-0 top-0 bottom-0 w-1" style="background-color: ${rider.teamColor}"></div>
-                    
-                    <div class="flex justify-between items-start ml-2 mb-3">
-                        <div class="flex flex-col min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
-                                ${getFlagImg(rider.country)}
-                                <span class="text-[9px] font-black uppercase bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">${escapeHtml(rider.teamCode)}</span>
-                            </div>
-                            <h4 class="text-sm md:text-base font-bold text-white uppercase tracking-tight truncate">${escapeHtml(rider.name)}</h4>
-                            <span class="spec-badge ${escapeHtml(rider.typeClass)} w-max mt-1">${escapeHtml(rider.type)}</span>
-                        </div>
-                        
-                        <div class="flex flex-col items-end shrink-0 pl-3">
-                            <button data-rider-name="${escapeHtml(rider.name)}" data-team-code="${escapeHtml(rider.teamCode)}" onclick="toggleFavorite(this)" class="p-1 mb-1 focus:outline-none" aria-label="Quitar de favoritos">
-                                <svg class="w-4 h-4 text-yellow-500 hover:text-zinc-500 transition-colors" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                            </button>
-                            <span class="text-2xl md:text-3xl font-black italic ${ovrColor} leading-none">${rider.stats.ovr}</span>
-                        </div>
-                    </div>
-
-                    <div class="ml-2 pt-3 border-t border-zinc-800/80">
-                        <div class="grid grid-cols-6 gap-1 text-[9px] md:text-[10px] text-zinc-500 font-mono w-full">
-                            ${renderStatsCells(rider.stats, 'block text-[7px] uppercase tracking-wider mb-0.5', 'text-zinc-200 font-bold')}
-                        </div>
-                    </div>
-                </div>
-                `;
+                return renderRiderCard(rider, {
+                    cardClass: 'glass bg-zinc-950/80 p-4 rounded-2xl border border-zinc-800 flex flex-col group hover:border-zinc-600 transition-colors relative overflow-hidden',
+                    sideBar: `<div class="absolute left-0 top-0 bottom-0 w-1" style="background-color: ${rider.teamColor}"></div>`,
+                    removeAction: `<button data-rider-name="${escapeHtml(rider.name)}" data-team-code="${escapeHtml(rider.teamCode)}" onclick="toggleFavorite(this)" class="absolute top-3 right-3 p-1 focus:outline-none" aria-label="Quitar de favoritos"><svg class="w-4 h-4 text-yellow-500 hover:text-zinc-500 transition-colors" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>`,
+                    headerExtra: `<span class="text-[9px] font-black uppercase bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded w-max mb-1">${escapeHtml(rider.teamCode)}</span>`,
+                    statsLabelClass: 'block text-[7px] uppercase tracking-wider mb-0.5',
+                    statsValueClass: 'text-zinc-200 font-bold',
+                    ovrSize: 'text-2xl md:text-3xl'
+                });
             }).join('');
         }
 
