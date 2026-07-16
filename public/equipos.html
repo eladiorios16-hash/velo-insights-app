@@ -477,14 +477,12 @@
             }
         }
 
-        // --- FOTOS DE CICLISTAS (CLOUDINARY) ---
-        function getRiderPhoto(rider) {
-            const url = rider.profile || rider.photo || rider.image;
-            if (url && url.includes('res.cloudinary.com')) {
-                return url.replace('/upload/', '/upload/w_100,h_100,c_fill,g_face/');
-            }
-            if (url) return url;
-            return `https://ui-avatars.com/api/?name=${encodeURIComponent(rider.name)}&background=060a13&color=ec4899&bold=true`;
+        // --- FOTOS DE CICLISTAS (CLOUDINARY, mismo sistema que index.html) ---
+        function getRiderImageUrl(name) {
+            if (!name) return 'https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';
+            let slug = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            slug = slug.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+            return `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${slug}.png`;
         }
 
         // --- LÓGICA FANTASY TEAM ---
@@ -570,7 +568,7 @@
             
             let html = '';
             myFantasyTeam.forEach(rider => {
-                const foto = getRiderPhoto(rider);
+                const foto = getRiderImageUrl(rider.name);
                 const riderStr = JSON.stringify(rider).replace(/"/g, '&quot;');
                 const flag = COUNTRY_FLAGS[rider.country] || rider.country;
 
@@ -581,7 +579,7 @@
                     </button>
                     
                     <div class="flex items-center gap-4 mb-4">
-                        <img src="${foto}" alt="${rider.name}" class="w-16 h-16 rounded-full object-cover border border-slate-700 group-hover:border-pink-500 transition-colors bg-zinc-900">
+                        <img src="${foto}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${rider.name}" class="w-16 h-16 rounded-full object-cover border border-slate-700 group-hover:border-pink-500 transition-colors bg-zinc-900">
                         <div class="flex flex-col min-w-0">
                             <h4 class="font-black text-white text-xs md:text-sm uppercase tracking-wider truncate">${rider.name}</h4>
                             <p class="text-[10px] text-slate-400 flex items-center gap-1 font-bold tracking-widest uppercase mt-0.5"><span class="text-sm mr-1">${flag}</span> ${rider.type || 'PRO'}</p>
