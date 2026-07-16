@@ -485,6 +485,15 @@
             return `https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/${slug}.png`;
         }
 
+        // --- COLOR DEL OVR SEGÚN NIVEL (estilo "carta") ---
+        function getOvrTierStyle(ovr) {
+            if (ovr >= 95) return 'text-amber-400 drop-shadow-[0_0_14px_rgba(251,191,36,0.7)]';
+            if (ovr >= 90) return 'text-cyan-400 drop-shadow-[0_0_14px_rgba(34,211,238,0.6)]';
+            if (ovr >= 85) return 'text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.5)]';
+            if (ovr >= 80) return 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]';
+            return 'text-zinc-400';
+        }
+
         // --- LÓGICA FANTASY TEAM ---
        function updateTeamCounter() {
             const counter = document.getElementById('team-counter');
@@ -582,7 +591,10 @@
                         <img src="${foto}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${rider.name}" class="w-16 h-16 rounded-full object-cover border border-slate-700 group-hover:border-pink-500 transition-colors bg-zinc-900">
                         <div class="flex flex-col min-w-0">
                             <h4 class="font-black text-white text-xs md:text-sm uppercase tracking-wider truncate">${rider.name}</h4>
-                            <p class="text-[10px] text-slate-400 flex items-center gap-1 font-bold tracking-widest uppercase mt-0.5"><span class="text-sm mr-1">${flag}</span> ${rider.type || 'PRO'}</p>
+                            <div class="flex items-center gap-1.5 mt-1">
+                                <span class="text-sm">${flag}</span>
+                                <span class="spec-badge ${rider.typeClass || 'spec-gc'}">${rider.type || 'PRO'}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -596,7 +608,7 @@
                     </div>
                     
                     <div class="absolute bottom-3 right-4 flex items-end">
-                        <span class="text-3xl font-black text-white italic drop-shadow-[0_0_10px_rgba(236,72,153,0.5)] leading-none">${rider.stats.ovr}</span>
+                        <span class="text-3xl font-black italic ${getOvrTierStyle(rider.stats.ovr)} leading-none">${rider.stats.ovr}</span>
                         <span class="text-[8px] text-pink-500 font-black tracking-widest ml-1 mb-1">OVR</span>
                     </div>
                 </div>
