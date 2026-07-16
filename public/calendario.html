@@ -146,12 +146,87 @@
                 
                 if (response.ok) {
                     allRaces = await response.json();
+                    
+                    // Aseguramos que la lista está ordenada cronológicamente (de enero a diciembre)
+                    allRaces.sort((a, b) => new Date(a.dateISO) - new Date(b.dateISO));
+                    
                     renderCalendar(allRaces);
+                    
+                    // ¡MAGIA DE AUTO-SCROLL AL DÍA DE HOY!
+                    scrollToCurrentRace();
+                    
                 } else { 
                     throw new Error('Error API'); 
                 }
             } catch (error) {
                 container.innerHTML = `<div class="text-center py-20 text-red-500 text-xs font-bold">Error de conexión (API).</div>`;
+            }
+        }
+
+        // --- FUNCIÓN DE AUTO-SCROLL (NUEVO) ---
+        function scrollToCurrentRace() {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            let activeRaceIndex = -1;
+            let activeStageIndex = -1;
+
+            // Buscamos si hay alguna carrera hoy
+            for (let i = 0; i < allRaces.length; i++) {
+                const r = allRaces[i];
+                if (!r.dateISO) continue;
+
+                const raceStart = new Date(r.dateISO);
+                let raceEnd = new Date(r.dateISO);
+                
+                const stages = (r.details && r.details.stages) ? r.details.stages : [];
+                if (stages.length > 0) {
+                    raceEnd.setDate(raceEnd.getDate() + stages.length - 1);
+                }
+
+                raceStart.setHours(0,0,0,0);
+                raceEnd.setHours(0,0,0,0);
+
+                // Si estamos dentro de las fechas de la carrera
+                if (today >= raceStart && today <= raceEnd) {
+                    activeRaceIndex = i;
+                    const diffTime = Math.abs(today - raceStart);
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); 
+                    if (diffDays >= 0 && diffDays < stages.length) {
+                        activeStageIndex = diffDays;
+                    }
+                    break;
+                }
+            }
+
+            // Si no hay carrera hoy, buscamos la que viene
+            if (activeRaceIndex === -1) {
+                for (let i = 0; i < allRaces.length; i++) {
+                    const raceStart = new Date(allRaces[i].dateISO);
+                    raceStart.setHours(0,0,0,0);
+                    if (raceStart >= today) {
+                        activeRaceIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (activeRaceIndex !== -1) {
+                // Le damos medio segundo a la web para pintar todo
+                setTimeout(() => {
+                    const card = document.getElementById(`card-${activeRaceIndex}`);
+                    if (card) {
+                        // 1. Abrimos la carrera
+                        toggleDetails(activeRaceIndex);
+
+                        // 2. Si tiene una etapa HOY, la abrimos
+                        if (activeStageIndex !== -1) {
+                            setTimeout(() => {
+                                toggleStage(activeRaceIndex, activeStageIndex);
+                            }, 500); 
+                        }
+                    }
+                }, 400); 
             }
         }
 
@@ -225,15 +300,28 @@
                 return;
             }
 
+            const todayDate = new Date();
+            todayDate.setHours(0,0,0,0);
+
             container.innerHTML = data.map((r, i) => {
-                const dateObj = new Date(r.dateISO);
-                const day = dateObj.getDate();
-                const month = dateObj.toLocaleString('es-ES', { month: 'short' }).replace('.', '').toUpperCase();
+                const raceStart = new Date(r.dateISO);
+                const day = raceStart.getDate();
+                const month = raceStart.toLocaleString('es-ES', { month: 'short' }).replace('.', '').toUpperCase();
+                raceStart.setHours(0,0,0,0);
                 
                 let stagesHTML = '';
                 const stages = (r.details && r.details.stages) ? r.details.stages : [];
                 
-                // Filtramos para contar solo las etapas reales de competición
+                // LÓGICA DE TIEMPO REAL: Calculamos si la carrera está viva hoy
+                let raceEnd = new Date(r.dateISO);
+                if (stages.length > 0) {
+                    raceEnd.setDate(raceEnd.getDate() + stages.length - 1);
+                }
+                raceEnd.setHours(0,0,0,0);
+                
+                const isLive = todayDate >= raceStart && todayDate <= raceEnd;
+                const statusBadge = isLive ? `<span class="bg-green-500 text-black text-[9px] font-black px-2 py-0.5 rounded animate-pulse ml-2 shadow-[0_0_10px_rgba(34,197,94,0.5)]" aria-label="Carrera en vivo">EN VIVO</span>` : '';
+                
                 const realStagesCount = stages.filter(s => {
                     const t = s.type ? s.type.toLowerCase() : '';
                     return !t.includes('descanso') && !t.includes('transicion');
@@ -248,9 +336,19 @@
                         
                         let dateStr = '';
                         let stageDateObj = new Date(r.dateISO);
+                        let isTodayStage = false;
+
                         if (!isNaN(stageDateObj.getTime())) {
                             stageDateObj.setDate(stageDateObj.getDate() + j);
                             dateStr = s.date || stageDateObj.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            
+                            // Comprobamos si esta etapa en concreto se corre hoy
+                            if (isLive) {
+                                stageDateObj.setHours(0,0,0,0);
+                                if (stageDateObj.getTime() === todayDate.getTime()) {
+                                    isTodayStage = true;
+                                }
+                            }
                         } else {
                             dateStr = s.date || 'TBD';
                         }
@@ -293,11 +391,12 @@
                         <div class="border-b border-zinc-800 last:border-0" role="listitem">
                             <button onclick="toggleStage(${i}, ${j})" id="stage-btn-${i}-${j}" class="stage-btn w-full p-4 hover:bg-white/5 transition-colors flex items-center justify-between gap-4 text-left group/stage" aria-expanded="false" aria-controls="stage-content-${i}-${j}">
                                 <div class="flex items-center gap-3 w-full">
-                                    <span class="font-heading text-lg text-zinc-500 w-6 shrink-0 text-center group-hover/stage:text-white transition-colors" aria-hidden="true">${s.n}</span>
+                                    <span class="font-heading text-lg ${isTodayStage ? 'text-cyan-400' : 'text-zinc-500'} w-6 shrink-0 text-center group-hover/stage:text-white transition-colors" aria-hidden="true">${s.n}</span>
                                     <div class="flex-1 min-w-0">
                                         <h4 class="text-xs md:text-sm font-bold text-white uppercase stage-name transition-colors truncate flex items-baseline gap-2">
                                             Etapa ${s.n} 
                                             <span class="text-cyan-400 font-mono text-[10px] font-normal tracking-wider">${dateStr}</span>
+                                            ${isTodayStage ? `<span class="bg-cyan-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded ml-1 shadow-[0_0_8px_rgba(34,211,238,0.4)]">HOY</span>` : ''}
                                         </h4>
                                         ${s.route ? `<p class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5 truncate">${s.route}</p>` : ''}
                                         
@@ -339,10 +438,6 @@
                 } else {
                     stagesHTML = `<div class="p-6 text-center text-zinc-600 text-xs italic" role="status">Detalles de etapas no disponibles.</div>`;
                 }
-
-                const today = new Date().toISOString().split('T')[0];
-                const isLive = r.dateISO === today;
-                const statusBadge = isLive ? `<span class="bg-green-500 text-black text-[9px] font-black px-2 py-0.5 rounded animate-pulse ml-2" aria-label="Carrera en vivo">EN VIVO</span>` : '';
 
                 const raceWinnerBadge = r.winner ? `
                     <div class="mt-2 flex items-center gap-1.5">
@@ -420,14 +515,14 @@
             renderCalendar(filtered);
         }
 
-        // --- UX MÓVIL: Acordeón Inteligente (Solo una carrera abierta a la vez) ---
+        // --- UX MÓVIL: Acordeón Inteligente ---
         function toggleDetails(index) {
             const content = document.getElementById(`details-${index}`);
             const card = document.getElementById(`card-${index}`);
             const icon = document.getElementById(`icon-${index}`);
             const isOpen = content.classList.contains('open');
             
-            // Cerrar todas las demás carreras primero (Evita el scroll infinito)
+            // Cerrar todas las demás
             document.querySelectorAll('.details-content').forEach(el => {
                 el.classList.remove('open');
                 el.parentElement.setAttribute('aria-expanded', 'false');
@@ -435,14 +530,12 @@
             document.querySelectorAll('.race-card').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.icon-toggle').forEach(el => el.style.transform = 'rotate(0deg)');
             
-            // Si no estaba abierta, la abrimos y hacemos auto-scroll para enfocarla
             if(!isOpen) {
                 content.classList.add('open');
                 card.classList.add('active');
                 card.setAttribute('aria-expanded', 'true');
                 icon.style.transform = 'rotate(180deg)';
                 
-                // Pequeño retardo para dejar que la animación del CSS termine antes de hacer scroll
                 setTimeout(() => {
                     card.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 300);
@@ -456,12 +549,10 @@
             const targetContent = document.getElementById(contentID);
             const targetBtn = document.getElementById(btnID);
             
-            // Si targetContent no existe (por ejemplo, porque es un día de descanso oculto), no hacer nada
             if(!targetContent) return;
             
             const isAlreadyOpen = targetContent.classList.contains('open');
             
-            // Cerrar todas las demás etapas de ESA carrera
             const allStagesInRace = document.querySelectorAll(`.race-${raceIndex}-stage-content`);
             allStagesInRace.forEach(el => el.classList.remove('open'));
             
@@ -472,7 +563,6 @@
                 btn.setAttribute('aria-expanded', 'false');
             });
             
-            // Si la etapa estaba cerrada, abrirla y enfocarla
             if (!isAlreadyOpen) {
                 targetContent.classList.add('open');
                 targetBtn.classList.add('active');
