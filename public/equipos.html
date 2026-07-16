@@ -478,10 +478,12 @@
         }
 
         // --- LÓGICA FANTASY TEAM ---
-        function updateTeamCounter() {
+       function updateTeamCounter() {
             const counter = document.getElementById('team-counter');
             if(counter) {
                 counter.innerText = `${myFantasyTeam.length}/8`;
+                
+                // CORRECCIÓN: Usamos classList para no tener espacios en el nombre de la clase
                 if(myFantasyTeam.length === 8) {
                     counter.classList.remove('bg-black/50', 'text-white');
                     counter.classList.add('bg-pink-500', 'text-black');
