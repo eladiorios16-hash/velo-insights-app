@@ -521,6 +521,20 @@
                 .replace(/'/g, '&#39;');
         }
 
+        // --- ARQUITECTURA: bloque de 6 estadísticas reutilizable ---
+        // Antes este mismo HTML (MNT/SPR/TT/LLA/RES/REC) estaba copiado y pegado en Favoritos,
+        // Mi Equipo y el modal de plantilla. Con esto solo hay que mantenerlo en un sitio.
+        // labelClass: clases del texto pequeño (MNT, SPR...) — string
+        // valueClass: clases del número — string, o función(key) => string si necesitas
+        //             una clase distinta por estadística (p.ej. resaltar la usada para ordenar)
+        function renderStatsCells(stats, labelClass, valueClass) {
+            const items = [['mnt', 'MNT'], ['spr', 'SPR'], ['tt', 'TT'], ['lla', 'LLA'], ['res', 'RES'], ['rec', 'REC']];
+            return items.map(([key, label]) => {
+                const vClass = typeof valueClass === 'function' ? valueClass(key) : valueClass;
+                return `<div class="text-center"><span class="${labelClass}">${label}</span><span class="${vClass}">${stats[key]}</span></div>`;
+            }).join('');
+        }
+
         // --- LÓGICA FANTASY TEAM ---
        function updateTeamCounter() {
             const counter = document.getElementById('team-counter');
@@ -669,12 +683,7 @@
                     </div>
 
                     <div class="grid grid-cols-6 gap-1 text-center bg-black p-2 rounded-xl border border-slate-800/80 mb-8 mt-3">
-                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">MNT</span><span class="text-xs text-white font-mono">${rider.stats.mnt}</span></div>
-                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">SPR</span><span class="text-xs text-white font-mono">${rider.stats.spr}</span></div>
-                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">TT</span><span class="text-xs text-white font-mono">${rider.stats.tt}</span></div>
-                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">LLA</span><span class="text-xs text-white font-mono">${rider.stats.lla}</span></div>
-                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">RES</span><span class="text-xs text-white font-mono">${rider.stats.res}</span></div>
-                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">REC</span><span class="text-xs text-white font-mono">${rider.stats.rec}</span></div>
+                        ${renderStatsCells(rider.stats, 'text-[7px] text-pink-500 font-black tracking-widest block', 'text-xs text-white font-mono')}
                     </div>
                     
                     <div class="absolute bottom-3 right-4 flex items-end">
@@ -755,12 +764,7 @@
 
                     <div class="ml-2 pt-3 border-t border-zinc-800/80">
                         <div class="grid grid-cols-6 gap-1 text-[9px] md:text-[10px] text-zinc-500 font-mono w-full">
-                            <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">MNT</span><span class="text-zinc-200 font-bold">${rider.stats.mnt}</span></div>
-                            <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">SPR</span><span class="text-zinc-200 font-bold">${rider.stats.spr}</span></div>
-                            <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">TT</span><span class="text-zinc-200 font-bold">${rider.stats.tt}</span></div>
-                            <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">LLA</span><span class="text-zinc-200 font-bold">${rider.stats.lla}</span></div>
-                            <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">RES</span><span class="text-zinc-200 font-bold">${rider.stats.res}</span></div>
-                            <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">REC</span><span class="text-zinc-200 font-bold">${rider.stats.rec}</span></div>
+                            ${renderStatsCells(rider.stats, 'block text-[7px] uppercase tracking-wider mb-0.5', 'text-zinc-200 font-bold')}
                         </div>
                     </div>
                 </div>
@@ -1042,12 +1046,7 @@
                             <span class="spec-badge ${escapeHtml(rider.typeClass)} inline-block lg:hidden w-max">${escapeHtml(rider.type)}</span>
                             <div class="flex items-center justify-between gap-3 w-full">
                                 <div class="grid grid-cols-6 gap-1.5 text-[10px] text-zinc-500 font-mono flex-1 max-w-[380px]">
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">MNT</span><span class="${hl('mnt')} text-sm md:text-base">${s.mnt}</span></div>
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">SPR</span><span class="${hl('spr')} text-sm md:text-base">${s.spr}</span></div>
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">TT</span><span class="${hl('tt')} text-sm md:text-base">${s.tt}</span></div>
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">LLA</span><span class="${hl('lla')} text-sm md:text-base">${s.lla}</span></div>
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">RES</span><span class="${hl('res')} text-sm md:text-base">${s.res}</span></div>
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">REC</span><span class="${hl('rec')} text-sm md:text-base">${s.rec}</span></div>
+                                    ${renderStatsCells(s, 'block text-[7px] uppercase tracking-wider mb-1', (key) => `${hl(key)} text-sm md:text-base`)}
                                 </div>
                                 ${fantasyBtnHtml}
                             </div>
