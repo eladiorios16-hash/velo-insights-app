@@ -477,6 +477,16 @@
             }
         }
 
+        // --- FOTOS DE CICLISTAS (CLOUDINARY) ---
+        function getRiderPhoto(rider) {
+            const url = rider.profile || rider.photo || rider.image;
+            if (url && url.includes('res.cloudinary.com')) {
+                return url.replace('/upload/', '/upload/w_100,h_100,c_fill,g_face/');
+            }
+            if (url) return url;
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(rider.name)}&background=060a13&color=ec4899&bold=true`;
+        }
+
         // --- LÓGICA FANTASY TEAM ---
        function updateTeamCounter() {
             const counter = document.getElementById('team-counter');
@@ -560,7 +570,7 @@
             
             let html = '';
             myFantasyTeam.forEach(rider => {
-                const foto = rider.profile ? rider.profile : 'assets/placeholder.jpg';
+                const foto = getRiderPhoto(rider);
                 const riderStr = JSON.stringify(rider).replace(/"/g, '&quot;');
                 const flag = COUNTRY_FLAGS[rider.country] || rider.country;
 
@@ -966,11 +976,11 @@
             document.body.style.overflow = 'hidden';
         };
 
-      window.closeModal = () => {
-    modal.classList.add('hidden-modal');
-    modal.classList.remove('visible-modal');
-    document.body.style.overflow = '';
-};
+        window.closeModal = () => {
+            modal.classList.add('hidden-modal');
+            modal.classList.remove('visible-modal');
+            document.body.style.overflow = '';
+        };
 
         window.resetSearch = () => { searchInput.value = ''; filterTeams('all'); }
 
