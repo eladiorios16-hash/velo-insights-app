@@ -515,7 +515,7 @@
             renderCalendar(filtered);
         }
 
-        // --- UX MÓVIL: Acordeón Inteligente ---
+     // --- UX MÓVIL: Acordeón Inteligente ---
         function toggleDetails(index) {
             const content = document.getElementById(`details-${index}`);
             const card = document.getElementById(`card-${index}`);
@@ -537,7 +537,8 @@
                 icon.style.transform = 'rotate(180deg)';
                 
                 setTimeout(() => {
-                    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Cuidado aquí: cambiado a 'center'
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 300);
             }
         }
@@ -569,7 +570,8 @@
                 targetBtn.setAttribute('aria-expanded', 'true');
                 
                 setTimeout(() => {
-                    targetBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    // Cuidado aquí: cambiado a 'center' para que encuadre perfectamente la etapa
+                    targetBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 300);
             }
         };
