@@ -486,10 +486,11 @@
         }
 
         // --- BANDERAS COMO IMAGEN (los emoji de bandera no se ven en Windows/PC) ---
+        // Usamos jsdelivr (mismo CDN que ya usamos para Chart.js) para evitar bloqueos de dominios nuevos
         function getFlagImg(countryCode, extraClass = '') {
             if (!countryCode) return '';
             const code = countryCode.toLowerCase().trim();
-            return `<img src="https://flagcdn.com/24x18/${code}.png" srcset="https://flagcdn.com/48x36/${code}.png 2x" width="18" height="13" alt="${countryCode}" class="inline-block rounded-[2px] object-cover shadow-sm shrink-0 ${extraClass}" onerror="this.style.display='none'">`;
+            return `<img src="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/${code}.svg" width="18" height="13" alt="${countryCode}" class="inline-block rounded-[2px] object-cover shadow-sm shrink-0 ${extraClass}" onerror="this.outerHTML='<span class=&quot;text-[9px] font-black text-zinc-400 tracking-wide&quot;>${countryCode}</span>'">`;
         }
 
         // --- COLOR DEL OVR SEGÚN NIVEL (estilo "carta") ---
@@ -583,23 +584,60 @@
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full";
             
             const sortedTeam = [...myFantasyTeam].sort((a, b) => (b.stats.ovr || 0) - (a.stats.ovr || 0));
+            const avgOvr = Math.round(sortedTeam.reduce((acc, r) => acc + (r.stats.ovr || 0), 0) / sortedTeam.length);
+            const captain = sortedTeam[0];
 
-            let html = '';
+            let html = `
+            <div class="col-span-full bg-gradient-to-r from-pink-950/30 via-black to-black border border-pink-900/40 rounded-2xl p-5 md:p-6 mb-1 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-[0.04] pointer-events-none" style="background-image: repeating-linear-gradient(135deg, #fff 0px, #fff 1px, transparent 1px, transparent 14px);"></div>
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-[0.3em] text-pink-500 mb-1">Plantilla Titular</p>
+                        <h2 class="text-2xl md:text-3xl font-heading text-white italic uppercase tracking-tighter leading-none">Mi Equipo <span class="text-zinc-600">// Tour de France</span></h2>
+                        <p class="text-[11px] text-zinc-400 font-bold uppercase tracking-widest mt-2 flex items-center gap-1.5">
+                            <i class="fas fa-crown text-amber-400"></i> Capitán: <span class="text-white">${captain.name}</span>
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 shrink-0">
+                        <div class="bg-black/60 border border-zinc-800 rounded-xl px-4 py-2 text-center">
+                            <span class="block text-2xl font-black italic ${getOvrTierStyle(avgOvr)} leading-none">${avgOvr}</span>
+                            <span class="block text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Media Equipo</span>
+                        </div>
+                        <div class="bg-black/60 border border-zinc-800 rounded-xl px-4 py-2 text-center">
+                            <span class="block text-2xl font-black italic text-white leading-none">${sortedTeam.length}<span class="text-zinc-600 text-sm">/8</span></span>
+                            <span class="block text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Dorsales</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+
             sortedTeam.forEach((rider, index) => {
                 const foto = getRiderImageUrl(rider.name);
                 const riderStr = JSON.stringify(rider).replace(/"/g, '&quot;');
                 const flag = getFlagImg(rider.country);
+                const isCaptain = index === 0;
+
+                const cardBorder = isCaptain ? 'border-amber-500/50 hover:border-amber-400' : 'border-slate-800 hover:border-pink-500/50';
+                const cardGlow = isCaptain ? 'shadow-[0_0_25px_rgba(251,191,36,0.15)]' : 'shadow-lg';
+                const roleLabel = isCaptain ? 'CAPITÁN' : `GREGARIO Nº${index + 1}`;
+                const roleColor = isCaptain ? 'text-amber-400' : 'text-zinc-600';
+
+                const bibBadge = isCaptain
+                    ? `<span class="absolute top-3 left-3 flex items-center justify-center w-7 h-7 rounded-full bg-amber-500 text-black border border-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.5)]" aria-label="Capitán"><i class="fas fa-crown text-[10px]"></i></span>`
+                    : `<span class="absolute top-3 left-3 text-[10px] font-mono font-black text-zinc-500 bg-black/60 rounded-full w-7 h-7 flex items-center justify-center border border-slate-800">${index + 1}</span>`;
 
                 html += `
-                <div class="bg-[#060a13] border border-slate-800 rounded-2xl p-5 relative group hover:border-pink-500/50 transition-all shadow-lg animate-fade-in-up">
-                    <span class="absolute top-3 left-3 text-[10px] font-mono font-black text-zinc-600 bg-black/50 rounded-full w-6 h-6 flex items-center justify-center border border-slate-800">${index + 1}</span>
+                <div class="bg-[#060a13] border ${cardBorder} rounded-2xl p-5 relative group transition-all ${cardGlow} animate-fade-in-up">
+                    ${bibBadge}
                     <button onclick="toggleFantasyTeam('${riderStr}')" class="absolute top-3 right-3 text-slate-600 hover:text-red-500 transition-colors bg-black/50 rounded-full w-6 h-6 flex items-center justify-center">
                         <i class="fas fa-times text-xs"></i>
                     </button>
                     
-                    <div class="flex items-center gap-4 mb-4 mt-4">
-                        <img src="${foto}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${rider.name}" class="w-16 h-16 rounded-full object-cover border border-slate-700 group-hover:border-pink-500 transition-colors bg-zinc-900">
+                    <div class="flex items-center gap-4 mb-2 mt-4">
+                        <img src="${foto}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${rider.name}" class="w-16 h-16 rounded-full object-cover border ${isCaptain ? 'border-amber-500/60' : 'border-slate-700'} group-hover:border-pink-500 transition-colors bg-zinc-900">
                         <div class="flex flex-col min-w-0">
+                            <span class="text-[8px] font-black uppercase tracking-widest ${roleColor}">${roleLabel}</span>
                             <h4 class="font-black text-white text-xs md:text-sm uppercase tracking-wider truncate">${rider.name}</h4>
                             <div class="flex items-center gap-1.5 mt-1">
                                 ${flag}
@@ -608,7 +646,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-6 gap-1 text-center bg-black p-2 rounded-xl border border-slate-800/80 mb-8">
+                    <div class="grid grid-cols-6 gap-1 text-center bg-black p-2 rounded-xl border border-slate-800/80 mb-8 mt-3">
                         <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">MNT</span><span class="text-xs text-white font-mono">${rider.stats.mnt}</span></div>
                         <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">SPR</span><span class="text-xs text-white font-mono">${rider.stats.spr}</span></div>
                         <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">TT</span><span class="text-xs text-white font-mono">${rider.stats.tt}</span></div>
