@@ -960,13 +960,18 @@
                 </div>
                 `;
             }).join('');
-        };
-
-        window.closeModal = () => {
+            
             modal.classList.remove('hidden-modal');
             modal.classList.add('visible-modal');
             document.body.style.overflow = 'hidden';
         };
+        };
+
+      window.closeModal = () => {
+    modal.classList.add('hidden-modal');
+    modal.classList.remove('visible-modal');
+    document.body.style.overflow = '';
+};
 
         window.resetSearch = () => { searchInput.value = ''; filterTeams('all'); }
 
