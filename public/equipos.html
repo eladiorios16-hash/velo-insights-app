@@ -113,7 +113,7 @@
             transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .accordion-content.open {
-            max-height: 200px; /* Suficiente para las stats */
+            max-height: 300px; /* Ampliado para que quepa el botón de añadir a equipo */
         }
         .accordion-icon {
             transition: transform 0.3s ease;
@@ -280,10 +280,14 @@
                 <div class="absolute right-4 text-[10px] font-mono text-zinc-600 border border-zinc-700 rounded px-1.5 py-0.5 pointer-events-none hidden md:block select-none bg-black">/</div>
             </div>
 
-            <div class="inline-flex bg-zinc-900/60 p-1 rounded-xl border border-zinc-800 backdrop-blur-sm" id="filters" role="group" aria-label="Filtros de equipos">
-                <button onclick="filterTeams('all')" id="btn-all" class="filter-tab active px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all bg-zinc-800 shadow-sm" aria-pressed="true">Equipos WT</button>
-                <button onclick="filterFavorites()" id="btn-favs" class="filter-tab px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-zinc-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all hover:text-yellow-500 flex items-center gap-2" aria-pressed="false">
+            <div class="inline-flex bg-zinc-900/60 p-1 rounded-xl border border-zinc-800 backdrop-blur-sm overflow-x-auto w-full md:w-auto" id="filters" role="group" aria-label="Filtros de equipos">
+                <button onclick="filterTeams('all')" id="btn-all" class="filter-tab active shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all bg-zinc-800 shadow-sm" aria-pressed="true">Equipos WT</button>
+                <button onclick="filterFavorites()" id="btn-favs" class="filter-tab shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-zinc-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all hover:text-yellow-500 flex items-center gap-2" aria-pressed="false">
                     <svg class="w-3 h-3 hidden md:block" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> Favoritos
+                </button>
+                <!-- BOTÓN MI EQUIPO (FANTASY) -->
+                <button onclick="renderMyTeamView()" id="btn-team" class="filter-tab shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-emerald-500/70 border border-transparent hover:border-emerald-500/30 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all hover:text-emerald-400 flex items-center gap-2" aria-pressed="false">
+                    <i class="fas fa-bicycle"></i> Mi Equipo <span id="team-counter" class="bg-black/50 text-white px-1.5 py-0.5 rounded ml-1">0/8</span>
                 </button>
             </div>
         </div>
@@ -372,6 +376,16 @@
         let currentSortCriteria = 'ovr'; 
         let currentOpenTeamCode = null;
 
+        // --- SISTEMA FANTASY (MI EQUIPO) ---
+        let myFantasyTeam = JSON.parse(localStorage.getItem('velo_fantasy_team')) || [];
+        
+        const COUNTRY_FLAGS = {
+            'ES': '🇪🇸', 'FR': '🇫🇷', 'BE': '🇧🇪', 'IT': '🇮🇹', 'SI': '🇸🇮', 'KZ': '🇰🇿',
+            'BH': '🇧🇭', 'GB': '🇬🇧', 'NL': '🇳🇱', 'DK': '🇩🇰', 'DE': '🇩🇪', 'CO': '🇨🇴',
+            'AU': '🇦🇺', 'US': '🇺🇸', 'PT': '🇵🇹', 'CH': '🇨🇭', 'EC': '🇪🇨', 'AT': '🇦🇹',
+            'NO': '🇳🇴', 'IE': '🇮🇪', 'PL': '🇵🇱'
+        };
+
         const TEAM_TECH = {
             'UAD': { bike: 'Colnago', group: 'Shimano', color: '#ef4444' },
             'TVL': { bike: 'Cervélo', group: 'SRAM', color: '#eab308' },
@@ -406,10 +420,10 @@
             const index = favs.findIndex(f => f.name === riderName);
             if (index === -1) {
                 favs.push({ name: riderName, team: teamCode });
-                showToast(`⭐ ${riderName} guardado`);
+                showToast(`⭐ ${riderName} guardado en favoritos`);
             } else {
                 favs.splice(index, 1);
-                showToast(`❌ ${riderName} eliminado`);
+                showToast(`❌ ${riderName} eliminado de favoritos`);
             }
             localStorage.setItem(FAV_KEY, JSON.stringify(favs));
             updateHeartIcon(riderName);
@@ -463,16 +477,131 @@
             }
         }
 
-        // --- RENDERIZADO DE FAVORITOS ---
+        // --- LÓGICA FANTASY TEAM ---
+        function updateTeamCounter() {
+            const counter = document.getElementById('team-counter');
+            if(counter) {
+                counter.innerText = `${myFantasyTeam.length}/8`;
+                if(myFantasyTeam.length === 8) counter.classList.replace('bg-black/50', 'bg-pink-500 text-black');
+                else counter.classList.replace('bg-pink-500', 'bg-black/50 text-white');
+            }
+        }
+
+        window.toggleFantasyTeam = function(riderDataString) {
+            const rider = JSON.parse(riderDataString);
+            const index = myFantasyTeam.findIndex(r => r.name === rider.name);
+
+            if (index > -1) {
+                myFantasyTeam.splice(index, 1);
+                showToast(`👋 ${rider.name} eliminado de tu equipo.`);
+            } else {
+                if (myFantasyTeam.length >= 8) {
+                    alert("⚠️ Límite de 8 ciclistas alcanzado. Elimina a uno antes de añadir otro.");
+                    return;
+                }
+                myFantasyTeam.push(rider);
+                showToast(`🔥 ${rider.name} fichado para tu equipo!`);
+            }
+
+            localStorage.setItem('velo_fantasy_team', JSON.stringify(myFantasyTeam));
+            updateTeamCounter();
+            
+            if (currentFilter === 'team') renderMyTeamView();
+            else {
+                // Actualizar botón en el modal si está abierto
+                const btn = document.getElementById(`btn-fantasy-${rider.name.replace(/\s+/g, '')}`);
+                if(btn) {
+                    if(index > -1) {
+                        btn.innerHTML = `<i class="fas fa-plus"></i> Fichar para Mi Equipo`;
+                        btn.className = `w-full lg:max-w-xs mt-3 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-black border border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors`;
+                    } else {
+                        btn.innerHTML = `<i class="fas fa-check"></i> En tu plantilla`;
+                        btn.className = `w-full lg:max-w-xs mt-3 bg-emerald-500 text-black border border-emerald-500 text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors`;
+                    }
+                }
+            }
+        };
+
+        window.renderMyTeamView = function() {
+            currentFilter = 'team';
+            
+            // Actualizar botones del filtro
+            document.getElementById('btn-all').classList.remove('active', 'bg-zinc-800', 'text-white');
+            document.getElementById('btn-all').classList.add('text-zinc-500');
+            document.getElementById('btn-favs').classList.remove('active', 'bg-zinc-800', 'text-yellow-500');
+            document.getElementById('btn-favs').classList.add('text-zinc-500');
+            
+            document.getElementById('btn-team').classList.add('text-emerald-400', 'border-emerald-500/50', 'bg-emerald-500/10');
+            document.getElementById('btn-team').classList.remove('text-emerald-500/70', 'border-transparent');
+
+            document.getElementById('h2h-section').classList.add('hidden');
+            document.getElementById('no-results').classList.add('hidden');
+
+            if (myFantasyTeam.length === 0) {
+                container.className = "grid grid-cols-1";
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-20 animate-fade-in-up border border-dashed border-emerald-500/30 rounded-3xl bg-emerald-900/5">
+                        <i class="fas fa-users text-4xl text-emerald-500/50 mb-4"></i>
+                        <h3 class="text-xl font-bold text-white mb-2 uppercase tracking-widest">Plantilla Vacía</h3>
+                        <p class="text-zinc-400 text-sm max-w-md mx-auto">Busca en los equipos WT, selecciona un ciclista y pulsa en "Fichar" para armar tu equipo de ensueño para el Tour (Máx 8).</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full";
+            
+            let html = '';
+            myFantasyTeam.forEach(rider => {
+                const foto = rider.profile ? rider.profile : 'assets/placeholder.jpg';
+                const riderStr = JSON.stringify(rider).replace(/"/g, '&quot;');
+                const flag = COUNTRY_FLAGS[rider.country] || rider.country;
+
+                html += `
+                <div class="bg-[#060a13] border border-slate-800 rounded-2xl p-5 relative group hover:border-pink-500/50 transition-all shadow-lg animate-fade-in-up">
+                    <button onclick="toggleFantasyTeam('${riderStr}')" class="absolute top-3 right-3 text-slate-600 hover:text-red-500 transition-colors bg-black/50 rounded-full w-6 h-6 flex items-center justify-center">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                    
+                    <div class="flex items-center gap-4 mb-4">
+                        <img src="${foto}" alt="${rider.name}" class="w-16 h-16 rounded-full object-cover border border-slate-700 group-hover:border-pink-500 transition-colors bg-zinc-900">
+                        <div class="flex flex-col min-w-0">
+                            <h4 class="font-black text-white text-xs md:text-sm uppercase tracking-wider truncate">${rider.name}</h4>
+                            <p class="text-[10px] text-slate-400 flex items-center gap-1 font-bold tracking-widest uppercase mt-0.5"><span class="text-sm mr-1">${flag}</span> ${rider.type || 'PRO'}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-6 gap-1 text-center bg-black p-2 rounded-xl border border-slate-800/80 mb-8">
+                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">MNT</span><span class="text-xs text-white font-mono">${rider.stats.mnt}</span></div>
+                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">SPR</span><span class="text-xs text-white font-mono">${rider.stats.spr}</span></div>
+                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">TT</span><span class="text-xs text-white font-mono">${rider.stats.tt}</span></div>
+                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">LLA</span><span class="text-xs text-white font-mono">${rider.stats.lla}</span></div>
+                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">RES</span><span class="text-xs text-white font-mono">${rider.stats.res}</span></div>
+                        <div class="flex flex-col"><span class="text-[7px] text-pink-500 font-black tracking-widest">REC</span><span class="text-xs text-white font-mono">${rider.stats.rec}</span></div>
+                    </div>
+                    
+                    <div class="absolute bottom-3 right-4 flex items-end">
+                        <span class="text-3xl font-black text-white italic drop-shadow-[0_0_10px_rgba(236,72,153,0.5)] leading-none">${rider.stats.ovr}</span>
+                        <span class="text-[8px] text-pink-500 font-black tracking-widest ml-1 mb-1">OVR</span>
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        };
+
+        // --- RENDERIZADO NORMAL Y FAVORITOS ---
         function filterFavorites() {
             currentFilter = 'favs';
             document.getElementById('btn-all').classList.remove('active', 'bg-zinc-800', 'text-white');
             document.getElementById('btn-all').classList.add('text-zinc-500');
-            document.getElementById('btn-all').setAttribute('aria-pressed', 'false');
+            
+            document.getElementById('btn-team').classList.remove('text-emerald-400', 'border-emerald-500/50', 'bg-emerald-500/10');
+            document.getElementById('btn-team').classList.add('text-emerald-500/70', 'border-transparent');
             
             document.getElementById('btn-favs').classList.add('active', 'bg-zinc-800', 'text-yellow-500');
             document.getElementById('btn-favs').classList.remove('text-zinc-500');
-            document.getElementById('btn-favs').setAttribute('aria-pressed', 'true');
 
             document.getElementById('h2h-section').classList.add('hidden');
 
@@ -491,11 +620,7 @@
                 if(team.riders) {
                     team.riders.forEach(rider => {
                         if(isFav(rider.name)) {
-                            favoriteRiders.push({
-                                ...rider,
-                                teamCode: team.code,
-                                teamColor: (TEAM_TECH[team.code] || TEAM_TECH['DEFAULT']).color
-                            });
+                            favoriteRiders.push({ ...rider, teamCode: team.code, teamColor: (TEAM_TECH[team.code] || TEAM_TECH['DEFAULT']).color });
                         }
                     });
                 }
@@ -548,13 +673,14 @@
 
         function filterTeams(type) {
             currentFilter = 'all';
-            document.getElementById('btn-favs').classList.remove('active', 'bg-zinc-800', 'text-white');
+            document.getElementById('btn-favs').classList.remove('active', 'bg-zinc-800', 'text-yellow-500');
             document.getElementById('btn-favs').classList.add('text-zinc-500');
-            document.getElementById('btn-favs').setAttribute('aria-pressed', 'false');
+            
+            document.getElementById('btn-team').classList.remove('text-emerald-400', 'border-emerald-500/50', 'bg-emerald-500/10');
+            document.getElementById('btn-team').classList.add('text-emerald-500/70', 'border-transparent');
             
             document.getElementById('btn-all').classList.add('active', 'bg-zinc-800', 'text-white');
             document.getElementById('btn-all').classList.remove('text-zinc-500');
-            document.getElementById('btn-all').setAttribute('aria-pressed', 'true');
 
             container.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6";
             document.getElementById('h2h-section').classList.remove('hidden');
@@ -578,6 +704,9 @@
                             return { ...rider, stats: { mnt: Number(stats?.mnt)||0, spr: Number(stats?.spr)||0, tt: Number(stats?.tt)||0, lla: Number(stats?.lla)||0, res: Number(stats?.res)||0, rec: Number(stats?.rec)||0, ovr: Number(stats?.ovr)||0 }};
                         })
                     }));
+                    
+                    updateTeamCounter();
+                    
                     if(allTeams.length > 0) { renderTeams(allTeams); initCompareSection(); } 
                     else { container.innerHTML = `<div class="col-span-full text-center py-20 text-zinc-500 text-xs font-bold uppercase">No hay equipos.</div>`; }
                 }
@@ -588,7 +717,7 @@
         }
 
         function renderTeams(items) {
-            if(items.length === 0 && currentFilter !== 'favs') { 
+            if(items.length === 0 && currentFilter !== 'favs' && currentFilter !== 'team') { 
                 document.getElementById('no-results').classList.remove('hidden'); 
                 document.getElementById('no-results-msg').innerText = "Sin resultados de búsqueda";
                 container.innerHTML = '';
@@ -644,21 +773,18 @@
 
         // --- FUNCIONES ACORDEÓN (UX MÓVIL FASE 3) ---
         window.toggleRiderAccordion = function(riderName) {
-            // Solo actuar en versión móvil (ancho menor a 1024px)
             if (window.innerWidth >= 1024) return;
             
-            const content = document.getElementById(`accordion-content-${riderName}`);
-            const icon = document.getElementById(`accordion-icon-${riderName}`);
+            const content = document.getElementById(`accordion-content-${riderName.replace(/\s+/g, '')}`);
+            const icon = document.getElementById(`accordion-icon-${riderName.replace(/\s+/g, '')}`);
             
             if (content.classList.contains('open')) {
                 content.classList.remove('open');
                 icon.classList.remove('open');
             } else {
-                // Cerrar todos los demás primero para mantener limpio el listado
                 document.querySelectorAll('.accordion-content.open').forEach(el => el.classList.remove('open'));
                 document.querySelectorAll('.accordion-icon.open').forEach(el => el.classList.remove('open'));
                 
-                // Abrir el actual
                 content.classList.add('open');
                 icon.classList.add('open');
             }
@@ -679,7 +805,6 @@
         }
 
         window.updateRadarManual = (mnt, spr, tt, lla, res, rec, name, color) => {
-            // Actualizar gráfica en PC (o móvil si estuviera visible)
             if(radarChartInstance) {
                 radarChartInstance.data.datasets[0].data = [mnt, spr, tt, lla, res, rec];
                 radarChartInstance.data.datasets[0].borderColor = color === 'gold' ? '#ec4899' : '#22d3ee';
@@ -688,8 +813,6 @@
                 const label = document.getElementById('radar-rider-name');
                 if(label) { label.innerText = name; label.className = `text-xs font-black uppercase tracking-wide drop-shadow-md bg-black/80 px-3 py-1.5 rounded-lg border border-white/10 transition-colors ${color === 'gold' ? 'text-pink-400' : 'text-cyan-400'}`; }
             }
-
-            // Activar acordeón en móvil
             toggleRiderAccordion(name);
         };
 
@@ -710,7 +833,6 @@
             }
 
             let riders = team.riders || [];
-
             const rosterTitle = document.getElementById('roster-title');
             rosterTitle.innerText = "PLANTILLA 2026";
             rosterTitle.classList.remove('text-yellow-500');
@@ -738,7 +860,6 @@
                 }, 200);
             }
 
-            // NUEVO DISEÑO ACORDEÓN INYECTADO AQUÍ
             modalRoster.innerHTML = sortedRiders.map((rider, index) => {
                 const s = rider.stats;
                 let ovrColor = 'text-zinc-500';
@@ -749,6 +870,17 @@
                 const isFavorite = isFav(rider.name);
                 const heartColor = isFavorite ? 'text-yellow-500' : 'text-zinc-700 hover:text-zinc-500';
                 const hl = (key) => key === currentSortCriteria ? 'text-yellow-400 font-black scale-110 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'text-zinc-200';
+                
+                const safeName = rider.name.replace(/\s+/g, '');
+                const riderStr = JSON.stringify(rider).replace(/"/g, '&quot;');
+                const isInTeam = myFantasyTeam.some(r => r.name === rider.name);
+                
+                let fantasyBtnHtml = '';
+                if(isInTeam) {
+                    fantasyBtnHtml = `<button id="btn-fantasy-${safeName}" onclick="event.stopPropagation(); toggleFantasyTeam('${riderStr}')" class="w-full lg:max-w-xs mt-3 bg-emerald-500 text-black border border-emerald-500 text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors"><i class="fas fa-check"></i> En tu plantilla</button>`;
+                } else {
+                    fantasyBtnHtml = `<button id="btn-fantasy-${safeName}" onclick="event.stopPropagation(); toggleFantasyTeam('${riderStr}')" class="w-full lg:max-w-xs mt-3 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-black border border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors"><i class="fas fa-plus"></i> Fichar para Mi Equipo</button>`;
+                }
 
                 return `
                 <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex flex-col p-3"
@@ -762,7 +894,7 @@
                             </button>
 
                             <span class="text-[10px] font-mono text-zinc-600 font-bold w-4 shrink-0 text-center" aria-hidden="true">${index + 1}</span>
-                            <span class="text-sm w-6 text-center shrink-0" aria-hidden="true">${rider.country}</span>
+                            <span class="text-sm w-6 text-center shrink-0" aria-hidden="true">${COUNTRY_FLAGS[rider.country] || rider.country}</span>
                             
                             <div class="flex flex-col min-w-0">
                                 <h4 class="text-zinc-300 font-bold uppercase text-xs md:text-sm tracking-tight group-hover:text-white transition-colors truncate">${rider.name}</h4>
@@ -777,32 +909,29 @@
                                 <span class="text-lg md:text-xl font-black italic ${currentSortCriteria === 'ovr' ? ovrColor : 'text-zinc-600'}">${s.ovr}</span>
                                 <span class="text-[8px] block text-zinc-600 font-bold tracking-widest mt-0.5 lg:hidden">OVR</span>
                             </div>
-                            <svg id="accordion-icon-${rider.name}" class="w-4 h-4 text-zinc-500 lg:hidden accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg id="accordion-icon-${safeName}" class="w-4 h-4 text-zinc-500 lg:hidden accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
 
-                    <div id="accordion-content-${rider.name}" class="accordion-content w-full">
-                        <div class="pt-3 mt-2 border-t border-zinc-800/80 ml-8 lg:ml-0 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-                            <span class="spec-badge ${rider.typeClass} inline-block lg:hidden w-max">${rider.type}</span>
-                            <div class="grid grid-cols-6 gap-1 text-[10px] text-zinc-500 font-mono w-full lg:max-w-[340px]">
-                                <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">MNT</span><span class="${hl('mnt')} text-xs">${s.mnt}</span></div>
-                                <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">SPR</span><span class="${hl('spr')} text-xs">${s.spr}</span></div>
-                                <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">TT</span><span class="${hl('tt')} text-xs">${s.tt}</span></div>
-                                <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">LLA</span><span class="${hl('lla')} text-xs">${s.lla}</span></div>
-                                <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">RES</span><span class="${hl('res')} text-xs">${s.res}</span></div>
-                                <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">REC</span><span class="${hl('rec')} text-xs">${s.rec}</span></div>
+                    <div id="accordion-content-${safeName}" class="accordion-content w-full">
+                        <div class="pt-3 mt-2 border-t border-zinc-800/80 ml-8 lg:ml-0 flex flex-col gap-2">
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+                                <span class="spec-badge ${rider.typeClass} inline-block lg:hidden w-max">${rider.type}</span>
+                                <div class="grid grid-cols-6 gap-1 text-[10px] text-zinc-500 font-mono w-full lg:max-w-[340px]">
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">MNT</span><span class="${hl('mnt')} text-xs">${s.mnt}</span></div>
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">SPR</span><span class="${hl('spr')} text-xs">${s.spr}</span></div>
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">TT</span><span class="${hl('tt')} text-xs">${s.tt}</span></div>
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">LLA</span><span class="${hl('lla')} text-xs">${s.lla}</span></div>
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">RES</span><span class="${hl('res')} text-xs">${s.res}</span></div>
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">REC</span><span class="${hl('rec')} text-xs">${s.rec}</span></div>
+                                </div>
                             </div>
+                            ${fantasyBtnHtml}
                         </div>
                     </div>
                 </div>
                 `;
             }).join('');
-
-            if (!refreshOnly) {
-                modal.classList.remove('hidden-modal');
-                modal.classList.add('visible-modal');
-                document.body.style.overflow = 'hidden';
-            }
         };
 
         window.closeModal = () => {
@@ -814,7 +943,7 @@
         window.resetSearch = () => { searchInput.value = ''; filterTeams('all'); }
 
         searchInput.addEventListener('input', (e) => {
-            if(currentFilter === 'favs') {
+            if(currentFilter === 'favs' || currentFilter === 'team') {
                 filterTeams('all');
             }
             const term = e.target.value.toLowerCase();
