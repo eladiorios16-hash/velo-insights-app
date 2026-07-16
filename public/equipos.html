@@ -925,9 +925,9 @@
                 
                 let fantasyBtnHtml = '';
                 if(isInTeam) {
-                    fantasyBtnHtml = `<button id="btn-fantasy-${safeName}" onclick="event.stopPropagation(); toggleFantasyTeam('${riderStr}')" class="w-full lg:max-w-xs mt-3 bg-emerald-500 text-black border border-emerald-500 text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors"><i class="fas fa-check"></i> En tu plantilla</button>`;
+                    fantasyBtnHtml = `<button id="btn-fantasy-${safeName}" onclick="event.stopPropagation(); toggleFantasyTeam('${riderStr}')" class="shrink-0 flex items-center justify-center gap-1.5 bg-emerald-500 text-black border border-emerald-500 text-[9px] font-bold uppercase tracking-widest py-2 px-3 rounded-lg transition-colors" aria-label="Quitar de tu equipo"><i class="fas fa-check"></i> En equipo</button>`;
                 } else {
-                    fantasyBtnHtml = `<button id="btn-fantasy-${safeName}" onclick="event.stopPropagation(); toggleFantasyTeam('${riderStr}')" class="w-full lg:max-w-xs mt-3 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-black border border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors"><i class="fas fa-plus"></i> Fichar para Mi Equipo</button>`;
+                    fantasyBtnHtml = `<button id="btn-fantasy-${safeName}" onclick="event.stopPropagation(); toggleFantasyTeam('${riderStr}')" class="shrink-0 flex items-center justify-center gap-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-black border border-emerald-500/30 text-[9px] font-bold uppercase tracking-widest py-2 px-3 rounded-lg transition-colors" aria-label="Fichar para tu equipo"><i class="fas fa-plus"></i> Fichar</button>`;
                 }
 
                 return `
@@ -962,19 +962,19 @@
                     </div>
 
                     <div id="accordion-content-${safeName}" class="accordion-content w-full">
-                        <div class="pt-3 mt-2 border-t border-zinc-800/80 ml-8 lg:ml-0 flex flex-col gap-2">
-                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-                                <span class="spec-badge ${rider.typeClass} inline-block lg:hidden w-max">${rider.type}</span>
-                                <div class="grid grid-cols-6 gap-1 text-[10px] text-zinc-500 font-mono w-full lg:max-w-[340px]">
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">MNT</span><span class="${hl('mnt')} text-xs">${s.mnt}</span></div>
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">SPR</span><span class="${hl('spr')} text-xs">${s.spr}</span></div>
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">TT</span><span class="${hl('tt')} text-xs">${s.tt}</span></div>
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">LLA</span><span class="${hl('lla')} text-xs">${s.lla}</span></div>
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">RES</span><span class="${hl('res')} text-xs">${s.res}</span></div>
-                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-0.5">REC</span><span class="${hl('rec')} text-xs">${s.rec}</span></div>
+                        <div class="pt-3 mt-2 border-t border-zinc-800/80 ml-8 lg:ml-0 flex flex-col gap-3">
+                            <span class="spec-badge ${rider.typeClass} inline-block lg:hidden w-max">${rider.type}</span>
+                            <div class="flex items-center justify-between gap-3 w-full">
+                                <div class="grid grid-cols-6 gap-1.5 text-[10px] text-zinc-500 font-mono flex-1 max-w-[380px]">
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">MNT</span><span class="${hl('mnt')} text-sm md:text-base">${s.mnt}</span></div>
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">SPR</span><span class="${hl('spr')} text-sm md:text-base">${s.spr}</span></div>
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">TT</span><span class="${hl('tt')} text-sm md:text-base">${s.tt}</span></div>
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">LLA</span><span class="${hl('lla')} text-sm md:text-base">${s.lla}</span></div>
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">RES</span><span class="${hl('res')} text-sm md:text-base">${s.res}</span></div>
+                                    <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">REC</span><span class="${hl('rec')} text-sm md:text-base">${s.rec}</span></div>
                                 </div>
+                                ${fantasyBtnHtml}
                             </div>
-                            ${fantasyBtnHtml}
                         </div>
                     </div>
                 </div>
