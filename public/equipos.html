@@ -963,9 +963,9 @@
         };
 
         window.closeModal = () => {
-            modal.classList.remove('visible-modal');
-            modal.classList.add('hidden-modal');
-            setTimeout(() => { document.body.style.overflow = ''; }, 300);
+            modal.classList.remove('hidden-modal');
+            modal.classList.add('visible-modal');
+            setTimeout(() => { document.body.style.overflow = 'hidden'; }, 300);
         };
 
         window.resetSearch = () => { searchInput.value = ''; filterTeams('all'); }
