@@ -965,7 +965,7 @@
         window.closeModal = () => {
             modal.classList.remove('hidden-modal');
             modal.classList.add('visible-modal');
-            setTimeout(() => { document.body.style.overflow = 'hidden'; }, 300);
+            document.body.style.overflow = 'hidden';
         };
 
         window.resetSearch = () => { searchInput.value = ''; filterTeams('all'); }
