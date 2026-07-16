@@ -415,7 +415,11 @@
 
         function getFavorites() { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); }
 
-        function toggleFavorite(riderName, teamCode) {
+        // Recibe el propio botón (this) en vez de strings embebidos en el onclick:
+        // así un nombre con apóstrofe (ej. "O'Grady") nunca puede romper el atributo onclick
+        function toggleFavorite(el) {
+            const riderName = el.dataset.riderName;
+            const teamCode = el.dataset.teamCode;
             let favs = getFavorites();
             const index = favs.findIndex(f => f.name === riderName);
             if (index === -1) {
@@ -436,7 +440,9 @@
         function isFav(riderName) { return getFavorites().some(f => f.name === riderName); }
 
         function updateHeartIcon(riderName) {
-            const buttons = document.querySelectorAll(`button[data-rider="${riderName.replace(/"/g, '\\"')}"] svg`);
+            // CSS.escape() es la forma correcta (nativa del navegador) de escapar un valor
+            // para usarlo dentro de un selector CSS, sin depender de un reemplazo manual
+            const buttons = document.querySelectorAll(`button[data-rider-name="${CSS.escape(riderName)}"] svg`);
             const active = isFav(riderName);
             buttons.forEach(svg => {
                 if(active) {
@@ -502,6 +508,19 @@
             return 'text-zinc-400';
         }
 
+        // --- SEGURIDAD: escapa texto antes de insertarlo en HTML (texto o atributos) ---
+        // Evita que un nombre/código con comillas, < > o & rompa el HTML o inyecte etiquetas
+        // (los datos de equipos/ciclistas vienen del panel admin, así que no son 100% de confianza)
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         // --- LÓGICA FANTASY TEAM ---
        function updateTeamCounter() {
             const counter = document.getElementById('team-counter');
@@ -519,8 +538,11 @@
             }
         }
 
-        window.toggleFantasyTeam = function(riderDataString) {
-            const rider = JSON.parse(riderDataString);
+        // Recibe el propio botón (this) en vez de JSON embebido en el onclick:
+        // más seguro (nada de datos del ciclista viaja dentro del atributo onclick)
+        // y a prueba de nombres con apóstrofes como "O'Grady"
+        window.toggleFantasyTeam = function(el) {
+            const rider = JSON.parse(el.dataset.rider);
             const index = myFantasyTeam.findIndex(r => r.name === rider.name);
 
             if (index > -1) {
@@ -544,11 +566,11 @@
                 const btn = document.getElementById(`btn-fantasy-${rider.name.replace(/\s+/g, '')}`);
                 if(btn) {
                     if(index > -1) {
-                        btn.innerHTML = `<i class="fas fa-plus"></i> Fichar para Mi Equipo`;
-                        btn.className = `w-full lg:max-w-xs mt-3 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-black border border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors`;
+                        btn.innerHTML = `<i class="fas fa-plus"></i> Fichar`;
+                        btn.className = `shrink-0 flex items-center justify-center gap-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-black border border-emerald-500/30 text-[9px] font-bold uppercase tracking-widest py-2 px-3 rounded-lg transition-colors`;
                     } else {
-                        btn.innerHTML = `<i class="fas fa-check"></i> En tu plantilla`;
-                        btn.className = `w-full lg:max-w-xs mt-3 bg-emerald-500 text-black border border-emerald-500 text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors`;
+                        btn.innerHTML = `<i class="fas fa-check"></i> En equipo`;
+                        btn.className = `shrink-0 flex items-center justify-center gap-1.5 bg-emerald-500 text-black border border-emerald-500 text-[9px] font-bold uppercase tracking-widest py-2 px-3 rounded-lg transition-colors`;
                     }
                 }
             }
@@ -595,7 +617,7 @@
                         <p class="text-[9px] font-black uppercase tracking-[0.3em] text-pink-500 mb-1">Plantilla Titular</p>
                         <h2 class="text-2xl md:text-3xl font-heading text-white italic uppercase tracking-tighter leading-none">Mi Equipo <span class="text-zinc-600">// Tour de France</span></h2>
                         <p class="text-[11px] text-zinc-400 font-bold uppercase tracking-widest mt-2 flex items-center gap-1.5">
-                            <i class="fas fa-crown text-amber-400"></i> Capitán: <span class="text-white">${captain.name}</span>
+                            <i class="fas fa-crown text-amber-400"></i> Capitán: <span class="text-white">${escapeHtml(captain.name)}</span>
                         </p>
                     </div>
                     <div class="flex items-center gap-3 shrink-0">
@@ -614,7 +636,7 @@
 
             sortedTeam.forEach((rider, index) => {
                 const foto = getRiderImageUrl(rider.name);
-                const riderStr = JSON.stringify(rider).replace(/"/g, '&quot;');
+                const riderJson = escapeHtml(JSON.stringify(rider));
                 const flag = getFlagImg(rider.country);
                 const isCaptain = index === 0;
 
@@ -630,18 +652,18 @@
                 html += `
                 <div class="bg-[#060a13] border ${cardBorder} rounded-2xl p-5 relative group transition-all ${cardGlow} animate-fade-in-up">
                     ${bibBadge}
-                    <button onclick="toggleFantasyTeam('${riderStr}')" class="absolute top-3 right-3 text-slate-600 hover:text-red-500 transition-colors bg-black/50 rounded-full w-6 h-6 flex items-center justify-center">
+                    <button data-rider="${riderJson}" onclick="toggleFantasyTeam(this)" class="absolute top-3 right-3 text-slate-600 hover:text-red-500 transition-colors bg-black/50 rounded-full w-6 h-6 flex items-center justify-center" aria-label="Quitar de tu equipo">
                         <i class="fas fa-times text-xs"></i>
                     </button>
                     
                     <div class="flex items-center gap-4 mb-2 mt-4">
-                        <img src="${foto}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${rider.name}" class="w-16 h-16 rounded-full object-cover border ${isCaptain ? 'border-amber-500/60' : 'border-slate-700'} group-hover:border-pink-500 transition-colors bg-zinc-900">
+                        <img src="${escapeHtml(foto)}" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dr1c3gqwf/image/upload/f_auto,q_auto/default.png';" alt="${escapeHtml(rider.name)}" class="w-16 h-16 rounded-full object-cover border ${isCaptain ? 'border-amber-500/60' : 'border-slate-700'} group-hover:border-pink-500 transition-colors bg-zinc-900">
                         <div class="flex flex-col min-w-0">
                             <span class="text-[8px] font-black uppercase tracking-widest ${roleColor}">${roleLabel}</span>
-                            <h4 class="font-black text-white text-xs md:text-sm uppercase tracking-wider truncate">${rider.name}</h4>
+                            <h4 class="font-black text-white text-xs md:text-sm uppercase tracking-wider truncate">${escapeHtml(rider.name)}</h4>
                             <div class="flex items-center gap-1.5 mt-1">
                                 ${flag}
-                                <span class="spec-badge ${rider.typeClass || 'spec-gc'}">${rider.type || 'PRO'}</span>
+                                <span class="spec-badge ${escapeHtml(rider.typeClass || 'spec-gc')}">${escapeHtml(rider.type || 'PRO')}</span>
                             </div>
                         </div>
                     </div>
@@ -717,14 +739,14 @@
                         <div class="flex flex-col min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 ${getFlagImg(rider.country)}
-                                <span class="text-[9px] font-black uppercase bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">${rider.teamCode}</span>
+                                <span class="text-[9px] font-black uppercase bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">${escapeHtml(rider.teamCode)}</span>
                             </div>
-                            <h4 class="text-sm md:text-base font-bold text-white uppercase tracking-tight truncate">${rider.name}</h4>
-                            <span class="spec-badge ${rider.typeClass} w-max mt-1">${rider.type}</span>
+                            <h4 class="text-sm md:text-base font-bold text-white uppercase tracking-tight truncate">${escapeHtml(rider.name)}</h4>
+                            <span class="spec-badge ${escapeHtml(rider.typeClass)} w-max mt-1">${escapeHtml(rider.type)}</span>
                         </div>
                         
                         <div class="flex flex-col items-end shrink-0 pl-3">
-                            <button onclick="toggleFavorite('${rider.name}', '${rider.teamCode}')" data-rider="${rider.name}" class="p-1 mb-1 focus:outline-none" aria-label="Quitar de favoritos">
+                            <button data-rider-name="${escapeHtml(rider.name)}" data-team-code="${escapeHtml(rider.teamCode)}" onclick="toggleFavorite(this)" class="p-1 mb-1 focus:outline-none" aria-label="Quitar de favoritos">
                                 <svg class="w-4 h-4 text-yellow-500 hover:text-zinc-500 transition-colors" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                             </button>
                             <span class="text-2xl md:text-3xl font-black italic ${ovrColor} leading-none">${rider.stats.ovr}</span>
@@ -826,28 +848,28 @@
                 const tech = TEAM_TECH[team.code] || TEAM_TECH['DEFAULT'];
                 return `
                 <div class="team-card glass rounded-2xl md:rounded-3xl border border-zinc-800/80 overflow-hidden cursor-pointer group bg-zinc-900/30 relative flex flex-col h-full min-h-[200px] md:min-h-[320px]" 
-                     onclick="openModal('${team.code}')" 
+                     data-team-code="${escapeHtml(team.code)}" onclick="openModal(this.dataset.teamCode)" 
                      style="--team-glow: ${tech.color}30; --team-color: ${tech.color}"
-                     role="button" tabindex="0" aria-label="Ver plantilla del equipo ${team.name}">
+                     role="button" tabindex="0" aria-label="Ver plantilla del equipo ${escapeHtml(team.name)}">
                     
                     <div class="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
-                        <span class="text-[90px] md:text-[140px] font-black italic text-white/[0.03] group-hover:text-white/[0.06] transition-colors leading-none tracking-tighter select-none rotate-[-15deg] scale-150">${team.code}</span>
+                        <span class="text-[90px] md:text-[140px] font-black italic text-white/[0.03] group-hover:text-white/[0.06] transition-colors leading-none tracking-tighter select-none rotate-[-15deg] scale-150">${escapeHtml(team.code)}</span>
                     </div>
 
                     <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-zinc-950/60 to-transparent opacity-90 z-10"></div>
                     
                     <div class="w-full flex-1 overflow-hidden flex items-center justify-center p-3 md:p-6 relative z-20 mt-2 md:mt-4 h-28 md:h-auto">
-                        <img src="${team.jersey}" class="team-jersey-thumb w-full h-full object-contain relative transition-transform duration-500 ease-out drop-shadow-2xl" loading="lazy" alt="Maillot ${team.name}">
+                        <img src="${escapeHtml(team.jersey)}" class="team-jersey-thumb w-full h-full object-contain relative transition-transform duration-500 ease-out drop-shadow-2xl" loading="lazy" alt="Maillot ${escapeHtml(team.name)}">
                     </div>
                     
                     <div class="p-3 md:p-5 z-30 shrink-0">
-                        <h3 class="text-xs md:text-base font-black uppercase tracking-tight text-white leading-tight group-hover:text-cyan-400 transition-colors mb-1.5 drop-shadow-lg line-clamp-2">${team.name}</h3>
+                        <h3 class="text-xs md:text-base font-black uppercase tracking-tight text-white leading-tight group-hover:text-cyan-400 transition-colors mb-1.5 drop-shadow-lg line-clamp-2">${escapeHtml(team.name)}</h3>
                         
                         <div class="flex items-center justify-between mb-2 md:mb-3 border-b border-white/5 pb-2 md:pb-3">
                             <div class="flex items-center gap-1 md:gap-2 text-[8px] md:text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
-                                <span class="truncate max-w-[60px] md:max-w-none">${team.country}</span>
+                                <span class="truncate max-w-[60px] md:max-w-none">${escapeHtml(team.country)}</span>
                                 <span class="w-1 h-1 rounded-full bg-zinc-700 shrink-0" aria-hidden="true"></span>
-                                <span class="text-cyan-500 shrink-0">${team.code}</span>
+                                <span class="text-cyan-500 shrink-0">${escapeHtml(team.code)}</span>
                             </div>
                         </div>
 
@@ -900,16 +922,22 @@
             });
         }
 
-        window.updateRadarManual = (mnt, spr, tt, lla, res, rec, name, color) => {
+        // Recibe la fila (this) y lee los datos desde data-rider / data-radar-color,
+        // en vez de recibir cada stat y el nombre como argumentos sueltos en el onclick
+        window.updateRadarManual = (el) => {
+            const rider = JSON.parse(el.dataset.rider);
+            const color = el.dataset.radarColor;
+            const s = rider.stats;
+
             if(radarChartInstance) {
-                radarChartInstance.data.datasets[0].data = [mnt, spr, tt, lla, res, rec];
+                radarChartInstance.data.datasets[0].data = [s.mnt, s.spr, s.tt, s.lla, s.res, s.rec];
                 radarChartInstance.data.datasets[0].borderColor = color === 'gold' ? '#ec4899' : '#22d3ee';
                 radarChartInstance.data.datasets[0].backgroundColor = color === 'gold' ? 'rgba(236, 72, 153, 0.2)' : 'rgba(34, 211, 238, 0.2)';
                 radarChartInstance.update();
                 const label = document.getElementById('radar-rider-name');
-                if(label) { label.innerText = name; label.className = `text-xs font-black uppercase tracking-wide drop-shadow-md bg-black/80 px-3 py-1.5 rounded-lg border border-white/10 transition-colors ${color === 'gold' ? 'text-pink-400' : 'text-cyan-400'}`; }
+                if(label) { label.innerText = rider.name; label.className = `text-xs font-black uppercase tracking-wide drop-shadow-md bg-black/80 px-3 py-1.5 rounded-lg border border-white/10 transition-colors ${color === 'gold' ? 'text-pink-400' : 'text-cyan-400'}`; }
             }
-            toggleRiderAccordion(name);
+            toggleRiderAccordion(rider.name);
         };
 
         window.openModal = (teamCode, refreshOnly = false) => {
@@ -968,24 +996,24 @@
                 const hl = (key) => key === currentSortCriteria ? 'text-yellow-400 font-black scale-110 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'text-zinc-200';
                 
                 const safeName = rider.name.replace(/\s+/g, '');
-                const riderStr = JSON.stringify(rider).replace(/"/g, '&quot;');
+                const riderJson = escapeHtml(JSON.stringify(rider));
                 const isInTeam = myFantasyTeam.some(r => r.name === rider.name);
                 
                 let fantasyBtnHtml = '';
                 if(isInTeam) {
-                    fantasyBtnHtml = `<button id="btn-fantasy-${safeName}" onclick="event.stopPropagation(); toggleFantasyTeam('${riderStr}')" class="shrink-0 flex items-center justify-center gap-1.5 bg-emerald-500 text-black border border-emerald-500 text-[9px] font-bold uppercase tracking-widest py-2 px-3 rounded-lg transition-colors" aria-label="Quitar de tu equipo"><i class="fas fa-check"></i> En equipo</button>`;
+                    fantasyBtnHtml = `<button id="btn-fantasy-${safeName}" data-rider="${riderJson}" onclick="event.stopPropagation(); toggleFantasyTeam(this)" class="shrink-0 flex items-center justify-center gap-1.5 bg-emerald-500 text-black border border-emerald-500 text-[9px] font-bold uppercase tracking-widest py-2 px-3 rounded-lg transition-colors" aria-label="Quitar de tu equipo"><i class="fas fa-check"></i> En equipo</button>`;
                 } else {
-                    fantasyBtnHtml = `<button id="btn-fantasy-${safeName}" onclick="event.stopPropagation(); toggleFantasyTeam('${riderStr}')" class="shrink-0 flex items-center justify-center gap-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-black border border-emerald-500/30 text-[9px] font-bold uppercase tracking-widest py-2 px-3 rounded-lg transition-colors" aria-label="Fichar para tu equipo"><i class="fas fa-plus"></i> Fichar</button>`;
+                    fantasyBtnHtml = `<button id="btn-fantasy-${safeName}" data-rider="${riderJson}" onclick="event.stopPropagation(); toggleFantasyTeam(this)" class="shrink-0 flex items-center justify-center gap-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-black border border-emerald-500/30 text-[9px] font-bold uppercase tracking-widest py-2 px-3 rounded-lg transition-colors" aria-label="Fichar para tu equipo"><i class="fas fa-plus"></i> Fichar</button>`;
                 }
 
                 return `
                 <div class="group border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-all cursor-pointer flex flex-col p-3"
-                     onclick="updateRadarManual(${s.mnt}, ${s.spr}, ${s.tt}, ${s.lla}, ${s.res}, ${s.rec}, '${rider.name}', '${radarColor}')"
+                     data-rider="${riderJson}" data-radar-color="${radarColor}" onclick="updateRadarManual(this)"
                      role="listitem">
                     
                     <div class="flex items-center justify-between w-full">
                         <div class="flex items-center gap-3">
-                            <button onclick="event.stopPropagation(); toggleFavorite('${rider.name}', '${teamCode}')" data-rider="${rider.name}" class="z-50 p-1 -ml-1 focus:outline-none" aria-label="${isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}">
+                            <button data-rider-name="${escapeHtml(rider.name)}" data-team-code="${escapeHtml(teamCode)}" onclick="event.stopPropagation(); toggleFavorite(this)" class="z-50 p-1 -ml-1 focus:outline-none" aria-label="${isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}">
                                 <svg class="w-4 h-4 ${heartColor} transition-colors" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                             </button>
 
@@ -993,9 +1021,9 @@
                             <span class="w-6 flex items-center justify-center shrink-0" aria-hidden="true">${getFlagImg(rider.country)}</span>
                             
                             <div class="flex flex-col min-w-0">
-                                <h4 class="text-zinc-300 font-bold uppercase text-xs md:text-sm tracking-tight group-hover:text-white transition-colors truncate">${rider.name}</h4>
+                                <h4 class="text-zinc-300 font-bold uppercase text-xs md:text-sm tracking-tight group-hover:text-white transition-colors truncate">${escapeHtml(rider.name)}</h4>
                                 <div class="flex items-center gap-2 mt-0.5">
-                                    <span class="spec-badge ${rider.typeClass} hidden lg:inline-block">${rider.type}</span>
+                                    <span class="spec-badge ${escapeHtml(rider.typeClass)} hidden lg:inline-block">${escapeHtml(rider.type)}</span>
                                 </div>
                             </div>
                         </div>
@@ -1011,7 +1039,7 @@
 
                     <div id="accordion-content-${safeName}" class="accordion-content w-full">
                         <div class="pt-3 mt-2 border-t border-zinc-800/80 ml-8 lg:ml-0 flex flex-col gap-3">
-                            <span class="spec-badge ${rider.typeClass} inline-block lg:hidden w-max">${rider.type}</span>
+                            <span class="spec-badge ${escapeHtml(rider.typeClass)} inline-block lg:hidden w-max">${escapeHtml(rider.type)}</span>
                             <div class="flex items-center justify-between gap-3 w-full">
                                 <div class="grid grid-cols-6 gap-1.5 text-[10px] text-zinc-500 font-mono flex-1 max-w-[380px]">
                                     <div class="text-center"><span class="block text-[7px] uppercase tracking-wider mb-1">MNT</span><span class="${hl('mnt')} text-sm md:text-base">${s.mnt}</span></div>
@@ -1059,7 +1087,7 @@
             const t1 = document.getElementById('h2h-team-1');
             const t2 = document.getElementById('h2h-team-2');
             
-            let teamOptionsHTML = allTeams.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
+            let teamOptionsHTML = allTeams.map((t, i) => `<option value="${i}">${escapeHtml(t.name)}</option>`).join('');
             t1.innerHTML = teamOptionsHTML;
             t2.innerHTML = teamOptionsHTML;
 
@@ -1122,7 +1150,7 @@
                 jerseyImg.src = team.jersey;
 
                 const sortedRiders = [...team.riders].sort((a, b) => b.stats.ovr - a.stats.ovr);
-                riderSelect.innerHTML = sortedRiders.map(r => `<option value="${r.name}">${r.stats.ovr} OVR | ${r.name}</option>`).join('');
+                riderSelect.innerHTML = sortedRiders.map(r => `<option value="${escapeHtml(r.name)}">${r.stats.ovr} OVR | ${escapeHtml(r.name)}</option>`).join('');
             }
         }
 
