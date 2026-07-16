@@ -435,6 +435,24 @@
             gregario: { label: 'Gregario',      icon: 'fa-shield-alt',  badge: 'bg-zinc-700 text-zinc-300 border-zinc-600', text: 'text-zinc-400' }
         };
 
+        // MIGRACIÓN: si el equipo se guardó antes de que existieran los roles (o alguno
+        // quedó con un valor no reconocido), se normaliza una sola vez al cargar la página.
+        // Sin esto, un <select> sin ninguna opción marcada como "selected" muestra la
+        // primera de la lista por defecto (Líder), aunque el ciclista en realidad sea gregario.
+        (function normalizeFantasyRoles() {
+            if (myFantasyTeam.length === 0) return;
+            let hasLeader = myFantasyTeam.some(r => r.role === 'lider');
+            let changed = false;
+            myFantasyTeam.forEach(r => {
+                if (!FANTASY_ROLES[r.role]) {
+                    r.role = hasLeader ? 'gregario' : 'lider';
+                    if (r.role === 'lider') hasLeader = true;
+                    changed = true;
+                }
+            });
+            if (changed) localStorage.setItem('velo_fantasy_team', JSON.stringify(myFantasyTeam));
+        })();
+
         // --- FAVORITOS ---
         const FAV_KEY = 'velo_favs_v1';
 
@@ -771,8 +789,12 @@
 
             myFantasyTeam.forEach((rider, index) => {
                 const riderJson = escapeHtml(JSON.stringify(rider));
-                const role = FANTASY_ROLES[rider.role] || FANTASY_ROLES.gregario;
-                const isLeader = rider.role === 'lider';
+                // roleKey normalizada: si por lo que sea el rol guardado no es válido,
+                // se trata como "gregario" en vez de dejar el <select> sin ninguna opción
+                // marcada (eso hace que el navegador muestre la primera, "Líder", por defecto)
+                const roleKey = FANTASY_ROLES[rider.role] ? rider.role : 'gregario';
+                const role = FANTASY_ROLES[roleKey];
+                const isLeader = roleKey === 'lider';
 
                 const cornerBadge = isLeader
                     ? `<span class="absolute top-3 left-3 flex items-center justify-center w-7 h-7 rounded-full ${role.badge}" aria-label="Líder"><i class="fas ${role.icon} text-[10px]"></i></span>`
@@ -783,7 +805,7 @@
                 const headerExtra = `<span class="text-[8px] font-black uppercase tracking-widest ${role.text}">${role.label}</span>`;
 
                 const roleOptions = Object.entries(FANTASY_ROLES).map(([key, r]) =>
-                    `<option value="${key}" ${rider.role === key ? 'selected' : ''}>${r.label}</option>`
+                    `<option value="${key}" ${roleKey === key ? 'selected' : ''}>${r.label}</option>`
                 ).join('');
 
                 const footerExtra = `
