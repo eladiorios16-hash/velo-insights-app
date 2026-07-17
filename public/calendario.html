@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5KBRZW06L3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-5KBRZW06L3');
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="icon" type="image/png" sizes="144x144" href="/assets/favicon-144.png">
+    <link rel="icon" type="image/svg+xml" href="/assets/logo-icon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icon-192.png">
+    <meta name="apple-mobile-web-app-title" content="Velo">
+    
+    <title>VELO INSIGHTS | Calendario Ciclismo WorldTour 2026</title>
+    <meta name="description" content="Calendario interactivo del ciclismo profesional WorldTour. Consulta fechas, perfiles, altimetrías y etapas de las Grandes Vueltas y Monumentos.">
+    <meta name="keywords" content="calendario ciclismo, fechas WorldTour, etapas Tour de Francia, perfiles Giro Italia, monumentos ciclismo, altimetria etapas, carreras UCI">
+    <meta name="author" content="Velo Insights">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://veloinsights.es/calendario.html">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://veloinsights.es/calendario.html">
+    <meta property="og:title" content="Calendario Ciclismo WorldTour | Velo Insights">
+    <meta property="og:description" content="Fechas, etapas y perfiles de todas las carreras del calendario WorldTour. Añádelas a tu Google Calendar.">
+    <meta property="og:image" content="https://veloinsights.es/assets/default-news.jpg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://veloinsights.es/calendario.html">
+    <meta name="twitter:title" content="Calendario Ciclismo WorldTour | Velo Insights">
+    <meta name="twitter:description" content="Fechas, etapas y perfiles de todas las carreras del calendario WorldTour. Añádelas a tu Google Calendar.">
+    <meta name="twitter:image" content="https://veloinsights.es/assets/default-news.jpg">
+    
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Velo App registrada con éxito'))
+                    .catch(err => console.log('❌ Error al registrar Velo App', err));
+            });
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/main.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body { -webkit-tap-highlight-color: transparent; background-color: #050505; }
+        
+        .race-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .race-card:hover { border-color: #52525b; }
+        .race-card.active { border-color: #22d3ee; background-color: rgba(34, 211, 238, 0.05); }
+
+        .details-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; background: #000; }
+        .details-content.open { max-height: 3000px; border-top: 1px solid #27272a; }
+
+        .stage-detail-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; background: #0c0c0e; }
+        .stage-detail-content.open { max-height: 800px; border-top: 1px dashed #27272a; padding-bottom: 10px; }
+
+        .stage-arrow { transition: transform 0.3s ease; }
+        .stage-btn.active .stage-arrow { transform: rotate(180deg); color: #22d3ee; }
+        .stage-btn.active .stage-name { color: #22d3ee; }
+
+        /* Categorías y Badges */
+        .cat-GT { color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); background: rgba(236, 72, 153, 0.1); }
+        .cat-MONUMENT { color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); background: rgba(250, 204, 21, 0.1); }
+        .cat-WT { color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.1); }
+
+        .badge-tt { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .badge-cri { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .badge-montaña { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge-mediamontaña { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+        .badge-llano { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .filter-btn { transition: all 0.3s ease; background: transparent; touch-action: manipulation; }
+        .filter-btn.active-all { border-color: #ffffff; color: #ffffff; background: rgba(255,255,255,0.05); box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+        .filter-btn.active-gt { border-color: #ec4899; color: #ec4899; background: rgba(236, 72, 153, 0.1); box-shadow: 0 0 15px rgba(236, 72, 153, 0.2); }
+        .filter-btn.active-monument { border-color: #facc15; color: #facc15; background: rgba(250, 204, 21, 0.1); box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); }
+        .filter-btn.active-wt { border-color: #22d3ee; color: #22d3ee; background: rgba(34, 211, 238, 0.1); box-shadow: 0 0 15px rgba(34, 211, 238, 0.2); }
+
+        /* Estilos del Perfil Interactivo */
+        .profile-bar {
+            transition: height 0.5s ease-out, background-color 0.2s, transform 0.2s;
+            transform-origin: bottom;
+        }
+        .profile-bar.cursor-pointer:hover {
+            transform: scaleY(1.1);
+            filter: brightness(1.3);
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body class="bg-[#050505] antialiased min-h-screen pb-20 text-white selection:bg-cyan-500/30">
+
+    <main class="max-w-5xl mx-auto px-4 md:px-6 py-28 md:py-40">
+        
+        <header class="mb-10 text-center reveal-on-scroll">
+            <h1 class="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">
+                Calendario <span class="text-zinc-700">2026</span>
+            </h1>
+            
+            <div class="max-w-md mx-auto relative group mb-8">
+                <label for="search-input" class="sr-only">Buscar carrera en el calendario</label>
+                <input type="text" id="search-input" placeholder="BUSCAR CARRERA..." 
+                       class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-3 px-12 text-white outline-none focus:border-cyan-500 focus:bg-black transition-all text-center uppercase font-bold tracking-wider text-xs md:text-sm placeholder-zinc-700 backdrop-blur-sm" aria-label="Buscador de carreras">
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-3" role="group" aria-label="Filtros por tipo de carrera">
+                <button id="btn-ALL" onclick="filterRaces('ALL')" class="filter-btn active-all px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-zinc-600 hover:text-zinc-300" aria-pressed="true">Todos</button>
+                <button id="btn-GT" onclick="filterRaces('GT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-pink-900 hover:text-pink-800" aria-pressed="false">Grand Tours</button>
+                <button id="btn-MONUMENT" onclick="filterRaces('MONUMENT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-yellow-900 hover:text-yellow-800" aria-pressed="false">Monumentos</button>
+                <button id="btn-WT" onclick="filterRaces('WT')" class="filter-btn px-5 py-2 rounded-lg border border-zinc-800 text-[10px] font-bold uppercase text-zinc-500 hover:border-cyan-900 hover:text-cyan-800" aria-pressed="false">World Tour</button>
+            </div>
+        </header>
+
+        <div id="calendar-container" class="space-y-4" role="list" aria-label="Lista de carreras del WorldTour"></div>
+
+    </main>
+
+    <script src="layout.js?v=5.5"></script>
+
+    <script>
+        const container = document.getElementById('calendar-container');
+        const searchInput = document.getElementById('search-input');
+        let allRaces = [];
+        let currentFilter = 'ALL';
+
+        // --- SEGURIDAD: escapa texto antes de insertarlo en HTML (texto o atributos) ---
+        // Mismo criterio que en equipos.html/index.html: los datos de carreras/etapas
+        // vienen del panel admin, así que no son 100% de confianza.
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+
+        // --- ACCESIBILIDAD: la cabecera de cada tarjeta de carrera es un
+        // <div role="button">, así que necesita gestionar Enter/Espacio a mano.
+        // Un único listener delegado: sigue funcionando aunque la lista se regenere.
+        container.addEventListener('keydown', (e) => {
+            const trigger = e.target.closest('[role="button"][onclick^="toggleDetails"]');
+            if (!trigger) return;
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                trigger.click();
+            }
+        });
+
+        // --- FECHA ACTUAL: helpers para saber qué carrera/etapa toca hoy ---
+        // Devuelve el rango [inicio, fin] de una carrera como objetos Date (a las 00:00).
+        // Prioriza endDateISO si el backend lo trae; si no, lo calcula a partir del
+        // número de etapas (así funciona igual aunque el campo no exista).
+        function getRaceDateRange(race) {
+            const start = new Date(race.dateISO);
+            if (isNaN(start.getTime())) return null;
+            start.setHours(0, 0, 0, 0);
+
+            let end;
+            if (race.endDateISO) {
+                end = new Date(race.endDateISO);
+                if (isNaN(end.getTime())) end = new Date(start);
+            } else {
+                const stages = (race.details && race.details.stages) ? race.details.stages : [];
+                end = new Date(start);
+                if (stages.length > 1) end.setDate(start.getDate() + (stages.length - 1));
+            }
+            end.setHours(0, 0, 0, 0);
+            return { start, end };
+        }
+
+        function isRaceLiveToday(race) {
+            const range = getRaceDateRange(race);
+            if (!range) return false;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return today >= range.start && today <= range.end;
+        }
+
+        // Índice de la etapa que corresponde a hoy dentro de una carrera (-1 si no aplica)
+        function getTodayStageIndex(race) {
+            const range = getRaceDateRange(race);
+            const stages = (race.details && race.details.stages) ? race.details.stages : [];
+            if (!range || stages.length === 0) return -1;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffDays = Math.round((today - range.start) / (1000 * 60 * 60 * 24));
+            return (diffDays >= 0 && diffDays < stages.length) ? diffDays : -1;
+        }
+
+        // Si se llega con ?race=NombreDeLaCarrera (por ejemplo desde un enlace de index.html),
+        // abre y enfoca ESA carrera en concreto. La navegación explícita siempre debe
+        // ganar al "adivina qué toca hoy" — si no, un enlace a una vuelta futura o pasada
+        // acababa abriendo la etapa de hoy en su lugar, que no es lo que se pidió.
+        function focusRaceFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const raceParam = params.get('race');
+            if (!raceParam) return false;
+
+            const index = allRaces.findIndex(r => r.name === raceParam);
+            if (index === -1) return false;
+
+            toggleDetails(index);
+
+            const stageIndex = getTodayStageIndex(allRaces[index]);
+            if (stageIndex > -1) {
+                setTimeout(() => toggleStage(index, stageIndex), 550);
+            }
+            return true;
+        }
+
+        // Encuentra la carrera en curso ahora mismo y la abre automáticamente
+        // (con su etapa de hoy, si la hay), en vez de dejar el calendario
+        // siempre arrancando desde arriba del todo.
+        function focusTodayRace() {
+            const todayIndex = allRaces.findIndex(isRaceLiveToday);
+            if (todayIndex === -1) return;
+
+            toggleDetails(todayIndex);
+
+            const stageIndex = getTodayStageIndex(allRaces[todayIndex]);
+            if (stageIndex > -1) {
+                // Se abre después de que la tarjeta termine su propio scroll,
+                // para que no se solapen las dos animaciones de desplazamiento.
+                setTimeout(() => toggleStage(todayIndex, stageIndex), 550);
+            }
+        }
+
+        async function initCalendar() {
+            container.innerHTML = `<div class="text-center py-20 animate-pulse text-zinc-600 uppercase text-xs font-black">Cargando datos...</div>`;
+            try {
+                const response = await fetch('/api/calendar');
+                
+                if (response.ok) {
+                    allRaces = await response.json();
+                    renderCalendar(allRaces);
+                    // Prioridad: si la URL pide una carrera concreta, esa gana.
+                    // Solo si no hay ninguna petición explícita, se enfoca la de hoy.
+                    if (!focusRaceFromURL()) focusTodayRace();
+                } else { 
+                    throw new Error('Error API'); 
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="text-center py-20 text-red-500 text-xs font-bold">Error de conexión (API).</div>`;
+            }
+        }
+
+        function generateElevationGraph(stages, raceIndex) {
+            if (!stages || stages.length === 0) return '';
+
+            let barsHTML = '';
+            
+            stages.forEach((s, index) => {
+                let height = '30%'; 
+                let colorClass = 'bg-zinc-700';
+                const type = s.type ? s.type.toLowerCase().replace(/\s+/g, '') : 'llano';
+                const isRestDay = type.includes('descanso') || type.includes('transicion');
+                
+                if (isRestDay) {
+                    height = '12%';
+                    colorClass = 'bg-zinc-800 border-t border-zinc-700/50';
+                } else if (type.includes('montaña') && !type.includes('media')) {
+                    height = '100%';
+                    colorClass = 'bg-gradient-to-t from-red-900 to-red-500';
+                } else if (type.includes('media')) {
+                    height = '60%';
+                    colorClass = 'bg-gradient-to-t from-yellow-900 to-yellow-500';
+                } else if (type.includes('llano')) {
+                    height = '25%';
+                    colorClass = 'bg-gradient-to-t from-green-900 to-green-500';
+                } else if (type.includes('cri') || type.includes('tt')) {
+                    height = '40%';
+                    colorClass = 'bg-gradient-to-t from-blue-900 to-blue-500';
+                }
+
+                const clickAction = isRestDay ? '' : `onclick="toggleStage(${raceIndex}, ${index}); event.stopPropagation();"`;
+                const cursorClass = isRestDay ? 'cursor-default' : 'cursor-pointer';
+                const tooltipText = isRestDay ? 'Día de descanso' : `Etapa ${s.n}: ${escapeHtml(s.type || 'Etapa')}`;
+                const hoverOpacity = isRestDay ? 'opacity-60' : 'opacity-80 group-hover/bar:opacity-100';
+
+                barsHTML += `
+                    <div ${clickAction} 
+                         title="${tooltipText}"
+                         class="flex-1 mx-[1px] rounded-t-sm relative group/bar flex flex-col justify-end items-center ${cursorClass}"
+                         style="height: 100%;"
+                         role="button" aria-expanded="false" aria-label="Ver detalles">
+                        <div class="w-full rounded-t-sm profile-bar ${colorClass} ${hoverOpacity}" style="height: ${height}"></div>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="px-5 py-6 bg-[#0a0a0a] border-b border-zinc-800" aria-label="Gráfico de altimetría de la carrera">
+                    <div class="flex justify-between items-end mb-2">
+                         <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Perfil de Carrera</span>
+                         <span class="text-[9px] font-mono text-zinc-600 uppercase" aria-hidden="true">Interactive Chart</span>
+                    </div>
+                    <div class="h-24 w-full flex items-end border-b border-zinc-800 pb-px relative">
+                         <div class="absolute w-full h-full border-t border-dashed border-zinc-800/30 top-0 left-0 pointer-events-none"></div>
+                         <div class="absolute w-full h-1/2 border-t border-dashed border-zinc-800/30 top-0 left-0 pointer-events-none"></div>
+                         
+                         ${barsHTML}
+                    </div>
+                    <div class="flex justify-between mt-2" aria-hidden="true">
+                        <span class="text-[8px] text-zinc-600">E1</span>
+                        <span class="text-[8px] text-zinc-600">FINAL</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCalendar(data) {
+            if (data.length === 0) {
+                container.innerHTML = `<div class="text-center py-20 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20"><p class="text-zinc-600 font-bold uppercase text-xs" role="alert">Sin resultados</p></div>`;
+                return;
+            }
+
+            container.innerHTML = data.map((r, i) => {
+                const dateObj = new Date(r.dateISO);
+                const day = dateObj.getDate();
+                const month = dateObj.toLocaleString('es-ES', { month: 'short' }).replace('.', '').toUpperCase();
+                
+                let stagesHTML = '';
+                const stages = (r.details && r.details.stages) ? r.details.stages : [];
+                
+                // Filtramos para contar solo las etapas reales de competición
+                const realStagesCount = stages.filter(s => {
+                    const t = s.type ? s.type.toLowerCase() : '';
+                    return !t.includes('descanso') && !t.includes('transicion');
+                }).length;
+                
+                const graphHTML = (stages.length > 1) ? generateElevationGraph(stages, i) : '';
+
+                // Etapa que corresponde a hoy dentro de esta carrera (-1 si no aplica)
+                const todayStageIndex = getTodayStageIndex(r);
+
+                if (stages.length > 0) {
+                    stagesHTML = stages.map((s, j) => {
+                        const typeClass = s.type ? s.type.toLowerCase().replace(/\s+/g, '') : 'llano';
+                        const isRestDay = typeClass.includes('descanso') || typeClass.includes('transicion');
+                        const isTodayStage = j === todayStageIndex;
+                        const todayTag = isTodayStage ? `<span class="bg-green-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded uppercase animate-pulse">Hoy</span>` : '';
+                        
+                        let dateStr = '';
+                        let stageDateObj = new Date(r.dateISO);
+                        if (!isNaN(stageDateObj.getTime())) {
+                            stageDateObj.setDate(stageDateObj.getDate() + j);
+                            dateStr = s.date || stageDateObj.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        } else {
+                            dateStr = s.date || 'TBD';
+                        }
+                        
+                        // Diseño especial para Días de Descanso
+                        if (isRestDay) {
+                            return `
+                            <div class="border-b border-zinc-800/60 last:border-0 bg-zinc-900/20" role="listitem">
+                                <div class="w-full p-4 flex items-center justify-between gap-4 text-left opacity-70">
+                                    <div class="flex items-center gap-3 w-full">
+                                        <div class="w-6 shrink-0 text-center flex justify-center text-zinc-500">
+                                            <i class="fas fa-mug-hot text-sm"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-xs md:text-sm font-bold text-zinc-400 uppercase flex items-baseline gap-2">
+                                                Día de Transición 
+                                                <span class="text-zinc-600 font-mono text-[10px] font-normal tracking-wider">${escapeHtml(dateStr)}</span>
+                                                ${todayTag}
+                                            </h4>
+                                            ${s.route ? `<p class="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5 truncate">${escapeHtml(s.route)}</p>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="shrink-0">
+                                        <span class="text-[9px] font-black bg-[#050505] text-zinc-500 border border-zinc-800 px-2 py-0.5 rounded uppercase tracking-widest shadow-inner">DESCANSO</span>
+                                    </div>
+                                </div>
+                                <div id="stage-content-${i}-${j}" class="hidden race-${i}-stage-content"></div>
+                            </div>`;
+                        }
+
+                        // Diseño normal de Etapas
+                        const winnerHTML = s.winner ? 
+                            `<div class="mt-1.5 flex items-center gap-1.5 animate-pulse-slow">
+                                <svg class="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                <span class="text-[10px] font-black text-amber-400 uppercase tracking-wide border-b border-amber-400/20">Ganador: ${escapeHtml(s.winner)}</span>
+                            </div>` : '';
+
+                        return `
+                        <div class="border-b border-zinc-800 last:border-0" role="listitem">
+                            <button onclick="toggleStage(${i}, ${j})" id="stage-btn-${i}-${j}" class="stage-btn w-full p-4 hover:bg-white/5 transition-colors flex items-center justify-between gap-4 text-left group/stage" aria-expanded="false" aria-controls="stage-content-${i}-${j}">
+                                <div class="flex items-center gap-3 w-full">
+                                    <span class="font-heading text-lg text-zinc-500 w-6 shrink-0 text-center group-hover/stage:text-white transition-colors" aria-hidden="true">${escapeHtml(s.n)}</span>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-xs md:text-sm font-bold text-white uppercase stage-name transition-colors truncate flex items-baseline gap-2">
+                                            Etapa ${escapeHtml(s.n)} 
+                                            <span class="text-cyan-400 font-mono text-[10px] font-normal tracking-wider">${escapeHtml(dateStr)}</span>
+                                            ${todayTag}
+                                        </h4>
+                                        ${s.route ? `<p class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5 truncate">${escapeHtml(s.route)}</p>` : ''}
+                                        
+                                        <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                                            <span class="text-[9px] font-black badge-${escapeHtml(typeClass)} px-1.5 py-0.5 rounded uppercase">${escapeHtml(s.type || 'Etapa')}</span>
+                                            ${s.km ? `<span class="text-sm font-bold text-zinc-300 font-mono border-l border-zinc-700 pl-2 ml-1">${escapeHtml(s.km)} km</span>` : ''}
+                                        </div>
+                                        ${winnerHTML}
+                                    </div>
+                                </div>
+                                <div class="stage-arrow text-zinc-600 shrink-0">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </button>
+                            <div id="stage-content-${i}-${j}" class="stage-detail-content race-${i}-stage-content">
+                                <div class="p-4 pt-4"> ${(s.gain || s.km) ? `
+                                        <div class="flex justify-center gap-4 text-[11px] font-mono text-zinc-400 mb-4 uppercase tracking-widest border-b border-zinc-800 pb-3">
+                                            ${s.km ? `<span>Distancia: <span class="text-white font-bold">${escapeHtml(s.km)} km</span></span>` : ''}
+                                            ${s.gain ? `<span>Desnivel: <span class="text-white font-bold">${escapeHtml(s.gain)}m+</span></span>` : ''}
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${s.image ? `
+                                        <div class="bg-white rounded-xl p-1 md:p-2 overflow-hidden border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all flex justify-center group/img">
+                                            <img src="${escapeHtml(s.image)}" onclick="openLightbox(this.src)" loading="lazy" class="w-full h-auto object-contain max-h-[350px] md:max-h-[500px] cursor-pointer group-hover/img:scale-[1.02] transition-transform duration-300" alt="Perfil altimétrico de la etapa ${escapeHtml(s.n)}">
+                                        </div>
+                                        <div class="mt-4 flex justify-end">
+                                            <button data-share="${escapeHtml(JSON.stringify({raceName: r.name, stageNum: s.n, route: s.route, km: s.km, gain: s.gain, image: s.image}))}" onclick="shareStage(this)" 
+                                                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase hover:bg-cyan-500 hover:text-black transition-all" aria-label="Compartir perfil de la etapa">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 12a3 3 0 100-2.684 3 3 0 000 2.684z"></path></svg>
+                                                Compartir Etapa
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    stagesHTML = `<div class="p-6 text-center text-zinc-600 text-xs italic" role="status">Detalles de etapas no disponibles.</div>`;
+                }
+
+                const isLive = isRaceLiveToday(r);
+                const statusBadge = isLive ? `<span class="bg-green-500 text-black text-[9px] font-black px-2 py-0.5 rounded animate-pulse ml-2" aria-label="Carrera en vivo">EN VIVO</span>` : '';
+
+                const raceWinnerBadge = r.winner ? `
+                    <div class="mt-2 flex items-center gap-1.5">
+                        <span class="bg-amber-500/20 border border-amber-500/40 text-amber-500 text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest flex items-center gap-1" aria-hidden="true">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M21 5h-4M19 3v4M9 11v3m-3 4h12M12 3v8m0 0a4 4 0 01-4-4m4 4a4 4 0 004-4"></path></svg>
+                            GANADOR
+                        </span>
+                        <span class="text-xs font-black text-white uppercase tracking-wide">${escapeHtml(r.winner)}</span>
+                    </div>
+                ` : '';
+
+                return `
+                <div id="card-${i}" class="race-card bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden mb-4" role="listitem">
+                    <div class="p-5 flex items-center justify-between cursor-pointer" onclick="toggleDetails(${i})" role="button" tabindex="0" aria-expanded="false" aria-controls="details-${i}" aria-label="Ver detalles de ${escapeHtml(r.name)}">
+                        <div class="flex items-center gap-5">
+                            <div class="flex flex-col items-center justify-center w-12 shrink-0 border-r border-zinc-800 pr-5" aria-hidden="true">
+                                <span class="text-3xl font-black italic text-white leading-none">${day}</span>
+                                <span class="text-[10px] font-bold text-zinc-500 uppercase">${month}</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center flex-wrap mb-1">
+                                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded uppercase cat-${escapeHtml(r.category)}">${escapeHtml(r.category)}</span>
+                                    ${statusBadge}
+                                </div>
+                                <h3 class="text-white font-bold uppercase text-base md:text-lg tracking-tight truncate group-hover:text-cyan-400 transition-colors">${escapeHtml(r.name)}</h3>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5 font-bold">
+                                    ${stages.length > 0 ? `${realStagesCount} Etapas` : 'Clásica / 1 Día'}
+                                </p>
+                                ${raceWinnerBadge}
+                            </div>
+                        </div>
+                        <div class="w-8 h-8 rounded-full border border-zinc-700 flex items-center justify-center text-zinc-400 transition-all icon-toggle" id="icon-${i}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                    <div id="details-${i}" class="details-content" role="region">
+                        ${graphHTML}
+                        <div role="list" aria-label="Etapas de la carrera">
+                            ${stagesHTML}
+                        </div>
+                        <div class="p-4 bg-zinc-900 border-t border-zinc-800 flex justify-center">
+                            <button data-title="${escapeHtml(r.name)}" data-date="${escapeHtml(r.dateISO)}" onclick="addToCalendar(this)" class="flex items-center gap-2 text-[10px] font-bold text-zinc-400 hover:text-white uppercase transition-colors" aria-label="Añadir esta carrera a Google Calendar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Agendar en Google Calendar
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function filterRaces(category) {
+            currentFilter = category;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active-all', 'active-gt', 'active-monument', 'active-wt');
+                btn.setAttribute('aria-pressed', 'false');
+            });
+            
+            const activeBtn = document.getElementById(`btn-${category}`);
+            if (activeBtn) {
+                activeBtn.setAttribute('aria-pressed', 'true');
+                if (category === 'ALL') activeBtn.classList.add('active-all');
+                else if (category === 'GT') activeBtn.classList.add('active-gt');
+                else if (category === 'MONUMENT') activeBtn.classList.add('active-monument');
+                else if (category === 'WT') activeBtn.classList.add('active-wt');
+            }
+            
+            const term = searchInput.value.toLowerCase().trim();
+            const filtered = allRaces.filter(r => {
+                const matchesCategory = category === 'ALL' || r.category === category;
+                const matchesSearch = r.name.toLowerCase().includes(term);
+                return matchesCategory && matchesSearch;
+            });
+            renderCalendar(filtered);
+        }
+
+        // --- UX MÓVIL: Acordeón Inteligente (Solo una carrera abierta a la vez) ---
+        function toggleDetails(index) {
+            const content = document.getElementById(`details-${index}`);
+            const card = document.getElementById(`card-${index}`);
+            const icon = document.getElementById(`icon-${index}`);
+            const isOpen = content.classList.contains('open');
+            
+            // Cerrar todas las demás carreras primero (Evita el scroll infinito)
+            document.querySelectorAll('.details-content').forEach(el => {
+                el.classList.remove('open');
+                el.parentElement.setAttribute('aria-expanded', 'false');
+            });
+            document.querySelectorAll('.race-card').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.icon-toggle').forEach(el => el.style.transform = 'rotate(0deg)');
+            
+            // Si no estaba abierta, la abrimos y hacemos auto-scroll para enfocarla
+            if(!isOpen) {
+                content.classList.add('open');
+                card.classList.add('active');
+                card.setAttribute('aria-expanded', 'true');
+                icon.style.transform = 'rotate(180deg)';
+                
+                // Pequeño retardo para dejar que la animación del CSS termine antes de hacer scroll
+                setTimeout(() => {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
+        }
+
+        // --- UX MÓVIL: Acordeón Inteligente para Etapas ---
+        window.toggleStage = (raceIndex, stageIndex) => {
+            const contentID = `stage-content-${raceIndex}-${stageIndex}`;
+            const btnID = `stage-btn-${raceIndex}-${stageIndex}`;
+            const targetContent = document.getElementById(contentID);
+            const targetBtn = document.getElementById(btnID);
+            
+            // Si targetContent no existe (por ejemplo, porque es un día de descanso oculto), no hacer nada
+            if(!targetContent) return;
+            
+            const isAlreadyOpen = targetContent.classList.contains('open');
+            
+            // Cerrar todas las demás etapas de ESA carrera
+            const allStagesInRace = document.querySelectorAll(`.race-${raceIndex}-stage-content`);
+            allStagesInRace.forEach(el => el.classList.remove('open'));
+            
+            const parentDetails = document.getElementById(`details-${raceIndex}`);
+            const allBtns = parentDetails.querySelectorAll('.stage-btn');
+            allBtns.forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-expanded', 'false');
+            });
+            
+            // Si la etapa estaba cerrada, abrirla y enfocarla (si targetBtn no existe,
+            // es un día de descanso: no hay botón que marcar como "active")
+            if (!isAlreadyOpen) {
+                targetContent.classList.add('open');
+                if (targetBtn) {
+                    targetBtn.classList.add('active');
+                    targetBtn.setAttribute('aria-expanded', 'true');
+                }
+                
+                setTimeout(() => {
+                    (targetBtn || targetContent).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 300);
+            }
+        };
+
+        window.shareStage = (el) => {
+            const d = JSON.parse(el.dataset.share);
+            const text = `🚴‍♂️ Perfil Técnico: ${d.raceName}\n📍 Etapa ${d.stageNum}: ${d.route}\n📏 Distancia: ${d.km} km\n⛰️ Desnivel: ${d.gain} m+\n\n${d.image ? `🖼️ Perfil: ${d.image}\n` : ''}\nAnalizado en Velo Insights ⚡`;
+            const url = window.location.href;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: `Etapa ${d.stageNum} - ${d.raceName}`,
+                    text: text,
+                    url: url
+                }).catch((error) => console.log('Error compartiendo:', error));
+            } else {
+                const dummy = document.createElement("textarea");
+                document.body.appendChild(dummy);
+                dummy.value = text + " " + url;
+                dummy.select();
+                document.execCommand("copy");
+                document.body.removeChild(dummy);
+                alert("Copiado al portapapeles: ¡Pégalo donde quieras!");
+            }
+        };
+
+        function addToCalendar(el) {
+            const title = el.dataset.title;
+            const date = el.dataset.date.replace(/-/g, ''); 
+            window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${date}/${date}&details=Velo%20Insights%20WorldTour`, '_blank');
+        }
+
+        searchInput.addEventListener('input', () => filterRaces(currentFilter));
+        document.addEventListener('DOMContentLoaded', initCalendar);
+    </script>
+
+    <div id="cookie-banner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-8 md:bottom-8 md:w-[400px] bg-zinc-900/95 backdrop-blur-md border border-zinc-700 shadow-2xl rounded-2xl p-6 z-[999] transform transition-transform duration-500 translate-y-full" role="dialog" aria-live="polite">
+        <div class="flex items-center gap-3 mb-3">
+            <i class="fas fa-shield-alt text-cyan-500 text-xl" aria-hidden="true"></i>
+            <h3 class="text-white font-black uppercase tracking-widest text-sm">Privacidad y Telemetría</h3>
+        </div>
+        <p class="text-zinc-400 text-xs leading-relaxed mb-5 font-mono">
+            En Velo Insights utilizamos cookies propias y de terceros para medir el rendimiento de la web (telemetría) y ofrecerte la mejor experiencia. 
+            <a href="privacidad.html" class="text-cyan-400 hover:text-cyan-300 underline decoration-cyan-500/30">Leer política completa</a>.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button id="btn-accept-cookies" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-widest py-2.5 rounded-xl transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                Aceptar Todas
+            </button>
+            <button id="btn-reject-cookies" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold uppercase tracking-widest py-2.5 rounded-xl border border-zinc-700 transition-colors">
+                Solo Esenciales
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Lógica del Banner de Cookies
+        document.addEventListener('DOMContentLoaded', () => {
+            const banner = document.getElementById('cookie-banner');
+            const btnAccept = document.getElementById('btn-accept-cookies');
+            const btnReject = document.getElementById('btn-reject-cookies');
+
+            if (!localStorage.getItem('velo_cookies_consent')) {
+                banner.classList.remove('hidden');
+                setTimeout(() => {
+                    banner.classList.remove('translate-y-full');
+                }, 100);
+            }
+
+            const hideBanner = (decision) => {
+                localStorage.setItem('velo_cookies_consent', decision);
+                banner.classList.add('translate-y-full');
+                setTimeout(() => {
+                    banner.classList.add('hidden');
+                }, 500);
+            };
+
+            if(btnAccept) btnAccept.addEventListener('click', () => hideBanner('accepted'));
+            if(btnReject) btnReject.addEventListener('click', () => hideBanner('rejected'));
+        });
+    </script>
+</body>
+</html>
