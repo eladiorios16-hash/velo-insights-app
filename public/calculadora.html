@@ -525,7 +525,8 @@
                         <div class="bg-black/60 border border-purple-500/20 rounded-3xl p-6 md:p-8 relative overflow-hidden text-center shadow-inner h-full flex flex-col justify-center mt-6 lg:mt-0" aria-live="polite" aria-atomic="true">
                             <div class="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none"></div>
                             
-                            <h3 class="text-sm font-black text-white italic uppercase tracking-widest mb-8 relative z-10">Presión Óptima Calculada</h3>
+                            <h3 class="text-sm font-black text-white italic uppercase tracking-widest mb-2 relative z-10">Presión Óptima Calculada</h3>
+                            <p class="text-[9px] text-zinc-600 uppercase tracking-widest mb-6 relative z-10">Estimación orientativa — ajusta según tu sensación en ruta</p>
                             
                             <div class="grid grid-cols-2 gap-4 relative z-10 divide-x divide-zinc-800">
                                 <div class="px-2">
@@ -649,11 +650,24 @@
         const rpmStatus = document.getElementById('rpm-status');
         const weightInput = document.getElementById('system-weight');
 
+        // --- SEGURIDAD: escapa texto antes de insertarlo en HTML (texto o atributos) ---
+        // Aquí el riesgo es "auto-XSS": nombres que el propio usuario teclea al guardar
+        // un perfil, guardados en su localStorage y reinsertados luego sin escapar.
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             const isError = type === 'error';
             toast.className = `p-4 rounded-xl shadow-2xl transform transition-all duration-300 translate-y-10 opacity-0 flex items-center gap-3 backdrop-blur-md ${isError ? 'bg-red-950/90 border border-red-500/50 text-red-200' : 'bg-emerald-950/90 border border-emerald-500/50 text-emerald-200'}`;
-            toast.innerHTML = `<i class="fas ${isError ? 'fa-trash' : 'fa-check-circle'} text-lg" aria-hidden="true"></i><span class="font-bold text-[10px] uppercase tracking-widest">${message}</span>`;
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-trash' : 'fa-check-circle'} text-lg" aria-hidden="true"></i><span class="font-bold text-[10px] uppercase tracking-widest">${escapeHtml(message)}</span>`;
             
             document.getElementById('toast-container').appendChild(toast);
             
@@ -757,15 +771,62 @@
             if(select.querySelector(`option[value="${savedVal}"]`)) select.value = savedVal;
         }
 
+        // --- ARQUITECTURA: generación de botones de plato/piñón unificada ---
+        // Antes esta plantilla estaba copiada y pegada en renderQuickSelects y en
+        // buildCustomButtons. Ahora vive en un único sitio.
+        function renderPlatoButtons(platos, setupId, borderClass, bgClass, textClass, hoverClass) {
+            return platos.map(p =>
+                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 md:px-4 md:py-2 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-sm md:text-base font-black font-mono shadow-sm" aria-label="Seleccionar plato de ${p} dientes">${p}T</button>`
+            ).join('');
+        }
+
+        function renderPinonButtons(pinones, setupId) {
+            return pinones.map(p =>
+                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-xs md:text-sm font-bold font-mono transition-colors shadow-sm" aria-label="Seleccionar piñón de ${p} dientes">${p}</button>`
+            ).join('');
+        }
+
+        // Genera el bloque completo (fila de platos + fila de piñones), usado tanto para
+        // un grupo predefinido como para uno personalizado. opts.deleteProfileId añade el
+        // botón de borrar; opts.emptyFallback muestra "--" si el array viene vacío.
+        function renderGearButtonsBlock(setupId, platos, pinones, colorClass, opts = {}) {
+            const bgClass = `bg-${colorClass}-900/30`;
+            const textClass = `text-${colorClass}-400`;
+            const borderClass = `border-${colorClass}-500/30`;
+            const hoverClass = `hover:bg-${colorClass}-500 hover:text-black`;
+
+            const emptyTag = '<span class="text-[10px] text-zinc-600">--</span>';
+            const platosHTML = renderPlatoButtons(platos, setupId, borderClass, bgClass, textClass, hoverClass) || (opts.emptyFallback ? emptyTag : '');
+            const pinonesHTML = renderPinonButtons(pinones, setupId) || (opts.emptyFallback ? emptyTag : '');
+
+            const deleteBtn = opts.deleteProfileId
+                ? `<button onclick="confirmDeleteProfile('${opts.deleteProfileId}', '${setupId}')" class="text-red-500/50 hover:text-red-400 p-2 rounded-lg hover:bg-red-950/30 transition-colors" title="Borrar perfil" aria-label="Borrar este perfil de transmisión"><i class="fas fa-trash" aria-hidden="true"></i></button>`
+                : '';
+
+            return `
+                <div class="mb-4 flex items-center gap-3 md:gap-4">
+                    <div class="w-16 shrink-0">
+                        <span class="block text-[9px] md:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
+                        <span class="block text-xs md:text-sm font-black text-${colorClass}-500 mt-1">${platos.length}x</span>
+                    </div>
+                    <div class="flex gap-2 flex-wrap flex-1" role="group" aria-label="Selección rápida de plato">${platosHTML}</div>
+                    ${deleteBtn}
+                </div>
+                <div class="flex items-start gap-3 md:gap-4">
+                    <div class="w-16 shrink-0 mt-2">
+                        <span class="block text-[9px] md:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
+                        <span class="block text-xs md:text-sm font-black text-${colorClass}-500 mt-1">${pinones.length}v</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 md:gap-2 flex-1" role="group" aria-label="Selección rápida de piñón">${pinonesHTML}</div>
+                </div>
+            `;
+        }
+
         function renderQuickSelects(setupId, skipAutoSelect = false) {
             const presetVal = document.getElementById(`preset-${setupId}`).value;
             const container = document.getElementById(`quick-selects-${setupId}`);
             
             const colorClass = setupId === 'a' ? 'cyan' : 'violet';
-            const bgClass = `bg-${colorClass}-900/30`;
-            const textClass = `text-${colorClass}-400`;
-            const borderClass = `border-${colorClass}-500/30`;
-            const hoverClass = `hover:bg-${colorClass}-500 hover:text-black`;
 
             container.classList.remove('hidden');
 
@@ -776,11 +837,11 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label for="custom-platos-${setupId}" class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mis Platos</label>
-                                <input type="text" id="custom-platos-${setupId}" value="${mem.platos}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors" placeholder="Ej: 50, 34" aria-label="Ingresar números de dientes separados por comas para los platos">
+                                <input type="text" id="custom-platos-${setupId}" value="${escapeHtml(mem.platos)}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors" placeholder="Ej: 50, 34" aria-label="Ingresar números de dientes separados por comas para los platos">
                             </div>
                             <div>
                                 <label for="custom-pinones-${setupId}" class="block text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mi Cassette</label>
-                                <input type="text" id="custom-pinones-${setupId}" value="${mem.pinones}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors" placeholder="Ej: 11, 13, 15..." aria-label="Ingresar números de dientes separados por comas para el cassette">
+                                <input type="text" id="custom-pinones-${setupId}" value="${escapeHtml(mem.pinones)}" oninput="buildCustomButtons('${setupId}')" class="w-full bg-black border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono focus:border-${colorClass}-500 outline-none transition-colors" placeholder="Ej: 11, 13, 15..." aria-label="Ingresar números de dientes separados por comas para el cassette">
                             </div>
                         </div>
                         <div class="flex items-end gap-2 mt-1">
@@ -800,34 +861,9 @@
             }
 
             const data = groupsetsDB[presetVal];
-            
-            const platosHTML = data.platos.map(p => 
-                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 md:px-4 md:py-2 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-sm md:text-base font-black font-mono shadow-sm" aria-label="Seleccionar plato de ${p} dientes">${p}T</button>`
-            ).join('');
-
-            const pinonesHTML = data.pinones.map(p => 
-                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-xs md:text-sm font-bold font-mono transition-colors shadow-sm" aria-label="Seleccionar piñón de ${p} dientes">${p}</button>`
-            ).join('');
-
-            const deleteBtn = data.isUser ? `<button onclick="confirmDeleteProfile('${presetVal}', '${setupId}')" class="text-red-500/50 hover:text-red-400 p-2 rounded-lg hover:bg-red-950/30 transition-colors" title="Borrar perfil" aria-label="Borrar este perfil de transmisión"><i class="fas fa-trash" aria-hidden="true"></i></button>` : '';
-
-            container.innerHTML = `
-                <div class="mb-4 flex items-center gap-3 md:gap-4">
-                    <div class="w-16 shrink-0">
-                        <span class="block text-[9px] md:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
-                        <span class="block text-xs md:text-sm font-black text-${colorClass}-500 mt-1">${data.platos.length}x</span>
-                    </div>
-                    <div class="flex gap-2 flex-wrap flex-1" role="group" aria-label="Selección rápida de plato">${platosHTML}</div>
-                    ${deleteBtn}
-                </div>
-                <div class="flex items-start gap-3 md:gap-4">
-                    <div class="w-16 shrink-0 mt-2">
-                        <span class="block text-[9px] md:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
-                        <span class="block text-xs md:text-sm font-black text-${colorClass}-500 mt-1">${data.pinones.length}v</span>
-                    </div>
-                    <div class="flex flex-wrap gap-1.5 md:gap-2 flex-1" role="group" aria-label="Selección rápida de piñón">${pinonesHTML}</div>
-                </div>
-            `;
+            container.innerHTML = renderGearButtonsBlock(setupId, data.platos, data.pinones, colorClass, {
+                deleteProfileId: data.isUser ? presetVal : null
+            });
 
             if (!skipAutoSelect) {
                 document.getElementById(`plato-${setupId}`).value = data.platos[0];
@@ -849,37 +885,10 @@
             if(setupId === 'b') window.customMemoryB = { platos: platosStr, pinones: pinonesStr };
 
             const colorClass = setupId === 'a' ? 'cyan' : 'violet';
-            const bgClass = `bg-${colorClass}-900/30`;
-            const textClass = `text-${colorClass}-400`;
-            const borderClass = `border-${colorClass}-500/30`;
-            const hoverClass = `hover:bg-${colorClass}-500 hover:text-black`;
-
-            const platosHTML = platosArr.map(p => 
-                `<button onclick="setGear('${setupId}', 'plato', ${p})" class="btn-gear px-3 py-1.5 md:px-4 md:py-2 rounded-xl border ${borderClass} ${bgClass} ${textClass} ${hoverClass} text-sm md:text-base font-black font-mono shadow-sm" aria-label="Seleccionar plato de ${p} dientes">${p}T</button>`
-            ).join('');
-
-            const pinonesHTML = pinonesArr.map(p => 
-                `<button onclick="setGear('${setupId}', 'pinon', ${p})" class="btn-gear px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-black hover:border-white text-xs md:text-sm font-bold font-mono transition-colors shadow-sm" aria-label="Seleccionar piñón de ${p} dientes">${p}</button>`
-            ).join('');
 
             const targetDiv = document.getElementById(`custom-buttons-container-${setupId}`);
             if(targetDiv) {
-                targetDiv.innerHTML = `
-                    <div class="mb-4 flex items-center gap-3 md:gap-4">
-                        <div class="w-16 shrink-0">
-                            <span class="block text-[9px] md:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Platos:</span>
-                            <span class="block text-xs md:text-sm font-black text-${colorClass}-500 mt-1">${platosArr.length}x</span>
-                        </div>
-                        <div class="flex gap-2 flex-wrap flex-1" role="group" aria-label="Selección rápida de plato">${platosHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
-                    </div>
-                    <div class="flex items-start gap-3 md:gap-4">
-                        <div class="w-16 shrink-0 mt-2">
-                            <span class="block text-[9px] md:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Cassette:</span>
-                            <span class="block text-xs md:text-sm font-black text-${colorClass}-500 mt-1">${pinonesArr.length}v</span>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5 md:gap-2 flex-1" role="group" aria-label="Selección rápida de piñón">${pinonesHTML || '<span class="text-[10px] text-zinc-600">--</span>'}</div>
-                    </div>
-                `;
+                targetDiv.innerHTML = renderGearButtonsBlock(setupId, platosArr, pinonesArr, colorClass, { emptyFallback: true });
             }
 
             if (!skipAutoSelect) calculateTelemetry(); 
@@ -916,14 +925,12 @@
         let profileToDelete = null; 
         let setupIdToDelete = null;
 
-        window.confirmDeleteProfile = function(profileId, setupId) {
-            profileToDelete = profileId; 
-            setupIdToDelete = setupId;
-            const savedProfiles = JSON.parse(localStorage.getItem('velo_user_profiles')) || {};
-            document.getElementById('modal-bike-name').innerText = savedProfiles[profileId]?.name || 'Grupo';
-            
-            const confirmBtn = document.getElementById('modal-confirm-btn');
-            confirmBtn.onclick = executeDeleteGearProfile;
+        // Abre el modal de confirmación de borrado: misma animación y misma estructura
+        // para perfiles de transmisión y de presión, solo cambia el nombre mostrado
+        // y qué función se ejecuta al confirmar.
+        function openDeleteModal(name, onConfirm) {
+            document.getElementById('modal-bike-name').innerText = name;
+            document.getElementById('modal-confirm-btn').onclick = onConfirm;
 
             const modal = document.getElementById('delete-modal');
             modal.classList.remove('hidden');
@@ -931,6 +938,13 @@
                 modal.classList.remove('opacity-0');
                 modal.querySelector('div').classList.remove('scale-95');
             });
+        }
+
+        window.confirmDeleteProfile = function(profileId, setupId) {
+            profileToDelete = profileId; 
+            setupIdToDelete = setupId;
+            const savedProfiles = JSON.parse(localStorage.getItem('velo_user_profiles')) || {};
+            openDeleteModal(savedProfiles[profileId]?.name || 'Grupo', executeDeleteGearProfile);
         };
 
         window.executeDeleteGearProfile = function() {
@@ -1312,17 +1326,7 @@
             
             profileToDelete = select.value;
             const savedProfiles = JSON.parse(localStorage.getItem('velo_tp_profiles')) || {};
-            document.getElementById('modal-bike-name').innerText = savedProfiles[profileToDelete]?.name || 'esta configuración de presiones';
-            
-            const confirmBtn = document.getElementById('modal-confirm-btn');
-            confirmBtn.onclick = executeDeleteTyreProfile;
-
-            const modal = document.getElementById('delete-modal');
-            modal.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                modal.classList.remove('opacity-0');
-                modal.querySelector('div').classList.remove('scale-95');
-            });
+            openDeleteModal(savedProfiles[profileToDelete]?.name || 'esta configuración de presiones', executeDeleteTyreProfile);
         };
 
         window.executeDeleteTyreProfile = function() {
