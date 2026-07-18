@@ -316,11 +316,13 @@
             }
 
             const keys = Object.keys(data[0]);
-            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight', 'tactical_data', 'palmares'];
+            const hiddenCols = ['id', 'riders', 'details', 'content', 'profile', 'riders_json', 'insight', 'tactical_data', 'palmares', 'orden'];
             const displayCols = keys.filter(k => !hiddenCols.includes(k)).slice(0, 5);
+            const isNoticias = currentTable === 'noticias';
 
             let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-700 shadow-2xl animate-fade-in-up"><table id="dataTable" class="w-full text-left text-sm text-slate-300 whitespace-nowrap">
                 <thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs"><tr>
+                    ${isNoticias ? '<th class="p-4">ORDEN</th>' : ''}
                     ${displayCols.map(c => `<th class="p-4">${c}</th>`).join('')}
                     <th class="p-4 text-right">ACCIONES</th>
                 </tr></thead>
@@ -330,9 +332,30 @@
             if (currentTable === 'ranking') {
                 renderData = [...data].sort((a, b) => b.points - a.points);
             }
+            // Las noticias sin "orden" todavía asignado (artículos antiguos, de antes de
+            // tener este campo) se van al final, en vez de mezclarse arriba sin criterio.
+            if (isNoticias) {
+                renderData = [...data].sort((a, b) => (a.orden ?? Infinity) - (b.orden ?? Infinity) || a.id - b.id);
+            }
 
-            renderData.forEach(row => {
+            renderData.forEach((row, index) => {
                 tableHtml += `<tr class="hover:bg-slate-800/60 transition group">`;
+
+                if (isNoticias) {
+                    const isFirst = index === 0;
+                    const isLast = index === renderData.length - 1;
+                    tableHtml += `<td class="p-4">
+                        <div class="flex flex-col gap-1">
+                            <button onclick="moveNewsOrder(${row.id}, -1)" ${isFirst ? 'disabled' : ''} class="w-7 h-7 flex items-center justify-center rounded-md bg-slate-800 border border-slate-700 text-slate-300 hover:bg-emerald-500 hover:text-black transition-colors disabled:opacity-25 disabled:pointer-events-none" aria-label="Subir posición" title="Subir">
+                                <i class="fas fa-chevron-up text-xs"></i>
+                            </button>
+                            <button onclick="moveNewsOrder(${row.id}, 1)" ${isLast ? 'disabled' : ''} class="w-7 h-7 flex items-center justify-center rounded-md bg-slate-800 border border-slate-700 text-slate-300 hover:bg-emerald-500 hover:text-black transition-colors disabled:opacity-25 disabled:pointer-events-none" aria-label="Bajar posición" title="Bajar">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                        </div>
+                    </td>`;
+                }
+
                 displayCols.forEach(col => {
                     let val = row[col];
                     let isHtmlInjection = false;
@@ -368,6 +391,37 @@
                 </td></tr>`;
             });
             container.innerHTML = headerHtml + tableHtml + `</tbody></table></div>`;
+        }
+
+        // Mueve una noticia una posición arriba (-1) o abajo (1) en la portada.
+        // Renumera de forma secuencial (0, 1, 2...) todo el listado tras el movimiento,
+        // así los artículos antiguos sin "orden" quedan también resueltos desde el
+        // primer clic, y solo se reescriben en la base de datos los que de verdad cambian.
+        async function moveNewsOrder(id, direction) {
+            const sorted = [...currentData].sort((a, b) => (a.orden ?? Infinity) - (b.orden ?? Infinity) || a.id - b.id);
+            const index = sorted.findIndex(item => item.id === id);
+            const targetIndex = index + direction;
+            if (index === -1 || targetIndex < 0 || targetIndex >= sorted.length) return;
+
+            [sorted[index], sorted[targetIndex]] = [sorted[targetIndex], sorted[index]];
+
+            const updates = [];
+            sorted.forEach((item, i) => {
+                if (item.orden !== i) updates.push({ ...item, orden: i });
+            });
+
+            try {
+                await Promise.all(updates.map(u =>
+                    fetch(`/api/admin/noticias/${u.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(u)
+                    })
+                ));
+                loadTable('noticias');
+            } catch (e) {
+                alert("❌ Error moviendo la noticia: " + e.message);
+            }
         }
 
         async function autoGenerateTrending() {
@@ -556,6 +610,20 @@
             
             for (const [key, value] of Object.entries(data)) {
                 if (key === 'id') continue;
+                // El orden de las noticias se gestiona con las flechas ▲▼ de la tabla,
+                // no con este formulario (evita números repetidos si se edita a mano).
+                // Va como campo oculto -no invisible del todo, sino ausente del formulario-
+                // para que su valor viaje igualmente al guardar: si no lo incluyéramos,
+                // editar el título de una noticia podría borrar su posición guardada
+                // en caso de que el backend reemplace todos los campos al hacer UPDATE.
+                if (key === 'orden') {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'orden';
+                    hidden.value = (value === null || value === undefined) ? '' : value;
+                    form.appendChild(hidden);
+                    continue;
+                }
                 
                 const wrapper = document.createElement('div');
                 wrapper.id = `wrapper-${key}`;
@@ -760,6 +828,10 @@
             for (let [key, value] of formData.entries()) {
                 if (key === 'points') {
                     dataObj[key] = value !== '' ? parseInt(value) : 0;
+                } else if (key === 'orden') {
+                    // null (no 0) si viene vacío: 0 significaría "primera posición",
+                    // y una noticia sin orden asignado aún debe ir al final, no al principio.
+                    dataObj[key] = value !== '' ? parseInt(value) : null;
                 } else {
                     dataObj[key] = value;
                 }
