@@ -53,25 +53,20 @@ const htmlAuthMiddleware = (req, res, next) => {
     res.status(401).send('⛔ ACCESO DENEGADO - Velo Security');
 };
 
-// Guardia 2: Para la base de datos (Silencioso, comprueba si ya estás dentro)
-const apiAuthMiddleware = (req, res, next) => {
-    const referer = req.headers.referer || req.headers.origin || '';
-    const fetchSite = req.headers['sec-fetch-site'];
-    
-    if (referer.includes('/velo-lab-hq') || referer.includes('veloinsights.es') || fetchSite === 'same-origin') {
-        return next();
-    }
-    res.status(403).json({ error: "⛔ Acceso denegado a la API." });
-};
+// Guardia 2 (ANTES): comprobaba Referer/Origin, que cualquier cliente HTTP que no sea
+// un navegador puede poner a mano — no era autenticación real, solo lo parecía.
+// Ahora /api/admin usa la MISMA autenticación real (usuario+contraseña) que la página
+// del panel. Como es el mismo origen, el navegador reenvía las credenciales que ya
+// cacheó al entrar en /velo-lab-hq, así que no cambia nada para ti al usar el admin.
 
 // 4. ZONA ADMIN
 app.get('/velo-lab-hq', loginLimiter, htmlAuthMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-app.use('/api/admin', apiAuthMiddleware);
+app.use('/api/admin', htmlAuthMiddleware);
 // --- RUTA PARA SUBIR IMÁGENES A CLOUDINARY ---
-app.post('/api/admin/upload', apiAuthMiddleware, upload.single('imagen'), async (req, res) => {
+app.post('/api/admin/upload', htmlAuthMiddleware, upload.single('imagen'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No se envió ninguna imagen.' });
     
     try {
