@@ -218,7 +218,11 @@ app.post('/api/admin/create/:table', async (req, res) => {
 
 // --- 7. APIs PÚBLICAS ---
 app.get('/api/news', async (req, res) => {
-    try { const [r] = await db.query("SELECT * FROM noticias ORDER BY id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
+    // Las noticias con "orden" asignado van primero (según ese número);
+    // las que aún no tienen orden (artículos antiguos, o recién creados
+    // hasta que se muevan una vez desde el admin) van al final, de más
+    // reciente a más antigua.
+    try { const [r] = await db.query("SELECT * FROM noticias ORDER BY (orden IS NULL) ASC, orden ASC, id DESC"); res.json(r); } catch(e){ res.status(500).json([]); }
 });
 app.get('/api/teams', async (req, res) => {
     try { 
@@ -261,7 +265,7 @@ app.get('/api/ranking', async (req, res) => {
 // --- RUTA MAESTRA (NUEVA FASE 1: PERFORMANCE BOOT) ---
 app.get('/api/home', async (req, res) => {
     try {
-        const [news] = await db.query("SELECT * FROM noticias ORDER BY id DESC LIMIT 5");
+        const [news] = await db.query("SELECT * FROM noticias ORDER BY (orden IS NULL) ASC, orden ASC, id DESC LIMIT 5");
         const [teams] = await db.query("SELECT * FROM equipos");
         const [calendar] = await db.query("SELECT * FROM calendario ORDER BY dateISO ASC");
         const [glossary] = await db.query("SELECT id, term, cat, definition as def, insight FROM glosario");
@@ -350,6 +354,9 @@ async function upgradeDatabase() {
     
     try { await db.query("ALTER TABLE glosario ADD COLUMN insight TEXT NULL"); } catch (e) {}
     try { await db.query("ALTER TABLE noticias ADD COLUMN vatios INT DEFAULT 0"); } catch (e) {}
+    // --- NUEVO: columna para poder reordenar las noticias a mano desde el admin.
+    // NULL en las noticias antiguas (se van al final hasta que se muevan una vez).
+    try { await db.query("ALTER TABLE noticias ADD COLUMN orden INT NULL"); } catch (e) {}
     try {
         await db.query(`CREATE TABLE IF NOT EXISTS trending (
             id INT AUTO_INCREMENT PRIMARY KEY, tipo VARCHAR(50) NOT NULL, title VARCHAR(255) NOT NULL, subtitle VARCHAR(255), value VARCHAR(50)
@@ -391,12 +398,12 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
         const htmlPath = path.join(__dirname, 'public', 'noticias.html');
         let html = fs.readFileSync(htmlPath, 'utf8');
 
-        const defaultImage = '[https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop](https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop)';
+        const defaultImage = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop';
         let imageUrl = noticia.image ? noticia.image.trim() : defaultImage;
         
         if (imageUrl && !imageUrl.startsWith('http')) {
             imageUrl = imageUrl.replace(/^\/+/, ''); 
-            imageUrl = '[https://veloinsights.es/](https://veloinsights.es/)' + imageUrl;
+            imageUrl = 'https://veloinsights.es/' + imageUrl;
         }
 
         const cleanTitle = noticia.title ? noticia.title.replace(/"/g, '&quot;') : 'Velo Insights';
@@ -405,7 +412,7 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
 
         // Datos Estructurados (Schema.org) para Google
        const schemaData = {
-            "@context": "[https://schema.org](https://schema.org)",
+            "@context": "https://schema.org",
             "@type": "NewsArticle",
             "headline": cleanTitle,
             "description": cleanDesc,
@@ -414,14 +421,14 @@ app.get(['/noticia/:id', '/noticia/:id/:slug'], async (req, res, next) => {
             "author": [{
                 "@type": "Organization",
                 "name": "Velo Insights",
-                "url": "[https://veloinsights.es](https://veloinsights.es)"
+                "url": "https://veloinsights.es"
             }],
             "publisher": {
                 "@type": "Organization",
                 "name": "Velo Insights",
                 "logo": {
                     "@type": "ImageObject",
-                    "url": "[https://veloinsights.es/assets/favicon-144.png](https://veloinsights.es/assets/favicon-144.png)"
+                    "url": "https://veloinsights.es/assets/favicon-144.png"
                 }
             }
         };
@@ -475,7 +482,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // B. SITEMAP SEO OPTIMIZADO
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const baseUrl = '[https://veloinsights.es](https://veloinsights.es)'; 
+        const baseUrl = 'https://veloinsights.es'; 
 
         res.set('Content-Type', 'application/xml');
         let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
