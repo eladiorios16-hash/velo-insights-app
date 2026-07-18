@@ -295,6 +295,9 @@
             if (currentTable === 'trending') {
                 extraBtn = `<button onclick="autoGenerateTrending()" class="bg-purple-500 hover:bg-purple-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform active:scale-95 text-sm shrink-0"><i class="fas fa-brain"></i> AUTO-GENERAR</button>`;
             }
+            if (currentTable === 'noticias') {
+                extraBtn = `<button onclick="bulkReorderByDate()" id="btn-bulk-reorder" class="bg-blue-500 hover:bg-blue-400 text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform active:scale-95 text-sm shrink-0"><i class="fas fa-sort-amount-down"></i> REORDENAR POR FECHA</button>`;
+            }
 
             let headerHtml = `
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 animate-fade-in-up">
@@ -422,6 +425,80 @@
                 loadTable('noticias');
             } catch (e) {
                 alert("❌ Error moviendo la noticia: " + e.message);
+            }
+        }
+
+        // Interpreta el campo "date" (texto libre, tipo "04 FEB 2026" o "4 de febrero de 2026")
+        // y devuelve un timestamp comparable, o null si no lo reconoce.
+        const MESES_ES = {
+            ene: 0, enero: 0, feb: 1, febrero: 1, mar: 2, marzo: 2, abr: 3, abril: 3,
+            may: 4, mayo: 4, jun: 5, junio: 5, jul: 6, julio: 6, ago: 7, agosto: 7,
+            sep: 8, sept: 8, septiembre: 8, oct: 9, octubre: 9, nov: 10, noviembre: 10, dic: 11, diciembre: 11
+        };
+        function parseFechaES(str) {
+            if (!str) return null;
+            const clean = str.toLowerCase().trim();
+
+            // Formato "AAAA-MM-DD" (por si alguna vez se guarda así)
+            const iso = clean.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]).getTime();
+
+            // Formato "DD [de] MES [de] AAAA" (cubre "04 FEB 2026" y "4 de febrero de 2026")
+            const match = clean.match(/(\d{1,2})\s*(?:de)?\s*([a-záéíóúñ]+)\.?\s*(?:de)?\s*(\d{4})/i);
+            if (match) {
+                const dia = parseInt(match[1], 10);
+                const mesTexto = match[2].replace(/\.$/, '');
+                const anio = parseInt(match[3], 10);
+                const mes = MESES_ES[mesTexto] ?? MESES_ES[mesTexto.substring(0, 3)];
+                if (mes !== undefined && !isNaN(dia) && !isNaN(anio)) {
+                    return new Date(anio, mes, dia).getTime();
+                }
+            }
+            return null; // No se pudo interpretar esta fecha
+        }
+
+        // Reordena TODAS las noticias de golpe según su campo "date" (más reciente primero),
+        // en vez de tener que mover 50 artículos uno a uno con las flechas.
+        // Sobrescribe cualquier orden manual que ya tuvieras.
+        async function bulkReorderByDate() {
+            if (!confirm("Esto va a reordenar TODAS las noticias según su fecha (de más reciente a más antigua) y sobrescribirá cualquier orden manual que ya tuvieras. ¿Continuar?")) return;
+
+            const conFecha = currentData.map(item => ({ ...item, _ts: parseFechaES(item.date) }));
+            const sinInterpretar = conFecha.filter(i => i._ts === null);
+
+            const sorted = [...conFecha].sort((a, b) => {
+                if (a._ts === null && b._ts === null) return b.id - a.id;
+                if (a._ts === null) return 1;  // sin fecha reconocible -> al final
+                if (b._ts === null) return -1;
+                return b._ts - a._ts; // más reciente primero
+            });
+
+            const updates = sorted.map((item, i) => {
+                const { _ts, ...clean } = item;
+                return { ...clean, orden: i };
+            });
+
+            const btn = document.getElementById('btn-bulk-reorder');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Reordenando...'; }
+
+            try {
+                await Promise.all(updates.map(u =>
+                    fetch(`/api/admin/noticias/${u.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(u)
+                    })
+                ));
+
+                if (sinInterpretar.length > 0) {
+                    alert(`✅ Reordenadas ${updates.length} noticias.\n\n⚠️ No pude interpretar la fecha de ${sinInterpretar.length} artículo(s) (se han colocado al final). Revísalos a mano:\n\n` +
+                        sinInterpretar.map(n => `• "${n.title}" (fecha guardada: "${n.date}")`).join('\n'));
+                } else {
+                    alert(`✅ Las ${updates.length} noticias se han reordenado correctamente según su fecha.`);
+                }
+                loadTable('noticias');
+            } catch (e) {
+                alert("❌ Error reordenando: " + e.message);
             }
         }
 
