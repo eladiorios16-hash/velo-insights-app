@@ -332,10 +332,11 @@
             if (currentTable === 'ranking') {
                 renderData = [...data].sort((a, b) => b.points - a.points);
             }
-            // Las noticias sin "orden" todavía asignado (artículos antiguos, de antes de
-            // tener este campo) se van al final, en vez de mezclarse arriba sin criterio.
+            // Igual que en la web pública (server.js usa "id DESC" como desempate):
+            // las noticias sin orden asignado se muestran de la más reciente a la más
+            // antigua, no al revés.
             if (isNoticias) {
-                renderData = [...data].sort((a, b) => (a.orden ?? Infinity) - (b.orden ?? Infinity) || a.id - b.id);
+                renderData = [...data].sort((a, b) => (a.orden ?? Infinity) - (b.orden ?? Infinity) || b.id - a.id);
             }
 
             renderData.forEach((row, index) => {
@@ -398,7 +399,7 @@
         // así los artículos antiguos sin "orden" quedan también resueltos desde el
         // primer clic, y solo se reescriben en la base de datos los que de verdad cambian.
         async function moveNewsOrder(id, direction) {
-            const sorted = [...currentData].sort((a, b) => (a.orden ?? Infinity) - (b.orden ?? Infinity) || a.id - b.id);
+            const sorted = [...currentData].sort((a, b) => (a.orden ?? Infinity) - (b.orden ?? Infinity) || b.id - a.id);
             const index = sorted.findIndex(item => item.id === id);
             const targetIndex = index + direction;
             if (index === -1 || targetIndex < 0 || targetIndex >= sorted.length) return;
