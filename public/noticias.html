@@ -205,7 +205,13 @@
                 if (resNews && resNews.ok) {
                     const data = await resNews.json();
                     if (data && data.length > 0) {
-                        allNews = data.sort((a, b) => b.id - a.id); 
+                        // Mismo criterio que el panel admin y que /api/news: las noticias con
+                        // "orden" asignado van primero según ese número; las que aún no tienen
+                        // (artículos antiguos, o recién creados hasta que se toquen una vez)
+                        // van después, de la más reciente a la más antigua por id.
+                        // (Antes esto se reordenaba solo por "id", ignorando el orden manual
+                        // del admin y deshaciendo cualquier cosa que se hubiera movido allí.)
+                        allNews = data.sort((a, b) => (a.orden ?? Infinity) - (b.orden ?? Infinity) || b.id - a.id);
                         renderHubs();
                         
                         let articleId = new URLSearchParams(window.location.search).get('article');
