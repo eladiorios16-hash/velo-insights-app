@@ -915,6 +915,18 @@
                 }
             }
 
+            // Al PUBLICAR una noticia nueva (no al editar una existente), la colocamos
+            // automáticamente en primera posición: le asignamos un "orden" un punto por
+            // debajo del más bajo que exista ahora mismo, así queda siempre por delante
+            // de todo lo demás sin tener que tocar las flechas ni "Reordenar por fecha".
+            if (!isEditing && currentTable === 'noticias') {
+                const ordenesActuales = currentData
+                    .map(d => d.orden)
+                    .filter(v => v !== null && v !== undefined);
+                const ordenMinimo = ordenesActuales.length > 0 ? Math.min(...ordenesActuales) : 0;
+                dataObj.orden = ordenMinimo - 1;
+            }
+
             let url = isEditing ? `/api/admin/${currentTable}/${editId}` : `/api/admin/create/${currentTable}`;
             let method = isEditing ? 'PUT' : 'POST';
 
